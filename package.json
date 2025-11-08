@@ -7,7 +7,9 @@
     "lint": "echo \"DLX-LINT-001: running eslint\" && eslint .",
     "format": "echo \"DLX-FMT-001: running prettier\" && prettier --write .",
     "build": "echo \"DLX-BUILD-001: root build placeholder\" && exit 0",
-    "audit": "echo \"DLX-AUDIT-001: running pnpm audit\" && pnpm audit"
+    "audit": "echo \"DLX-AUDIT-001: running pnpm audit\" && pnpm audit",
+    "prepare": "echo \"DLX-HUSKY-000: installing husky hooks\" && husky install",
+    "lint-staged": "echo \"DLX-LS-001: running lint-staged\" && lint-staged"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.0.0",
@@ -17,5 +19,16 @@
     "husky": "^9.0.0",
     "lint-staged": "^15.0.0",
     "prettier": "^3.0.0"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "echo \"DLX-LS-JS-001: eslint --fix on staged js/ts\"",
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,css,html}": [
+      "echo \"DLX-LS-DOC-001: prettier on staged non-code\"",
+      "prettier --write"
+    ]
   }
 }
