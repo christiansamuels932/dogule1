@@ -1,0 +1,21 @@
+{
+  "name": "dogule1",
+  "version": "0.0.0",
+  "private": true,
+  "packageManager": "pnpm@10.19.0",
+  "scripts": {
+    "lint": "echo \"DLX-LINT-001: running eslint\" && eslint .",
+    "format": "echo \"DLX-FMT-001: running prettier\" && prettier --write .",
+    "build": "echo \"DLX-BUILD-001: root build placeholder\" && exit 0",
+    "audit": "echo \"DLX-AUDIT-001: running pnpm audit\" && pnpm audit"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^19.0.0",
+    "@commitlint/config-conventional": "^19.0.0",
+    "@eslint/js": "^9.0.0",
+    "eslint": "^9.0.0",
+    "husky": "^9.0.0",
+    "lint-staged": "^15.0.0",
+    "prettier": "^3.0.0"
+  }
+}
