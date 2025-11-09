@@ -2,7 +2,7 @@
 
 ## Phase 1 — Scaffolding
 
-**Status:** Stations 1–4 complete. Taking a break; resume tomorrow with Station 5 planning.
+**Status:** Stations 1–5 complete. Ready to outline Station 6 scope.
 
 ### Station 1 — Tooling Check ✅
 
@@ -33,4 +33,10 @@ All essential tools verified and operational.
 - ESLint updated with CJS override; lint + format verified via Husky/lint-staged.
 - Work lives on `feature/station4-modules` (`INIT_REPO_010`). PR: https://github.com/christiansamuels932/dogule1/pull/1
 
-**Next Action:** Station 5 — start wiring navigation + shared styles across modules (restart tomorrow).
+### Station 5 — Navigation Shell & Shared Styles ✅
+
+- Added `apps/web/index.html` as the first app entrypoint with a simple German navigation UI that links to every module placeholder.
+- Created `modules/shared/shared.css` as the common baseline (system font stack, spacing, colors, list/link styles) and wired it into the new entrypoint.
+- Changes delivered on `feature/station5-navigation-shared` (`INIT_REPO_014`); branch merged back to `main`.
+
+**Next Action:** Station 6 — expand shared layout primitives and start integrating module-level navigation (scope to be defined).
