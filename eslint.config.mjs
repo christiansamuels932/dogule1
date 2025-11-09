@@ -12,4 +12,16 @@ export default [
       // DLX-ESLINT-BASE-001: Basiskonfiguration, später pro Modul erweiterbar.
     },
   },
+  {
+    files: ["*.cjs"],
+    languageOptions: {
+      ecmaVersion: 2021,
+      sourceType: "script",
+      globals: {
+        module: "writable",
+        require: "readonly",
+        __dirname: "readonly",
+      },
+    },
+  },
 ];
