@@ -2,7 +2,7 @@
 
 ## Phase 1 — Scaffolding
 
-**Status:** Stations 1–6 complete. Ready to plan Station 7 scope.
+**Status:** Stations 1–6 complete. Station 7 planning in progress.
 
 ### Station 1 — Tooling Check ✅
 
@@ -39,7 +39,7 @@ All essential tools verified and operational.
 - Created `modules/shared/shared.css` as the common baseline (system font stack, spacing, colors, list/link styles) and wired it into the new entrypoint.
 - Changes delivered on `feature/station5-navigation-shared` (`INIT_REPO_014`); branch merged back to `main`.
 
-**Next Action:** Station 6 — expand shared layout primitives and start integrating module-level navigation (scope to be defined).
+**Next Action:** Station 7 — scope definition + kickoff.
 
 ### Station 6 — Functional Routing Shell ✅
 
