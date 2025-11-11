@@ -10,20 +10,29 @@
       <h1>Dogule1 – Modulübersicht</h1>
       <p>Wähle ein Modul aus, um den Platzhalter zu öffnen.</p>
     </header>
+    <nav aria-label="Module">
+      <ul>
+        <li>
+          <a href="#dashboard" data-route="dashboard" class="nav-link-active" aria-current="page"
+            >Dashboard</a
+          >
+        </li>
+        <li><a href="#kommunikation" data-route="kommunikation">Kommunikation</a></li>
+        <li><a href="#kurse" data-route="kurse">Kurse</a></li>
+        <li><a href="#kunden" data-route="kunden">Kunden</a></li>
+        <li><a href="#hunde" data-route="hunde">Hunde</a></li>
+        <li><a href="#kalender" data-route="kalender">Kalender</a></li>
+        <li><a href="#trainer" data-route="trainer">Trainer</a></li>
+        <li><a href="#finanzen" data-route="finanzen">Finanzen</a></li>
+        <li><a href="#waren" data-route="waren">Waren</a></li>
+      </ul>
+    </nav>
     <main>
-      <nav>
-        <ul>
-          <li><a href="../../modules/dashboard/index.html">Dashboard</a></li>
-          <li><a href="../../modules/kommunikation/index.html">Kommunikation</a></li>
-          <li><a href="../../modules/kurse/index.html">Kurse</a></li>
-          <li><a href="../../modules/kunden/index.html">Kunden</a></li>
-          <li><a href="../../modules/hunde/index.html">Hunde</a></li>
-          <li><a href="../../modules/kalender/index.html">Kalender</a></li>
-          <li><a href="../../modules/trainer/index.html">Trainer</a></li>
-          <li><a href="../../modules/finanzen/index.html">Finanzen</a></li>
-          <li><a href="../../modules/waren/index.html">Waren</a></li>
-        </ul>
-      </nav>
+      <div id="content" class="content-area" aria-live="polite">
+        <p>Lade Dashboard...</p>
+      </div>
     </main>
+    <noscript>Bitte JavaScript aktivieren, um die Module zu laden.</noscript>
+    <script src="./main.js"></script>
   </body>
 </html>

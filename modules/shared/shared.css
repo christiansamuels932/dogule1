@@ -28,3 +28,13 @@ ul {
 li {
   margin: 0.5rem 0;
 }
+
+.nav-link-active {
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+.content-area {
+  padding: 1rem;
+  min-height: 60vh;
+}
