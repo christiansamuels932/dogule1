@@ -13,7 +13,7 @@ export default [
     },
   },
   {
-    files: ["*.cjs"],
+    files: ["*.cjs", "**/*.cjs"],
     languageOptions: {
       ecmaVersion: 2021,
       sourceType: "script",

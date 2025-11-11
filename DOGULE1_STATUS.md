@@ -2,7 +2,7 @@
 
 ## Phase 1 — Scaffolding
 
-**Status:** Stations 1–5 complete. Ready to outline Station 6 scope.
+**Status:** Stations 1–6 complete. Ready to plan Station 7 scope.
 
 ### Station 1 — Tooling Check ✅
 
@@ -40,3 +40,10 @@ All essential tools verified and operational.
 - Changes delivered on `feature/station5-navigation-shared` (`INIT_REPO_014`); branch merged back to `main`.
 
 **Next Action:** Station 6 — expand shared layout primitives and start integrating module-level navigation (scope to be defined).
+
+### Station 6 — Functional Routing Shell ✅
+
+- Added a lightweight hash router (`apps/web/main.js`) that swaps module placeholders into a live region, keeps navigation state in sync, and reports fetch failures through inline messaging + console error codes.
+- Updated the navigation shell (`apps/web/index.html`) to use hash links/data-route attributes, include the new content container, and load the router script; shared styles now highlight the active link and size the content area (`modules/shared/shared.css`).
+- Created a tiny Node-based dev server (`scripts/dev-server.cjs`) plus `pnpm dev` for serving `apps/web` while routing through static module files, with lint config extended to cover CommonJS scripts.
+- Work tracked on `feature/station6-functional-routing` (`INIT_REPO_015`). PR: https://github.com/christiansamuels932/dogule1/pull/2
