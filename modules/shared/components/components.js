@@ -89,3 +89,36 @@ export function createBadge(text, variant = "default") {
   clone.textContent = text || "";
   return clone;
 }
+
+export function createNotice(text, { variant = "info", role = "status" } = {}) {
+  const template = document.getElementById("ui-notice");
+  if (!template) {
+    throw new Error("Template #ui-notice not found");
+  }
+
+  const allowed = new Set(["info", "ok", "warn"]);
+  const resolvedVariant = allowed.has(variant) ? variant : "info";
+  const fragment = template.content.cloneNode(true);
+  const section = fragment.firstElementChild;
+  section.classList.remove("ui-notice--info", "ui-notice--ok", "ui-notice--warn");
+  section.classList.add(`ui-notice--${resolvedVariant}`);
+  section.setAttribute("role", role === "alert" ? "alert" : "status");
+  section.querySelector(".ui-notice__content").textContent = text || "";
+  return fragment;
+}
+
+export function createEmptyState(title, hint, { actionNode } = {}) {
+  const template = document.getElementById("ui-empty");
+  if (!template) {
+    throw new Error("Template #ui-empty not found");
+  }
+
+  const fragment = template.content.cloneNode(true);
+  fragment.querySelector(".ui-empty__title").textContent = title || "";
+  fragment.querySelector(".ui-empty__hint").textContent = hint || "";
+  const actions = fragment.querySelector(".ui-empty__actions");
+  if (actions && actionNode) {
+    actions.appendChild(actionNode);
+  }
+  return fragment;
+}
