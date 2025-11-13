@@ -2,7 +2,7 @@
 
 ## Phase 1 — Scaffolding
 
-**Status:** Stations 1–7 complete. Station 8 planning in progress.
+**Status:** Stations 1–8 complete. Station 9 planning in progress.
 
 ### Station 1 — Tooling Check ✅
 
@@ -39,7 +39,7 @@ All essential tools verified and operational.
 - Created `modules/shared/shared.css` as the common baseline (system font stack, spacing, colors, list/link styles) and wired it into the new entrypoint.
 - Changes delivered on `feature/station5-navigation-shared` (`INIT_REPO_014`); branch merged back to `main`.
 
-**Next Action:** Station 8 — define dashboard widgets + data plumbing scope.
+**Next Action:** Station 9 — shared UI components + interaction polish.
 
 ### Station 6 — Functional Routing Shell ✅
 
@@ -54,3 +54,10 @@ All essential tools verified and operational.
 - Router now bootstraps the shared layout before loading module HTML, injecting module content into `#dogule-main` so the frame stays intact; hash navigation still drives module switching with consistent aria states.
 - Shared base styles expanded (`modules/shared/shared.css`) to cover typography, focus outlines, and spacing utilities; added `pnpm dev`-ready layout assets for Station 7 tasks.
 - Work lives on `feature/station7-ui-structure` (`INIT_REPO_016`). PR: https://github.com/christiansamuels932/dogule1/pull/5
+
+### Station 8 — Standardized Module Interfaces ✅
+
+- Every module now ships with `index.html` + `index.js`, exposing a standard `initModule(container)` entry used by the router; shared layout’s `<main id="dogule-main">` is the mounting target.
+- Router (`apps/web/main.js`) dynamically imports each module bundle, validates the exported initializer, and renders localized error UI on failure; navigation links now cover all modules with hash routes and active-state attributes.
+- Layout navigation exposes German labels for all modules, ensuring hash changes stay in sync whether triggered by clicks or manual URL edits.
+- Work delivered on `feature/station8-module-interfaces` (`INIT_REPO_017`). PR: https://github.com/christiansamuels932/dogule1/pull/6
