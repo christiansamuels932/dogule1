@@ -9,6 +9,7 @@ import {
 } from "../../shared/api/kunden.js";
 
 let kundenCache = [];
+const TOAST_KEY = "__DOGULE_KUNDEN_TOAST__";
 
 export async function initModule(container, routeContext = { segments: [] }) {
   container.innerHTML = "";
@@ -73,6 +74,7 @@ async function renderList(section) {
       <a class="ui-btn ui-btn--primary" href="#/kunden/new">Neu</a>
     </header>
   `;
+  injectToast(section);
 
   if (!kunden.length) {
     const empty = document.createElement("p");
@@ -127,10 +129,12 @@ async function renderDetail(section, id) {
       <a class="ui-btn ui-btn--quiet" href="#/kunden">Zurück</a>
     </div>
   `;
+  injectToast(section);
 
   section.querySelector('[data-action="delete"]')?.addEventListener("click", async () => {
-    await deleteKunde(id, { dryRun: true });
-    kundenCache = kundenCache.filter((k) => k.id !== id);
+    await deleteKunde(id);
+    await fetchKunden();
+    setToast("Gelöscht.");
     window.location.hash = "#/kunden";
   });
 
@@ -222,18 +226,34 @@ async function renderForm(section, view, id) {
     }
 
     if (mode === "create") {
-      const rec = await createKunde(values, { dryRun: true });
-      kundenCache = [rec, ...kundenCache];
+      await createKunde(values);
+      await fetchKunden();
+      setToast("Erstellt.");
       window.location.hash = "#/kunden";
     } else {
-      const updated = await updateKunde(id, values, { dryRun: true });
-      const idx = kundenCache.findIndex((k) => k.id === id);
-      if (idx >= 0) kundenCache[idx] = { ...kundenCache[idx], ...updated };
+      await updateKunde(id, values);
+      await fetchKunden();
+      setToast("Gespeichert.");
       window.location.hash = `#/kunden/${id}`;
     }
   });
 
   focusHeading(section);
+}
+
+function setToast(message) {
+  window[TOAST_KEY] = message;
+}
+
+function injectToast(section) {
+  const message = window[TOAST_KEY];
+  if (!message) return;
+  delete window[TOAST_KEY];
+  const notice = document.createElement("p");
+  notice.className = "kunden-toast";
+  notice.setAttribute("role", "status");
+  notice.textContent = message;
+  section.prepend(notice);
 }
 
 function collectValues(refs) {
