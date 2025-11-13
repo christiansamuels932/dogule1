@@ -1,47 +1,51 @@
 // Simple hash-based router for Dogule1
 /* globals window, document, fetch, console, DOMParser */
 
-const routes = {
-  dashboard: "/modules/dashboard/index.html",
-  kommunikation: "/modules/kommunikation/index.html",
-  kurse: "/modules/kurse/index.html",
-  kunden: "/modules/kunden/index.html",
-  hunde: "/modules/hunde/index.html",
-  kalender: "/modules/kalender/index.html",
-  trainer: "/modules/trainer/index.html",
-  finanzen: "/modules/finanzen/index.html",
-  waren: "/modules/waren/index.html",
-};
+// --- Simple hash router for Dogule1 Module Interfaces (Station 8) ---
+const VALID_MODULES = new Set([
+  "dashboard",
+  "kommunikation",
+  "kurse",
+  "kunden",
+  "hunde",
+  "kalender",
+  "trainer",
+  "finanzen",
+  "waren",
+]);
 
 const LAYOUT_URL = "../../modules/shared/layout.html";
 let layoutMain = null;
 let layoutPromise = null;
 
 function getRouteFromHash() {
-  const hash = window.location.hash.replace("#", "").trim();
-  return hash && routes[hash] ? hash : "dashboard";
+  const raw = (window.location.hash || "").replace(/^#\/?/, "").trim().toLowerCase();
+  return VALID_MODULES.has(raw) ? raw : "dashboard";
 }
 
-async function loadRoute(route) {
-  const target = await ensureLayout();
-  if (!target) return;
-
-  const url = routes[route] || routes.dashboard;
+async function loadAndRender(route) {
+  const layoutContainer = await ensureLayout();
+  const container = layoutContainer || document.getElementById("dogule-main");
+  if (!container) {
+    console.error("Router error: #dogule-main not found in layout.");
+    return;
+  }
 
   try {
-    const response = await fetch(url);
-    if (!response.ok) {
-      target.innerHTML = "<p>Fehler beim Laden des Moduls.</p>";
-      setActiveLink(route);
-      return;
+    const mod = await import(`/modules/${route}/index.js`);
+    if (typeof mod.initModule !== "function") {
+      throw new Error(`Module "${route}" missing export initModule(container)`);
     }
-
-    const html = await response.text();
-    target.innerHTML = html;
-    setActiveLink(route);
+    await mod.initModule(container);
   } catch (err) {
-    console.error("DOGULE1_ROUTER_001 fetch failed", err);
-    target.innerHTML = "<p>Technischer Fehler beim Laden des Moduls.</p>";
+    console.error(err);
+    container.innerHTML = `
+      <section class="dogule-section">
+        <h1>Fehler</h1>
+        <p>Konnte Modul <code>${route}</code> nicht laden.</p>
+      </section>
+    `;
+  } finally {
     setActiveLink(route);
   }
 }
@@ -60,13 +64,13 @@ function setActiveLink(route) {
   });
 }
 
-async function handleRouteChange() {
+async function handleNavigation() {
   const route = getRouteFromHash();
-  await loadRoute(route);
+  await loadAndRender(route);
 }
 
-window.addEventListener("hashchange", handleRouteChange);
-window.addEventListener("DOMContentLoaded", handleRouteChange);
+window.addEventListener("hashchange", handleNavigation);
+window.addEventListener("DOMContentLoaded", handleNavigation);
 
 async function ensureLayout() {
   if (layoutMain) return layoutMain;
