@@ -1,0 +1,44 @@
+.dogule-card {
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+}
+
+.dogule-card__header {
+  margin-bottom: 0.75rem;
+}
+
+.dogule-card__title {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.dogule-card__subtitle {
+  margin: 0;
+  color: #475569;
+  font-size: 0.9rem;
+}
+
+.dogule-card__body {
+  font-size: 0.95rem;
+}
+
+.dogule-alert {
+  border-left: 4px solid #0ea5e9;
+  padding: 0.75rem 1rem;
+  background: #e0f2fe;
+  color: #0c4a6e;
+  border-radius: 0.25rem;
+  margin: 1rem 0;
+}
+
+.dogule-alert__title {
+  display: block;
+  margin-bottom: 0.2rem;
+}
+
+.dogule-alert__message {
+  margin: 0;
+}

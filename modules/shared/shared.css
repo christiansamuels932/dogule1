@@ -1,3 +1,5 @@
+@import "./components/components.css";
+
 html,
 body {
   margin: 0;
