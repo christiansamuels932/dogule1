@@ -2,7 +2,7 @@
 
 ## Phase 1 — Scaffolding
 
-**Status:** Stations 1–6 complete. Ready to plan Station 7 scope.
+**Status:** Stations 1–7 complete. Station 8 planning in progress.
 
 ### Station 1 — Tooling Check ✅
 
@@ -39,7 +39,7 @@ All essential tools verified and operational.
 - Created `modules/shared/shared.css` as the common baseline (system font stack, spacing, colors, list/link styles) and wired it into the new entrypoint.
 - Changes delivered on `feature/station5-navigation-shared` (`INIT_REPO_014`); branch merged back to `main`.
 
-**Next Action:** Station 6 — expand shared layout primitives and start integrating module-level navigation (scope to be defined).
+**Next Action:** Station 8 — define dashboard widgets + data plumbing scope.
 
 ### Station 6 — Functional Routing Shell ✅
 
@@ -47,3 +47,10 @@ All essential tools verified and operational.
 - Updated the navigation shell (`apps/web/index.html`) to use hash links/data-route attributes, include the new content container, and load the router script; shared styles now highlight the active link and size the content area (`modules/shared/shared.css`).
 - Created a tiny Node-based dev server (`scripts/dev-server.cjs`) plus `pnpm dev` for serving `apps/web` while routing through static module files, with lint config extended to cover CommonJS scripts.
 - Work tracked on `feature/station6-functional-routing` (`INIT_REPO_015`). PR: https://github.com/christiansamuels932/dogule1/pull/4
+
+### Station 7 — Unified Layout & UI Structure ✅
+
+- Introduced a shared layout demo + stylesheet (`modules/shared/layout.html` / `layout.css`) with persistent header/footer, navigation, and main content frame to reuse across modules.
+- Router now bootstraps the shared layout before loading module HTML, injecting module content into `#dogule-main` so the frame stays intact; hash navigation still drives module switching with consistent aria states.
+- Shared base styles expanded (`modules/shared/shared.css`) to cover typography, focus outlines, and spacing utilities; added `pnpm dev`-ready layout assets for Station 7 tasks.
+- Work lives on `feature/station7-ui-structure` (`INIT_REPO_016`). PR: https://github.com/christiansamuels932/dogule1/pull/5
