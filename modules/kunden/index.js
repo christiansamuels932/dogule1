@@ -1,16 +1,15 @@
 // Standardized module interface for Dogule1
-/* globals document, window */
+/* globals document, window, console */
 import {
-  createBadge,
   createButton,
   createCard,
-  createEmptyState,
   createFormRow,
   createNotice,
   createSectionHeader,
 } from "../../shared/components/components.js";
+import { list } from "../../shared/api/crud.js";
 
-export function initModule(container) {
+export async function initModule(container) {
   container.innerHTML = "";
   const fragment = document.createDocumentFragment();
 
@@ -36,6 +35,8 @@ export function initModule(container) {
 
   fragment.appendChild(section);
   container.appendChild(fragment);
+
+  await populateKunden();
 }
 
 function buildToolbarCard() {
@@ -79,40 +80,29 @@ function buildCustomersCard() {
   if (!cardElement) return document.createDocumentFragment();
 
   const listBody = cardElement.querySelector(".ui-card__body");
-
-  const customers = [];
-  if (!customers.length) {
-    const emptyState = createEmptyState(
-      "Keine Kunden vorhanden",
-      "Fügen Sie einen neuen Kunden hinzu.",
-      {
-        actionNode: createButton({
-          label: "Neuen Kunden anlegen",
-          variant: "primary",
-          onClick: () => {
-            window.location.hash = "#/kunden";
-          },
-        }),
-      }
-    );
-    listBody.appendChild(emptyState);
-    return cardElement;
-  }
-
-  customers.forEach((customer) => {
-    const customerCard = createCard({
-      eyebrow: customer.id,
-      title: customer.name,
-      body: `<p>${customer.email}</p>`,
-      footer: "",
-    });
-    const cardEl = customerCard.querySelector(".ui-card") || customerCard.firstElementChild;
-    if (!cardEl) return;
-    cardEl.querySelector(".ui-card__footer").appendChild(createBadge("Aktiv", "ok"));
-    listBody.appendChild(cardEl);
-  });
-
+  const list = document.createElement("ul");
+  list.id = "kunden-list";
+  listBody.appendChild(list);
   return cardElement;
+}
+
+async function populateKunden() {
+  const listElement = document.querySelector("#kunden-list");
+  if (!listElement) return;
+  listElement.innerHTML = "<li>Lade Kunden…</li>";
+  try {
+    const customers = await list("kunden");
+    if (!customers.length) {
+      listElement.innerHTML = "<li>Keine Kunden vorhanden.</li>";
+      return;
+    }
+    listElement.innerHTML = customers
+      .map((customer) => `<li>${customer.name} – ${customer.hund} (${customer.kurs})</li>`)
+      .join("");
+  } catch (err) {
+    console.error("KUNDEN_LOAD_FAILED", err);
+    listElement.innerHTML = "<li>Fehler beim Laden der Kundendaten.</li>";
+  }
 }
 
 function buildCreateFormCard() {
