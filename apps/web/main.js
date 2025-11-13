@@ -51,14 +51,14 @@ async function loadAndRender(route) {
 }
 
 function setActiveLink(route) {
-  const links = document.querySelectorAll("[data-route]");
+  const links = document.querySelectorAll("a.nav__link[data-route]");
   links.forEach((link) => {
     const isActive = link.dataset.route === route;
     if (isActive) {
-      link.classList.add("nav-link-active");
+      link.classList.add("nav__link--active");
       link.setAttribute("aria-current", "page");
     } else {
-      link.classList.remove("nav-link-active");
+      link.classList.remove("nav__link--active");
       link.removeAttribute("aria-current");
     }
   });

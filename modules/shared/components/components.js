@@ -89,3 +89,129 @@ export function createBadge(text, variant = "default") {
   clone.textContent = text || "";
   return clone;
 }
+
+export function createNotice(text, { variant = "info", role = "status" } = {}) {
+  const template = document.getElementById("ui-notice");
+  if (!template) {
+    throw new Error("Template #ui-notice not found");
+  }
+
+  const allowed = new Set(["info", "ok", "warn"]);
+  const resolvedVariant = allowed.has(variant) ? variant : "info";
+  const fragment = template.content.cloneNode(true);
+  const section = fragment.firstElementChild;
+  section.classList.remove("ui-notice--info", "ui-notice--ok", "ui-notice--warn");
+  section.classList.add(`ui-notice--${resolvedVariant}`);
+  section.setAttribute("role", role === "alert" ? "alert" : "status");
+  section.querySelector(".ui-notice__content").textContent = text || "";
+  return fragment;
+}
+
+export function createEmptyState(title, hint, { actionNode } = {}) {
+  const template = document.getElementById("ui-empty");
+  if (!template) {
+    throw new Error("Template #ui-empty not found");
+  }
+
+  const fragment = template.content.cloneNode(true);
+  fragment.querySelector(".ui-empty__title").textContent = title || "";
+  fragment.querySelector(".ui-empty__hint").textContent = hint || "";
+  const actions = fragment.querySelector(".ui-empty__actions");
+  if (actions && actionNode) {
+    actions.appendChild(actionNode);
+  }
+  return fragment;
+}
+
+export function createFormRow({
+  id,
+  label,
+  control = "input",
+  type = "text",
+  placeholder = "",
+  value = "",
+  required = false,
+  describedByText = "",
+  options = [],
+  visuallyHiddenLabel = false,
+} = {}) {
+  if (!id) {
+    throw new Error("createFormRow requires an id");
+  }
+
+  const template = document.getElementById("ui-form-row-template");
+  if (!template) {
+    throw new Error("Template #ui-form-row-template not found");
+  }
+
+  const fragment = template.content.cloneNode(true);
+  const row = fragment.firstElementChild;
+  const labelEl = row.querySelector(".ui-form-row__label");
+  const controlHost = row.querySelector(".ui-form-row__control");
+  const hintEl = row.querySelector(".ui-form-row__hint");
+
+  labelEl.textContent = label || "";
+  labelEl.setAttribute("for", id);
+  if (visuallyHiddenLabel) {
+    labelEl.classList.add("sr-only");
+  } else {
+    labelEl.classList.remove("sr-only");
+  }
+
+  const controlNode = buildControl({
+    id,
+    control,
+    type,
+    placeholder,
+    value,
+    required,
+    options,
+  });
+  controlHost.appendChild(controlNode);
+
+  if (describedByText) {
+    const hintId = `${id}-hint`;
+    hintEl.textContent = describedByText;
+    hintEl.id = hintId;
+    hintEl.classList.remove("sr-only");
+    controlNode.setAttribute("aria-describedby", hintId);
+  } else {
+    hintEl.classList.add("sr-only");
+  }
+
+  return row;
+}
+
+function buildControl({ id, control, type, placeholder, value, required, options }) {
+  const controlType = control.toLowerCase();
+  if (controlType === "textarea") {
+    const textarea = document.createElement("textarea");
+    textarea.id = id;
+    textarea.placeholder = placeholder;
+    textarea.required = Boolean(required);
+    textarea.value = value;
+    return textarea;
+  }
+
+  if (controlType === "select") {
+    const select = document.createElement("select");
+    select.id = id;
+    select.required = Boolean(required);
+    options.forEach(({ value: optionValue, label, selected }) => {
+      const optionEl = document.createElement("option");
+      optionEl.value = optionValue ?? "";
+      optionEl.textContent = label ?? "";
+      if (selected) optionEl.selected = true;
+      select.appendChild(optionEl);
+    });
+    return select;
+  }
+
+  const input = document.createElement("input");
+  input.id = id;
+  input.type = type || "text";
+  input.placeholder = placeholder;
+  input.required = Boolean(required);
+  input.value = value;
+  return input;
+}
