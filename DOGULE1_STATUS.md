@@ -75,3 +75,11 @@ All essential tools verified and operational.
 - Seeded realistic mock datasets for Kunden, Kurse, and Trainer to unblock UI development without a backend.
 - Kunden and Kurse modules now fetch via `list("<table>")`, render shared-component cards/lists dynamically, and surface localized empty/error states while reusing existing UI primitives.
 - Validation via `pnpm lint` / `pnpm build`; work tracked on `feature/station10-data-mocks` (`INIT_REPO_026–029`). PR: https://github.com/christiansamuels932/dogule1/pull/11
+
+### Station 11 — Kunden CRUD (Phase 1) 🔄
+
+- Kunden module: list → detail → create → edit → delete, powered entirely by the `modules/shared/api/` mock DB.
+- Hash routes to support flows: `#/kunden`, `#/kunden/:id`, `#/kunden/new`, `#/kunden/:id/edit`; navigation updates must remain keyboard-accessible with focus management per route.
+- Forms (German labels) require: Vorname*, Nachname*, E-Mail\*, Telefon, Adresse, Notizen; enforce required fields + email format, display inline German errors, and optimistically update the in-memory list.
+- Acceptance: no Hunde link/payments/search/pagination/persistence yet, only mock CRUD with instant UI refresh, `pnpm lint` + `pnpm build` green.
+- Out of scope for this phase: Hunde link, payments, search, pagination, persistence; next step is implementing param routes + API stubs for richer flows.

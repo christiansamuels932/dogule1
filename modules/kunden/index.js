@@ -1,158 +1,289 @@
-// Standardized module interface for Dogule1
-/* globals document, window, console */
+// Kunden module – list/detail/form flows with mock API
+/* globals document, console, window */
 import {
-  createButton,
-  createCard,
-  createFormRow,
-  createNotice,
-  createSectionHeader,
-} from "../../shared/components/components.js";
-import { list } from "../../shared/api/crud.js";
+  listKunden,
+  getKunde,
+  createKunde,
+  updateKunde,
+  deleteKunde,
+} from "../../shared/api/kunden.js";
 
-export async function initModule(container) {
+let kundenCache = [];
+const TOAST_KEY = "__DOGULE_KUNDEN_TOAST__";
+
+export async function initModule(container, routeContext = { segments: [] }) {
   container.innerHTML = "";
-  const fragment = document.createDocumentFragment();
-
   const section = document.createElement("section");
-  section.className = "dogule-section";
-  section.appendChild(
-    createSectionHeader({
-      title: "Kunden",
-      subtitle: "Verwaltung und Filter",
-      level: 2,
-    })
-  );
+  section.className = "dogule-section kunden-view";
+  container.appendChild(section);
 
-  section.appendChild(
-    createNotice("Bitte wähle einen Filter oder lege einen neuen Kunden an.", {
-      variant: "info",
-    })
-  );
+  const { view, id } = resolveView(routeContext);
 
-  section.appendChild(buildToolbarCard());
-  section.appendChild(buildCustomersCard());
-  section.appendChild(buildCreateFormCard());
-
-  fragment.appendChild(section);
-  container.appendChild(fragment);
-
-  await populateKunden();
-}
-
-function buildToolbarCard() {
-  const cardFragment = createCard({
-    eyebrow: "",
-    title: "Aktionen",
-    body: "",
-    footer: "",
-  });
-  const cardElement = cardFragment.querySelector(".ui-card") || cardFragment.firstElementChild;
-  if (!cardElement) return document.createDocumentFragment();
-
-  const body = cardElement.querySelector(".ui-card__body");
-  body.appendChild(
-    createButton({
-      label: "Neuer Kunde",
-      variant: "primary",
-      onClick: () => {
-        window.location.hash = "#/kunden";
-      },
-    })
-  );
-  body.appendChild(
-    createButton({
-      label: "Exportieren",
-      variant: "secondary",
-    })
-  );
-
-  return cardElement;
-}
-
-function buildCustomersCard() {
-  const cardFragment = createCard({
-    eyebrow: "",
-    title: "Kundenliste",
-    body: "",
-    footer: "",
-  });
-  const cardElement = cardFragment.querySelector(".ui-card") || cardFragment.firstElementChild;
-  if (!cardElement) return document.createDocumentFragment();
-
-  const listBody = cardElement.querySelector(".ui-card__body");
-  const list = document.createElement("ul");
-  list.id = "kunden-list";
-  listBody.appendChild(list);
-  return cardElement;
-}
-
-async function populateKunden() {
-  const listElement = document.querySelector("#kunden-list");
-  if (!listElement) return;
-  listElement.innerHTML = "<li>Lade Kunden…</li>";
   try {
-    const customers = await list("kunden");
-    if (!customers.length) {
-      listElement.innerHTML = "<li>Keine Kunden vorhanden.</li>";
-      return;
+    if (view === "list") {
+      await renderList(section);
+    } else if (view === "detail" && id) {
+      await renderDetail(section, id);
+    } else if (view === "create" || (view === "edit" && id)) {
+      await renderForm(section, view, id);
+    } else {
+      section.innerHTML = `
+        <h1>Unbekannte Ansicht</h1>
+        <p>Der Pfad "${window.location.hash}" wird noch nicht unterstützt.</p>
+      `;
+      focusHeading(section);
     }
-    listElement.innerHTML = customers
-      .map((customer) => `<li>${customer.name} – ${customer.hund} (${customer.kurs})</li>`)
-      .join("");
-  } catch (err) {
-    console.error("KUNDEN_LOAD_FAILED", err);
-    listElement.innerHTML = "<li>Fehler beim Laden der Kundendaten.</li>";
+  } catch (error) {
+    console.error("KUNDEN_ROUTE_FAILED", error);
+    section.innerHTML = `
+      <h1>Fehler</h1>
+      <p>Konnte Kundenansicht nicht laden.</p>
+      <p><a href="#/kunden">Zurück zur Liste</a></p>
+    `;
+    focusHeading(section);
   }
 }
 
-function buildCreateFormCard() {
-  const cardFragment = createCard({
-    eyebrow: "",
-    title: "Neuer Kunde",
-    body: "",
-    footer: "",
+function resolveView(routeContext = {}) {
+  const segments = routeContext.segments || [];
+  if (!segments.length) return { view: "list" };
+  const [first, second] = segments;
+  if (first === "new") return { view: "create" };
+  if (second === "edit") return { view: "edit", id: first };
+  return { view: "detail", id: first };
+}
+
+async function fetchKunden() {
+  kundenCache = await listKunden();
+  return kundenCache;
+}
+
+function focusHeading(root) {
+  const heading = root.querySelector("h1");
+  if (heading) {
+    heading.setAttribute("tabindex", "-1");
+    heading.focus();
+  }
+}
+
+async function renderList(section) {
+  const kunden = await fetchKunden();
+  section.innerHTML = `
+    <header class="kunden-header">
+      <h1>Kundenliste</h1>
+      <a class="ui-btn ui-btn--primary" href="#/kunden/new">Neu</a>
+    </header>
+  `;
+  injectToast(section);
+
+  if (!kunden.length) {
+    const empty = document.createElement("p");
+    empty.textContent = "Noch keine Kunden.";
+    section.appendChild(empty);
+  } else {
+    const list = document.createElement("ul");
+    list.className = "kunden-list";
+    kunden.forEach((kunde) => {
+      const item = document.createElement("li");
+      const link = document.createElement("a");
+      link.href = `#/kunden/${kunde.id}`;
+      const fullName = kunde.name ?? `${kunde.vorname ?? ""} ${kunde.nachname ?? ""}`.trim();
+      link.textContent = `${fullName || "Unbenannt"} – ${kunde.email ?? "keine E-Mail"}`;
+      item.appendChild(link);
+      list.appendChild(item);
+    });
+    section.appendChild(list);
+  }
+
+  focusHeading(section);
+}
+
+async function renderDetail(section, id) {
+  if (!kundenCache.length) await fetchKunden();
+  let kunde = kundenCache.find((k) => k.id === id);
+  if (!kunde) kunde = await getKunde(id);
+
+  if (!kunde) {
+    section.innerHTML = `
+      <h1>Kunde nicht gefunden</h1>
+      <p>Kein Eintrag mit ID <strong>${id}</strong> vorhanden.</p>
+      <p><a href="#/kunden">Zurück zur Liste</a></p>
+    `;
+    focusHeading(section);
+    return;
+  }
+
+  section.innerHTML = `
+    <h1>Kundendetails</h1>
+    <dl class="kunden-details">
+      <dt>Vorname</dt><dd>${kunde.vorname ?? "–"}</dd>
+      <dt>Nachname</dt><dd>${kunde.nachname ?? "–"}</dd>
+      <dt>E-Mail</dt><dd>${kunde.email ?? "–"}</dd>
+      <dt>Telefon</dt><dd>${kunde.telefon ?? "–"}</dd>
+      <dt>Adresse</dt><dd>${kunde.adresse ?? "–"}</dd>
+      <dt>Notizen</dt><dd>${kunde.notizen ?? "–"}</dd>
+    </dl>
+    <div class="kunden-actions">
+      <a class="ui-btn" href="#/kunden/${id}/edit">Bearbeiten</a>
+      <button type="button" class="ui-btn ui-btn--secondary" data-action="delete">Löschen</button>
+      <a class="ui-btn ui-btn--quiet" href="#/kunden">Zurück</a>
+    </div>
+  `;
+  injectToast(section);
+
+  section.querySelector('[data-action="delete"]')?.addEventListener("click", async () => {
+    await deleteKunde(id);
+    await fetchKunden();
+    setToast("Gelöscht.");
+    window.location.hash = "#/kunden";
   });
-  const cardElement = cardFragment.querySelector(".ui-card") || cardFragment.firstElementChild;
-  if (!cardElement) return document.createDocumentFragment();
 
-  const body = cardElement.querySelector(".ui-card__body");
-  body.appendChild(
-    createFormRow({
-      id: "kunden-name",
-      label: "Name",
-      placeholder: "z. B. Anna Schmidt",
-    })
-  );
-  body.appendChild(
-    createFormRow({
-      id: "kunden-email",
-      label: "E-Mail",
-      type: "email",
-      placeholder: "anna@example.com",
-    })
-  );
-  body.appendChild(
-    createFormRow({
-      id: "kunden-telefon",
-      label: "Telefon",
-      type: "tel",
-      placeholder: "+49 160 000000",
-    })
-  );
+  focusHeading(section);
+}
 
-  const footer = cardElement.querySelector(".ui-card__footer");
-  footer.appendChild(
-    createButton({
-      label: "Speichern",
-      variant: "primary",
-    })
-  );
-  footer.appendChild(
-    createButton({
-      label: "Abbrechen",
-      variant: "secondary",
-    })
-  );
+async function renderForm(section, view, id) {
+  const mode = view === "create" ? "create" : "edit";
+  let existing = null;
 
-  return cardElement;
+  if (mode === "edit") {
+    if (!kundenCache.length) await fetchKunden();
+    existing = kundenCache.find((k) => k.id === id) || (await getKunde(id));
+    if (!existing) {
+      section.innerHTML = `
+        <h1>Kunde nicht gefunden</h1>
+        <p>Kein Eintrag mit ID <strong>${id}</strong> vorhanden.</p>
+        <p><a href="#/kunden">Zurück zur Liste</a></p>
+      `;
+      focusHeading(section);
+      return;
+    }
+  }
+
+  section.innerHTML = `
+    <h1>${mode === "create" ? "Neuer Kunde" : "Kunde bearbeiten"}</h1>
+  `;
+
+  const form = document.createElement("form");
+  form.noValidate = true;
+  section.appendChild(form);
+
+  const fields = [
+    { name: "vorname", label: "Vorname*", required: true },
+    { name: "nachname", label: "Nachname*", required: true },
+    { name: "email", label: "E-Mail*", required: true, type: "email" },
+    { name: "telefon", label: "Telefon" },
+    { name: "adresse", label: "Adresse" },
+    { name: "notizen", label: "Notizen", textarea: true },
+  ];
+
+  const refs = {};
+  fields.forEach((field) => {
+    const wrapper = document.createElement("div");
+    wrapper.className = "kunden-form-row";
+    const idAttr = `kunden-${field.name}`;
+    const label = document.createElement("label");
+    label.setAttribute("for", idAttr);
+    label.textContent = field.label;
+    const input = field.textarea
+      ? document.createElement("textarea")
+      : document.createElement("input");
+    input.id = idAttr;
+    input.name = field.name;
+    if (field.type) input.type = field.type;
+    input.value = existing?.[field.name] ?? "";
+    const error = document.createElement("div");
+    error.className = "form-error";
+    error.id = `${idAttr}-error`;
+    input.setAttribute("aria-describedby", error.id);
+    input.setAttribute("aria-invalid", "false");
+    wrapper.append(label, input, error);
+    form.appendChild(wrapper);
+    refs[field.name] = { input, error };
+  });
+
+  const actions = document.createElement("div");
+  actions.className = "kunden-actions";
+  const submit = document.createElement("button");
+  submit.type = "submit";
+  submit.className = "ui-btn ui-btn--primary";
+  submit.textContent = mode === "create" ? "Erstellen" : "Speichern";
+  const cancel = document.createElement("a");
+  cancel.className = "ui-btn ui-btn--quiet";
+  cancel.href = mode === "create" ? "#/kunden" : `#/kunden/${id}`;
+  cancel.textContent = "Abbrechen";
+  actions.append(submit, cancel);
+  form.appendChild(actions);
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const values = collectValues(refs);
+    const errors = validate(values);
+    applyErrors(refs, errors);
+    if (Object.keys(errors).length) {
+      const firstError = Object.values(refs).find((ref) => ref.error.textContent);
+      if (firstError) firstError.input.focus();
+      return;
+    }
+
+    if (mode === "create") {
+      await createKunde(values);
+      await fetchKunden();
+      setToast("Erstellt.");
+      window.location.hash = "#/kunden";
+    } else {
+      await updateKunde(id, values);
+      await fetchKunden();
+      setToast("Gespeichert.");
+      window.location.hash = `#/kunden/${id}`;
+    }
+  });
+
+  focusHeading(section);
+}
+
+function setToast(message) {
+  window[TOAST_KEY] = message;
+}
+
+function injectToast(section) {
+  const message = window[TOAST_KEY];
+  if (!message) return;
+  delete window[TOAST_KEY];
+  const notice = document.createElement("p");
+  notice.className = "kunden-toast";
+  notice.setAttribute("role", "status");
+  notice.textContent = message;
+  section.prepend(notice);
+}
+
+function collectValues(refs) {
+  const values = {};
+  Object.entries(refs).forEach(([key, ref]) => {
+    values[key] = ref.input.value.trim();
+  });
+  return values;
+}
+
+function validate(values) {
+  const errors = {};
+  if (!values.vorname) errors.vorname = "Bitte den Vornamen ausfüllen.";
+  if (!values.nachname) errors.nachname = "Bitte den Nachnamen ausfüllen.";
+  if (!values.email) {
+    errors.email = "Bitte eine E-Mail-Adresse angeben.";
+  } else if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(values.email)) {
+    errors.email = "Bitte eine gültige E-Mail-Adresse eingeben.";
+  }
+  return errors;
+}
+
+function applyErrors(refs, errors) {
+  Object.entries(refs).forEach(([key, ref]) => {
+    if (errors[key]) {
+      ref.error.textContent = errors[key];
+      ref.input.setAttribute("aria-invalid", "true");
+    } else {
+      ref.error.textContent = "";
+      ref.input.setAttribute("aria-invalid", "false");
+    }
+  });
 }

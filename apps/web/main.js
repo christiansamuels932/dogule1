@@ -18,12 +18,19 @@ const LAYOUT_URL = "../../modules/shared/layout.html";
 let layoutMain = null;
 let layoutPromise = null;
 
-function getRouteFromHash() {
+function getRouteInfo() {
   const raw = (window.location.hash || "").replace(/^#\/?/, "").trim().toLowerCase();
-  return VALID_MODULES.has(raw) ? raw : "dashboard";
+  const segments = raw ? raw.split("/").filter(Boolean) : [];
+  const moduleSlug = segments[0] || "dashboard";
+  const route = VALID_MODULES.has(moduleSlug) ? moduleSlug : "dashboard";
+  const params = route === moduleSlug ? segments.slice(1) : [];
+  const info = { module: route, segments: params, raw };
+  window.__DOGULE_ROUTE__ = info;
+  return info;
 }
 
-async function loadAndRender(route) {
+async function loadAndRender(routeInfo) {
+  const route = routeInfo.module;
   const layoutContainer = await ensureLayout();
   const container = layoutContainer || document.getElementById("dogule-main");
   if (!container) {
@@ -36,7 +43,7 @@ async function loadAndRender(route) {
     if (typeof mod.initModule !== "function") {
       throw new Error(`Module "${route}" missing export initModule(container)`);
     }
-    await mod.initModule(container);
+    await mod.initModule(container, routeInfo);
   } catch (err) {
     console.error(err);
     container.innerHTML = `
@@ -65,8 +72,8 @@ function setActiveLink(route) {
 }
 
 async function handleNavigation() {
-  const route = getRouteFromHash();
-  await loadAndRender(route);
+  const routeInfo = getRouteInfo();
+  await loadAndRender(routeInfo);
 }
 
 window.addEventListener("hashchange", handleNavigation);
