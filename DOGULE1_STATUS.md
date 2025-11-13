@@ -2,7 +2,7 @@
 
 ## Phase 1 — Scaffolding
 
-**Status:** Stations 1–9 complete. Station 10 planning in progress.
+**Status:** Stations 1–10 complete. Station 11 planning in progress.
 
 ### Station 1 — Tooling Check ✅
 
@@ -39,7 +39,7 @@ All essential tools verified and operational.
 - Created `modules/shared/shared.css` as the common baseline (system font stack, spacing, colors, list/link styles) and wired it into the new entrypoint.
 - Changes delivered on `feature/station5-navigation-shared` (`INIT_REPO_014`); branch merged back to `main`.
 
-**Next Action:** Station 10 — data plumbing + persistence strategy.
+**Next Action:** Station 11 — data transport + persistence strategy.
 
 ### Station 6 — Functional Routing Shell ✅
 
@@ -68,3 +68,10 @@ All essential tools verified and operational.
 - Router updates keep nav state in sync via shared data-route hooks; focus-visible styles remain centralized in shared CSS.
 - Dashboard and Kunden modules now render exclusively through shared components (cards, notices, badges, buttons, form rows, empty states) with German copy and no ad-hoc styles.
 - Lint/build green; work lives on `feature/station9-ui-components` (`INIT_REPO_018–025`). PR: https://github.com/christiansamuels932/dogule1/pull/9
+
+### Station 10 — Centralized Mock API & Module Wiring ✅
+
+- Added `modules/shared/api/` with delay helper, seeded in-memory DB, CRUD stubs, and barrel exports so modules can read/write mock data with simulated latency.
+- Seeded realistic mock datasets for Kunden, Kurse, and Trainer to unblock UI development without a backend.
+- Kunden and Kurse modules now fetch via `list("<table>")`, render shared-component cards/lists dynamically, and surface localized empty/error states while reusing existing UI primitives.
+- Validation via `pnpm lint` / `pnpm build`; work tracked on `feature/station10-data-mocks` (`INIT_REPO_026–029`). PR: https://github.com/christiansamuels932/dogule1/pull/11
