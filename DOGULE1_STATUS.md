@@ -2,7 +2,7 @@
 
 ## Phase 1 — Scaffolding
 
-**Status:** Stations 1–10 complete. Station 11 planning in progress.
+**Status:** Stations 1–10 complete and verified. Station 11 freshly restarted from the Station 10 baseline (branch `feature/station11-kunden-crud`) with layout/template loading fixed; implementation work resumes next.
 
 ### Station 1 — Tooling Check ✅
 
@@ -78,8 +78,7 @@ All essential tools verified and operational.
 
 ### Station 11 — Kunden CRUD (Phase 1) 🔄
 
-- Kunden module: list → detail → create → edit → delete, powered entirely by the `modules/shared/api/` mock DB.
-- Hash routes to support flows: `#/kunden`, `#/kunden/:id`, `#/kunden/new`, `#/kunden/:id/edit`; navigation updates must remain keyboard-accessible with focus management per route.
-- Forms (German labels) require: Vorname*, Nachname*, E-Mail\*, Telefon, Adresse, Notizen; enforce required fields + email format, display inline German errors, and optimistically update the in-memory list.
-- Acceptance: no Hunde link/payments/search/pagination/persistence yet, only mock CRUD with instant UI refresh, `pnpm lint` + `pnpm build` green.
-- Out of scope for this phase: Hunde link, payments, search, pagination, persistence; next step is implementing param routes + API stubs for richer flows.
+- 2025‑02‑14 reset: pulled latest `origin/main`, recreated `feature/station11-kunden-crud`, and re-applied only the baseline Station 10 artifacts so we can re-run the full Station 11 scope cleanly.
+- Fixed router regression discovered during sanity checks by preloading `modules/shared/components/templates.html` before any module import (`apps/web/main.js`), restoring Dashboard/Kurse rendering so Station 10 remains green.
+- Kunden module currently matches the Station 10 mock wiring (list/detail/form already call `listKunden`, `getKunde`, `createKunde`, `updateKunde`, `deleteKunde`). Station 11 implementation will now build the UX/validation polish, delete confirmation, and toast flows on top of this clean slate.
+- Outstanding work for acceptance: ensure all CRUD routes (`#/kunden`, `#/kunden/:id`, `#/kunden/new`, `#/kunden/:id/edit`) meet the spec (focus handling, German copy, validation, optimistic updates) and rerun `pnpm lint` / `pnpm build` before raising the PR.
