@@ -7,7 +7,7 @@ import {
   createEmptyState,
   createNotice,
   createSectionHeader,
-} from "../../shared/components/components.js";
+} from "../shared/components/components.js";
 
 const QUICK_ACTIONS = [
   { label: "Neuer Kurs", hash: "#/kurse" },

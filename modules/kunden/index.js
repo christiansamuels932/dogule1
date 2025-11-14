@@ -6,7 +6,7 @@ import {
   createKunde,
   updateKunde,
   deleteKunde,
-} from "../../shared/api/kunden.js";
+} from "../shared/api/kunden.js";
 
 let kundenCache = [];
 const TOAST_KEY = "__DOGULE_KUNDEN_TOAST__";
