@@ -15,8 +15,11 @@ const VALID_MODULES = new Set([
 ]);
 
 const LAYOUT_URL = "../../modules/shared/layout.html";
+const TEMPLATES_URL = "../../modules/shared/components/templates.html";
+const TEMPLATE_HOST_ID = "dogule-shared-templates";
 let layoutMain = null;
 let layoutPromise = null;
+let templatesPromise = null;
 
 function getRouteInfo() {
   const raw = (window.location.hash || "").replace(/^#\/?/, "").trim().toLowerCase();
@@ -32,6 +35,7 @@ function getRouteInfo() {
 async function loadAndRender(routeInfo) {
   const route = routeInfo.module;
   const layoutContainer = await ensureLayout();
+  await ensureTemplates();
   const container = layoutContainer || document.getElementById("dogule-main");
   if (!container) {
     console.error("Router error: #dogule-main not found in layout.");
@@ -142,4 +146,37 @@ function applyLayoutBody(layoutBody) {
   document.body.className = layoutBody.className;
   document.body.id = layoutBody.id || "";
   document.body.innerHTML = layoutBody.innerHTML;
+}
+
+async function ensureTemplates() {
+  if (document.getElementById(TEMPLATE_HOST_ID)) {
+    return true;
+  }
+  if (!templatesPromise) {
+    templatesPromise = loadTemplates();
+  }
+  return templatesPromise;
+}
+
+async function loadTemplates() {
+  try {
+    const response = await fetch(TEMPLATES_URL);
+    if (!response.ok) {
+      throw new Error(`Failed to load templates: ${response.status}`);
+    }
+    const html = await response.text();
+    let host = document.getElementById(TEMPLATE_HOST_ID);
+    if (!host) {
+      host = document.createElement("div");
+      host.id = TEMPLATE_HOST_ID;
+      host.hidden = true;
+      document.body.appendChild(host);
+    }
+    host.innerHTML = html;
+    return true;
+  } catch (error) {
+    console.error("DOGULE1_TEMPLATES_FAILED", error);
+    templatesPromise = null;
+    return false;
+  }
 }

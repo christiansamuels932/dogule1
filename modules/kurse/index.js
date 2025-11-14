@@ -8,8 +8,8 @@ import {
   createFormRow,
   createNotice,
   createSectionHeader,
-} from "../../shared/components/components.js";
-import { list } from "../../shared/api/crud.js";
+} from "../shared/components/components.js";
+import { list } from "../shared/api/crud.js";
 
 export async function initModule(container) {
   container.innerHTML = "";
