@@ -1,4 +1,4 @@
-// Standardized module interface for Dogule1
+// Kurse module – list/detail flows with mock API
 /* globals document, console, window */
 import {
   createBadge,
@@ -9,14 +9,45 @@ import {
   createNotice,
   createSectionHeader,
 } from "../shared/components/components.js";
-import { listKurse } from "../shared/api/index.js";
+import { listKurse, getKurs } from "../shared/api/index.js";
 
-export async function initModule(container) {
+let kursCache = [];
+
+export async function initModule(container, routeContext = { segments: [] }) {
   container.innerHTML = "";
-  const fragment = document.createDocumentFragment();
-
   const section = document.createElement("section");
-  section.className = "dogule-section";
+  section.className = "dogule-section kurse-view";
+  container.appendChild(section);
+
+  const { view, id } = resolveView(routeContext);
+
+  try {
+    if (view === "detail" && id) {
+      await renderDetail(section, id);
+    } else {
+      await renderList(section);
+    }
+  } catch (error) {
+    console.error("KURSE_VIEW_FAILED", error);
+    section.innerHTML = `
+      <h1>Fehler</h1>
+      <p>Kursansicht konnte nicht geladen werden.</p>
+      <p><a class="ui-btn ui-btn--quiet" href="#/kurse">Zurück zur Übersicht</a></p>
+    `;
+  }
+}
+
+function resolveView(routeContext = {}) {
+  const segments = routeContext.segments || [];
+  if (!segments.length) return { view: "list" };
+  const [first, second] = segments;
+  if (first === "new") return { view: "create" };
+  if (second === "edit") return { view: "edit", id: first };
+  return { view: "detail", id: first };
+}
+
+async function renderList(section) {
+  section.innerHTML = "";
   section.appendChild(
     createSectionHeader({
       title: "Kurse",
@@ -31,15 +62,104 @@ export async function initModule(container) {
     })
   );
 
+  const toolbar = buildCourseToolbarCard();
   const listCard = buildCourseListCard();
-  section.appendChild(buildCourseToolbarCard());
-  section.appendChild(listCard);
-  section.appendChild(buildCourseFormCard());
+  const formCard = buildCourseFormCard();
 
-  fragment.appendChild(section);
-  container.appendChild(fragment);
+  section.appendChild(toolbar);
+  section.appendChild(listCard);
+  section.appendChild(formCard);
 
   await populateCourses(listCard);
+  focusHeading(section);
+}
+
+async function renderDetail(section, id) {
+  section.innerHTML = "";
+  section.appendChild(
+    createSectionHeader({
+      title: "Kursdetails",
+      subtitle: "Alle Informationen auf einen Blick",
+      level: 2,
+    })
+  );
+
+  const detailFragment = createCard({
+    eyebrow: "",
+    title: "Kurs wird geladen ...",
+    body: "<p>Kurs wird geladen ...</p>",
+    footer: "",
+  });
+  const detailCard = detailFragment.querySelector(".ui-card") || detailFragment.firstElementChild;
+  if (!detailCard) return;
+  section.appendChild(detailCard);
+
+  const body = detailCard.querySelector(".ui-card__body");
+  const footer = detailCard.querySelector(".ui-card__footer");
+
+  try {
+    if (!kursCache.length) await fetchKurse();
+    let kurs = kursCache.find((k) => k.id === id);
+    if (!kurs) kurs = await getKurs(id);
+    if (!kurs) {
+      throw new Error(`Kurs ${id} nicht gefunden`);
+    }
+
+    detailCard.querySelector(".ui-card__eyebrow").textContent = formatStatusLabel(kurs.status);
+    detailCard.querySelector(".ui-card__title").textContent = kurs.title || "Ohne Titel";
+
+    body.innerHTML = "";
+    body.appendChild(renderDetailList(kurs));
+    body.appendChild(renderNotesBlock(kurs));
+    body.appendChild(renderMetaBlock(kurs));
+
+    footer.innerHTML = "";
+    footer.append(
+      createButton({
+        label: "Kurs bearbeiten",
+        variant: "primary",
+        onClick: () => {
+          window.location.hash = `#/kurse/${kurs.id}/edit`;
+        },
+      }),
+      createButton({
+        label: "Kurs löschen",
+        variant: "secondary",
+        onClick: () => {
+          window.alert?.("Löschfunktion folgt demnächst.");
+        },
+      })
+    );
+    const backLink = document.createElement("a");
+    backLink.className = "ui-btn ui-btn--quiet";
+    backLink.href = "#/kurse";
+    backLink.textContent = "Zurück zur Übersicht";
+    footer.append(backLink);
+  } catch (error) {
+    console.error("KURSE_DETAIL_FAILED", error);
+    body.innerHTML = "";
+    const noticeFragment = createNotice("Kurs konnte nicht geladen werden.", {
+      variant: "warn",
+      role: "alert",
+    });
+    body.appendChild(noticeFragment);
+    const backBtn = createButton({
+      label: "Zurück zur Übersicht",
+      variant: "primary",
+      onClick: () => {
+        window.location.hash = "#/kurse";
+      },
+    });
+    body.appendChild(backBtn);
+    if (footer) footer.innerHTML = "";
+  }
+
+  focusHeading(section);
+}
+
+async function fetchKurse() {
+  kursCache = await listKurse();
+  return kursCache;
 }
 
 function buildCourseToolbarCard() {
@@ -56,9 +176,9 @@ function buildCourseToolbarCard() {
   const createBtn = createButton({
     label: "Neuer Kurs",
     variant: "primary",
-  });
-  createBtn.addEventListener("click", () => {
-    window.location.hash = "#/kurse/new";
+    onClick: () => {
+      window.location.hash = "#/kurse/new";
+    },
   });
   body.appendChild(createBtn);
   body.appendChild(
@@ -139,15 +259,15 @@ async function populateCourses(cardElement) {
   const body = cardElement.querySelector(".ui-card__body");
   body.textContent = "Kurse werden geladen ...";
   try {
-    const courses = await listKurse();
+    const courses = await fetchKurse();
     body.innerHTML = "";
     if (!courses.length) {
       const emptyAction = createButton({
         label: "Neuer Kurs",
         variant: "primary",
-      });
-      emptyAction.addEventListener("click", () => {
-        window.location.hash = "#/kurse/new";
+        onClick: () => {
+          window.location.hash = "#/kurse/new";
+        },
       });
       body.appendChild(
         createEmptyState(
@@ -195,6 +315,8 @@ async function populateCourses(cardElement) {
       );
       footer.appendChild(statusBadge);
       footer.appendChild(createBadge(`${course.level || "Alltag"}`, "default"));
+
+      attachCourseNavigation(cardEl, course.id);
       body.appendChild(cardEl);
     });
   } catch (error) {
@@ -204,17 +326,31 @@ async function populateCourses(cardElement) {
       variant: "warn",
       role: "alert",
     });
+    body.appendChild(noticeFragment);
     const retryBtn = createButton({
       label: "Erneut versuchen",
       variant: "secondary",
+      onClick: () => populateCourses(cardElement),
     });
-    retryBtn.addEventListener("click", () => populateCourses(cardElement));
-    const noticeEl = noticeFragment.firstElementChild;
-    if (noticeEl) {
-      noticeEl.appendChild(retryBtn);
-    }
-    body.appendChild(noticeFragment);
+    body.appendChild(retryBtn);
   }
+}
+
+function attachCourseNavigation(cardEl, id) {
+  if (!cardEl) return;
+  cardEl.classList.add("kurse-list-item");
+  cardEl.setAttribute("role", "button");
+  cardEl.setAttribute("tabindex", "0");
+  const navigate = () => {
+    window.location.hash = `#/kurse/${id}`;
+  };
+  cardEl.addEventListener("click", navigate);
+  cardEl.addEventListener("keypress", (event) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      navigate();
+    }
+  });
 }
 
 function formatDate(value) {
@@ -261,4 +397,76 @@ function getStatusVariant(status) {
     default:
       return "info";
   }
+}
+
+function renderDetailList(kurs) {
+  const list = document.createElement("dl");
+  list.className = "kurs-detail-list";
+  [
+    { term: "Trainer", value: kurs.trainerName || "–" },
+    { term: "Datum", value: formatDate(kurs.date) },
+    { term: "Zeit", value: formatTimeRange(kurs.startTime, kurs.endTime) },
+    { term: "Ort", value: kurs.location || "–" },
+    { term: "Status", value: formatStatusLabel(kurs.status) },
+    {
+      term: "Kapazität",
+      value: `${kurs.bookedCount ?? 0} / ${kurs.capacity ?? 0}`,
+    },
+    { term: "Level", value: kurs.level || "–" },
+    { term: "Preis", value: formatPrice(kurs.price) },
+  ].forEach(({ term, value }) => {
+    const dt = document.createElement("dt");
+    dt.textContent = term;
+    const dd = document.createElement("dd");
+    dd.textContent = value;
+    list.append(dt, dd);
+  });
+  return list;
+}
+
+function renderNotesBlock(kurs) {
+  const wrapper = document.createElement("div");
+  wrapper.className = "kurs-detail-notes";
+  const heading = document.createElement("h3");
+  heading.textContent = "Notizen";
+  const text = document.createElement("p");
+  text.textContent = kurs.notes || "Keine Notizen vorhanden.";
+  wrapper.append(heading, text);
+  return wrapper;
+}
+
+function renderMetaBlock(kurs) {
+  const meta = document.createElement("p");
+  meta.className = "kurs-detail-meta";
+  meta.textContent = `Erstellt am ${formatDateTime(kurs.createdAt)} · Aktualisiert am ${formatDateTime(
+    kurs.updatedAt
+  )}`;
+  return meta;
+}
+
+function formatPrice(value) {
+  const amount = Number(value);
+  if (!Number.isFinite(amount) || amount <= 0) return "–";
+  return new Intl.NumberFormat("de-CH", {
+    style: "currency",
+    currency: "CHF",
+    minimumFractionDigits: 2,
+  }).format(amount);
+}
+
+function formatDateTime(value) {
+  if (!value) return "–";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "–";
+  return date.toLocaleString("de-CH", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
+}
+
+function focusHeading(root) {
+  const heading = root.querySelector("h1, h2");
+  if (!heading) return;
+  heading.setAttribute("tabindex", "-1");
+  heading.focus();
 }
