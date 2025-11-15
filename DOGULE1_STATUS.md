@@ -76,9 +76,10 @@ All essential tools verified and operational.
 - Kunden and Kurse modules now fetch via `list("<table>")`, render shared-component cards/lists dynamically, and surface localized empty/error states while reusing existing UI primitives.
 - Validation via `pnpm lint` / `pnpm build`; work tracked on `feature/station10-data-mocks` (`INIT_REPO_026–029`). PR: https://github.com/christiansamuels932/dogule1/pull/11
 
-### Station 11 — Kunden CRUD (Phase 1) 🔄
+### Station 11 — Kunden CRUD (Phase 1) ✅
 
-- 2025‑02‑14 reset: pulled latest `origin/main`, recreated `feature/station11-kunden-crud`, and re-applied only the baseline Station 10 artifacts so we can re-run the full Station 11 scope cleanly.
-- Fixed router regression discovered during sanity checks by preloading `modules/shared/components/templates.html` before any module import (`apps/web/main.js`), restoring Dashboard/Kurse rendering so Station 10 remains green.
-- Kunden module currently matches the Station 10 mock wiring (list/detail/form already call `listKunden`, `getKunde`, `createKunde`, `updateKunde`, `deleteKunde`). Station 11 implementation will now build the UX/validation polish, delete confirmation, and toast flows on top of this clean slate.
-- Outstanding work for acceptance: ensure all CRUD routes (`#/kunden`, `#/kunden/:id`, `#/kunden/new`, `#/kunden/:id/edit`) meet the spec (focus handling, German copy, validation, optimistic updates) and rerun `pnpm lint` / `pnpm build` before raising the PR.
+- Rebuilt Kunden data model across the mock API by seeding `vorname`, `nachname`, `email`, `telefon`, `adresse`, `notizen`, `createdAt`, `updatedAt`, ensuring `createKunde`/`updateKunde` keep timestamps fresh.
+- Polished the Kunden list/detail/form flows to show the rich fields with German copy, added delete confirmation, inline toasts, and error handling so CRUD failures don’t strand the UI.
+- Added optimistic button states, validation, and navigation feedback for create/edit/delete; shared helpers now format names, timestamps, and optional values consistently.
+- Security check fix: pinned `js-yaml@^4.1.1` via `pnpm.overrides` to satisfy the audit GitHub Action.
+- Local validation: `pnpm audit`, `pnpm lint`, `pnpm build`; branch `feature/station11-kunden-crud` pushed with PR **Station 11 – Kunden data model + UX polish** (#15) awaiting review.
