@@ -2,7 +2,7 @@
 
 ## Phase 1 — Scaffolding
 
-**Status:** Stations 1–10 complete and verified. Station 11 freshly restarted from the Station 10 baseline (branch `feature/station11-kunden-crud`) with layout/template loading fixed; implementation work resumes next.
+**Status:** Stations 1–10 complete and verified. Station 11 was restarted from the Station 10 baseline (branch `feature/station11-kunden-crud`) with layout/template loading fixed, and the follow-up Kurse CRUD polish for Station 12 is now merged; planning for Station 13 starts next.
 
 ### Station 1 — Tooling Check ✅
 
@@ -39,7 +39,7 @@ All essential tools verified and operational.
 - Created `modules/shared/shared.css` as the common baseline (system font stack, spacing, colors, list/link styles) and wired it into the new entrypoint.
 - Changes delivered on `feature/station5-navigation-shared` (`INIT_REPO_014`); branch merged back to `main`.
 
-**Next Action:** Station 11 — data transport + persistence strategy.
+**Next Action:** Prepare Station 13 scope (TBD) now that Station 12 landed cleanly.
 
 ### Station 6 — Functional Routing Shell ✅
 
@@ -82,3 +82,10 @@ All essential tools verified and operational.
 - Fixed router regression discovered during sanity checks by preloading `modules/shared/components/templates.html` before any module import (`apps/web/main.js`), restoring Dashboard/Kurse rendering so Station 10 remains green.
 - Kunden module currently matches the Station 10 mock wiring (list/detail/form already call `listKunden`, `getKunde`, `createKunde`, `updateKunde`, `deleteKunde`). Station 11 implementation will now build the UX/validation polish, delete confirmation, and toast flows on top of this clean slate.
 - Outstanding work for acceptance: ensure all CRUD routes (`#/kunden`, `#/kunden/:id`, `#/kunden/new`, `#/kunden/:id/edit`) meet the spec (focus handling, German copy, validation, optimistic updates) and rerun `pnpm lint` / `pnpm build` before raising the PR.
+
+### Station 12 — Kurse CRUD Polish ✅
+
+- Branch `feature/station12-kurse-crud` wires the Kurse create/edit form buttons directly into the shared submit handler (button `type="button"` + explicit click listener with diagnostic logging), preventing native submits from bypassing validation.
+- Removed the temporary “Debug-Kurs erstellen (Test)” control from the toolbar so only production-ready actions remain visible.
+- Harmonized toast feedback so create and edit paths both emit localized success/error notices via `setToast`/`showInlineToast`, matching the broader CRUD confirmation UX.
+- Husky + lint-staged run clean; branch pushed to origin for review while we prep the next routing milestone.
