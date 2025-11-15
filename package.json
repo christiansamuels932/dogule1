@@ -31,5 +31,10 @@
       "echo \"DLX-LS-DOC-001: prettier on staged non-code\"",
       "prettier --write"
     ]
+  },
+  "pnpm": {
+    "overrides": {
+      "js-yaml": "^4.1.1"
+    }
   }
 }
