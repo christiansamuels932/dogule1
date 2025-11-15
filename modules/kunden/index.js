@@ -87,8 +87,9 @@ async function renderList(section) {
       const item = document.createElement("li");
       const link = document.createElement("a");
       link.href = `#/kunden/${kunde.id}`;
-      const fullName = kunde.name ?? `${kunde.vorname ?? ""} ${kunde.nachname ?? ""}`.trim();
-      link.textContent = `${fullName || "Unbenannt"} – ${kunde.email ?? "keine E-Mail"}`;
+      const fullName = formatFullName(kunde);
+      const email = kunde.email?.trim() || "keine E-Mail";
+      link.textContent = `${fullName} – ${email}`;
       item.appendChild(link);
       list.appendChild(item);
     });
@@ -113,15 +114,23 @@ async function renderDetail(section, id) {
     return;
   }
 
+  const fullName = formatFullName(kunde);
+  const detailRows = [
+    { label: "Name", value: fullName },
+    { label: "E-Mail", value: kunde.email },
+    { label: "Telefon", value: kunde.telefon },
+    { label: "Adresse", value: kunde.adresse },
+    { label: "Notizen", value: kunde.notizen },
+    { label: "Erstellt am", value: formatDateTime(kunde.createdAt) },
+    { label: "Aktualisiert am", value: formatDateTime(kunde.updatedAt) },
+  ]
+    .map(({ label, value }) => `<dt>${label}</dt><dd>${valueOrDash(value)}</dd>`)
+    .join("");
+
   section.innerHTML = `
     <h1>Kundendetails</h1>
     <dl class="kunden-details">
-      <dt>Vorname</dt><dd>${kunde.vorname ?? "–"}</dd>
-      <dt>Nachname</dt><dd>${kunde.nachname ?? "–"}</dd>
-      <dt>E-Mail</dt><dd>${kunde.email ?? "–"}</dd>
-      <dt>Telefon</dt><dd>${kunde.telefon ?? "–"}</dd>
-      <dt>Adresse</dt><dd>${kunde.adresse ?? "–"}</dd>
-      <dt>Notizen</dt><dd>${kunde.notizen ?? "–"}</dd>
+      ${detailRows}
     </dl>
     <div class="kunden-actions">
       <a class="ui-btn" href="#/kunden/${id}/edit">Bearbeiten</a>
@@ -131,11 +140,33 @@ async function renderDetail(section, id) {
   `;
   injectToast(section);
 
-  section.querySelector('[data-action="delete"]')?.addEventListener("click", async () => {
-    await deleteKunde(id);
-    await fetchKunden();
-    setToast("Gelöscht.");
-    window.location.hash = "#/kunden";
+  const deleteBtn = section.querySelector('[data-action="delete"]');
+  deleteBtn?.addEventListener("click", async () => {
+    if (deleteBtn.disabled) return;
+    const confirmed = window.confirm(`Soll "${fullName}" wirklich gelöscht werden?`);
+    if (!confirmed) return;
+    deleteBtn.disabled = true;
+    const originalLabel = deleteBtn.textContent;
+    deleteBtn.textContent = "Lösche ...";
+    let deleted = false;
+    try {
+      const result = await deleteKunde(id);
+      if (!result?.ok) {
+        throw new Error("Delete failed");
+      }
+      await fetchKunden();
+      deleted = true;
+      setToast("Kunde gelöscht.", "success");
+      window.location.hash = "#/kunden";
+    } catch (error) {
+      console.error("KUNDEN_DELETE_FAILED", error);
+      showInlineToast(section, "Löschen fehlgeschlagen. Bitte erneut versuchen.", "error");
+    } finally {
+      if (!deleted) {
+        deleteBtn.disabled = false;
+        deleteBtn.textContent = originalLabel;
+      }
+    }
   });
 
   focusHeading(section);
@@ -162,6 +193,7 @@ async function renderForm(section, view, id) {
   section.innerHTML = `
     <h1>${mode === "create" ? "Neuer Kunde" : "Kunde bearbeiten"}</h1>
   `;
+  injectToast(section);
 
   const form = document.createElement("form");
   form.noValidate = true;
@@ -225,32 +257,52 @@ async function renderForm(section, view, id) {
       return;
     }
 
-    if (mode === "create") {
-      await createKunde(values);
+    const defaultLabel = mode === "create" ? "Erstellen" : "Speichern";
+    const busyLabel = mode === "create" ? "Erstelle ..." : "Speichere ...";
+    submit.disabled = true;
+    submit.textContent = busyLabel;
+    let success = false;
+    try {
+      const result = mode === "create" ? await createKunde(values) : await updateKunde(id, values);
+      if (!result || !result.id) {
+        throw new Error("Save failed");
+      }
       await fetchKunden();
-      setToast("Erstellt.");
-      window.location.hash = "#/kunden";
-    } else {
-      await updateKunde(id, values);
-      await fetchKunden();
-      setToast("Gespeichert.");
-      window.location.hash = `#/kunden/${id}`;
+      success = true;
+      if (mode === "create") {
+        setToast("Kunde erstellt.", "success");
+        window.location.hash = "#/kunden";
+      } else {
+        setToast("Änderungen gespeichert.", "success");
+        window.location.hash = `#/kunden/${id}`;
+      }
+    } catch (error) {
+      console.error("KUNDEN_SAVE_FAILED", error);
+      showInlineToast(section, "Speichern fehlgeschlagen. Bitte erneut versuchen.", "error");
+    } finally {
+      if (!success) {
+        submit.disabled = false;
+        submit.textContent = defaultLabel;
+      }
     }
   });
 
   focusHeading(section);
 }
 
-function setToast(message) {
-  window[TOAST_KEY] = message;
+function setToast(message, tone = "info") {
+  window[TOAST_KEY] = { message, tone };
 }
 
 function injectToast(section) {
-  const message = window[TOAST_KEY];
-  if (!message) return;
+  section.querySelectorAll(".kunden-toast").forEach((node) => node.remove());
+  const toast = window[TOAST_KEY];
+  if (!toast) return;
   delete window[TOAST_KEY];
+  const { message, tone = "info" } =
+    typeof toast === "string" ? { message: toast, tone: "info" } : toast;
   const notice = document.createElement("p");
-  notice.className = "kunden-toast";
+  notice.className = `kunden-toast kunden-toast--${tone}`;
   notice.setAttribute("role", "status");
   notice.textContent = message;
   section.prepend(notice);
@@ -285,5 +337,31 @@ function applyErrors(refs, errors) {
       ref.error.textContent = "";
       ref.input.setAttribute("aria-invalid", "false");
     }
+  });
+}
+
+function showInlineToast(section, message, tone = "info") {
+  setToast(message, tone);
+  injectToast(section);
+}
+
+function formatFullName(kunde = {}) {
+  const fullName = `${kunde.vorname ?? ""} ${kunde.nachname ?? ""}`.trim();
+  return fullName || "Unbenannt";
+}
+
+function valueOrDash(value) {
+  if (value === null || value === undefined) return "–";
+  const str = typeof value === "string" ? value.trim() : String(value);
+  return str || "–";
+}
+
+function formatDateTime(value) {
+  if (!value) return "–";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "–";
+  return date.toLocaleString("de-CH", {
+    dateStyle: "medium",
+    timeStyle: "short",
   });
 }
