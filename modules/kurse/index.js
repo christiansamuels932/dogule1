@@ -9,9 +9,24 @@ import {
   createNotice,
   createSectionHeader,
 } from "../shared/components/components.js";
-import { listKurse, getKurs } from "../shared/api/index.js";
+import { listKurse, getKurs, createKurs, updateKurs } from "../shared/api/index.js";
 
 let kursCache = [];
+const TOAST_KEY = "__DOGULE_KURSE_TOAST__";
+const STATUS_OPTIONS = [
+  { value: "geplant", label: "Geplant" },
+  { value: "offen", label: "Offen" },
+  { value: "ausgebucht", label: "Ausgebucht" },
+  { value: "abgesagt", label: "Abgesagt" },
+];
+const LEVEL_OPTIONS = [
+  { value: "", label: "Bitte wählen" },
+  { value: "Welpen", label: "Welpen" },
+  { value: "Junghunde", label: "Junghunde" },
+  { value: "Alltag", label: "Alltag" },
+  { value: "Fortgeschrittene", label: "Fortgeschrittene" },
+  { value: "Sporthunde", label: "Sporthunde" },
+];
 
 export async function initModule(container, routeContext = { segments: [] }) {
   container.innerHTML = "";
@@ -24,6 +39,8 @@ export async function initModule(container, routeContext = { segments: [] }) {
   try {
     if (view === "detail" && id) {
       await renderDetail(section, id);
+    } else if (view === "create" || (view === "edit" && id)) {
+      await renderForm(section, view, id);
     } else {
       await renderList(section);
     }
@@ -61,14 +78,12 @@ async function renderList(section) {
       variant: "info",
     })
   );
+  injectToast(section);
 
   const toolbar = buildCourseToolbarCard();
   const listCard = buildCourseListCard();
-  const formCard = buildCourseFormCard();
-
   section.appendChild(toolbar);
   section.appendChild(listCard);
-  section.appendChild(formCard);
 
   await populateCourses(listCard);
   focusHeading(section);
@@ -83,6 +98,7 @@ async function renderDetail(section, id) {
       level: 2,
     })
   );
+  injectToast(section);
 
   const detailFragment = createCard({
     eyebrow: "",
@@ -157,6 +173,137 @@ async function renderDetail(section, id) {
   focusHeading(section);
 }
 
+async function renderForm(section, view, id) {
+  const mode = view === "create" ? "create" : "edit";
+  section.innerHTML = "";
+  section.appendChild(
+    createSectionHeader({
+      title: mode === "create" ? "Neuer Kurs" : "Kurs bearbeiten",
+      subtitle: mode === "create" ? "Lege einen neuen Kurs an." : "Passe die Kursdaten an.",
+      level: 2,
+    })
+  );
+  injectToast(section);
+
+  let existing = null;
+  if (mode === "edit") {
+    const loading = document.createElement("p");
+    loading.textContent = "Kurs wird geladen ...";
+    section.appendChild(loading);
+    try {
+      if (!kursCache.length) await fetchKurse();
+      existing = kursCache.find((kurs) => kurs.id === id) || (await getKurs(id));
+      if (!existing) {
+        throw new Error(`Kurs ${id} nicht gefunden`);
+      }
+    } catch (error) {
+      console.error("KURSE_FORM_LOAD_FAILED", error);
+      section.removeChild(loading);
+      section.appendChild(
+        createNotice("Kurs konnte nicht geladen werden.", {
+          variant: "warn",
+          role: "alert",
+        })
+      );
+      const backBtn = createButton({
+        label: "Zurück zur Übersicht",
+        variant: "primary",
+        onClick: () => {
+          window.location.hash = "#/kurse";
+        },
+      });
+      section.appendChild(backBtn);
+      focusHeading(section);
+      return;
+    }
+    section.removeChild(loading);
+  }
+
+  const formCardFragment = createCard({
+    eyebrow: "",
+    title: mode === "create" ? "Angaben zum Kurs" : existing?.title || "Angaben zum Kurs",
+    body: "",
+    footer: "",
+  });
+  const formCard = formCardFragment.querySelector(".ui-card") || formCardFragment.firstElementChild;
+  if (!formCard) return;
+  section.appendChild(formCard);
+
+  const form = document.createElement("form");
+  form.noValidate = true;
+  const body = formCard.querySelector(".ui-card__body");
+  body.appendChild(form);
+
+  const fields = buildFormFields(existing);
+  const refs = {};
+  fields.forEach((field) => {
+    const row = createFormRow(field.config);
+    const input = row.querySelector("input, select, textarea");
+    input.name = field.name;
+    if (field.config.type === "number") {
+      if (field.min !== undefined) input.min = field.min;
+      if (field.max !== undefined) input.max = field.max;
+      if (field.step) input.step = field.step;
+    }
+    if (field.setValue) {
+      field.setValue(input);
+    } else if (field.value !== undefined) {
+      input.value = field.value;
+    }
+    const hint = row.querySelector(".ui-form-row__hint");
+    hint.classList.add("sr-only");
+    refs[field.name] = { input, hint };
+    form.appendChild(row);
+  });
+
+  const actions = document.createElement("div");
+  actions.className = "kurse-form-actions";
+  const submit = document.createElement("button");
+  submit.type = "submit";
+  submit.className = "ui-btn ui-btn--primary";
+  submit.textContent = mode === "create" ? "Erstellen" : "Speichern";
+  const cancel = document.createElement("a");
+  cancel.className = "ui-btn ui-btn--quiet";
+  cancel.href = mode === "create" ? "#/kurse" : `#/kurse/${id}`;
+  cancel.textContent = "Abbrechen";
+  actions.append(submit, cancel);
+  formCard.querySelector(".ui-card__footer").appendChild(actions);
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const values = collectFormValues(refs);
+    const errors = validate(values);
+    applyErrors(refs, errors);
+    if (Object.keys(errors).length) {
+      const firstError = Object.values(refs).find((ref) => !ref.hint.classList.contains("sr-only"));
+      firstError?.input.focus();
+      return;
+    }
+
+    const payload = buildPayload(values);
+    const defaultLabel = submit.textContent;
+    submit.disabled = true;
+    submit.textContent = mode === "create" ? "Erstelle ..." : "Speichere ...";
+
+    try {
+      const result = mode === "create" ? await createKurs(payload) : await updateKurs(id, payload);
+      if (!result || !result.id) {
+        throw new Error("Save failed");
+      }
+      await fetchKurse();
+      setToast(mode === "create" ? "Kurs wurde erstellt." : "Kurs wurde aktualisiert.", "success");
+      window.location.hash = mode === "create" ? "#/kurse" : `#/kurse/${result.id}`;
+    } catch (error) {
+      console.error("KURSE_FORM_SAVE_FAILED", error);
+      showInlineToast(section, "Speichern fehlgeschlagen. Bitte erneut versuchen.", "error");
+      submit.disabled = false;
+      submit.textContent = defaultLabel;
+    }
+  });
+
+  focusHeading(section);
+}
+
 async function fetchKurse() {
   kursCache = await listKurse();
   return kursCache;
@@ -202,56 +349,6 @@ function buildCourseListCard() {
   if (!cardElement) return document.createDocumentFragment();
   const body = cardElement.querySelector(".ui-card__body");
   body.textContent = "Kurse werden geladen ...";
-  return cardElement;
-}
-
-function buildCourseFormCard() {
-  const cardFragment = createCard({
-    eyebrow: "",
-    title: "Kurs erfassen",
-    body: "",
-    footer: "",
-  });
-  const cardElement = cardFragment.querySelector(".ui-card") || cardFragment.firstElementChild;
-  if (!cardElement) return document.createDocumentFragment();
-
-  const body = cardElement.querySelector(".ui-card__body");
-  body.appendChild(
-    createFormRow({
-      id: "kurs-titel",
-      label: "Titel",
-      placeholder: "z. B. Anfänger 1",
-    })
-  );
-  body.appendChild(
-    createFormRow({
-      id: "kurs-trainer",
-      label: "Trainer",
-      placeholder: "z. B. Martina Frei",
-    })
-  );
-  body.appendChild(
-    createFormRow({
-      id: "kurs-datum",
-      label: "Datum",
-      type: "date",
-    })
-  );
-
-  const footer = cardElement.querySelector(".ui-card__footer");
-  footer.appendChild(
-    createButton({
-      label: "Speichern",
-      variant: "primary",
-    })
-  );
-  footer.appendChild(
-    createButton({
-      label: "Abbrechen",
-      variant: "secondary",
-    })
-  );
-
   return cardElement;
 }
 
@@ -462,6 +559,273 @@ function formatDateTime(value) {
     dateStyle: "medium",
     timeStyle: "short",
   });
+}
+
+function buildFormFields(existing = {}) {
+  const statusValue = existing?.status ?? "geplant";
+  const levelValue = existing?.level ?? "";
+  return [
+    {
+      name: "title",
+      value: existing?.title ?? "",
+      config: {
+        id: "kurs-title",
+        label: "Kurstitel*",
+        placeholder: "z. B. Welpentraining Kompakt",
+        required: true,
+      },
+    },
+    {
+      name: "trainerName",
+      value: existing?.trainerName ?? "",
+      config: {
+        id: "kurs-trainer",
+        label: "Trainer*",
+        placeholder: "z. B. Martina Frei",
+        required: true,
+      },
+    },
+    {
+      name: "date",
+      value: existing?.date ?? "",
+      config: {
+        id: "kurs-date",
+        label: "Datum*",
+        type: "date",
+        required: true,
+      },
+    },
+    {
+      name: "startTime",
+      value: existing?.startTime ?? "",
+      config: {
+        id: "kurs-start",
+        label: "Beginn*",
+        type: "time",
+        required: true,
+      },
+    },
+    {
+      name: "endTime",
+      value: existing?.endTime ?? "",
+      config: {
+        id: "kurs-end",
+        label: "Ende*",
+        type: "time",
+        required: true,
+      },
+    },
+    {
+      name: "location",
+      value: existing?.location ?? "",
+      config: {
+        id: "kurs-location",
+        label: "Ort*",
+        placeholder: "Trainingsplatz oder Treffpunkt",
+        required: true,
+      },
+    },
+    {
+      name: "status",
+      config: {
+        id: "kurs-status",
+        label: "Status*",
+        control: "select",
+        required: true,
+        options: STATUS_OPTIONS.map((option) => ({
+          value: option.value,
+          label: option.label,
+          selected: option.value === statusValue,
+        })),
+      },
+    },
+    {
+      name: "capacity",
+      value: existing?.capacity?.toString() ?? "",
+      config: {
+        id: "kurs-capacity",
+        label: "Kapazität*",
+        type: "number",
+        required: true,
+      },
+      min: "1",
+      step: "1",
+    },
+    {
+      name: "bookedCount",
+      value: existing?.bookedCount?.toString() ?? "",
+      config: {
+        id: "kurs-booked",
+        label: "Anmeldungen*",
+        type: "number",
+        required: true,
+      },
+      min: "0",
+      step: "1",
+    },
+    {
+      name: "level",
+      config: {
+        id: "kurs-level",
+        label: "Niveau",
+        control: "select",
+        options: LEVEL_OPTIONS.map((option) => ({
+          value: option.value,
+          label: option.label,
+          selected: option.value === levelValue,
+        })),
+      },
+    },
+    {
+      name: "price",
+      value: existing?.price ? String(existing.price) : "",
+      config: {
+        id: "kurs-price",
+        label: "Preis (CHF)",
+        type: "number",
+        placeholder: "z. B. 150",
+      },
+      min: "0",
+      step: "0.05",
+    },
+    {
+      name: "notes",
+      value: existing?.notes ?? "",
+      config: {
+        id: "kurs-notes",
+        label: "Notizen",
+        control: "textarea",
+        placeholder: "Besondere Hinweise zum Ablauf",
+      },
+    },
+  ];
+}
+
+function collectFormValues(refs) {
+  const values = {};
+  Object.entries(refs).forEach(([key, ref]) => {
+    const raw = ref.input.value;
+    values[key] = typeof raw === "string" ? raw.trim() : raw;
+  });
+  return values;
+}
+
+function validate(values) {
+  const errors = {};
+  const requiredFields = [
+    "title",
+    "trainerName",
+    "date",
+    "startTime",
+    "endTime",
+    "location",
+    "status",
+    "capacity",
+    "bookedCount",
+  ];
+  requiredFields.forEach((field) => {
+    if (!values[field]) {
+      errors[field] = "Bitte dieses Feld ausfüllen.";
+    }
+  });
+
+  const capacity = Number.parseInt(values.capacity, 10);
+  if (!Number.isFinite(capacity) || capacity <= 0) {
+    errors.capacity = "Kapazität muss größer als 0 sein.";
+  }
+
+  const booked = Number.parseInt(values.bookedCount, 10);
+  if (!Number.isFinite(booked) || booked < 0) {
+    errors.bookedCount = "Anmeldungen müssen 0 oder größer sein.";
+  } else if (Number.isFinite(capacity) && booked > capacity) {
+    errors.bookedCount = "Anmeldungen dürfen die Kapazität nicht überschreiten.";
+  }
+
+  const startMinutes = toMinutes(values.startTime);
+  const endMinutes = toMinutes(values.endTime);
+  if (values.startTime && startMinutes === null) {
+    errors.startTime = "Bitte gültigen Beginn (HH:MM) eingeben.";
+  }
+  if (values.endTime && endMinutes === null) {
+    errors.endTime = "Bitte gültiges Ende (HH:MM) eingeben.";
+  }
+  if (startMinutes !== null && endMinutes !== null && endMinutes <= startMinutes) {
+    errors.endTime = "Ende muss nach dem Beginn liegen.";
+  }
+
+  if (values.price) {
+    const price = Number(values.price);
+    if (!Number.isFinite(price) || price < 0) {
+      errors.price = "Bitte gültigen Preis eingeben.";
+    }
+  }
+
+  return errors;
+}
+
+function applyErrors(refs, errors) {
+  Object.entries(refs).forEach(([key, ref]) => {
+    const hint = ref.hint;
+    const input = ref.input;
+    if (errors[key]) {
+      hint.textContent = errors[key];
+      hint.classList.remove("sr-only");
+      input.setAttribute("aria-invalid", "true");
+    } else {
+      hint.textContent = "";
+      hint.classList.add("sr-only");
+      input.setAttribute("aria-invalid", "false");
+    }
+  });
+}
+
+function buildPayload(values) {
+  return {
+    title: values.title,
+    trainerName: values.trainerName,
+    date: values.date,
+    startTime: values.startTime,
+    endTime: values.endTime,
+    location: values.location,
+    status: values.status,
+    capacity: Number.parseInt(values.capacity, 10),
+    bookedCount: Number.parseInt(values.bookedCount, 10),
+    level: values.level || "",
+    price: values.price ? Number(values.price) : 0,
+    notes: values.notes || "",
+  };
+}
+
+function toMinutes(value) {
+  if (!value || typeof value !== "string") return null;
+  const [hourStr, minuteStr] = value.split(":");
+  const hours = Number.parseInt(hourStr, 10);
+  const minutes = Number.parseInt(minuteStr, 10);
+  if (!Number.isFinite(hours) || !Number.isFinite(minutes)) return null;
+  return hours * 60 + minutes;
+}
+
+function setToast(message, tone = "info") {
+  window[TOAST_KEY] = { message, tone };
+}
+
+function injectToast(section) {
+  section.querySelectorAll(".kurse-toast").forEach((node) => node.remove());
+  const toast = window[TOAST_KEY];
+  if (!toast) return;
+  delete window[TOAST_KEY];
+  const { message, tone = "info" } =
+    typeof toast === "string" ? { message: toast, tone: "info" } : toast;
+  const notice = document.createElement("p");
+  notice.className = `kurse-toast kurse-toast--${tone}`;
+  notice.setAttribute("role", "status");
+  notice.textContent = message;
+  section.prepend(notice);
+}
+
+function showInlineToast(section, message, tone = "info") {
+  setToast(message, tone);
+  injectToast(section);
 }
 
 function focusHeading(root) {
