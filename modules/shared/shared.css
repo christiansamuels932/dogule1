@@ -39,3 +39,16 @@ a:focus-visible {
 .dogule-section h2 {
   margin-bottom: 0.5rem;
 }
+
+.kurse-list-item {
+  cursor: pointer;
+  transition:
+    box-shadow 150ms ease,
+    transform 150ms ease;
+}
+
+.kurse-list-item:hover,
+.kurse-list-item:focus-visible {
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.16);
+  transform: translateY(-1px);
+}
