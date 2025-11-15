@@ -9,7 +9,7 @@ import {
   createNotice,
   createSectionHeader,
 } from "../shared/components/components.js";
-import { listKurse, getKurs, createKurs, updateKurs } from "../shared/api/index.js";
+import { listKurse, getKurs, createKurs, updateKurs, deleteKurs } from "../shared/api/index.js";
 
 let kursCache = [];
 const TOAST_KEY = "__DOGULE_KURSE_TOAST__";
@@ -130,22 +130,19 @@ async function renderDetail(section, id) {
     body.appendChild(renderMetaBlock(kurs));
 
     footer.innerHTML = "";
-    footer.append(
-      createButton({
-        label: "Kurs bearbeiten",
-        variant: "primary",
-        onClick: () => {
-          window.location.hash = `#/kurse/${kurs.id}/edit`;
-        },
-      }),
-      createButton({
-        label: "Kurs löschen",
-        variant: "secondary",
-        onClick: () => {
-          window.alert?.("Löschfunktion folgt demnächst.");
-        },
-      })
-    );
+    const editBtn = createButton({
+      label: "Kurs bearbeiten",
+      variant: "primary",
+      onClick: () => {
+        window.location.hash = `#/kurse/${kurs.id}/edit`;
+      },
+    });
+    const deleteBtn = createButton({
+      label: "Kurs löschen",
+      variant: "secondary",
+    });
+    deleteBtn.addEventListener("click", () => handleDeleteKurs(section, kurs.id, deleteBtn));
+    footer.append(editBtn, deleteBtn);
     const backLink = document.createElement("a");
     backLink.className = "ui-btn ui-btn--quiet";
     backLink.href = "#/kurse";
@@ -826,6 +823,31 @@ function injectToast(section) {
 function showInlineToast(section, message, tone = "info") {
   setToast(message, tone);
   injectToast(section);
+}
+
+async function handleDeleteKurs(section, id, button) {
+  if (button?.disabled) return;
+  const confirmed = window.confirm(
+    "Kurs löschen?\nMöchtest du diesen Kurs wirklich löschen? Dieser Vorgang kann nicht rückgängig gemacht werden."
+  );
+  if (!confirmed) return;
+  const originalLabel = button.textContent;
+  button.disabled = true;
+  button.textContent = "Lösche ...";
+  try {
+    const result = await deleteKurs(id);
+    if (!result?.ok) {
+      throw new Error("Delete failed");
+    }
+    await fetchKurse();
+    setToast("Kurs wurde gelöscht.", "success");
+    window.location.hash = "#/kurse";
+  } catch (error) {
+    console.error("KURSE_DELETE_FAILED", error);
+    showInlineToast(section, "Fehler beim Löschen des Kurses.", "error");
+    button.disabled = false;
+    button.textContent = originalLabel;
+  }
 }
 
 function focusHeading(root) {
