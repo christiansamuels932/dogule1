@@ -40,6 +40,9 @@ export async function initModule(container, routeContext = { segments: [] }) {
     if (view === "detail" && id) {
       await renderDetail(section, id);
     } else if (view === "create" || (view === "edit" && id)) {
+      if (view === "create") {
+        console.log("[Kurse] entering create route #/kurse/new");
+      }
       await renderForm(section, view, id);
     } else {
       await renderList(section);
@@ -228,6 +231,7 @@ async function renderForm(section, view, id) {
 
   const form = document.createElement("form");
   form.noValidate = true;
+  form.dataset.kursForm = "true";
   const body = formCard.querySelector(".ui-card__body");
   body.appendChild(form);
 
@@ -256,7 +260,7 @@ async function renderForm(section, view, id) {
   const actions = document.createElement("div");
   actions.className = "kurse-form-actions";
   const submit = document.createElement("button");
-  submit.type = "submit";
+  submit.type = "button";
   submit.className = "ui-btn ui-btn--primary";
   submit.textContent = mode === "create" ? "Erstellen" : "Speichern";
   const cancel = document.createElement("a");
@@ -266,36 +270,20 @@ async function renderForm(section, view, id) {
   actions.append(submit, cancel);
   formCard.querySelector(".ui-card__footer").appendChild(actions);
 
-  form.addEventListener("submit", async (event) => {
+  const submitContext = {
+    mode,
+    id,
+    refs,
+    section,
+    submit,
+  };
+  const kursFormSubmitHandler = (event) => handleKursFormSubmit(event, submitContext);
+
+  form.addEventListener("submit", kursFormSubmitHandler);
+  submit.addEventListener("click", (event) => {
     event.preventDefault();
-    const values = collectFormValues(refs);
-    const errors = validate(values);
-    applyErrors(refs, errors);
-    if (Object.keys(errors).length) {
-      const firstError = Object.values(refs).find((ref) => !ref.hint.classList.contains("sr-only"));
-      firstError?.input.focus();
-      return;
-    }
-
-    const payload = buildPayload(values);
-    const defaultLabel = submit.textContent;
-    submit.disabled = true;
-    submit.textContent = mode === "create" ? "Erstelle ..." : "Speichere ...";
-
-    try {
-      const result = mode === "create" ? await createKurs(payload) : await updateKurs(id, payload);
-      if (!result || !result.id) {
-        throw new Error("Save failed");
-      }
-      await fetchKurse();
-      setToast(mode === "create" ? "Kurs wurde erstellt." : "Kurs wurde aktualisiert.", "success");
-      window.location.hash = mode === "create" ? "#/kurse" : `#/kurse/${result.id}`;
-    } catch (error) {
-      console.error("KURSE_FORM_SAVE_FAILED", error);
-      showInlineToast(section, "Speichern fehlgeschlagen. Bitte erneut versuchen.", "error");
-      submit.disabled = false;
-      submit.textContent = defaultLabel;
-    }
+    console.log("[Kurse] form action button clicked");
+    kursFormSubmitHandler(event);
   });
 
   focusHeading(section);
@@ -823,6 +811,56 @@ function injectToast(section) {
 function showInlineToast(section, message, tone = "info") {
   setToast(message, tone);
   injectToast(section);
+}
+
+async function handleKursFormSubmit(event, { mode, id, refs, section, submit }) {
+  event.preventDefault();
+  console.log("[Kurse] handleKursFormSubmit fired, mode:", mode);
+  const values = collectFormValues(refs);
+  const errors = validate(values);
+  applyErrors(refs, errors);
+  if (Object.keys(errors).length) {
+    const firstError = Object.values(refs).find((ref) => !ref.hint.classList.contains("sr-only"));
+    firstError?.input.focus();
+    return;
+  }
+
+  const payload = buildPayload(values);
+  const defaultLabel = submit.textContent;
+  submit.disabled = true;
+  submit.textContent = mode === "create" ? "Erstelle ..." : "Speichere ...";
+
+  try {
+    let result;
+    if (mode === "create") {
+      result = await createKurs(payload);
+    } else {
+      result = await updateKurs(id, payload);
+    }
+    const createdId = result?.id;
+    if (!createdId) {
+      console.error("[Kurse] create/update returned no id, cannot navigate");
+      showInlineToast(section, "Kurs konnte nach dem Speichern nicht geladen werden.", "error");
+      return;
+    }
+    await fetchKurse();
+    if (mode === "create") {
+      setToast("Kurs wurde erstellt.", "success");
+    } else {
+      setToast("Kurs wurde aktualisiert.", "success");
+    }
+    window.location.hash = `#/kurse/${createdId}`;
+  } catch (error) {
+    console.error("[Kurse] error in form submit handler:", error);
+    const message =
+      mode === "create"
+        ? "Kurs konnte nicht erstellt werden."
+        : "Fehler beim Speichern des Kurses.";
+    showInlineToast(section, message, "error");
+  } finally {
+    submit.disabled = false;
+    submit.textContent = defaultLabel;
+  }
 }
 
 async function handleDeleteKurs(section, id, button) {
