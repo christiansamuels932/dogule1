@@ -1,5 +1,5 @@
 // Standardized module interface for Dogule1
-/* globals document, console */
+/* globals document, console, window */
 import {
   createBadge,
   createButton,
@@ -9,7 +9,7 @@ import {
   createNotice,
   createSectionHeader,
 } from "../shared/components/components.js";
-import { list } from "../shared/api/crud.js";
+import { listKurse } from "../shared/api/index.js";
 
 export async function initModule(container) {
   container.innerHTML = "";
@@ -53,12 +53,14 @@ function buildCourseToolbarCard() {
   if (!cardElement) return document.createDocumentFragment();
 
   const body = cardElement.querySelector(".ui-card__body");
-  body.appendChild(
-    createButton({
-      label: "Neuer Kurs",
-      variant: "primary",
-    })
-  );
+  const createBtn = createButton({
+    label: "Neuer Kurs",
+    variant: "primary",
+  });
+  createBtn.addEventListener("click", () => {
+    window.location.hash = "#/kurse/new";
+  });
+  body.appendChild(createBtn);
   body.appendChild(
     createButton({
       label: "Plan exportieren",
@@ -79,7 +81,7 @@ function buildCourseListCard() {
   const cardElement = cardFragment.querySelector(".ui-card") || cardFragment.firstElementChild;
   if (!cardElement) return document.createDocumentFragment();
   const body = cardElement.querySelector(".ui-card__body");
-  body.textContent = "Lade Kurse…";
+  body.textContent = "Kurse werden geladen ...";
   return cardElement;
 }
 
@@ -135,42 +137,128 @@ function buildCourseFormCard() {
 
 async function populateCourses(cardElement) {
   const body = cardElement.querySelector(".ui-card__body");
-  body.textContent = "Lade Kurse…";
+  body.textContent = "Kurse werden geladen ...";
   try {
-    const courses = await list("kurse");
+    const courses = await listKurse();
     body.innerHTML = "";
     if (!courses.length) {
+      const emptyAction = createButton({
+        label: "Neuer Kurs",
+        variant: "primary",
+      });
+      emptyAction.addEventListener("click", () => {
+        window.location.hash = "#/kurse/new";
+      });
       body.appendChild(
-        createEmptyState("Keine Kurse vorhanden", "Lege einen neuen Kurs an.", {
-          actionNode: createButton({
-            label: "Neuer Kurs",
-            variant: "primary",
-          }),
-        })
+        createEmptyState(
+          "Noch keine Kurse erfasst.",
+          "Lege den ersten Kurs an und plane dein Training.",
+          {
+            actionNode: emptyAction,
+          }
+        )
       );
       return;
     }
 
     courses.forEach((course) => {
       const courseCard = createCard({
-        eyebrow: course.trainer,
-        title: course.titel,
-        body: `<p>${course.datum ?? "Termin folgt"}</p>`,
+        eyebrow: formatDate(course.date),
+        title: course.title || "Ohne Titel",
+        body: "",
         footer: "",
       });
       const cardEl = courseCard.querySelector(".ui-card") || courseCard.firstElementChild;
       if (!cardEl) return;
-      cardEl.querySelector(".ui-card__footer").appendChild(createBadge("Geplant", "info"));
+      const cardBody = cardEl.querySelector(".ui-card__body");
+      const infoList = document.createElement("ul");
+      infoList.className = "kurs-info-list";
+      [
+        { label: "Zeit", value: formatTimeRange(course.startTime, course.endTime) },
+        { label: "Trainer", value: course.trainerName || "Noch nicht zugewiesen" },
+        {
+          label: "Kapazität",
+          value: `${course.bookedCount ?? 0} / ${course.capacity ?? 0}`,
+        },
+        { label: "Ort", value: course.location || "Noch offen" },
+      ].forEach(({ label, value }) => {
+        const item = document.createElement("li");
+        item.innerHTML = `<strong>${label}:</strong> ${value}`;
+        infoList.appendChild(item);
+      });
+      cardBody.appendChild(infoList);
+
+      const footer = cardEl.querySelector(".ui-card__footer");
+      const statusBadge = createBadge(
+        formatStatusLabel(course.status),
+        getStatusVariant(course.status)
+      );
+      footer.appendChild(statusBadge);
+      footer.appendChild(createBadge(`${course.level || "Alltag"}`, "default"));
       body.appendChild(cardEl);
     });
   } catch (error) {
     console.error("KURSE_LOAD_FAILED", error);
     body.innerHTML = "";
-    body.appendChild(
-      createNotice("Kurse konnten nicht geladen werden.", {
-        variant: "warn",
-        role: "alert",
-      })
-    );
+    const noticeFragment = createNotice("Fehler beim Laden der Kurse.", {
+      variant: "warn",
+      role: "alert",
+    });
+    const retryBtn = createButton({
+      label: "Erneut versuchen",
+      variant: "secondary",
+    });
+    retryBtn.addEventListener("click", () => populateCourses(cardElement));
+    const noticeEl = noticeFragment.firstElementChild;
+    if (noticeEl) {
+      noticeEl.appendChild(retryBtn);
+    }
+    body.appendChild(noticeFragment);
+  }
+}
+
+function formatDate(value) {
+  if (!value) return "Datum folgt";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleDateString("de-CH", {
+    weekday: "short",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+}
+
+function formatTimeRange(start, end) {
+  const safeStart = start || "00:00";
+  const safeEnd = end || "00:00";
+  return `${safeStart} – ${safeEnd}`;
+}
+
+function formatStatusLabel(status) {
+  const normalized = (status || "").toLowerCase();
+  switch (normalized) {
+    case "offen":
+      return "Offen";
+    case "ausgebucht":
+      return "Ausgebucht";
+    case "abgesagt":
+      return "Abgesagt";
+    case "geplant":
+    default:
+      return "Geplant";
+  }
+}
+
+function getStatusVariant(status) {
+  const normalized = (status || "").toLowerCase();
+  switch (normalized) {
+    case "offen":
+      return "ok";
+    case "ausgebucht":
+    case "abgesagt":
+      return "warn";
+    default:
+      return "info";
   }
 }
