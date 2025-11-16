@@ -1,8 +1,6 @@
-// Standardized module interface for Dogule1
-export function initModule(container) {
-  container.innerHTML = `
-    <section class="dogule-section">
-      <h1>Hunde</h1>
-    </section>
-  `;
+/* globals console, document */
+
+export default function initHundeModule() {
+  console.log("[Hunde] module loaded");
+  return document.createElement("div");
 }

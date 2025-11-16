@@ -44,10 +44,19 @@ async function loadAndRender(routeInfo) {
 
   try {
     const mod = await import(`/modules/${route}/index.js`);
-    if (typeof mod.initModule !== "function") {
-      throw new Error(`Module "${route}" missing export initModule(container)`);
+    const entry = typeof mod.initModule === "function" ? mod.initModule : mod.default;
+    if (typeof entry !== "function") {
+      throw new Error(`Module "${route}" missing export initModule(container) or default export`);
     }
-    await mod.initModule(container, routeInfo);
+    const result = await entry(container, routeInfo);
+    if (container && result) {
+      if (result instanceof window.Node) {
+        container.innerHTML = "";
+        container.appendChild(result);
+      } else if (typeof result === "string") {
+        container.innerHTML = result;
+      }
+    }
   } catch (err) {
     console.error(err);
     container.innerHTML = `
