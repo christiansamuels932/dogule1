@@ -33,12 +33,16 @@ export function initModule(container) {
       level: 1,
     })
   );
-  overviewSection.appendChild(
+  const statusCard = createStandardCard();
+  const statusBody = statusCard.querySelector(".ui-card__body");
+  resetCardBody(statusBody);
+  statusBody.appendChild(
     createNotice("Alles betriebsbereit.", {
       variant: "ok",
       role: "status",
     })
   );
+  overviewSection.appendChild(statusCard);
   appendSectionCard(overviewSection, buildActionsCard, "[DASHBOARD_ERR_ACTIONS]");
   appendSectionCard(overviewSection, buildMetricsCard, "[DASHBOARD_ERR_METRICS]");
   fragment.appendChild(overviewSection);
@@ -46,13 +50,7 @@ export function initModule(container) {
 }
 
 function buildActionsCard() {
-  const cardFragment = createCard({
-    eyebrow: "",
-    title: "Schnellaktionen",
-    body: "",
-    footer: "",
-  });
-  const cardElement = cardFragment.querySelector(".ui-card") || cardFragment.firstElementChild;
+  const cardElement = createStandardCard("Schnellaktionen");
   if (!cardElement) return document.createDocumentFragment();
 
   const bodyEl = cardElement.querySelector(".ui-card__body");
@@ -77,13 +75,7 @@ function buildActionsCard() {
 }
 
 function buildMetricsCard() {
-  const cardFragment = createCard({
-    eyebrow: "",
-    title: "Kennzahlen",
-    body: "",
-    footer: "",
-  });
-  const cardElement = cardFragment.querySelector(".ui-card") || cardFragment.firstElementChild;
+  const cardElement = createStandardCard("Kennzahlen");
   if (!cardElement) return document.createDocumentFragment();
 
   const bodyEl = cardElement.querySelector(".ui-card__body");
@@ -141,13 +133,7 @@ function appendStandardEmptyState(target) {
 }
 
 function buildErrorCard() {
-  const cardFragment = createCard({
-    eyebrow: "",
-    title: "Fehler",
-    body: "",
-    footer: "",
-  });
-  const cardElement = cardFragment.querySelector(".ui-card") || cardFragment.firstElementChild;
+  const cardElement = createStandardCard("Fehler");
   if (!cardElement) return document.createDocumentFragment();
   const body = cardElement.querySelector(".ui-card__body");
   resetCardBody(body);
@@ -158,4 +144,14 @@ function buildErrorCard() {
     })
   );
   return cardElement;
+}
+
+function createStandardCard(title = "") {
+  const cardFragment = createCard({
+    eyebrow: "",
+    title,
+    body: "",
+    footer: "",
+  });
+  return cardFragment.querySelector(".ui-card") || cardFragment.firstElementChild;
 }
