@@ -7,6 +7,7 @@ import {
   updateKunde,
   deleteKunde,
 } from "../shared/api/kunden.js";
+import { createSectionHeader, createCard } from "../shared/components/components.js";
 
 let kundenCache = [];
 const TOAST_KEY = "__DOGULE_KUNDEN_TOAST__";
@@ -139,6 +140,27 @@ async function renderDetail(section, id) {
     </div>
   `;
   injectToast(section);
+  const hundeSection = document.createElement("section");
+  hundeSection.className = "kunden-hunde-section";
+  hundeSection.appendChild(
+    createSectionHeader({
+      title: "Hunde",
+      subtitle: "",
+      level: 2,
+    })
+  );
+  const hundeCardFragment = createCard({
+    eyebrow: "",
+    title: "",
+    body: "",
+    footer: "",
+  });
+  const hundeCard =
+    hundeCardFragment.querySelector(".ui-card") || hundeCardFragment.firstElementChild;
+  if (hundeCard) {
+    hundeSection.appendChild(hundeCard);
+  }
+  section.appendChild(hundeSection);
 
   const deleteBtn = section.querySelector('[data-action="delete"]');
   deleteBtn?.addEventListener("click", async () => {
