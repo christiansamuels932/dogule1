@@ -19,7 +19,9 @@ import {
   updateKurs,
   deleteKurs,
   listHunde,
+  getKunde,
   listKunden,
+  listFinanzenByKundeId,
 } from "../shared/api/index.js";
 
 let kursCache = [];
@@ -143,7 +145,9 @@ async function renderDetail(section, id) {
     body.appendChild(renderNotesBlock(kurs));
     body.appendChild(renderMetaBlock(kurs));
     const linkedHunde = await collectLinkedHunde(kurs);
+    const kundenFinanzen = await buildKursKundenFinanzen(linkedHunde);
     const linkedKunden = await collectLinkedKunden(linkedHunde);
+    section.__kursFinanzen = kundenFinanzen;
 
     footer.innerHTML = "";
     const editBtn = createButton({
@@ -326,6 +330,40 @@ function appendLinkedSections(section, linkedHunde, linkedKunden) {
 }
 
 const KURSE_FINANCE_SECTION_TITLES = ["Finanzübersicht", "Offene Beträge", "Zahlungshistorie"];
+
+async function buildKursKundenFinanzen(linkedHunde = []) {
+  if (!Array.isArray(linkedHunde) || !linkedHunde.length) return [];
+  const financeResults = [];
+  const seen = new Set();
+  for (const hund of linkedHunde) {
+    const kundeId = hund?.kundenId;
+    if (!kundeId || seen.has(kundeId)) continue;
+    seen.add(kundeId);
+    let kunde = null;
+    try {
+      kunde = await getKunde(kundeId);
+    } catch (error) {
+      console.error("KURSE_FINANZ_KUNDE_FAILED", error);
+    }
+    if (!kunde) continue;
+    let finanzen = [];
+    try {
+      finanzen = await listFinanzenByKundeId(kunde.id);
+    } catch (finanzenError) {
+      console.error("KURSE_FINANZ_FETCH_FAILED", finanzenError);
+    }
+    const zahlungen = finanzen.filter((entry) => entry.typ === "zahlung");
+    const offeneBetraege = finanzen.filter((entry) => entry.typ === "offen");
+    const lastZahlung = zahlungen.length ? zahlungen[zahlungen.length - 1] : null;
+    financeResults.push({
+      kundeId: kunde.id,
+      offeneBetraege,
+      zahlungen,
+      lastZahlung,
+    });
+  }
+  return financeResults;
+}
 
 function appendFinancePlaceholderSections(section) {
   if (!section) return;
