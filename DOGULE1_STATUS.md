@@ -126,6 +126,16 @@ All essential tools verified and operational.
 
 **Next Action:** Prepare Station 16 planning (Chat 16 kickoff).
 
+### Station 16 — Hunde Finanzen ✅
+
+- Branch `feature/station16-hunde-finanzen`; PR https://github.com/christiansamuels932/dogule1/pull/?? (pending).
+- Step 1: Added Finanzübersicht/Offene Beträge/Zahlungshistorie placeholders to Hund detail using shared cards/empty states.
+- Step 2: Wired Hund detail to fetch the zugehörige Kunde plus dessen Finanzdaten via new finanzen API helper.
+- Step 3: Rendered real finance data for each Hund (latest payment, total offen, offene Posten list, Zahlungshistorie) using shared cards and empty states.
+- Step 4: Final spacing/style polish so Hunde finance sections mirror the Kunden module.
+
+**Next Action:** Prepare Station 17 planning.
+
 ### Global Requirements
 
 - All modules must auto-generate IDs for new items, and each detail/edit view must display the ID alongside a small safety button that allows manual override. This rule applies to every entity (Kunden, Hunde, Kurse, etc.) and must be enforced after Station 17 during the CRUD refinement pass.
