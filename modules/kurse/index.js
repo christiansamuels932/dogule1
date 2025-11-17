@@ -9,6 +9,9 @@ import {
   createNotice,
   createSectionHeader,
 } from "../shared/components/components.js";
+
+const createSection = createSectionHeader;
+const createEmpty = (message) => createEmptyState(message, "", {});
 import {
   listKurse,
   getKurs,
@@ -162,6 +165,7 @@ async function renderDetail(section, id) {
     backLink.textContent = "Zurück zur Übersicht";
     footer.append(backLink);
     appendLinkedSections(section, linkedHunde, linkedKunden);
+    appendFinancePlaceholderSections(section);
   } catch (error) {
     console.error("KURSE_DETAIL_FAILED", error);
     body.innerHTML = "";
@@ -319,6 +323,38 @@ function appendLinkedSections(section, linkedHunde, linkedKunden) {
     kundenSection.appendChild(kundenCard);
   }
   section.appendChild(kundenSection);
+}
+
+const KURSE_FINANCE_SECTION_TITLES = ["Finanzübersicht", "Offene Beträge", "Zahlungshistorie"];
+
+function appendFinancePlaceholderSections(section) {
+  if (!section) return;
+  KURSE_FINANCE_SECTION_TITLES.forEach((title) => {
+    const financeSection = document.createElement("section");
+    financeSection.className = "kurse-finanz-section";
+    financeSection.appendChild(
+      createSection({
+        title,
+        subtitle: "",
+        level: 2,
+      })
+    );
+    const cardFragment = createCard({
+      eyebrow: "",
+      title: "",
+      body: "",
+      footer: "",
+    });
+    const card = cardFragment.querySelector(".ui-card") || cardFragment.firstElementChild;
+    if (!card) return;
+    const body = card.querySelector(".ui-card__body");
+    if (body) {
+      body.innerHTML = "";
+      body.appendChild(createEmpty("Keine Daten verfügbar."));
+    }
+    financeSection.appendChild(card);
+    section.appendChild(financeSection);
+  });
 }
 
 function formatCustomerName(kunde = {}) {
