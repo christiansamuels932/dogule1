@@ -9,7 +9,14 @@ import {
   createNotice,
   createSectionHeader,
 } from "../shared/components/components.js";
-import { listKurse, getKurs, createKurs, updateKurs, deleteKurs } from "../shared/api/index.js";
+import {
+  listKurse,
+  getKurs,
+  createKurs,
+  updateKurs,
+  deleteKurs,
+  listHunde,
+} from "../shared/api/index.js";
 
 let kursCache = [];
 const TOAST_KEY = "__DOGULE_KURSE_TOAST__";
@@ -131,6 +138,7 @@ async function renderDetail(section, id) {
     body.appendChild(renderDetailList(kurs));
     body.appendChild(renderNotesBlock(kurs));
     body.appendChild(renderMetaBlock(kurs));
+    const linkedHunde = await collectLinkedHunde(kurs);
 
     footer.innerHTML = "";
     const editBtn = createButton({
@@ -151,7 +159,7 @@ async function renderDetail(section, id) {
     backLink.href = "#/kurse";
     backLink.textContent = "Zurück zur Übersicht";
     footer.append(backLink);
-    appendLinkedPlaceholders(section);
+    appendLinkedSections(section, linkedHunde);
   } catch (error) {
     console.error("KURSE_DETAIL_FAILED", error);
     body.innerHTML = "";
@@ -174,7 +182,19 @@ async function renderDetail(section, id) {
   focusHeading(section);
 }
 
-function appendLinkedPlaceholders(section) {
+async function collectLinkedHunde(kurs) {
+  const ids = Array.isArray(kurs.hundIds) ? kurs.hundIds : [];
+  if (!ids.length) return [];
+  try {
+    const hunde = await listHunde();
+    return hunde.filter((hund) => ids.includes(hund.id));
+  } catch (error) {
+    console.error("KURSE_LINKED_HUNDE_FAILED", error);
+    return [];
+  }
+}
+
+function appendLinkedSections(section, linkedHunde) {
   const hundeSection = document.createElement("section");
   hundeSection.className = "kurse-linked-section";
   hundeSection.appendChild(
@@ -196,7 +216,31 @@ function appendLinkedPlaceholders(section) {
     const body = hundeCard.querySelector(".ui-card__body");
     if (body) {
       body.innerHTML = "";
-      body.appendChild(createEmptyState("Noch keine Daten", "", {}));
+      if (!linkedHunde.length) {
+        body.appendChild(createEmptyState("Noch keine Daten", "", {}));
+      } else {
+        linkedHunde.forEach((hund) => {
+          const cardFragment = createCard({
+            eyebrow: hund.rasse || "",
+            title: hund.name || "Unbenannter Hund",
+            body: `<p>Rufname: ${hund.rufname || "–"}</p>`,
+            footer: "",
+          });
+          const cardEl = cardFragment.querySelector(".ui-card") || cardFragment.firstElementChild;
+          if (!cardEl) return;
+          cardEl.classList.add("kurse-linked-hund");
+          cardEl.addEventListener("click", () => {
+            window.location.hash = `#/hunde/${hund.id}`;
+          });
+          cardEl.addEventListener("keypress", (event) => {
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              window.location.hash = `#/hunde/${hund.id}`;
+            }
+          });
+          body.appendChild(cardEl);
+        });
+      }
     }
     hundeSection.appendChild(hundeCard);
   }
