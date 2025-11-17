@@ -118,6 +118,7 @@ async function renderDetail(section, id) {
 
   const fullName = formatFullName(kunde);
   const detailRows = [
+    { label: "Kunden-ID", value: kunde.kundenCode || kunde.id },
     { label: "Name", value: fullName },
     { label: "E-Mail", value: kunde.email },
     { label: "Telefon", value: kunde.telefon },
@@ -209,11 +210,11 @@ async function renderDetail(section, id) {
 }
 
 async function renderForm(section, view, id) {
+  if (!kundenCache.length) await fetchKunden();
   const mode = view === "create" ? "create" : "edit";
   let existing = null;
 
   if (mode === "edit") {
-    if (!kundenCache.length) await fetchKunden();
     existing = kundenCache.find((k) => k.id === id) || (await getKunde(id));
     if (!existing) {
       section.innerHTML = `
@@ -235,7 +236,17 @@ async function renderForm(section, view, id) {
   form.noValidate = true;
   section.appendChild(form);
 
+  const kundenCodeValue =
+    mode === "edit" ? (existing?.kundenCode ?? "") : generateNextKundenCode(kundenCache);
+
   const fields = [
+    {
+      name: "kundenCode",
+      label: "Kunden-ID*",
+      required: true,
+      readOnly: true,
+      value: kundenCodeValue,
+    },
     { name: "vorname", label: "Vorname*", required: true },
     { name: "nachname", label: "Nachname*", required: true },
     { name: "email", label: "E-Mail*", required: true, type: "email" },
@@ -258,7 +269,11 @@ async function renderForm(section, view, id) {
     input.id = idAttr;
     input.name = field.name;
     if (field.type) input.type = field.type;
-    input.value = existing?.[field.name] ?? "";
+    const initialValue = field.value !== undefined ? field.value : (existing?.[field.name] ?? "");
+    input.value = initialValue;
+    if (field.readOnly) {
+      input.readOnly = true;
+    }
     const error = document.createElement("div");
     error.className = "form-error";
     error.id = `${idAttr}-error`;
@@ -354,6 +369,9 @@ function collectValues(refs) {
 
 function validate(values) {
   const errors = {};
+  if (!values.kundenCode) {
+    errors.kundenCode = "Kunden-ID fehlt.";
+  }
   if (!values.vorname) errors.vorname = "Bitte den Vornamen ausfüllen.";
   if (!values.nachname) errors.nachname = "Bitte den Nachnamen ausfüllen.";
   if (!values.email) {
@@ -408,6 +426,21 @@ function formatHundeListEntry(hund = {}) {
   const rufname = (hund.rufname || "").trim() || "kein Rufname";
   const rasse = (hund.rasse || "").trim() || "unbekannte Rasse";
   return `${name} – ${rufname} · ${rasse}`;
+}
+
+function generateNextKundenCode(list = []) {
+  let max = 0;
+  list.forEach((kunde) => {
+    const source = (kunde.kundenCode || kunde.id || "").trim();
+    const match = source.match(/(\d+)/);
+    if (!match) return;
+    const num = Number.parseInt(match[1], 10);
+    if (Number.isFinite(num) && num > max) {
+      max = num;
+    }
+  });
+  const nextNumber = max + 1;
+  return `K-${String(nextNumber).padStart(3, "0")}`;
 }
 
 function formatFullName(kunde = {}) {

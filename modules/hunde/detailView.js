@@ -5,7 +5,7 @@ import {
   createNotice,
   createSectionHeader,
 } from "../shared/components/components.js";
-import { getHund, deleteHund } from "../shared/api/hunde.js";
+import { deleteHund, listHunde } from "../shared/api/hunde.js";
 import { getKunde } from "../shared/api/kunden.js";
 import { injectHundToast, setHundToast } from "./formView.js";
 
@@ -13,6 +13,7 @@ export async function createHundeDetailView(container, hundId) {
   if (!container) return;
   container.innerHTML = "";
   container.classList.add("hunde-view");
+  window.scrollTo(0, 0);
 
   container.appendChild(
     createSectionHeader({
@@ -39,7 +40,8 @@ export async function createHundeDetailView(container, hundId) {
     if (!hundId) {
       throw new Error("Keine Hunde-ID angegeben");
     }
-    const hund = await getHund(hundId);
+    const hunde = await listHunde();
+    const hund = hunde.find((entry) => entry.id === hundId);
     if (!hund) {
       throw new Error(`Hund ${hundId} nicht gefunden`);
     }
