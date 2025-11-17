@@ -111,9 +111,9 @@ export async function createHundeDetailView(container, hundId) {
         },
       })
     );
-    container.appendChild(buildFinanzPlaceholderSection("Finanzübersicht"));
-    container.appendChild(buildFinanzPlaceholderSection("Offene Beträge"));
-    container.appendChild(buildFinanzPlaceholderSection("Zahlungshistorie"));
+    container.appendChild(buildFinanzUebersichtSection(container.__linkedFinanzen || []));
+    container.appendChild(buildFinanzOffeneSection(container.__linkedFinanzen || []));
+    container.appendChild(buildFinanzHistorieSection(container.__linkedFinanzen || []));
   } catch (error) {
     console.error("HUNDE_DETAIL_FAILED", error);
     body.innerHTML = "";
@@ -198,12 +198,12 @@ async function buildLinkedKurseSection(hundId) {
   return section;
 }
 
-function buildFinanzPlaceholderSection(title) {
+function buildFinanzUebersichtSection(finanzen = []) {
   const section = document.createElement("section");
   section.className = "hunde-finanz-section";
   section.appendChild(
     createSectionHeader({
-      title,
+      title: "Finanzübersicht",
       subtitle: "",
       level: 2,
     })
@@ -219,7 +219,122 @@ function buildFinanzPlaceholderSection(title) {
   const body = card.querySelector(".ui-card__body");
   if (body) {
     body.innerHTML = "";
-    body.appendChild(createEmptyState("Keine Daten vorhanden.", "", {}));
+    const payments = finanzen.filter((entry) => entry.typ === "zahlung");
+    const latest = payments.length ? payments[payments.length - 1] : null;
+    if (!latest && !finanzen.some((entry) => entry.typ === "offen")) {
+      body.appendChild(createEmptyState("Keine Daten vorhanden.", "", {}));
+    } else {
+      const info = document.createElement("dl");
+      info.className = "hunde-finanz-info";
+      const addRow = (label, value) => {
+        const dt = document.createElement("dt");
+        dt.textContent = label;
+        const dd = document.createElement("dd");
+        dd.textContent = value;
+        info.append(dt, dd);
+      };
+      addRow(
+        "Letzte Zahlung",
+        latest
+          ? `${formatDateTime(latest.datum)} – CHF ${Number(latest.betrag || 0).toFixed(2)}`
+          : "Keine Zahlungen"
+      );
+      const openSum = finanzen
+        .filter((entry) => entry.typ === "offen")
+        .reduce((total, entry) => total + Number(entry.betrag || 0), 0);
+      addRow("Offen gesamt", `CHF ${openSum.toFixed(2)}`);
+      body.appendChild(info);
+    }
+  }
+  section.appendChild(card);
+  return section;
+}
+
+function buildFinanzOffeneSection(finanzen = []) {
+  const section = document.createElement("section");
+  section.className = "hunde-finanz-section";
+  section.appendChild(
+    createSectionHeader({
+      title: "Offene Beträge",
+      subtitle: "",
+      level: 2,
+    })
+  );
+  const cardFragment = createCard({
+    eyebrow: "",
+    title: "",
+    body: "",
+    footer: "",
+  });
+  const card = cardFragment.querySelector(".ui-card") || cardFragment.firstElementChild;
+  if (!card) return section;
+  const body = card.querySelector(".ui-card__body");
+  if (body) {
+    body.innerHTML = "";
+    const offen = finanzen.filter((entry) => entry.typ === "offen");
+    if (!offen.length) {
+      body.appendChild(createEmptyState("Keine Daten vorhanden.", "", {}));
+    } else {
+      const sum = offen.reduce((total, entry) => total + Number(entry.betrag || 0), 0);
+      const summary = document.createElement("p");
+      summary.innerHTML = `<strong>Total offen:</strong> CHF ${sum.toFixed(2)}`;
+      body.appendChild(summary);
+      offen.forEach((entry) => {
+        const itemFragment = createCard({
+          eyebrow: entry.beschreibung || "Offener Posten",
+          title: `CHF ${Number(entry.betrag || 0).toFixed(2)}`,
+          body: `<p>${formatDateTime(entry.datum)}</p>`,
+          footer: "",
+        });
+        const itemCard = itemFragment.querySelector(".ui-card") || itemFragment.firstElementChild;
+        if (itemCard) body.appendChild(itemCard);
+      });
+    }
+  }
+  section.appendChild(card);
+  return section;
+}
+
+function buildFinanzHistorieSection(finanzen = []) {
+  const section = document.createElement("section");
+  section.className = "hunde-finanz-section";
+  section.appendChild(
+    createSectionHeader({
+      title: "Zahlungshistorie",
+      subtitle: "",
+      level: 2,
+    })
+  );
+  const cardFragment = createCard({
+    eyebrow: "",
+    title: "",
+    body: "",
+    footer: "",
+  });
+  const card = cardFragment.querySelector(".ui-card") || cardFragment.firstElementChild;
+  if (!card) return section;
+  const body = card.querySelector(".ui-card__body");
+  if (body) {
+    body.innerHTML = "";
+    const payments = finanzen
+      .filter((entry) => entry.typ === "zahlung")
+      .slice()
+      .reverse();
+    if (!payments.length) {
+      body.appendChild(createEmptyState("Keine Daten vorhanden.", "", {}));
+    } else {
+      payments.forEach((entry) => {
+        const paymentCardFragment = createCard({
+          eyebrow: formatDateTime(entry.datum),
+          title: `CHF ${Number(entry.betrag || 0).toFixed(2)}`,
+          body: `<p>${entry.beschreibung || "Zahlung"}</p>`,
+          footer: "",
+        });
+        const paymentCard =
+          paymentCardFragment.querySelector(".ui-card") || paymentCardFragment.firstElementChild;
+        if (paymentCard) body.appendChild(paymentCard);
+      });
+    }
   }
   section.appendChild(card);
   return section;
