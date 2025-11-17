@@ -558,18 +558,35 @@ function renderFinanzOverview(finanzen = []) {
   const body = card.querySelector(".ui-card__body");
   if (body) {
     body.innerHTML = "";
-    const payments = finanzen.filter((entry) => entry.typ === "zahlung");
-    if (!payments.length) {
-      body.appendChild(createEmptyState("Noch keine Daten", "", {}));
-    } else {
-      const latest = payments[payments.length - 1];
-      const block = document.createElement("div");
-      block.className = "kunden-finanz-uebersicht";
-      block.innerHTML = `
-        <p><strong>Letzte Zahlung:</strong> ${formatDateTime(latest.datum)} – CHF ${latest.betrag.toFixed(2)}</p>
-        <p>${latest.beschreibung || ""}</p>
-      `;
-      body.appendChild(block);
+    const payments = finanzen
+      .filter((entry) => entry.typ === "zahlung")
+      .slice()
+      .reverse();
+    const latest = payments.length ? payments[payments.length - 1] : null;
+    const openSum = finanzen
+      .filter((entry) => entry.typ === "offen")
+      .reduce((total, entry) => total + Number(entry.betrag || 0), 0);
+    const infoList = document.createElement("dl");
+    infoList.className = "kunden-finanz-info";
+    const addInfoRow = (label, value) => {
+      const dt = document.createElement("dt");
+      dt.textContent = label;
+      const dd = document.createElement("dd");
+      dd.textContent = value;
+      infoList.append(dt, dd);
+    };
+    addInfoRow(
+      "Letzte Zahlung",
+      latest
+        ? `${formatDateTime(latest.datum)} – CHF ${Number(latest.betrag || 0).toFixed(2)}`
+        : "Keine Zahlungen"
+    );
+    addInfoRow("Offen gesamt", `CHF ${openSum.toFixed(2)}`);
+    body.appendChild(infoList);
+    if (latest?.beschreibung) {
+      const note = document.createElement("p");
+      note.textContent = latest.beschreibung;
+      body.appendChild(note);
     }
   }
   section.appendChild(card);
@@ -603,8 +620,18 @@ function renderOffeneBetraege(finanzen = []) {
     } else {
       const sum = openEntries.reduce((total, entry) => total + Number(entry.betrag || 0), 0);
       const summary = document.createElement("p");
-      summary.innerHTML = `<strong>Gesamt:</strong> CHF ${sum.toFixed(2)}`;
+      summary.innerHTML = `<strong>Total offen:</strong> CHF ${sum.toFixed(2)}`;
       body.appendChild(summary);
+      const list = document.createElement("ul");
+      list.className = "kunden-offene-liste";
+      openEntries.forEach((entry) => {
+        const item = document.createElement("li");
+        item.innerHTML = `<strong>${entry.beschreibung || "Posten"}</strong> – CHF ${Number(
+          entry.betrag || 0
+        ).toFixed(2)} (${formatDateTime(entry.datum)})`;
+        list.appendChild(item);
+      });
+      body.appendChild(list);
     }
   }
   section.appendChild(card);
