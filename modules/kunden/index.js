@@ -8,7 +8,12 @@ import {
   deleteKunde,
 } from "../shared/api/kunden.js";
 import { listHunde } from "../shared/api/hunde.js";
-import { createSectionHeader, createCard } from "../shared/components/components.js";
+import { listKurse } from "../shared/api/kurse.js";
+import {
+  createSectionHeader,
+  createCard,
+  createEmptyState,
+} from "../shared/components/components.js";
 
 let kundenCache = [];
 const TOAST_KEY = "__DOGULE_KUNDEN_TOAST__";
@@ -137,6 +142,24 @@ async function renderDetail(section, id) {
   } catch (error) {
     console.error("KUNDEN_HUNDE_LOAD_FAILED", error);
   }
+  let linkedKurse = [];
+  try {
+    const kurse = await listKurse();
+    const hundIds = new Set(linkedHunde.map((hund) => hund.id));
+    linkedKurse = kurse.filter(
+      (kurs) => Array.isArray(kurs.hundIds) && kurs.hundIds.some((hundId) => hundIds.has(hundId))
+    );
+    const unique = [];
+    const seen = new Set();
+    linkedKurse.forEach((kurs) => {
+      if (seen.has(kurs.id)) return;
+      seen.add(kurs.id);
+      unique.push(kurs);
+    });
+    linkedKurse = unique;
+  } catch (error) {
+    console.error("KUNDEN_KURSE_LOAD_FAILED", error);
+  }
 
   section.innerHTML = `
     <h1>Kundendetails</h1>
@@ -176,6 +199,7 @@ async function renderDetail(section, id) {
     hundeSection.appendChild(hundeCard);
   }
   section.appendChild(hundeSection);
+  section.appendChild(renderKundenKurseSection(linkedKurse));
 
   const deleteBtn = section.querySelector('[data-action="delete"]');
   deleteBtn?.addEventListener("click", async () => {
@@ -441,6 +465,59 @@ function generateNextKundenCode(list = []) {
   });
   const nextNumber = max + 1;
   return `K-${String(nextNumber).padStart(3, "0")}`;
+}
+
+function renderKundenKurseSection(kurse = []) {
+  const section = document.createElement("section");
+  section.className = "kunden-kurse-section";
+  section.appendChild(
+    createSectionHeader({
+      title: "Kurse dieses Kunden",
+      subtitle: "",
+      level: 2,
+    })
+  );
+  const cardFragment = createCard({
+    eyebrow: "",
+    title: "",
+    body: "",
+    footer: "",
+  });
+  const card = cardFragment.querySelector(".ui-card") || cardFragment.firstElementChild;
+  if (card) {
+    const body = card.querySelector(".ui-card__body");
+    if (body) {
+      body.innerHTML = "";
+      if (!kurse.length) {
+        body.appendChild(createEmptyState("Noch keine Kurse", "", {}));
+      } else {
+        kurse.forEach((kurs) => {
+          const kursCardFragment = createCard({
+            eyebrow: formatDateTime(kurs.date),
+            title: kurs.title || "Ohne Titel",
+            body: `<p>${kurs.location || "Ort folgt"}</p>`,
+            footer: "",
+          });
+          const kursCard =
+            kursCardFragment.querySelector(".ui-card") || kursCardFragment.firstElementChild;
+          if (!kursCard) return;
+          kursCard.classList.add("kunden-kurs-item");
+          kursCard.addEventListener("click", () => {
+            window.location.hash = `#/kurse/${kurs.id}`;
+          });
+          kursCard.addEventListener("keypress", (event) => {
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              window.location.hash = `#/kurse/${kurs.id}`;
+            }
+          });
+          body.appendChild(kursCard);
+        });
+      }
+    }
+    section.appendChild(card);
+  }
+  return section;
 }
 
 function formatFullName(kunde = {}) {
