@@ -1,11 +1,12 @@
 # Codex Step Log
 
-- Station 18 Step 2: Expanded modules/shared/alpha-checklist.md with acceptance items for each module category.
-- Station 18 Step 3: Captured alpha findings per module in modules/shared/alpha-findings.md and committed the notes.
-- Station 18 Step 4: Added modules/shared/alpha-fix-plan.md with ordered routing→UI→empty state→error→detail→list→form→console→ID override→Kurs-ID actions and committed it.
-- Station 18 Step 5: Cleaned up dashboard routing by turning quick actions into links, updated placeholder HTML, and removed button-based handlers.
-- Station 18 Step 6: Passed dashboard UI consistency by rebuilding quick action/metric cards with shared components and standardized empty states.
-- Station 18 Step 6a: Normalized dashboard empty states with shared helper wrapper and consistent text.
-- Station 18 Step 8: Added try/catch handlers for dashboard cards, logged errors with DASHBOARD codes, and display shared error notices inside fallback cards.
-- Station 18 Step 9: Normalized dashboard cards to shared card headers/bodies and added a status card for the notice.
-- Station 18 Step 10: Swapped dashboard quick-action/metrics rendering to shared list pattern with normalized empty states.
+- **Station 18 Step 2 (completed):** Built the initial alpha-readiness checklist skeletons for Dashboard, Kunden, Hunde, Kurse in `modules/shared/alpha-checklist.md`, listing routing/UI/empty/error/detail/list/form/console items so every subsequent step has explicit checkboxes.
+- **Station 18 Step 3 (completed):** Performed a static audit (dev server blocked) and documented every concrete issue per module in `modules/shared/alpha-findings.md`, covering missing shared components, ID override gaps, console noise, and inconsistent empty states.
+- **Station 18 Step 4 (completed):** Authored `modules/shared/alpha-fix-plan.md`, sequencing remediation tasks module-by-module in the mandated order (routing → UI consistency → empty-states → error-states → detail views → list views → form views → console cleanliness → ID overrides → Kurs-ID visibility).
+- **Station 18 Step 5 (completed):** Converted dashboard quick actions to proper hash links, updated the fallback HTML placeholder, removed inline click handlers, and committed the routing cleanup.
+- **Station 18 Step 6 (completed):** Rebuilt dashboard quick-action and metric cards with shared helpers, standardized empty states, and ensured initModule mounts cleanly into `#dogule-main`.
+- **Station 18 Step 6a (completed):** Added helper utilities to reset card bodies and append the “Keine Daten vorhanden.” empty state consistently, removing any bespoke placeholders.
+- **Station 18 Step 8 (completed):** Wrapped each dashboard card builder in try/catch, logging `console.error("[DASHBOARD_ERR_*"]` codes and rendering the shared error notice (`createNotice` “Fehler beim Laden der Daten.”) when failures occur.
+- **Station 18 Step 9 (completed):** Introduced `createStandardCard()` so the notice, quick actions, metrics, and error fallbacks all use identical card shells with shared headers/bodies, preventing duplicate content on remount.
+- **Station 18 Step 10 (completed):** Replaced ad-hoc `<div>`/`<dl>` structures with normalized list bodies for quick actions and metrics, re-rendering into cleared containers and keeping empty states centralized.
+- **Station 18 Step 11 (next up):** Begin applying the same alpha plan to the Kunden module—focus on list/detail/form refactors (shared cards + form rows), standardizing empty/error states, and implementing the ID override control; this step is not yet started/completed.
