@@ -202,6 +202,9 @@ async function renderDetail(section, id) {
   }
   section.appendChild(hundeSection);
   section.appendChild(renderKundenKurseSection(linkedKurse));
+  section.appendChild(renderKundenFinanzSection("Finanzübersicht"));
+  section.appendChild(renderKundenFinanzSection("Offene Beträge"));
+  section.appendChild(renderKundenFinanzSection("Zahlungshistorie"));
 
   const deleteBtn = section.querySelector('[data-action="delete"]');
   deleteBtn?.addEventListener("click", async () => {
@@ -516,6 +519,34 @@ function renderKundenKurseSection(kurse = []) {
           body.appendChild(kursCard);
         });
       }
+    }
+    section.appendChild(card);
+  }
+  return section;
+}
+
+function renderKundenFinanzSection(title) {
+  const section = document.createElement("section");
+  section.className = "kunden-finanz-section";
+  section.appendChild(
+    createSectionHeader({
+      title,
+      subtitle: "",
+      level: 2,
+    })
+  );
+  const cardFragment = createCard({
+    eyebrow: "",
+    title: "",
+    body: "",
+    footer: "",
+  });
+  const card = cardFragment.querySelector(".ui-card") || cardFragment.firstElementChild;
+  if (card) {
+    const body = card.querySelector(".ui-card__body");
+    if (body) {
+      body.innerHTML = "";
+      body.appendChild(createEmptyState("Noch keine Daten", "", {}));
     }
     section.appendChild(card);
   }
