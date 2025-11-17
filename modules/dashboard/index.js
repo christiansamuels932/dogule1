@@ -1,5 +1,5 @@
 // Standardized module interface for Dogule1
-/* globals document */
+/* globals document, console */
 import {
   createBadge,
   createCard,
@@ -39,8 +39,8 @@ export function initModule(container) {
       role: "status",
     })
   );
-  overviewSection.appendChild(buildActionsCard());
-  overviewSection.appendChild(buildMetricsCard());
+  appendSectionCard(overviewSection, buildActionsCard, "[DASHBOARD_ERR_ACTIONS]");
+  appendSectionCard(overviewSection, buildMetricsCard, "[DASHBOARD_ERR_METRICS]");
   fragment.appendChild(overviewSection);
   container.appendChild(fragment);
 }
@@ -117,6 +117,18 @@ function buildMetricsCard() {
   return cardElement;
 }
 
+function appendSectionCard(section, builder, errorCode) {
+  try {
+    const node = builder();
+    if (node) {
+      section.appendChild(node);
+    }
+  } catch (error) {
+    console.error(errorCode, error);
+    section.appendChild(buildErrorCard());
+  }
+}
+
 function resetCardBody(target) {
   if (target) {
     target.innerHTML = "";
@@ -126,4 +138,24 @@ function resetCardBody(target) {
 function appendStandardEmptyState(target) {
   if (!target) return;
   target.appendChild(createEmptyState("Keine Daten vorhanden.", ""));
+}
+
+function buildErrorCard() {
+  const cardFragment = createCard({
+    eyebrow: "",
+    title: "Fehler",
+    body: "",
+    footer: "",
+  });
+  const cardElement = cardFragment.querySelector(".ui-card") || cardFragment.firstElementChild;
+  if (!cardElement) return document.createDocumentFragment();
+  const body = cardElement.querySelector(".ui-card__body");
+  resetCardBody(body);
+  body.appendChild(
+    createNotice("Fehler beim Laden der Daten.", {
+      variant: "warn",
+      role: "alert",
+    })
+  );
+  return cardElement;
 }
