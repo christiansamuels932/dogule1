@@ -107,6 +107,9 @@ export async function createHundeDetailView(container, hundId) {
         },
       })
     );
+    container.appendChild(buildFinanzPlaceholderSection("Finanzübersicht"));
+    container.appendChild(buildFinanzPlaceholderSection("Offene Beträge"));
+    container.appendChild(buildFinanzPlaceholderSection("Zahlungshistorie"));
   } catch (error) {
     console.error("HUNDE_DETAIL_FAILED", error);
     body.innerHTML = "";
@@ -186,6 +189,33 @@ async function buildLinkedKurseSection(hundId) {
         body.appendChild(kursCard);
       });
     }
+  }
+  section.appendChild(card);
+  return section;
+}
+
+function buildFinanzPlaceholderSection(title) {
+  const section = document.createElement("section");
+  section.className = "hunde-finanz-section";
+  section.appendChild(
+    createSectionHeader({
+      title,
+      subtitle: "",
+      level: 2,
+    })
+  );
+  const cardFragment = createCard({
+    eyebrow: "",
+    title: "",
+    body: "",
+    footer: "",
+  });
+  const card = cardFragment.querySelector(".ui-card") || cardFragment.firstElementChild;
+  if (!card) return section;
+  const body = card.querySelector(".ui-card__body");
+  if (body) {
+    body.innerHTML = "";
+    body.appendChild(createEmptyState("Keine Daten vorhanden.", "", {}));
   }
   section.appendChild(card);
   return section;
