@@ -134,7 +134,15 @@ All essential tools verified and operational.
 - Step 3: Rendered real finance data for each Hund (latest payment, total offen, offene Posten list, Zahlungshistorie) using shared cards and empty states.
 - Step 4: Final spacing/style polish so Hunde finance sections mirror the Kunden module.
 
-**Next Action:** Prepare Station 17 planning.
+### Station 17 — Kurse Finanzen ✅
+
+- Branch `feature/station17-kurse-finanzen`; PR https://github.com/christiansamuels932/dogule1/pull/?? (pending).
+- Step 1: Added Finanzübersicht/Offene Beträge/Zahlungshistorie placeholder sections beneath the bestehende Hunde/Kunden-Verbünde im Kursdetail, matching the shared card layout.
+- Step 2: Reused the Hund → Kunde Beziehung to resolve every Kunde eines Kurses, fetched deren Finanzen über `listFinanzenByKundeId`, und sammelte sie als `section.__kursFinanzen`.
+- Step 3: Rendered a minimal aggregated view per Kunde (letzte Zahlung, offene Beträge, Zahlungshistorie) using shared cards/rows so each Abschnitt zeigt rohe Einträge ohne Summen.
+- Step 4: Final polish—removed leftover console logs, aligned section spacing with Kunden/Hunde finance blocks, and unified all finance empty states with the “Keine Daten vorhanden.” phrasing.
+
+**Next Action:** Start Station 18 planning.
 
 ### Global Requirements
 
