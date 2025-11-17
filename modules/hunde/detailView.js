@@ -224,26 +224,39 @@ function buildFinanzUebersichtSection(finanzen = []) {
     if (!latest && !finanzen.some((entry) => entry.typ === "offen")) {
       body.appendChild(createEmptyState("Keine Daten vorhanden.", "", {}));
     } else {
-      const info = document.createElement("dl");
-      info.className = "hunde-finanz-info";
-      const addRow = (label, value) => {
-        const dt = document.createElement("dt");
-        dt.textContent = label;
-        const dd = document.createElement("dd");
-        dd.textContent = value;
-        info.append(dt, dd);
-      };
-      addRow(
-        "Letzte Zahlung",
-        latest
-          ? `${formatDateTime(latest.datum)} – CHF ${Number(latest.betrag || 0).toFixed(2)}`
-          : "Keine Zahlungen"
-      );
-      const openSum = finanzen
-        .filter((entry) => entry.typ === "offen")
-        .reduce((total, entry) => total + Number(entry.betrag || 0), 0);
-      addRow("Offen gesamt", `CHF ${openSum.toFixed(2)}`);
-      body.appendChild(info);
+      const listFragment = createCard({
+        eyebrow: "",
+        title: "",
+        body: "",
+        footer: "",
+      });
+      const listCard = listFragment.querySelector(".ui-card") || listFragment.firstElementChild;
+      if (listCard) {
+        const listBody = listCard.querySelector(".ui-card__body");
+        if (listBody) {
+          const info = document.createElement("dl");
+          info.className = "hunde-finanz-info";
+          const addRow = (label, value) => {
+            const dt = document.createElement("dt");
+            dt.textContent = label;
+            const dd = document.createElement("dd");
+            dd.textContent = value;
+            info.append(dt, dd);
+          };
+          addRow(
+            "Letzte Zahlung",
+            latest
+              ? `${formatDateTime(latest.datum)} – CHF ${Number(latest.betrag || 0).toFixed(2)}`
+              : "Keine Zahlungen"
+          );
+          const openSum = finanzen
+            .filter((entry) => entry.typ === "offen")
+            .reduce((total, entry) => total + Number(entry.betrag || 0), 0);
+          addRow("Offen gesamt", `CHF ${openSum.toFixed(2)}`);
+          listBody.appendChild(info);
+        }
+        body.appendChild(listCard);
+      }
     }
   }
   section.appendChild(card);
@@ -276,9 +289,15 @@ function buildFinanzOffeneSection(finanzen = []) {
       body.appendChild(createEmptyState("Keine Daten vorhanden.", "", {}));
     } else {
       const sum = offen.reduce((total, entry) => total + Number(entry.betrag || 0), 0);
-      const summary = document.createElement("p");
-      summary.innerHTML = `<strong>Total offen:</strong> CHF ${sum.toFixed(2)}`;
-      body.appendChild(summary);
+      const summaryCardFragment = createCard({
+        eyebrow: "",
+        title: "",
+        body: `<p><strong>Total offen:</strong> CHF ${sum.toFixed(2)}</p>`,
+        footer: "",
+      });
+      const summaryCard =
+        summaryCardFragment.querySelector(".ui-card") || summaryCardFragment.firstElementChild;
+      if (summaryCard) body.appendChild(summaryCard);
       offen.forEach((entry) => {
         const itemFragment = createCard({
           eyebrow: entry.beschreibung || "Offener Posten",
