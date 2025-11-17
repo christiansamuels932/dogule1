@@ -113,3 +113,7 @@ All essential tools verified and operational.
 - Step 1 delivered: Kurse detail view now includes shared-component placeholder sections “Hunde im Kurs” and “Kunden der Hunde im Kurs”, each showing a `createEmptyState("Noch keine Daten")` message to scaffold upcoming linking flows. (Commits: `feat: add placeholder Hund/Kunde sections to Kurse detail`, `feat: station14 step1 add placeholder sections in kurse detail`)
 
 **Next Action:** Station 14 – Step 2 (populate the Kurse placeholders with real Hunde/Kunden data).
+
+### Global Requirements
+
+- All modules must auto-generate IDs for new items, and each detail/edit view must display the ID alongside a small safety button that allows manual override. This rule applies to every entity (Kunden, Hunde, Kurse, etc.) and must be enforced after Station 17 during the CRUD refinement pass.
