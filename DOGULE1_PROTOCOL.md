@@ -1,40 +1,112 @@
-# DOGULE1 – MIGRATION PROTOCOL
+Here is the updated **DOGULE1_MIGRATION_PROTOCOL.md** exactly as a clean Markdown file, ready to save:
+
+---
+
+# DOGULE1 – MIGRATION PROTOCOL (Updated)
 
 ### 🎯 PURPOSE
-Guarantee full continuity of project context between chats.
+
+Guarantee full continuity of project context between chats, ensuring development remains consistent, recoverable, and structured.
 
 ---
 
-## 1 — STATUS FILE
-- File: `DOGULE1_STATUS.md`  
-- Location: root folder `dogule1/`  
-- Content: phase, current station, next action, progress, summary.  
-- Updated by Codex after every station.
+## 1 — STATUS FILE (Single Source of Truth)
+
+**File:** `DOGULE1_STATUS.md`
+**Location:** Repository root (`dogule1/`)
+**Maintained by:** Codex (after every completed station)
+
+This file must always contain:
+
+- Current phase
+- Current station
+- Completed work summary
+- Next action
+- Branch name
+- Relevant PR references
+- Warnings or notes for the next station
+
+`DOGULE1_STATUS.md` is the _sole authoritative source_ that restores all project context when a chat begins.
 
 ---
 
-## 2 — TRIGGER FOR MIGRATION
-Migration occurs when:  
-1. A station completes.  
-2. Chat becomes slow or crowded.
+## 2 — WHEN MIGRATION IS REQUIRED
+
+A migration to a fresh chat must occur when:
+
+1. **A station completes**
+2. **The chat becomes slow, crowded, or unstable**
+3. **A milestone requires clean isolation** (e.g., major refactor, heavy Codex operations)
+
+Migration ensures clean state, fast performance, and perfect continuity.
 
 ---
 
-## 3 — MIGRATION STEPS
-1. Export or copy the latest `DOGULE1_STATUS.md`.  
-2. Open a new chat named for the next station.  
-3. Paste the status content as the first message.  
-4. ChatGPT acknowledges and continues from there.
+## 3 — MIGRATION STEPS (Exact Procedure)
+
+1. Copy the **latest** `DOGULE1_STATUS.md`.
+2. Open a **new chat** named after the next station (e.g., “Chat 13 – Station 13”).
+3. Paste `DOGULE1_STATUS.md` as **the very first message**.
+4. Paste the **Opening Instruction Block**, which includes:
+   - “You are Chat X.”
+   - “Your task is Station X.”
+   - All **Standing Rules** (1–6)
+   - Station goal
+   - First actionable step
+   - Branch name for Codex
+
+5. ChatGPT acknowledges everything and continues from there.
+
+The new chat then becomes the official execution environment for the next station.
 
 ---
 
-## 4 — REDUNDANCY
-- Each status version remains in Git history.  
-- Optional mirror on NAS under `/projects/dogule1/logs/`.
+## 4 — STANDING RULES (Always Passed to the Next Chat)
+
+1. Work one step at a time.
+2. Explain every step like to a child.
+3. Pass these rules to the next chat.
+4. Use English for instructions; German for UI.
+5. Codex writes all code, commits, pushes, and updates DOGULE1_STATUS.md.
+6. **Codex instructions must be plain text only**
+   - No bullets
+   - No numbering
+   - No markdown formatting
+   - Only plain new-line text
+
+These rules are mandatory for every station and ensure consistent execution.
 
 ---
 
-## ✅ RESULT
-Migration is loss-free and project continuity is guaranteed.
+## 5 — ROLE PRESERVATION DURING MIGRATION
 
-# EOF_OK
+- **ChatGPT** remains the **Project Planner**.
+- **Codex** remains the **Builder**.
+- **Christian Samuels** remains the **Client Representative**.
+
+Roles never change between chats and must be assumed in every new session.
+
+---
+
+## 6 — REDUNDANCY & SAFETY
+
+- `DOGULE1_STATUS.md` is version-controlled via Git.
+- All commits and PRs ensure a traceable development history.
+- Optional NAS mirror: `/projects/dogule1/logs/`
+- Chat migration blocks form a human-readable fallback copy.
+
+This ensures no loss of context, even in catastrophic chat resets.
+
+---
+
+## 7 — RESULT
+
+Following this protocol guarantees:
+
+- Zero context loss
+- Seamless multi-chat workflow
+- Clear boundaries between stations
+- Perfect reproducibility of the entire development journey
+- A stable, predictable collaboration between ChatGPT and Codex
+
+Each station becomes a clean, well-defined chapter in Dogule1’s development.

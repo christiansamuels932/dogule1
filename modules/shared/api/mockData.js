@@ -34,6 +34,57 @@ export const kundenMock = [
   },
 ];
 
+export const hundeMock = [
+  {
+    id: "hund-001",
+    hundeId: "H-001",
+    name: "Bello vom Greifensee",
+    rufname: "Bello",
+    rasse: "Labrador Retriever",
+    geschlecht: "Rüde",
+    geburtsdatum: "2021-09-14",
+    gewichtKg: 30,
+    groesseCm: 58,
+    kundenId: "k1",
+    trainingsziele: "Locker an der Leine, Impulskontrolle",
+    notizen: "Sehr wasserfreudig, braucht Pausen nach Sprinteinheiten.",
+    createdAt: "2024-11-20T09:00:00.000Z",
+    updatedAt: "2025-02-04T15:35:00.000Z",
+  },
+  {
+    id: "hund-002",
+    hundeId: "H-002",
+    name: "Rex vom Stadtpark",
+    rufname: "Rex",
+    rasse: "Deutscher Schäferhund",
+    geschlecht: "Rüde",
+    geburtsdatum: "2020-03-02",
+    gewichtKg: 34,
+    groesseCm: 62,
+    kundenId: "k2",
+    trainingsziele: "Stadtsicherheit, Ruhe in Wartebereichen",
+    notizen: "Reagiert sensibel auf laute Plätze, braucht klare Signale.",
+    createdAt: "2024-10-12T11:45:00.000Z",
+    updatedAt: "2025-01-15T08:10:00.000Z",
+  },
+  {
+    id: "hund-003",
+    hundeId: "H-003",
+    name: "Nala vom Viktoriapark",
+    rufname: "Nala",
+    rasse: "Border Collie",
+    geschlecht: "Hündin",
+    geburtsdatum: "2022-06-25",
+    gewichtKg: 18,
+    groesseCm: 52,
+    kundenId: "k3",
+    trainingsziele: "Rückruf, Impulskontrolle",
+    notizen: "Braucht geistige Auslastung, liebt Nasenarbeit.",
+    createdAt: "2024-12-05T07:30:00.000Z",
+    updatedAt: "2025-02-11T13:20:00.000Z",
+  },
+];
+
 export const kurseMock = [
   {
     id: "course-001",
