@@ -82,3 +82,12 @@ All essential tools verified and operational.
 - Fixed router regression discovered during sanity checks by preloading `modules/shared/components/templates.html` before any module import (`apps/web/main.js`), restoring Dashboard/Kurse rendering so Station 10 remains green.
 - Kunden module currently matches the Station 10 mock wiring (list/detail/form already call `listKunden`, `getKunde`, `createKunde`, `updateKunde`, `deleteKunde`). Station 11 implementation will now build the UX/validation polish, delete confirmation, and toast flows on top of this clean slate.
 - Outstanding work for acceptance: ensure all CRUD routes (`#/kunden`, `#/kunden/:id`, `#/kunden/new`, `#/kunden/:id/edit`) meet the spec (focus handling, German copy, validation, optimistic updates) and rerun `pnpm lint` / `pnpm build` before raising the PR.
+
+### Station 13 — Hunde CRUD ✅
+
+- Delivered full Hunde CRUD flow matching the Kunden/Kurse UX: list view via shared components, detail view with Kunde linking, create/edit form reusing shared rows and toast helpers, and delete with confirmation + success/error toasts.
+- Hunde data API added (`modules/shared/api/hunde.js`) with mock seed entries plus Hunde-ID handling; router now supports `#/hunde`, `#/hunde/<id>`, `/new`, `/edit`, and the form enforces unique, auto-generated Hunde-IDs.
+- Hunde detail now links back to Kunden detail and offers edit/delete actions; list view injects toasts and navigational affordances consistent with other modules.
+- Branch: `feature/station13-hunde-crud` — PR: https://github.com/christiansamuels932/dogule1/pull/18
+
+**Next Action:** Open Chat 13.1 to implement cross-linking in Kunde detail (list all Hunde belonging to that Kunde).
