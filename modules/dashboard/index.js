@@ -24,27 +24,23 @@ export function initModule(container) {
   if (!container) return;
   container.innerHTML = "";
   const fragment = document.createDocumentFragment();
-
   const overviewSection = document.createElement("section");
   overviewSection.className = "dogule-section";
   overviewSection.appendChild(
     createSectionHeader({
       title: "Übersicht",
       subtitle: "Schnellzugriff und Status",
-      level: 2,
+      level: 1,
     })
   );
-
   overviewSection.appendChild(
     createNotice("Alles betriebsbereit.", {
       variant: "ok",
       role: "status",
     })
   );
-
   overviewSection.appendChild(buildActionsCard());
   overviewSection.appendChild(buildMetricsCard());
-
   fragment.appendChild(overviewSection);
   container.appendChild(fragment);
 }
@@ -60,18 +56,22 @@ function buildActionsCard() {
   if (!cardElement) return document.createDocumentFragment();
 
   const bodyEl = cardElement.querySelector(".ui-card__body");
+  bodyEl.textContent = "";
   if (!QUICK_ACTIONS.length) {
-    bodyEl.appendChild(createEmptyState("Keine Daten vorhanden.", "Fügen Sie Inhalte hinzu."));
+    bodyEl.appendChild(createEmptyState("Keine Daten vorhanden.", ""));
     return cardElement;
   }
 
+  const actionGroup = document.createElement("div");
+  actionGroup.setAttribute("role", "group");
   QUICK_ACTIONS.forEach((action) => {
     const link = document.createElement("a");
     link.className = "ui-btn ui-btn--primary";
     link.href = action.href;
     link.textContent = action.label;
-    bodyEl.appendChild(link);
+    actionGroup.appendChild(link);
   });
+  bodyEl.appendChild(actionGroup);
 
   return cardElement;
 }
@@ -87,20 +87,32 @@ function buildMetricsCard() {
   if (!cardElement) return document.createDocumentFragment();
 
   const bodyEl = cardElement.querySelector(".ui-card__body");
+  bodyEl.textContent = "";
   if (!METRICS.length) {
-    bodyEl.appendChild(createEmptyState("Keine Daten vorhanden.", "Fügen Sie Inhalte hinzu."));
+    bodyEl.appendChild(createEmptyState("Keine Daten vorhanden.", ""));
     return cardElement;
   }
 
+  const list = document.createElement("dl");
   METRICS.forEach((metric) => {
-    const wrapper = document.createElement("div");
-    wrapper.innerHTML = `<strong>${metric.label}</strong><p>${metric.value}</p>`;
+    const term = document.createElement("dt");
+    term.textContent = metric.label;
+
+    const detail = document.createElement("dd");
+    const value = document.createElement("span");
+    value.textContent = metric.value;
+    detail.appendChild(value);
+
     if (metric.badge) {
-      const badge = createBadge(metric.badge.text, metric.badge.variant);
-      wrapper.appendChild(badge);
+      detail.appendChild(document.createTextNode(" "));
+      detail.appendChild(createBadge(metric.badge.text, metric.badge.variant));
     }
-    bodyEl.appendChild(wrapper);
+
+    list.appendChild(term);
+    list.appendChild(detail);
   });
+
+  bodyEl.appendChild(list);
 
   return cardElement;
 }
