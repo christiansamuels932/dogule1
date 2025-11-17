@@ -46,3 +46,8 @@ export async function updateFinanz(id, data = {}, options) {
 export async function deleteFinanz(id, options) {
   return remove(TABLE, id, options);
 }
+
+export async function listFinanzenByKundeId(kundeId, options) {
+  const finanzen = await listFinanzen(options);
+  return finanzen.filter((entry) => entry.kundeId === kundeId);
+}

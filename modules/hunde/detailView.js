@@ -9,6 +9,7 @@ import {
 import { deleteHund, listHunde } from "../shared/api/hunde.js";
 import { getKunde } from "../shared/api/kunden.js";
 import { listKurse } from "../shared/api/kurse.js";
+import { listFinanzenByKundeId } from "../shared/api/finanzen.js";
 import { injectHundToast, setHundToast } from "./formView.js";
 
 export async function createHundeDetailView(container, hundId) {
@@ -51,6 +52,7 @@ export async function createHundeDetailView(container, hundId) {
       id: hund.kundenId || "",
       name: "–",
     };
+    let kundeFinanzen = [];
     if (hund.kundenId) {
       try {
         const kunde = await getKunde(hund.kundenId);
@@ -58,11 +60,13 @@ export async function createHundeDetailView(container, hundId) {
           const fullName = `${kunde.vorname ?? ""} ${kunde.nachname ?? ""}`.trim();
           kundeInfo.name = fullName || kunde.vorname || kunde.nachname || "–";
           kundeInfo.id = kunde.id || hund.kundenId;
+          kundeFinanzen = await listFinanzenByKundeId(kunde.id);
         }
       } catch (kundenError) {
         console.error("HUNDE_DETAIL_KUNDE_FAILED", kundenError);
       }
     }
+    container.__linkedFinanzen = kundeFinanzen;
 
     cardElement.querySelector(".ui-card__title").textContent = hund.name || "Unbenannter Hund";
     body.innerHTML = "";
