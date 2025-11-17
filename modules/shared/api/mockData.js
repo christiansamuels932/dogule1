@@ -203,6 +203,49 @@ export const kurseMock = [
   },
 ];
 
+export const finanzenMock = [
+  {
+    id: "fin-001",
+    kundeId: "k1",
+    typ: "zahlung",
+    betrag: 150,
+    datum: "2025-02-01",
+    beschreibung: "Kursgebühr Welpen",
+  },
+  {
+    id: "fin-002",
+    kundeId: "k1",
+    typ: "offen",
+    betrag: 90,
+    datum: "2025-02-15",
+    beschreibung: "Offene Privatstunde",
+  },
+  {
+    id: "fin-003",
+    kundeId: "k2",
+    typ: "zahlung",
+    betrag: 200,
+    datum: "2025-01-20",
+    beschreibung: "Junghunde Block",
+  },
+  {
+    id: "fin-004",
+    kundeId: "k2",
+    typ: "offen",
+    betrag: 50,
+    datum: "2025-02-05",
+    beschreibung: "Materialkosten",
+  },
+  {
+    id: "fin-005",
+    kundeId: "k3",
+    typ: "zahlung",
+    betrag: 110,
+    datum: "2025-01-28",
+    beschreibung: "Einzelcoaching",
+  },
+];
+
 export const trainerMock = [
   { id: "t1", name: "Martina Frei", spezialisierung: "Welpentraining" },
   { id: "t2", name: "Jonas Graf", spezialisierung: "Agility" },

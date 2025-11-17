@@ -107,12 +107,24 @@ All essential tools verified and operational.
 
 **Next Action:** Start Station 14 planning (unless project plan specifies another station).
 
-### Station 14 — Kurse Linking (Step 1) 🟡
+### Station 14 — Kurse/Hunde/Kunden Linking ✅
 
-- Branch `feature/station14-kurse-linking` created from latest `main` to host Station 14 work.
-- Step 1 delivered: Kurse detail view now includes shared-component placeholder sections “Hunde im Kurs” and “Kunden der Hunde im Kurs”, each showing a `createEmptyState("Noch keine Daten")` message to scaffold upcoming linking flows. (Commits: `feat: add placeholder Hund/Kunde sections to Kurse detail`, `feat: station14 step1 add placeholder sections in kurse detail`)
+- Branch `feature/station14-kurse-linking`; PR https://github.com/christiansamuels932/dogule1/pull/22.
+- Kurse detail gained placeholder sections, then dynamic linked lists: “Hunde im Kurs” pulls `hundIds` to show associated Hunde, and “Kunden der Hunde im Kurs” renders deduplicated owners with shared cards/empty states.
+- Hunde detail now lists “Kurse dieses Hundes,” linking every associated Kurs card back to `#/kurse/<id>`.
+- Kunden detail shows all Hunde plus “Kurse dieses Kunden,” deduplicating the courses for any owned dog and linking back to Kurse.
+- Mock data/API extended with `hundIds`, shared components used consistently, all sections handle empty data, and routing between `#/kurse`, `#/hunde`, `#/kunden` stays clean.
 
-**Next Action:** Station 14 – Step 2 (populate the Kurse placeholders with real Hunde/Kunden data).
+**Next Action:** Begin Station 15 planning.
+
+### Station 15 — Kunden Finanzen ✅
+
+- Branch `feature/station15-kunden-finanzen`; PR https://github.com/christiansamuels932/dogule1/pull/24.
+- Step 1: Added Finanzübersicht/Offene Beträge/Zahlungshistorie placeholder sections to Kunden detail using shared components.
+- Step 2: Seeded `finanzenMock`, added finanzen API helpers, and rendered per-Kunde finance data (open sums, payments, latest payment) with shared cards/empty states.
+- Step 3: Polished the finance UI (structured info rows, total headers, entry lists, reverse-ordered payment history) for a tidy mini-dashboard.
+
+**Next Action:** Prepare Station 16 planning (Chat 16 kickoff).
 
 ### Global Requirements
 

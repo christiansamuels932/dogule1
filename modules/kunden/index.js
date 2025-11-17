@@ -9,6 +9,7 @@ import {
 } from "../shared/api/kunden.js";
 import { listHunde } from "../shared/api/hunde.js";
 import { listKurse } from "../shared/api/kurse.js";
+import { listFinanzen } from "../shared/api/finanzen.js";
 import {
   createSectionHeader,
   createCard,
@@ -202,9 +203,10 @@ async function renderDetail(section, id) {
   }
   section.appendChild(hundeSection);
   section.appendChild(renderKundenKurseSection(linkedKurse));
-  section.appendChild(renderKundenFinanzSection("Finanzübersicht"));
-  section.appendChild(renderKundenFinanzSection("Offene Beträge"));
-  section.appendChild(renderKundenFinanzSection("Zahlungshistorie"));
+  const finanzData = await loadFinanzen(id);
+  section.appendChild(renderFinanzOverview(finanzData));
+  section.appendChild(renderOffeneBetraege(finanzData));
+  section.appendChild(renderZahlungshistorie(finanzData));
 
   const deleteBtn = section.querySelector('[data-action="delete"]');
   deleteBtn?.addEventListener("click", async () => {
@@ -525,12 +527,22 @@ function renderKundenKurseSection(kurse = []) {
   return section;
 }
 
-function renderKundenFinanzSection(title) {
+async function loadFinanzen(kundeId) {
+  try {
+    const finanzen = await listFinanzen();
+    return finanzen.filter((entry) => entry.kundeId === kundeId);
+  } catch (error) {
+    console.error("KUNDEN_FINANZEN_LOAD_FAILED", error);
+    return [];
+  }
+}
+
+function renderFinanzOverview(finanzen = []) {
   const section = document.createElement("section");
   section.className = "kunden-finanz-section";
   section.appendChild(
     createSectionHeader({
-      title,
+      title: "Finanzübersicht",
       subtitle: "",
       level: 2,
     })
@@ -542,14 +554,126 @@ function renderKundenFinanzSection(title) {
     footer: "",
   });
   const card = cardFragment.querySelector(".ui-card") || cardFragment.firstElementChild;
-  if (card) {
-    const body = card.querySelector(".ui-card__body");
-    if (body) {
-      body.innerHTML = "";
-      body.appendChild(createEmptyState("Noch keine Daten", "", {}));
+  if (!card) return section;
+  const body = card.querySelector(".ui-card__body");
+  if (body) {
+    body.innerHTML = "";
+    const payments = finanzen
+      .filter((entry) => entry.typ === "zahlung")
+      .slice()
+      .reverse();
+    const latest = payments.length ? payments[payments.length - 1] : null;
+    const openSum = finanzen
+      .filter((entry) => entry.typ === "offen")
+      .reduce((total, entry) => total + Number(entry.betrag || 0), 0);
+    const infoList = document.createElement("dl");
+    infoList.className = "kunden-finanz-info";
+    const addInfoRow = (label, value) => {
+      const dt = document.createElement("dt");
+      dt.textContent = label;
+      const dd = document.createElement("dd");
+      dd.textContent = value;
+      infoList.append(dt, dd);
+    };
+    addInfoRow(
+      "Letzte Zahlung",
+      latest
+        ? `${formatDateTime(latest.datum)} – CHF ${Number(latest.betrag || 0).toFixed(2)}`
+        : "Keine Zahlungen"
+    );
+    addInfoRow("Offen gesamt", `CHF ${openSum.toFixed(2)}`);
+    body.appendChild(infoList);
+    if (latest?.beschreibung) {
+      const note = document.createElement("p");
+      note.textContent = latest.beschreibung;
+      body.appendChild(note);
     }
-    section.appendChild(card);
   }
+  section.appendChild(card);
+  return section;
+}
+
+function renderOffeneBetraege(finanzen = []) {
+  const section = document.createElement("section");
+  section.className = "kunden-finanz-section";
+  section.appendChild(
+    createSectionHeader({
+      title: "Offene Beträge",
+      subtitle: "",
+      level: 2,
+    })
+  );
+  const cardFragment = createCard({
+    eyebrow: "",
+    title: "",
+    body: "",
+    footer: "",
+  });
+  const card = cardFragment.querySelector(".ui-card") || cardFragment.firstElementChild;
+  if (!card) return section;
+  const body = card.querySelector(".ui-card__body");
+  if (body) {
+    body.innerHTML = "";
+    const openEntries = finanzen.filter((entry) => entry.typ === "offen");
+    if (!openEntries.length) {
+      body.appendChild(createEmptyState("Noch keine Daten", "", {}));
+    } else {
+      const sum = openEntries.reduce((total, entry) => total + Number(entry.betrag || 0), 0);
+      const summary = document.createElement("p");
+      summary.innerHTML = `<strong>Total offen:</strong> CHF ${sum.toFixed(2)}`;
+      body.appendChild(summary);
+      const list = document.createElement("ul");
+      list.className = "kunden-offene-liste";
+      openEntries.forEach((entry) => {
+        const item = document.createElement("li");
+        item.innerHTML = `<strong>${entry.beschreibung || "Posten"}</strong> – CHF ${Number(
+          entry.betrag || 0
+        ).toFixed(2)} (${formatDateTime(entry.datum)})`;
+        list.appendChild(item);
+      });
+      body.appendChild(list);
+    }
+  }
+  section.appendChild(card);
+  return section;
+}
+
+function renderZahlungshistorie(finanzen = []) {
+  const section = document.createElement("section");
+  section.className = "kunden-finanz-section";
+  section.appendChild(
+    createSectionHeader({
+      title: "Zahlungshistorie",
+      subtitle: "",
+      level: 2,
+    })
+  );
+  const cardFragment = createCard({
+    eyebrow: "",
+    title: "",
+    body: "",
+    footer: "",
+  });
+  const card = cardFragment.querySelector(".ui-card") || cardFragment.firstElementChild;
+  if (!card) return section;
+  const body = card.querySelector(".ui-card__body");
+  if (body) {
+    body.innerHTML = "";
+    const payments = finanzen.filter((entry) => entry.typ === "zahlung");
+    if (!payments.length) {
+      body.appendChild(createEmptyState("Noch keine Daten", "", {}));
+    } else {
+      const list = document.createElement("ul");
+      list.className = "kunden-zahlungsliste";
+      payments.forEach((entry) => {
+        const item = document.createElement("li");
+        item.innerHTML = `<strong>${formatDateTime(entry.datum)}</strong> – CHF ${Number(entry.betrag || 0).toFixed(2)} (${entry.beschreibung || "Zahlung"})`;
+        list.appendChild(item);
+      });
+      body.appendChild(list);
+    }
+  }
+  section.appendChild(card);
   return section;
 }
 
