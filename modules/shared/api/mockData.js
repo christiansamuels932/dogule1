@@ -1,6 +1,7 @@
 export const kundenMock = [
   {
     id: "k1",
+    kundenCode: "K-001",
     vorname: "Andrea",
     nachname: "Müller",
     email: "andrea.mueller@hundeschule.ch",
@@ -12,6 +13,7 @@ export const kundenMock = [
   },
   {
     id: "k2",
+    kundenCode: "K-002",
     vorname: "Thomas",
     nachname: "Keller",
     email: "thomas.keller@example.com",
@@ -23,6 +25,7 @@ export const kundenMock = [
   },
   {
     id: "k3",
+    kundenCode: "K-003",
     vorname: "Lea",
     nachname: "Sommer",
     email: "lea.sommer@posteo.de",
