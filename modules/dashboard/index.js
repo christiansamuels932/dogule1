@@ -1,8 +1,7 @@
 // Standardized module interface for Dogule1
-/* globals document, window */
+/* globals document */
 import {
   createBadge,
-  createButton,
   createCard,
   createEmptyState,
   createNotice,
@@ -10,9 +9,9 @@ import {
 } from "../shared/components/components.js";
 
 const QUICK_ACTIONS = [
-  { label: "Neuer Kurs", hash: "#/kurse" },
-  { label: "Neuer Kunde", hash: "#/kunden" },
-  { label: "Termin anlegen", hash: "#/kalender" },
+  { label: "Zu den Kunden", href: "#/kunden" },
+  { label: "Zu den Hunden", href: "#/hunde" },
+  { label: "Zu den Kursen", href: "#/kurse" },
 ];
 
 const METRICS = [
@@ -22,6 +21,7 @@ const METRICS = [
 ];
 
 export function initModule(container) {
+  if (!container) return;
   container.innerHTML = "";
   const fragment = document.createDocumentFragment();
 
@@ -61,21 +61,16 @@ function buildActionsCard() {
 
   const bodyEl = cardElement.querySelector(".ui-card__body");
   if (!QUICK_ACTIONS.length) {
-    bodyEl.appendChild(createEmptyState("Noch keine Daten", "Fügen Sie Inhalte hinzu."));
+    bodyEl.appendChild(createEmptyState("Keine Daten vorhanden.", "Fügen Sie Inhalte hinzu."));
     return cardElement;
   }
 
   QUICK_ACTIONS.forEach((action) => {
-    const button = createButton({
-      label: action.label,
-      variant: "primary",
-      onClick: () => {
-        if (action.hash) {
-          window.location.hash = action.hash;
-        }
-      },
-    });
-    bodyEl.appendChild(button);
+    const link = document.createElement("a");
+    link.className = "ui-btn ui-btn--primary";
+    link.href = action.href;
+    link.textContent = action.label;
+    bodyEl.appendChild(link);
   });
 
   return cardElement;
@@ -93,7 +88,7 @@ function buildMetricsCard() {
 
   const bodyEl = cardElement.querySelector(".ui-card__body");
   if (!METRICS.length) {
-    bodyEl.appendChild(createEmptyState("Noch keine Daten", "Fügen Sie Inhalte hinzu."));
+    bodyEl.appendChild(createEmptyState("Keine Daten vorhanden.", "Fügen Sie Inhalte hinzu."));
     return cardElement;
   }
 
