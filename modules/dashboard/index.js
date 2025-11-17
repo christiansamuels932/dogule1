@@ -60,16 +60,18 @@ function buildActionsCard() {
     return cardElement;
   }
 
-  const actionGroup = document.createElement("div");
-  actionGroup.setAttribute("role", "group");
+  const list = document.createElement("ul");
+  list.className = "dashboard-list";
   QUICK_ACTIONS.forEach((action) => {
+    const item = document.createElement("li");
     const link = document.createElement("a");
     link.className = "ui-btn ui-btn--primary";
     link.href = action.href;
     link.textContent = action.label;
-    actionGroup.appendChild(link);
+    item.appendChild(link);
+    list.appendChild(item);
   });
-  bodyEl.appendChild(actionGroup);
+  bodyEl.appendChild(list);
 
   return cardElement;
 }
@@ -85,23 +87,22 @@ function buildMetricsCard() {
     return cardElement;
   }
 
-  const list = document.createElement("dl");
+  const list = document.createElement("ul");
+  list.className = "dashboard-list";
   METRICS.forEach((metric) => {
-    const term = document.createElement("dt");
-    term.textContent = metric.label;
-
-    const detail = document.createElement("dd");
+    const item = document.createElement("li");
+    const label = document.createElement("strong");
+    label.textContent = metric.label;
     const value = document.createElement("span");
     value.textContent = metric.value;
-    detail.appendChild(value);
-
+    item.appendChild(label);
+    item.appendChild(document.createTextNode(" "));
+    item.appendChild(value);
     if (metric.badge) {
-      detail.appendChild(document.createTextNode(" "));
-      detail.appendChild(createBadge(metric.badge.text, metric.badge.variant));
+      item.appendChild(document.createTextNode(" "));
+      item.appendChild(createBadge(metric.badge.text, metric.badge.variant));
     }
-
-    list.appendChild(term);
-    list.appendChild(detail);
+    list.appendChild(item);
   });
 
   bodyEl.appendChild(list);
