@@ -53,9 +53,6 @@ export async function initModule(container, routeContext = { segments: [] }) {
     if (view === "detail" && id) {
       await renderDetail(section, id);
     } else if (view === "create" || (view === "edit" && id)) {
-      if (view === "create") {
-        console.log("[Kurse] entering create route #/kurse/new");
-      }
       await renderForm(section, view, id);
     } else {
       await renderList(section);
@@ -375,7 +372,7 @@ function appendFinanceSections(section, kundenFinanzen = []) {
   };
   KURSE_FINANCE_SECTION_TITLES.forEach((title) => {
     const financeSection = document.createElement("section");
-    financeSection.className = "kurse-finanz-section";
+    financeSection.className = "kurse-linked-section kurse-finanz-section";
     financeSection.appendChild(
       createSection({
         title,
@@ -397,7 +394,7 @@ function appendFinanceSections(section, kundenFinanzen = []) {
       const renderer = renderers[title];
       const rendered = typeof renderer === "function" ? renderer(body, financeData) : false;
       if (!rendered) {
-        body.appendChild(createEmpty("Keine Daten verfügbar."));
+        body.appendChild(createEmpty("Keine Daten vorhanden."));
       }
     }
     financeSection.appendChild(card);
@@ -432,7 +429,7 @@ function renderKursOffeneBetraegeContent(container, financeData = []) {
     });
   });
   if (!offeneEntries.length) {
-    container.appendChild(createEmpty("Keine Daten verfügbar."));
+    container.appendChild(createEmpty("Keine Daten vorhanden."));
     return true;
   }
   offeneEntries.forEach(({ kundeId, eintrag }) => {
@@ -458,7 +455,7 @@ function renderKursZahlungshistorieContent(container, financeData = []) {
     return Number.isNaN(timeB) ? 1 : Number.isNaN(timeA) ? -1 : timeB - timeA;
   });
   if (!zahlungen.length) {
-    container.appendChild(createEmpty("Keine Daten verfügbar."));
+    container.appendChild(createEmpty("Keine Daten vorhanden."));
     return true;
   }
   zahlungen.forEach(({ kundeId, eintrag }) => {
@@ -596,7 +593,6 @@ async function renderForm(section, view, id) {
   form.addEventListener("submit", kursFormSubmitHandler);
   submit.addEventListener("click", (event) => {
     event.preventDefault();
-    console.log("[Kurse] form action button clicked");
     kursFormSubmitHandler(event);
   });
 
@@ -1135,7 +1131,6 @@ function showInlineToast(section, message, tone = "info") {
 
 async function handleKursFormSubmit(event, { mode, id, refs, section, submit }) {
   event.preventDefault();
-  console.log("[Kurse] handleKursFormSubmit fired, mode:", mode);
   const values = collectFormValues(refs);
   const errors = validate(values);
   applyErrors(refs, errors);
