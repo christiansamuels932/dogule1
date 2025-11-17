@@ -9,6 +9,7 @@ import {
 } from "../shared/api/kunden.js";
 import { listHunde } from "../shared/api/hunde.js";
 import { listKurse } from "../shared/api/kurse.js";
+import { listFinanzen } from "../shared/api/finanzen.js";
 import {
   createSectionHeader,
   createCard,
@@ -202,9 +203,10 @@ async function renderDetail(section, id) {
   }
   section.appendChild(hundeSection);
   section.appendChild(renderKundenKurseSection(linkedKurse));
-  section.appendChild(renderKundenFinanzSection("Finanzübersicht"));
-  section.appendChild(renderKundenFinanzSection("Offene Beträge"));
-  section.appendChild(renderKundenFinanzSection("Zahlungshistorie"));
+  const finanzData = await loadFinanzen(id);
+  section.appendChild(renderFinanzOverview(finanzData));
+  section.appendChild(renderOffeneBetraege(finanzData));
+  section.appendChild(renderZahlungshistorie(finanzData));
 
   const deleteBtn = section.querySelector('[data-action="delete"]');
   deleteBtn?.addEventListener("click", async () => {
@@ -525,12 +527,22 @@ function renderKundenKurseSection(kurse = []) {
   return section;
 }
 
-function renderKundenFinanzSection(title) {
+async function loadFinanzen(kundeId) {
+  try {
+    const finanzen = await listFinanzen();
+    return finanzen.filter((entry) => entry.kundeId === kundeId);
+  } catch (error) {
+    console.error("KUNDEN_FINANZEN_LOAD_FAILED", error);
+    return [];
+  }
+}
+
+function renderFinanzOverview(finanzen = []) {
   const section = document.createElement("section");
   section.className = "kunden-finanz-section";
   section.appendChild(
     createSectionHeader({
-      title,
+      title: "Finanzübersicht",
       subtitle: "",
       level: 2,
     })
@@ -542,14 +554,99 @@ function renderKundenFinanzSection(title) {
     footer: "",
   });
   const card = cardFragment.querySelector(".ui-card") || cardFragment.firstElementChild;
-  if (card) {
-    const body = card.querySelector(".ui-card__body");
-    if (body) {
-      body.innerHTML = "";
+  if (!card) return section;
+  const body = card.querySelector(".ui-card__body");
+  if (body) {
+    body.innerHTML = "";
+    const payments = finanzen.filter((entry) => entry.typ === "zahlung");
+    if (!payments.length) {
       body.appendChild(createEmptyState("Noch keine Daten", "", {}));
+    } else {
+      const latest = payments[payments.length - 1];
+      const block = document.createElement("div");
+      block.className = "kunden-finanz-uebersicht";
+      block.innerHTML = `
+        <p><strong>Letzte Zahlung:</strong> ${formatDateTime(latest.datum)} – CHF ${latest.betrag.toFixed(2)}</p>
+        <p>${latest.beschreibung || ""}</p>
+      `;
+      body.appendChild(block);
     }
-    section.appendChild(card);
   }
+  section.appendChild(card);
+  return section;
+}
+
+function renderOffeneBetraege(finanzen = []) {
+  const section = document.createElement("section");
+  section.className = "kunden-finanz-section";
+  section.appendChild(
+    createSectionHeader({
+      title: "Offene Beträge",
+      subtitle: "",
+      level: 2,
+    })
+  );
+  const cardFragment = createCard({
+    eyebrow: "",
+    title: "",
+    body: "",
+    footer: "",
+  });
+  const card = cardFragment.querySelector(".ui-card") || cardFragment.firstElementChild;
+  if (!card) return section;
+  const body = card.querySelector(".ui-card__body");
+  if (body) {
+    body.innerHTML = "";
+    const openEntries = finanzen.filter((entry) => entry.typ === "offen");
+    if (!openEntries.length) {
+      body.appendChild(createEmptyState("Noch keine Daten", "", {}));
+    } else {
+      const sum = openEntries.reduce((total, entry) => total + Number(entry.betrag || 0), 0);
+      const summary = document.createElement("p");
+      summary.innerHTML = `<strong>Gesamt:</strong> CHF ${sum.toFixed(2)}`;
+      body.appendChild(summary);
+    }
+  }
+  section.appendChild(card);
+  return section;
+}
+
+function renderZahlungshistorie(finanzen = []) {
+  const section = document.createElement("section");
+  section.className = "kunden-finanz-section";
+  section.appendChild(
+    createSectionHeader({
+      title: "Zahlungshistorie",
+      subtitle: "",
+      level: 2,
+    })
+  );
+  const cardFragment = createCard({
+    eyebrow: "",
+    title: "",
+    body: "",
+    footer: "",
+  });
+  const card = cardFragment.querySelector(".ui-card") || cardFragment.firstElementChild;
+  if (!card) return section;
+  const body = card.querySelector(".ui-card__body");
+  if (body) {
+    body.innerHTML = "";
+    const payments = finanzen.filter((entry) => entry.typ === "zahlung");
+    if (!payments.length) {
+      body.appendChild(createEmptyState("Noch keine Daten", "", {}));
+    } else {
+      const list = document.createElement("ul");
+      list.className = "kunden-zahlungsliste";
+      payments.forEach((entry) => {
+        const item = document.createElement("li");
+        item.innerHTML = `<strong>${formatDateTime(entry.datum)}</strong> – CHF ${Number(entry.betrag || 0).toFixed(2)} (${entry.beschreibung || "Zahlung"})`;
+        list.appendChild(item);
+      });
+      body.appendChild(list);
+    }
+  }
+  section.appendChild(card);
   return section;
 }
 
