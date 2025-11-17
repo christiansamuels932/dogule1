@@ -169,7 +169,7 @@ async function renderDetail(section, id) {
     backLink.textContent = "Zurück zur Übersicht";
     footer.append(backLink);
     appendLinkedSections(section, linkedHunde, linkedKunden);
-    appendFinancePlaceholderSections(section);
+    appendFinanceSections(section, kundenFinanzen);
   } catch (error) {
     console.error("KURSE_DETAIL_FAILED", error);
     body.innerHTML = "";
@@ -365,8 +365,14 @@ async function buildKursKundenFinanzen(linkedHunde = []) {
   return financeResults;
 }
 
-function appendFinancePlaceholderSections(section) {
+function appendFinanceSections(section, kundenFinanzen = []) {
   if (!section) return;
+  const financeData = Array.isArray(kundenFinanzen) ? kundenFinanzen : [];
+  const renderers = {
+    Finanzübersicht: renderKursFinanzOverviewContent,
+    "Offene Beträge": renderKursOffeneBetraegeContent,
+    Zahlungshistorie: renderKursZahlungshistorieContent,
+  };
   KURSE_FINANCE_SECTION_TITLES.forEach((title) => {
     const financeSection = document.createElement("section");
     financeSection.className = "kurse-finanz-section";
@@ -388,11 +394,92 @@ function appendFinancePlaceholderSections(section) {
     const body = card.querySelector(".ui-card__body");
     if (body) {
       body.innerHTML = "";
-      body.appendChild(createEmpty("Keine Daten verfügbar."));
+      const renderer = renderers[title];
+      const rendered = typeof renderer === "function" ? renderer(body, financeData) : false;
+      if (!rendered) {
+        body.appendChild(createEmpty("Keine Daten verfügbar."));
+      }
     }
     financeSection.appendChild(card);
     section.appendChild(financeSection);
   });
+}
+
+function renderKursFinanzOverviewContent(container, financeData = []) {
+  if (!financeData.length) return false;
+  financeData.forEach((entry) => {
+    const infoRow = createFinanceRow(
+      `Kunde ${entry.kundeId}`,
+      entry.lastZahlung
+        ? `Letzte Zahlung: ${formatFinanceAmount(entry.lastZahlung.betrag)} · Datum: ${formatDateTime(
+            entry.lastZahlung.datum
+          )}`
+        : "Keine letzte Zahlung"
+    );
+    container.appendChild(infoRow);
+  });
+  return true;
+}
+
+function renderKursOffeneBetraegeContent(container, financeData = []) {
+  const offeneEntries = [];
+  financeData.forEach((entry) => {
+    entry.offeneBetraege.forEach((offen) => {
+      offeneEntries.push({
+        kundeId: entry.kundeId,
+        eintrag: offen,
+      });
+    });
+  });
+  if (!offeneEntries.length) {
+    container.appendChild(createEmpty("Keine Daten verfügbar."));
+    return true;
+  }
+  offeneEntries.forEach(({ kundeId, eintrag }) => {
+    const infoRow = createFinanceRow(
+      `Kunde ${kundeId}`,
+      `Betrag: ${formatFinanceAmount(eintrag.betrag)} · Datum: ${formatDateTime(eintrag.datum)}`
+    );
+    container.appendChild(infoRow);
+  });
+  return true;
+}
+
+function renderKursZahlungshistorieContent(container, financeData = []) {
+  const zahlungen = [];
+  financeData.forEach((entry) => {
+    entry.zahlungen.forEach((zahlung) => {
+      zahlungen.push({ kundeId: entry.kundeId, eintrag: zahlung });
+    });
+  });
+  zahlungen.sort((a, b) => {
+    const timeA = new Date(a.eintrag.datum).getTime();
+    const timeB = new Date(b.eintrag.datum).getTime();
+    return Number.isNaN(timeB) ? 1 : Number.isNaN(timeA) ? -1 : timeB - timeA;
+  });
+  if (!zahlungen.length) {
+    container.appendChild(createEmpty("Keine Daten verfügbar."));
+    return true;
+  }
+  zahlungen.forEach(({ kundeId, eintrag }) => {
+    const infoRow = createFinanceRow(
+      `Kunde ${kundeId}`,
+      `Zahlung: ${formatFinanceAmount(eintrag.betrag)} · Datum: ${formatDateTime(eintrag.datum)}`
+    );
+    container.appendChild(infoRow);
+  });
+  return true;
+}
+
+function createFinanceRow(label, text) {
+  const row = document.createElement("div");
+  row.className = "kurse-finanz-row";
+  const labelEl = document.createElement("strong");
+  labelEl.textContent = label;
+  const textEl = document.createElement("span");
+  textEl.textContent = text;
+  row.append(labelEl, textEl);
+  return row;
 }
 
 function formatCustomerName(kunde = {}) {
@@ -761,6 +848,12 @@ function formatPrice(value) {
     currency: "CHF",
     minimumFractionDigits: 2,
   }).format(amount);
+}
+
+function formatFinanceAmount(value) {
+  const amount = Number(value);
+  if (!Number.isFinite(amount)) return "CHF 0.00";
+  return `CHF ${amount.toFixed(2)}`;
 }
 
 function formatDateTime(value) {
