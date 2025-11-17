@@ -151,6 +151,7 @@ async function renderDetail(section, id) {
     backLink.href = "#/kurse";
     backLink.textContent = "Zurück zur Übersicht";
     footer.append(backLink);
+    appendLinkedPlaceholders(section);
   } catch (error) {
     console.error("KURSE_DETAIL_FAILED", error);
     body.innerHTML = "";
@@ -171,6 +172,62 @@ async function renderDetail(section, id) {
   }
 
   focusHeading(section);
+}
+
+function appendLinkedPlaceholders(section) {
+  const hundeSection = document.createElement("section");
+  hundeSection.className = "kurse-linked-section";
+  hundeSection.appendChild(
+    createSectionHeader({
+      title: "Hunde im Kurs",
+      subtitle: "",
+      level: 2,
+    })
+  );
+  const hundeCardFragment = createCard({
+    eyebrow: "",
+    title: "",
+    body: "",
+    footer: "",
+  });
+  const hundeCard =
+    hundeCardFragment.querySelector(".ui-card") || hundeCardFragment.firstElementChild;
+  if (hundeCard) {
+    const body = hundeCard.querySelector(".ui-card__body");
+    if (body) {
+      body.innerHTML = "";
+      body.appendChild(createEmptyState("Noch keine Daten", "", {}));
+    }
+    hundeSection.appendChild(hundeCard);
+  }
+  section.appendChild(hundeSection);
+
+  const kundenSection = document.createElement("section");
+  kundenSection.className = "kurse-linked-section";
+  kundenSection.appendChild(
+    createSectionHeader({
+      title: "Kunden der Hunde im Kurs",
+      subtitle: "",
+      level: 2,
+    })
+  );
+  const kundenCardFragment = createCard({
+    eyebrow: "",
+    title: "",
+    body: "",
+    footer: "",
+  });
+  const kundenCard =
+    kundenCardFragment.querySelector(".ui-card") || kundenCardFragment.firstElementChild;
+  if (kundenCard) {
+    const body = kundenCard.querySelector(".ui-card__body");
+    if (body) {
+      body.innerHTML = "";
+      body.appendChild(createEmptyState("Noch keine Daten", "", {}));
+    }
+    kundenSection.appendChild(kundenCard);
+  }
+  section.appendChild(kundenSection);
 }
 
 async function renderForm(section, view, id) {

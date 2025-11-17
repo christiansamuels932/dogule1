@@ -106,3 +106,10 @@ All essential tools verified and operational.
   - `feat: auto-generate kunden ids`
 
 **Next Action:** Start Station 14 planning (unless project plan specifies another station).
+
+### Station 14 — Kurse Linking (Step 1) 🟡
+
+- Branch `feature/station14-kurse-linking` created from latest `main` to host Station 14 work.
+- Step 1 delivered: Kurse detail view now includes shared-component placeholder sections “Hunde im Kurs” and “Kunden der Hunde im Kurs”, each showing a `createEmptyState("Noch keine Daten")` message to scaffold upcoming linking flows. (Commits: `feat: add placeholder Hund/Kunde sections to Kurse detail`, `feat: station14 step1 add placeholder sections in kurse detail`)
+
+**Next Action:** Station 14 – Step 2 (populate the Kurse placeholders with real Hunde/Kunden data).
