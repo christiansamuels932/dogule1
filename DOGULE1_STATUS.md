@@ -91,3 +91,18 @@ All essential tools verified and operational.
 - Branch: `feature/station13-hunde-crud` — PR: https://github.com/christiansamuels932/dogule1/pull/18
 
 **Next Action:** Open Chat 13.1 to implement cross-linking in Kunde detail (list all Hunde belonging to that Kunde).
+
+### Station 13.1 — Kunde ↔ Hunde Cross-Linking ✅
+
+- Kunden detail view now renders a shared-component card listing all Hunde that reference the Kunde, with each entry navigating to the corresponding Hundedetail via `#/hunde/<id>`. Empty states reuse the Kunden list styling (“Keine Hunde zugeordnet.”).
+- Hunde detail routing hydrates fresh data and scrolls to top on every navigation to avoid stale state when jumping from Kunden links; delete + toast flows remain intact.
+- Kunden IDs are now auto-generated (`K-001`, `K-002`, …) via shared API/helper logic, shown read-only in forms/detail so Hunde references stay consistent.
+- Branch: `feature/station13-1-kunde-hunde-linking` — commits:
+  - `feat: add placeholder Hunde section to kunden detail for station 13.1`
+  - `feat: render linked hunde list in kunden detail`
+  - `style: unify linked hunde list styling in kunden detail`
+  - `fix: ensure clean routing and hydration for hunde detail from kunden detail`
+  - `chore: final cleanup and validation for station 13.1`
+  - `feat: auto-generate kunden ids`
+
+**Next Action:** Start Station 14 planning (unless project plan specifies another station).
