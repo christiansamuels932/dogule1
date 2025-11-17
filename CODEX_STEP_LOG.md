@@ -8,3 +8,4 @@
 - Station 18 Step 6a: Normalized dashboard empty states with shared helper wrapper and consistent text.
 - Station 18 Step 8: Added try/catch handlers for dashboard cards, logged errors with DASHBOARD codes, and display shared error notices inside fallback cards.
 - Station 18 Step 9: Normalized dashboard cards to shared card headers/bodies and added a status card for the notice.
+- Station 18 Step 10: Swapped dashboard quick-action/metrics rendering to shared list pattern with normalized empty states.
