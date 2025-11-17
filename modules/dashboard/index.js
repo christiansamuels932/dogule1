@@ -56,9 +56,9 @@ function buildActionsCard() {
   if (!cardElement) return document.createDocumentFragment();
 
   const bodyEl = cardElement.querySelector(".ui-card__body");
-  bodyEl.textContent = "";
+  resetCardBody(bodyEl);
   if (!QUICK_ACTIONS.length) {
-    bodyEl.appendChild(createEmptyState("Keine Daten vorhanden.", ""));
+    appendStandardEmptyState(bodyEl);
     return cardElement;
   }
 
@@ -87,9 +87,9 @@ function buildMetricsCard() {
   if (!cardElement) return document.createDocumentFragment();
 
   const bodyEl = cardElement.querySelector(".ui-card__body");
-  bodyEl.textContent = "";
+  resetCardBody(bodyEl);
   if (!METRICS.length) {
-    bodyEl.appendChild(createEmptyState("Keine Daten vorhanden.", ""));
+    appendStandardEmptyState(bodyEl);
     return cardElement;
   }
 
@@ -115,4 +115,15 @@ function buildMetricsCard() {
   bodyEl.appendChild(list);
 
   return cardElement;
+}
+
+function resetCardBody(target) {
+  if (target) {
+    target.innerHTML = "";
+  }
+}
+
+function appendStandardEmptyState(target) {
+  if (!target) return;
+  target.appendChild(createEmptyState("Keine Daten vorhanden.", ""));
 }
