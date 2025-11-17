@@ -382,15 +382,16 @@ function showInlineToast(section, message, tone = "info") {
 }
 
 function renderKundenHundeList(hunde = []) {
-  const wrapper = document.createElement("div");
   if (!hunde.length) {
-    const empty = document.createElement("p");
-    empty.textContent = "Keine Hunde zugeordnet.";
-    wrapper.appendChild(empty);
+    const wrapper = document.createElement("div");
+    const emptyNotice = document.createElement("p");
+    emptyNotice.className = "kunden-empty";
+    emptyNotice.textContent = "Keine Hunde zugeordnet.";
+    wrapper.appendChild(emptyNotice);
     return wrapper;
   }
   const list = document.createElement("ul");
-  list.className = "kunden-hunde-list";
+  list.className = "kunden-list";
   hunde.forEach((hund) => {
     const item = document.createElement("li");
     const link = document.createElement("a");
@@ -399,8 +400,7 @@ function renderKundenHundeList(hunde = []) {
     item.appendChild(link);
     list.appendChild(item);
   });
-  wrapper.appendChild(list);
-  return wrapper;
+  return list;
 }
 
 function formatHundeListEntry(hund = {}) {
