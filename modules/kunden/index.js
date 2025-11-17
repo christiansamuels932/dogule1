@@ -7,6 +7,7 @@ import {
   updateKunde,
   deleteKunde,
 } from "../shared/api/kunden.js";
+import { listHunde } from "../shared/api/hunde.js";
 import { createSectionHeader, createCard } from "../shared/components/components.js";
 
 let kundenCache = [];
@@ -128,6 +129,14 @@ async function renderDetail(section, id) {
     .map(({ label, value }) => `<dt>${label}</dt><dd>${valueOrDash(value)}</dd>`)
     .join("");
 
+  let linkedHunde = [];
+  try {
+    const hunde = await listHunde();
+    linkedHunde = hunde.filter((hund) => hund.kundenId === id);
+  } catch (error) {
+    console.error("KUNDEN_HUNDE_LOAD_FAILED", error);
+  }
+
   section.innerHTML = `
     <h1>Kundendetails</h1>
     <dl class="kunden-details">
@@ -158,6 +167,11 @@ async function renderDetail(section, id) {
   const hundeCard =
     hundeCardFragment.querySelector(".ui-card") || hundeCardFragment.firstElementChild;
   if (hundeCard) {
+    const hundeBody = hundeCard.querySelector(".ui-card__body");
+    if (hundeBody) {
+      hundeBody.innerHTML = "";
+      hundeBody.appendChild(renderKundenHundeList(linkedHunde));
+    }
     hundeSection.appendChild(hundeCard);
   }
   section.appendChild(hundeSection);
@@ -365,6 +379,35 @@ function applyErrors(refs, errors) {
 function showInlineToast(section, message, tone = "info") {
   setToast(message, tone);
   injectToast(section);
+}
+
+function renderKundenHundeList(hunde = []) {
+  const wrapper = document.createElement("div");
+  if (!hunde.length) {
+    const empty = document.createElement("p");
+    empty.textContent = "Keine Hunde zugeordnet.";
+    wrapper.appendChild(empty);
+    return wrapper;
+  }
+  const list = document.createElement("ul");
+  list.className = "kunden-hunde-list";
+  hunde.forEach((hund) => {
+    const item = document.createElement("li");
+    const link = document.createElement("a");
+    link.href = `#/hunde/${hund.id}`;
+    link.textContent = formatHundeListEntry(hund);
+    item.appendChild(link);
+    list.appendChild(item);
+  });
+  wrapper.appendChild(list);
+  return wrapper;
+}
+
+function formatHundeListEntry(hund = {}) {
+  const name = (hund.name || "").trim() || "Unbenannter Hund";
+  const rufname = (hund.rufname || "").trim() || "kein Rufname";
+  const rasse = (hund.rasse || "").trim() || "unbekannte Rasse";
+  return `${name} – ${rufname} · ${rasse}`;
 }
 
 function formatFullName(kunde = {}) {
