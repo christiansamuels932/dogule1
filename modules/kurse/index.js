@@ -9,7 +9,15 @@ import {
   createNotice,
   createSectionHeader,
 } from "../shared/components/components.js";
-import { listKurse, getKurs, createKurs, updateKurs, deleteKurs } from "../shared/api/index.js";
+import {
+  listKurse,
+  getKurs,
+  createKurs,
+  updateKurs,
+  deleteKurs,
+  listHunde,
+  listKunden,
+} from "../shared/api/index.js";
 
 let kursCache = [];
 const TOAST_KEY = "__DOGULE_KURSE_TOAST__";
@@ -131,6 +139,8 @@ async function renderDetail(section, id) {
     body.appendChild(renderDetailList(kurs));
     body.appendChild(renderNotesBlock(kurs));
     body.appendChild(renderMetaBlock(kurs));
+    const linkedHunde = await collectLinkedHunde(kurs);
+    const linkedKunden = await collectLinkedKunden(linkedHunde);
 
     footer.innerHTML = "";
     const editBtn = createButton({
@@ -151,7 +161,7 @@ async function renderDetail(section, id) {
     backLink.href = "#/kurse";
     backLink.textContent = "Zurück zur Übersicht";
     footer.append(backLink);
-    appendLinkedPlaceholders(section);
+    appendLinkedSections(section, linkedHunde, linkedKunden);
   } catch (error) {
     console.error("KURSE_DETAIL_FAILED", error);
     body.innerHTML = "";
@@ -174,7 +184,40 @@ async function renderDetail(section, id) {
   focusHeading(section);
 }
 
-function appendLinkedPlaceholders(section) {
+async function collectLinkedHunde(kurs) {
+  const ids = Array.isArray(kurs.hundIds) ? kurs.hundIds : [];
+  if (!ids.length) return [];
+  try {
+    const hunde = await listHunde();
+    return hunde.filter((hund) => ids.includes(hund.id));
+  } catch (error) {
+    console.error("KURSE_LINKED_HUNDE_FAILED", error);
+    return [];
+  }
+}
+
+async function collectLinkedKunden(hunde) {
+  if (!hunde.length) return [];
+  try {
+    const kunden = await listKunden();
+    const seen = new Set();
+    const result = [];
+    hunde.forEach((hund) => {
+      if (!hund.kundenId) return;
+      if (seen.has(hund.kundenId)) return;
+      const kunde = kunden.find((entry) => entry.id === hund.kundenId);
+      if (kunde) {
+        seen.add(kunde.id);
+        result.push(kunde);
+      }
+    });
+    return result;
+  } catch (error) {
+    console.error("KURSE_LINKED_KUNDEN_FAILED", error);
+    return [];
+  }
+}
+function appendLinkedSections(section, linkedHunde, linkedKunden) {
   const hundeSection = document.createElement("section");
   hundeSection.className = "kurse-linked-section";
   hundeSection.appendChild(
@@ -196,7 +239,31 @@ function appendLinkedPlaceholders(section) {
     const body = hundeCard.querySelector(".ui-card__body");
     if (body) {
       body.innerHTML = "";
-      body.appendChild(createEmptyState("Noch keine Daten", "", {}));
+      if (!linkedHunde.length) {
+        body.appendChild(createEmptyState("Noch keine Daten", "", {}));
+      } else {
+        linkedHunde.forEach((hund) => {
+          const cardFragment = createCard({
+            eyebrow: hund.rasse || "",
+            title: hund.name || "Unbenannter Hund",
+            body: `<p>Rufname: ${hund.rufname || "–"}</p>`,
+            footer: "",
+          });
+          const cardEl = cardFragment.querySelector(".ui-card") || cardFragment.firstElementChild;
+          if (!cardEl) return;
+          cardEl.classList.add("kurse-linked-hund");
+          cardEl.addEventListener("click", () => {
+            window.location.hash = `#/hunde/${hund.id}`;
+          });
+          cardEl.addEventListener("keypress", (event) => {
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              window.location.hash = `#/hunde/${hund.id}`;
+            }
+          });
+          body.appendChild(cardEl);
+        });
+      }
     }
     hundeSection.appendChild(hundeCard);
   }
@@ -223,11 +290,40 @@ function appendLinkedPlaceholders(section) {
     const body = kundenCard.querySelector(".ui-card__body");
     if (body) {
       body.innerHTML = "";
-      body.appendChild(createEmptyState("Noch keine Daten", "", {}));
+      if (!linkedKunden.length) {
+        body.appendChild(createEmptyState("Noch keine Daten", "", {}));
+      } else {
+        linkedKunden.forEach((kunde) => {
+          const cardFragment = createCard({
+            eyebrow: kunde.email || "",
+            title: formatCustomerName(kunde),
+            body: `<p>Telefon: ${kunde.telefon || "–"}</p>`,
+            footer: "",
+          });
+          const cardEl = cardFragment.querySelector(".ui-card") || cardFragment.firstElementChild;
+          if (!cardEl) return;
+          cardEl.classList.add("kurse-linked-kunde");
+          cardEl.addEventListener("click", () => {
+            window.location.hash = `#/kunden/${kunde.id}`;
+          });
+          cardEl.addEventListener("keypress", (event) => {
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              window.location.hash = `#/kunden/${kunde.id}`;
+            }
+          });
+          body.appendChild(cardEl);
+        });
+      }
     }
     kundenSection.appendChild(kundenCard);
   }
   section.appendChild(kundenSection);
+}
+
+function formatCustomerName(kunde = {}) {
+  const name = `${kunde.vorname ?? ""} ${kunde.nachname ?? ""}`.trim();
+  return name || kunde.email || "Unbenannter Kunde";
 }
 
 async function renderForm(section, view, id) {

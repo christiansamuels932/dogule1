@@ -4,9 +4,11 @@ import {
   createCard,
   createNotice,
   createSectionHeader,
+  createEmptyState,
 } from "../shared/components/components.js";
 import { deleteHund, listHunde } from "../shared/api/hunde.js";
 import { getKunde } from "../shared/api/kunden.js";
+import { listKurse } from "../shared/api/kurse.js";
 import { injectHundToast, setHundToast } from "./formView.js";
 
 export async function createHundeDetailView(container, hundId) {
@@ -66,6 +68,8 @@ export async function createHundeDetailView(container, hundId) {
     body.innerHTML = "";
     body.appendChild(buildDetailList(hund, kundeInfo));
     body.appendChild(buildMetaBlock(hund));
+    const kurseSection = await buildLinkedKurseSection(hund.id);
+    container.appendChild(kurseSection);
 
     footer.innerHTML = "";
     footer.appendChild(
@@ -124,6 +128,67 @@ export async function createHundeDetailView(container, hundId) {
   } finally {
     focusHeading(container);
   }
+}
+
+async function buildLinkedKurseSection(hundId) {
+  const section = document.createElement("section");
+  section.className = "hunde-linked-kurse";
+  section.appendChild(
+    createSectionHeader({
+      title: "Kurse dieses Hundes",
+      subtitle: "",
+      level: 2,
+    })
+  );
+  const cardFragment = createCard({
+    eyebrow: "",
+    title: "",
+    body: "",
+    footer: "",
+  });
+  const card = cardFragment.querySelector(".ui-card") || cardFragment.firstElementChild;
+  if (!card) return section;
+  const body = card.querySelector(".ui-card__body");
+  if (body) {
+    body.innerHTML = "";
+    let kurse = [];
+    try {
+      const allKurse = await listKurse();
+      kurse = allKurse.filter(
+        (kurs) => Array.isArray(kurs.hundIds) && kurs.hundIds.includes(hundId)
+      );
+    } catch (error) {
+      console.error("HUNDE_LINKED_KURSE_FAILED", error);
+    }
+    if (!kurse.length) {
+      body.appendChild(createEmptyState("Noch keine Kurse", "", {}));
+    } else {
+      kurse.forEach((kurs) => {
+        const kursFragment = createCard({
+          eyebrow: formatDate(kurs.date),
+          title: kurs.title || "Ohne Titel",
+          body: `<p>${kurs.location || "Ort offen"}</p>`,
+          footer: "",
+        });
+        const kursCard = kursFragment.querySelector(".ui-card") || kursFragment.firstElementChild;
+        if (!kursCard) return;
+        kursCard.classList.add("hunde-linked-kurs");
+        const navigate = () => {
+          window.location.hash = `#/kurse/${kurs.id}`;
+        };
+        kursCard.addEventListener("click", navigate);
+        kursCard.addEventListener("keypress", (event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            navigate();
+          }
+        });
+        body.appendChild(kursCard);
+      });
+    }
+  }
+  section.appendChild(card);
+  return section;
 }
 
 function buildDetailList(hund, kundeInfo) {
