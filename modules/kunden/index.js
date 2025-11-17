@@ -143,22 +143,24 @@ async function renderDetail(section, id) {
     console.error("KUNDEN_HUNDE_LOAD_FAILED", error);
   }
   let linkedKurse = [];
-  try {
-    const kurse = await listKurse();
-    const hundIds = new Set(linkedHunde.map((hund) => hund.id));
-    linkedKurse = kurse.filter(
-      (kurs) => Array.isArray(kurs.hundIds) && kurs.hundIds.some((hundId) => hundIds.has(hundId))
-    );
-    const unique = [];
-    const seen = new Set();
-    linkedKurse.forEach((kurs) => {
-      if (seen.has(kurs.id)) return;
-      seen.add(kurs.id);
-      unique.push(kurs);
-    });
-    linkedKurse = unique;
-  } catch (error) {
-    console.error("KUNDEN_KURSE_LOAD_FAILED", error);
+  if (linkedHunde.length) {
+    try {
+      const kurse = await listKurse();
+      const hundIds = new Set(linkedHunde.map((hund) => hund.id));
+      const filtered = kurse.filter(
+        (kurs) => Array.isArray(kurs.hundIds) && kurs.hundIds.some((hundId) => hundIds.has(hundId))
+      );
+      const unique = [];
+      const seen = new Set();
+      filtered.forEach((kurs) => {
+        if (seen.has(kurs.id)) return;
+        seen.add(kurs.id);
+        unique.push(kurs);
+      });
+      linkedKurse = unique;
+    } catch (error) {
+      console.error("KUNDEN_KURSE_LOAD_FAILED", error);
+    }
   }
 
   section.innerHTML = `
