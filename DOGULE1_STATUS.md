@@ -2,7 +2,11 @@
 
 ## Phase 1 — Scaffolding
 
-**Status:** Stations 1–10 complete and verified. Station 11 freshly restarted from the Station 10 baseline (branch `feature/station11-kunden-crud`) with layout/template loading fixed; implementation work resumes next.
+**Status:** Stations 1–17 are complete and verified. Station 18 (Alpha Hardening – core modules) is finished on branch `feature/station18-alpha-prep`, and Station 18.1 (Alpha Hardening – remaining modules & QA) kicks off next using the same branch unless otherwise noted.
+
+### Response Format Requirement
+
+- Codex must prefix every reply with the current `Station X — Step Y` marker (example: `Station 18 — Step 32 …`) so that context is obvious even after restarts.
 
 ### Station 1 — Tooling Check ✅
 
@@ -144,6 +148,30 @@ All essential tools verified and operational.
 
 **Next Action:** Start Station 18 planning.
 
+### Station 18 — Alpha Hardening (Dashboard/Kunden/Hunde/Kurse) ✅
+
+- Branch `feature/station18-alpha-prep`; PR forthcoming once Station 18.1 wraps.
+- Steps 2–13 (Dashboard): routing cleanup, shared card usage, empty/error state normalization, console hygiene, and explicit ID-override exemption comments.
+- Steps 14–22 (Kunden): rebuilt routing/list/detail/form flows with shared components, standardized empty/error states, added finance cards, ensured `[KUNDEN_ERR_*]` logging only, and delivered the “ID manuell ändern” toggle with validation.
+- Steps 23–30 (Hunde): matched Kunden polish (routing, layout, empty/error handling), refreshed list/detail/form layouts, wired finance/relations cards, and implemented the Hunde ID override.
+- Steps 31–38 (Kurse): converted routing/list/detail/form to shared card patterns, centralized empty/error states, normalized console output to `[KURSE_ERR_*]`, updated list to card-based layout, rebuilt forms (Stammdaten card + ID override), and documented verification outcomes in `modules/shared/alpha-verification.md`.
+- Step 39: captured Alpha verification summaries for Dashboard/Kunden/Hunde/Kurse to hand over to QA/client stakeholders.
+
+**Next Action:** Station 18.1 — extend the same Alpha-ready treatment to the remaining modules (Kommunikation, Kalender, Trainer, Finanzen, Waren) plus final documentation/QA polish.
+
 ### Global Requirements
 
 - All modules must auto-generate IDs for new items, and each detail/edit view must display the ID alongside a small safety button that allows manual override. This rule applies to every entity (Kunden, Hunde, Kurse, etc.) and must be enforced after Station 17 during the CRUD refinement pass.
+
+### Station 18.1 — Alpha Hardening (Kommunikation, Kalender, Trainer, Finanzen, Waren) 🚧
+
+- Scope:
+  - Apply the Station 18 checklist (routing, UI consistency, empty/error states, list/detail/form parity, console hygiene, ID override review) to the remaining modules.
+  - Extend shared verification docs and checklists once those modules reach the same standard.
+  - Prepare any residual tooling/docs required for Phase 2 → Phase 3 handoff.
+- Pending Tasks:
+  1. Audit each module against `modules/shared/alpha-checklist.md` and log deltas.
+  2. Implement fixes per module following the established sequence (routing → UI → empty/error → detail/list/form → console → ID).
+  3. Update `modules/shared/alpha-verification.md` with new module confirmations.
+  4. Finalize PR for `feature/station18-alpha-prep` after verification/regression pass.
+- **Next Action:** Begin Station 18.1 Step 1 (Kommunikation audit) immediately after this status update.
