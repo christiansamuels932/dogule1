@@ -18,13 +18,18 @@ export async function createHundeDetailView(container, hundId) {
   container.classList.add("hunde-view");
   window.scrollTo(0, 0);
 
-  container.appendChild(
-    createSectionHeader({
-      title: "Hundedetails",
-      subtitle: "Alle Informationen zu einem Hund",
-      level: 2,
-    })
-  );
+  const headerFragment = createSectionHeader({
+    title: "Hund",
+    subtitle: "",
+    level: 2,
+  });
+  const headerSection =
+    headerFragment.querySelector(".ui-section") || headerFragment.firstElementChild;
+  const headerTitle = headerSection?.querySelector(".ui-section__title");
+  const headerSubtitle = headerSection?.querySelector(".ui-section__subtitle");
+  if (headerTitle) headerTitle.textContent = "Hund";
+  if (headerSubtitle) headerSubtitle.textContent = "";
+  container.appendChild(headerFragment);
   injectHundToast(container);
 
   const cardFragment = createCard({
@@ -76,8 +81,17 @@ export async function createHundeDetailView(container, hundId) {
     }
     container.__linkedFinanzen = kundeFinanzen;
 
-    cardElement.querySelector(".ui-card__title").textContent = hund.name || "Unbenannter Hund";
+    const hundName = hund.name || "Unbenannter Hund";
+    if (headerSubtitle) {
+      headerSubtitle.textContent = hundName;
+      headerSubtitle.hidden = false;
+    }
+    cardElement.querySelector(".ui-card__title").textContent = hundName;
     body.innerHTML = "";
+    if (headerSubtitle) {
+      headerSubtitle.textContent = "";
+      headerSubtitle.hidden = true;
+    }
     if (kundeLoadFailed) {
       body.appendChild(
         createNotice("Fehler beim Laden der Daten.", {
