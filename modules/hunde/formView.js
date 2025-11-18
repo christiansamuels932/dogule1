@@ -134,17 +134,58 @@ function buildFormFields(form, existing = {}, kunden = [], hundeListe = [], mode
   const assignedHundeId =
     existing?.hundeId ?? (mode === "create" ? generateNextHundeId(hundeListe) : existing?.id || "");
   const resolvedHundeId = assignedHundeId || generateNextHundeId(hundeListe);
+  const defaultId = resolvedHundeId;
+  const refs = {};
+
+  // Hunde-ID row with manual override toggle
+  const idRow = createFormRow({
+    id: "hund-id",
+    label: "Hunde-ID*",
+    placeholder: "z. B. hund-001",
+    required: true,
+    describedByText:
+      'Standardmäßig automatisch. Mit "ID manuell ändern" aktivierst du die Bearbeitung.',
+  });
+  const idInput = idRow.querySelector("input");
+  idInput.name = "hundeId";
+  idInput.value = resolvedHundeId;
+  idInput.readOnly = true;
+  idInput.setAttribute("aria-readonly", "true");
+  const idHint = idRow.querySelector(".ui-form-row__hint");
+  if (idHint) {
+    idHint.classList.remove("sr-only");
+  }
+  refs.hundeId = { input: idInput, hint: idHint, defaultHint: idHint?.textContent || "" };
+  form.appendChild(idRow);
+
+  const toggleWrap = document.createElement("div");
+  toggleWrap.className = "hunde-id-toggle";
+  const toggleBtn = document.createElement("button");
+  toggleBtn.type = "button";
+  toggleBtn.className = "ui-btn ui-btn--secondary";
+  toggleBtn.textContent = "ID manuell ändern";
+  toggleWrap.appendChild(toggleBtn);
+  form.appendChild(toggleWrap);
+
+  let manualOverride = false;
+  toggleBtn.addEventListener("click", () => {
+    manualOverride = !manualOverride;
+    if (manualOverride) {
+      idInput.readOnly = false;
+      idInput.removeAttribute("aria-readonly");
+      toggleBtn.textContent = "Automatische ID verwenden";
+      idInput.focus();
+    } else {
+      idInput.readOnly = true;
+      idInput.setAttribute("aria-readonly", "true");
+      toggleBtn.textContent = "ID manuell ändern";
+      if (!idInput.value.trim()) {
+        idInput.value = defaultId;
+      }
+    }
+  });
+
   const fields = [
-    {
-      name: "hundeId",
-      value: resolvedHundeId,
-      config: {
-        id: "hund-id",
-        label: "Hunde-ID*",
-        placeholder: "z. B. hund-001",
-        required: true,
-      },
-    },
     {
       name: "name",
       value: existing?.name ?? "",
@@ -253,7 +294,6 @@ function buildFormFields(form, existing = {}, kunden = [], hundeListe = [], mode
     },
   ];
 
-  const refs = {};
   fields.forEach((field) => {
     const row = createFormRow(field.config);
     const input = row.querySelector("input, select, textarea");
@@ -266,12 +306,15 @@ function buildFormFields(form, existing = {}, kunden = [], hundeListe = [], mode
     if (field.value !== undefined && field.value !== null) {
       input.value = field.value;
     }
-    if (field.name === "hundeId") {
-      input.readOnly = true;
-    }
     const hint = row.querySelector(".ui-form-row__hint");
-    hint.classList.add("sr-only");
-    refs[field.name] = { input, hint };
+    const defaultHint = field.config.describedByText || "";
+    if (defaultHint) {
+      hint.textContent = defaultHint;
+      hint.classList.remove("sr-only");
+    } else {
+      hint.classList.add("sr-only");
+    }
+    refs[field.name] = { input, hint, defaultHint };
     form.appendChild(row);
   });
   return refs;
@@ -325,8 +368,14 @@ function applyErrors(refs, errors) {
       ref.hint.classList.remove("sr-only");
       ref.input.setAttribute("aria-invalid", "true");
     } else {
-      ref.hint.textContent = "";
-      ref.hint.classList.add("sr-only");
+      const defaultHint = ref.defaultHint || "";
+      if (defaultHint) {
+        ref.hint.textContent = defaultHint;
+        ref.hint.classList.remove("sr-only");
+      } else {
+        ref.hint.textContent = "";
+        ref.hint.classList.add("sr-only");
+      }
       ref.input.setAttribute("aria-invalid", "false");
     }
   });
