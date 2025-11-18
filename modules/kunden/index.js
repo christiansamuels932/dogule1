@@ -55,11 +55,9 @@ function createUiLink(label, href, variant = "primary") {
   return link;
 }
 
-function appendSharedEmptyState(target, hint = "", actionNode) {
+function appendSharedEmptyState(target) {
   if (!target) return;
-  const fragment = createEmptyState("Keine Daten vorhanden.", hint, {
-    actionNode,
-  });
+  const fragment = createEmptyState("Keine Daten vorhanden.", "");
   target.appendChild(fragment);
 }
 
@@ -182,8 +180,7 @@ async function renderList(root) {
   const listBody = listCard.querySelector(".ui-card__body");
   listBody.innerHTML = "";
   if (!kunden.length) {
-    const actionNode = createUiLink("Ersten Kunden anlegen", "#/kunden/new", "primary");
-    appendSharedEmptyState(listBody, "Lege den ersten Kunden an.", actionNode);
+    appendSharedEmptyState(listBody);
   } else {
     const list = document.createElement("ul");
     list.className = "kunden-list";
@@ -554,7 +551,7 @@ function renderKundenHundeSection(hunde = []) {
   body.innerHTML = "";
 
   if (!hunde.length) {
-    appendSharedEmptyState(body, "Noch keine Hunde zugeordnet.");
+    appendSharedEmptyState(body);
   } else {
     const list = document.createElement("ul");
     list.className = "kunden-list";
@@ -606,7 +603,7 @@ function renderKundenKurseSection(kurse = []) {
   body.innerHTML = "";
 
   if (!kurse.length) {
-    appendSharedEmptyState(body, "Noch keine Kurse verknüpft.");
+    appendSharedEmptyState(body);
   } else {
     kurse.forEach((kurs) => {
       const kursCardFragment = createCard({
@@ -653,7 +650,7 @@ function renderFinanzOverview(finanzen = []) {
   body.innerHTML = "";
 
   if (!finanzen.length) {
-    appendSharedEmptyState(body, "Noch keine Finanzdaten verfügbar.");
+    appendSharedEmptyState(body);
   } else {
     const payments = finanzen
       .filter((entry) => entry.typ === "zahlung")
@@ -703,7 +700,7 @@ function renderOffeneBetraege(finanzen = []) {
 
   const openEntries = finanzen.filter((entry) => entry.typ === "offen");
   if (!openEntries.length) {
-    appendSharedEmptyState(body, "Keine offenen Posten vorhanden.");
+    appendSharedEmptyState(body);
   } else {
     const sum = openEntries.reduce((total, entry) => total + Number(entry.betrag || 0), 0);
     const summary = document.createElement("p");
@@ -743,7 +740,7 @@ function renderZahlungshistorie(finanzen = []) {
 
   const payments = finanzen.filter((entry) => entry.typ === "zahlung");
   if (!payments.length) {
-    appendSharedEmptyState(body, "Noch keine Zahlungen erfasst.");
+    appendSharedEmptyState(body);
   } else {
     const list = document.createElement("ul");
     list.className = "kunden-zahlungsliste";
