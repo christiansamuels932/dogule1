@@ -685,7 +685,7 @@ async function renderForm(section, view, id) {
 
   const formCardFragment = createCard({
     eyebrow: "",
-    title: mode === "create" ? "Angaben zum Kurs" : existing?.title || "Angaben zum Kurs",
+    title: "Stammdaten",
     body: "",
     footer: "",
   });
@@ -697,6 +697,7 @@ async function renderForm(section, view, id) {
   form.noValidate = true;
   form.dataset.kursForm = "true";
   const body = formCard.querySelector(".ui-card__body");
+  body.innerHTML = "";
   body.appendChild(form);
 
   const fields = buildFormFields(existing);
@@ -705,6 +706,10 @@ async function renderForm(section, view, id) {
     const row = createFormRow(field.config);
     const input = row.querySelector("input, select, textarea");
     input.name = field.name;
+    if (field.readOnly) {
+      input.readOnly = true;
+      input.setAttribute("aria-readonly", "true");
+    }
     if (field.config.type === "number") {
       if (field.min !== undefined) input.min = field.min;
       if (field.max !== undefined) input.max = field.max;
@@ -723,16 +728,27 @@ async function renderForm(section, view, id) {
 
   const actions = document.createElement("div");
   actions.className = "kurse-form-actions";
-  const submit = document.createElement("button");
+  const submit = createButton({
+    label: mode === "create" ? "Erstellen" : "Speichern",
+    variant: "primary",
+  });
   submit.type = "button";
-  submit.className = "ui-btn ui-btn--primary";
-  submit.textContent = mode === "create" ? "Erstellen" : "Speichern";
-  const cancel = document.createElement("a");
-  cancel.className = "ui-btn ui-btn--quiet";
-  cancel.href = mode === "create" ? "#/kurse" : `#/kurse/${id}`;
-  cancel.textContent = "Abbrechen";
+  const cancel = createButton({
+    label: "Abbrechen",
+    variant: "quiet",
+  });
+  cancel.type = "button";
+  cancel.addEventListener("click", (event) => {
+    event.preventDefault();
+    const target = mode === "create" ? "#/kurse" : `#/kurse/${id}`;
+    if (typeof window !== "undefined") {
+      window.location.hash = target;
+    }
+  });
   actions.append(submit, cancel);
-  formCard.querySelector(".ui-card__footer").appendChild(actions);
+  const footerHost = formCard.querySelector(".ui-card__footer");
+  footerHost.innerHTML = "";
+  footerHost.appendChild(actions);
 
   const submitContext = {
     mode,
@@ -926,6 +942,16 @@ function buildFormFields(existing = {}) {
   const statusValue = existing?.status ?? "geplant";
   const levelValue = existing?.level ?? "";
   return [
+    {
+      name: "id",
+      value: existing?.id ?? "",
+      readOnly: true,
+      config: {
+        id: "kurs-id",
+        label: "Kurs-ID",
+        placeholder: "Wird automatisch vergeben",
+      },
+    },
     {
       name: "title",
       value: existing?.title ?? "",
