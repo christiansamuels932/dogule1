@@ -61,6 +61,21 @@ function appendSharedEmptyState(target) {
   target.appendChild(fragment);
 }
 
+function createErrorNotice() {
+  return createNotice("Fehler beim Laden der Daten.", {
+    variant: "warn",
+    role: "alert",
+  });
+}
+
+function showErrorNotice(target, { replace = true } = {}) {
+  if (!target) return;
+  if (replace) {
+    target.innerHTML = "";
+  }
+  target.appendChild(createErrorNotice());
+}
+
 function mapToneToNoticeVariant(tone = "info") {
   if (tone === "success") return "ok";
   if (tone === "error" || tone === "warn") return "warn";
@@ -88,7 +103,7 @@ export async function initModule(container, routeContext = { segments: [] }) {
       renderUnknownView(viewRoot);
     }
   } catch (error) {
-    console.error("KUNDEN_ROUTE_FAILED", error);
+    console.error("[KUNDEN_ERR_ROUTE]", error);
     renderLoadError(viewRoot);
   }
 }
@@ -101,12 +116,10 @@ function renderUnknownView(root) {
     subtitle: "Diese Route wird aktuell nicht unterstützt.",
     level: 1,
   });
-  section.appendChild(
-    createNotice(`Der Pfad "${window.location.hash}" wird noch nicht unterstützt.`, {
-      variant: "warn",
-      role: "alert",
-    })
-  );
+  section.appendChild(createErrorNotice());
+  const note = document.createElement("p");
+  note.textContent = `Der Pfad "${window.location.hash}" wird noch nicht unterstützt.`;
+  section.appendChild(note);
   section.appendChild(createUiLink("Zur Kundenliste", "#/kunden", "quiet"));
   root.appendChild(section);
   focusHeading(root);
@@ -120,12 +133,7 @@ function renderLoadError(root) {
     subtitle: "Die Kundenansicht konnte nicht geladen werden.",
     level: 1,
   });
-  section.appendChild(
-    createNotice("Konnte Kundenansicht nicht laden.", {
-      variant: "warn",
-      role: "alert",
-    })
-  );
+  section.appendChild(createErrorNotice());
   section.appendChild(createUiLink("Zur Kundenliste", "#/kunden", "quiet"));
   root.appendChild(section);
   focusHeading(root);
@@ -156,7 +164,6 @@ function focusHeading(root) {
 
 async function renderList(root) {
   if (!root) return;
-  const kunden = await fetchKunden();
   root.innerHTML = "";
 
   const section = createSectionBlock({
@@ -179,6 +186,19 @@ async function renderList(root) {
   const listCard = createStandardCard("Kundenliste");
   const listBody = listCard.querySelector(".ui-card__body");
   listBody.innerHTML = "";
+
+  let kunden = [];
+  try {
+    kunden = await fetchKunden();
+  } catch (error) {
+    console.error("[KUNDEN_ERR_LIST_LOAD]", error);
+    showErrorNotice(listBody);
+    section.append(actionsCard, listCard);
+    root.appendChild(section);
+    focusHeading(root);
+    return;
+  }
+
   if (!kunden.length) {
     appendSharedEmptyState(listBody);
   } else {
@@ -204,9 +224,31 @@ async function renderList(root) {
 
 async function renderDetail(root, id) {
   if (!root) return;
-  if (!kundenCache.length) await fetchKunden();
-  let kunde = kundenCache.find((k) => k.id === id);
-  if (!kunde) kunde = await getKunde(id);
+  let kunde = null;
+  try {
+    if (!kundenCache.length) {
+      await fetchKunden();
+    }
+    kunde = kundenCache.find((k) => k.id === id);
+    if (!kunde) {
+      kunde = await getKunde(id);
+    }
+  } catch (error) {
+    console.error("[KUNDEN_ERR_DETAIL_LOAD]", error);
+    root.innerHTML = "";
+    const fallbackSection = createSectionBlock({
+      title: "Kundendetails",
+      subtitle: "",
+      level: 1,
+    });
+    const errorCard = createStandardCard("Stammdaten");
+    const errorBody = errorCard.querySelector(".ui-card__body");
+    showErrorNotice(errorBody);
+    fallbackSection.appendChild(errorCard);
+    root.appendChild(fallbackSection);
+    focusHeading(root);
+    return;
+  }
 
   root.innerHTML = "";
   const detailSection = createSectionBlock({
@@ -255,19 +297,25 @@ async function renderDetail(root, id) {
   deleteBtn.textContent = "Löschen";
   const backLink = createUiLink("Zur Übersicht", "#/kunden", "quiet");
   actionsBody.append(editLink, deleteBtn, backLink);
+  const actionStatus = document.createElement("div");
+  actionStatus.className = "kunden-card-status";
+  actionsBody.appendChild(actionStatus);
   detailSection.appendChild(actionsCard);
 
   root.appendChild(detailSection);
 
   let linkedHunde = [];
+  let hundeLoadFailed = false;
   try {
     const hunde = await listHunde();
     linkedHunde = hunde.filter((hund) => hund.kundenId === id);
   } catch (error) {
-    console.error("KUNDEN_HUNDE_LOAD_FAILED", error);
+    hundeLoadFailed = true;
+    console.error("[KUNDEN_ERR_HUNDE_LOAD]", error);
   }
 
   let linkedKurse = [];
+  let kurseLoadFailed = false;
   if (linkedHunde.length) {
     try {
       const kurse = await listKurse();
@@ -284,16 +332,26 @@ async function renderDetail(root, id) {
       });
       linkedKurse = unique;
     } catch (error) {
-      console.error("KUNDEN_KURSE_LOAD_FAILED", error);
+      kurseLoadFailed = true;
+      console.error("[KUNDEN_ERR_KURSE_LOAD]", error);
     }
+  } else if (hundeLoadFailed) {
+    kurseLoadFailed = true;
   }
 
-  root.appendChild(renderKundenHundeSection(linkedHunde));
-  root.appendChild(renderKundenKurseSection(linkedKurse));
-  const finanzData = await loadFinanzen(id);
-  root.appendChild(renderFinanzOverview(finanzData));
-  root.appendChild(renderOffeneBetraege(finanzData));
-  root.appendChild(renderZahlungshistorie(finanzData));
+  root.appendChild(renderKundenHundeSection(linkedHunde, hundeLoadFailed));
+  root.appendChild(renderKundenKurseSection(linkedKurse, kurseLoadFailed));
+  let finanzen = [];
+  let finanzenLoadFailed = false;
+  try {
+    finanzen = await loadFinanzen(id);
+  } catch (error) {
+    finanzenLoadFailed = true;
+    console.error("[KUNDEN_ERR_FINANZEN_LOAD]", error);
+  }
+  root.appendChild(renderFinanzOverview(finanzen, finanzenLoadFailed));
+  root.appendChild(renderOffeneBetraege(finanzen, finanzenLoadFailed));
+  root.appendChild(renderZahlungshistorie(finanzen, finanzenLoadFailed));
 
   deleteBtn.addEventListener("click", async () => {
     if (deleteBtn.disabled) return;
@@ -313,8 +371,8 @@ async function renderDetail(root, id) {
       setToast("Kunde gelöscht.", "success");
       window.location.hash = "#/kunden";
     } catch (error) {
-      console.error("KUNDEN_DELETE_FAILED", error);
-      showInlineToast(detailSection, "Löschen fehlgeschlagen. Bitte erneut versuchen.", "error");
+      console.error("[KUNDEN_ERR_DELETE]", error);
+      showErrorNotice(actionStatus);
     } finally {
       if (!deleted) {
         deleteBtn.disabled = false;
@@ -328,12 +386,48 @@ async function renderDetail(root, id) {
 
 async function renderForm(root, view, id) {
   if (!root) return;
-  if (!kundenCache.length) await fetchKunden();
+  try {
+    if (!kundenCache.length) {
+      await fetchKunden();
+    }
+  } catch (error) {
+    console.error("[KUNDEN_ERR_FORM_INIT]", error);
+    root.innerHTML = "";
+    const fallbackSection = createSectionBlock({
+      title: "Kundenformular",
+      subtitle: "",
+      level: 1,
+    });
+    const card = createStandardCard("Stammdaten");
+    const body = card.querySelector(".ui-card__body");
+    showErrorNotice(body);
+    fallbackSection.appendChild(card);
+    root.appendChild(fallbackSection);
+    focusHeading(root);
+    return;
+  }
   const mode = view === "create" ? "create" : "edit";
   let existing = null;
 
   if (mode === "edit") {
-    existing = kundenCache.find((k) => k.id === id) || (await getKunde(id));
+    try {
+      existing = kundenCache.find((k) => k.id === id) || (await getKunde(id));
+    } catch (error) {
+      console.error("[KUNDEN_ERR_FORM_LOAD]", error);
+      root.innerHTML = "";
+      const section = createSectionBlock({
+        title: "Kunde bearbeiten",
+        subtitle: "",
+        level: 1,
+      });
+      const card = createStandardCard("Stammdaten");
+      const body = card.querySelector(".ui-card__body");
+      showErrorNotice(body);
+      section.appendChild(card);
+      root.appendChild(section);
+      focusHeading(root);
+      return;
+    }
     if (!existing) {
       root.innerHTML = "";
       const section = createSectionBlock({
@@ -429,6 +523,7 @@ async function renderForm(root, view, id) {
 
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
+    formStatusSlot.innerHTML = "";
     const values = collectValues(refs);
     const errors = validate(values);
     applyErrors(refs, errors);
@@ -458,8 +553,8 @@ async function renderForm(root, view, id) {
         window.location.hash = `#/kunden/${id}`;
       }
     } catch (error) {
-      console.error("KUNDEN_SAVE_FAILED", error);
-      showInlineToast(section, "Speichern fehlgeschlagen. Bitte erneut versuchen.", "error");
+      console.error("[KUNDEN_ERR_FORM_SAVE]", error);
+      showErrorNotice(formStatusSlot, { replace: true });
     } finally {
       if (!success) {
         submit.disabled = false;
@@ -471,6 +566,9 @@ async function renderForm(root, view, id) {
   const formCard = createStandardCard("Stammdaten");
   const formBody = formCard.querySelector(".ui-card__body");
   formBody.innerHTML = "";
+  const formStatusSlot = document.createElement("div");
+  formStatusSlot.className = "kunden-card-status";
+  formBody.appendChild(formStatusSlot);
   formBody.appendChild(form);
   section.appendChild(formCard);
   root.appendChild(section);
@@ -535,12 +633,7 @@ function applyErrors(refs, errors) {
   });
 }
 
-function showInlineToast(section, message, tone = "info") {
-  setToast(message, tone);
-  injectToast(section);
-}
-
-function renderKundenHundeSection(hunde = []) {
+function renderKundenHundeSection(hunde = [], hasError = false) {
   const section = createSectionBlock({
     title: "Hunde dieses Kunden",
     subtitle: "",
@@ -550,7 +643,9 @@ function renderKundenHundeSection(hunde = []) {
   const body = card.querySelector(".ui-card__body");
   body.innerHTML = "";
 
-  if (!hunde.length) {
+  if (hasError) {
+    showErrorNotice(body);
+  } else if (!hunde.length) {
     appendSharedEmptyState(body);
   } else {
     const list = document.createElement("ul");
@@ -592,7 +687,7 @@ function generateNextKundenCode(list = []) {
   return `K-${String(nextNumber).padStart(3, "0")}`;
 }
 
-function renderKundenKurseSection(kurse = []) {
+function renderKundenKurseSection(kurse = [], hasError = false) {
   const section = createSectionBlock({
     title: "Kurse dieses Kunden",
     subtitle: "",
@@ -602,7 +697,9 @@ function renderKundenKurseSection(kurse = []) {
   const body = card.querySelector(".ui-card__body");
   body.innerHTML = "";
 
-  if (!kurse.length) {
+  if (hasError) {
+    showErrorNotice(body);
+  } else if (!kurse.length) {
     appendSharedEmptyState(body);
   } else {
     kurse.forEach((kurs) => {
@@ -630,16 +727,11 @@ function renderKundenKurseSection(kurse = []) {
 }
 
 async function loadFinanzen(kundeId) {
-  try {
-    const finanzen = await listFinanzen();
-    return finanzen.filter((entry) => entry.kundeId === kundeId);
-  } catch (error) {
-    console.error("KUNDEN_FINANZEN_LOAD_FAILED", error);
-    return [];
-  }
+  const finanzen = await listFinanzen();
+  return finanzen.filter((entry) => entry.kundeId === kundeId);
 }
 
-function renderFinanzOverview(finanzen = []) {
+function renderFinanzOverview(finanzen = [], hasError = false) {
   const section = createSectionBlock({
     title: "Finanzübersicht",
     subtitle: "",
@@ -649,7 +741,9 @@ function renderFinanzOverview(finanzen = []) {
   const body = card.querySelector(".ui-card__body");
   body.innerHTML = "";
 
-  if (!finanzen.length) {
+  if (hasError) {
+    showErrorNotice(body);
+  } else if (!finanzen.length) {
     appendSharedEmptyState(body);
   } else {
     const payments = finanzen
@@ -688,7 +782,7 @@ function renderFinanzOverview(finanzen = []) {
   return section;
 }
 
-function renderOffeneBetraege(finanzen = []) {
+function renderOffeneBetraege(finanzen = [], hasError = false) {
   const section = createSectionBlock({
     title: "Offene Beträge",
     subtitle: "",
@@ -698,37 +792,41 @@ function renderOffeneBetraege(finanzen = []) {
   const body = card.querySelector(".ui-card__body");
   body.innerHTML = "";
 
-  const openEntries = finanzen.filter((entry) => entry.typ === "offen");
-  if (!openEntries.length) {
-    appendSharedEmptyState(body);
+  if (hasError) {
+    showErrorNotice(body);
   } else {
-    const sum = openEntries.reduce((total, entry) => total + Number(entry.betrag || 0), 0);
-    const summary = document.createElement("p");
-    const summaryLabel = document.createElement("strong");
-    summaryLabel.textContent = "Total offen:";
-    summary.append(summaryLabel, document.createTextNode(` CHF ${sum.toFixed(2)}`));
-    body.appendChild(summary);
+    const openEntries = finanzen.filter((entry) => entry.typ === "offen");
+    if (!openEntries.length) {
+      appendSharedEmptyState(body);
+    } else {
+      const sum = openEntries.reduce((total, entry) => total + Number(entry.betrag || 0), 0);
+      const summary = document.createElement("p");
+      const summaryLabel = document.createElement("strong");
+      summaryLabel.textContent = "Total offen:";
+      summary.append(summaryLabel, document.createTextNode(` CHF ${sum.toFixed(2)}`));
+      body.appendChild(summary);
 
-    const list = document.createElement("ul");
-    list.className = "kunden-offene-liste";
-    openEntries.forEach((entry) => {
-      const item = document.createElement("li");
-      const title = document.createElement("strong");
-      title.textContent = entry.beschreibung || "Posten";
-      const amountText = document.createTextNode(
-        ` – CHF ${Number(entry.betrag || 0).toFixed(2)} (${formatDateTime(entry.datum)})`
-      );
-      item.append(title, amountText);
-      list.appendChild(item);
-    });
-    body.appendChild(list);
+      const list = document.createElement("ul");
+      list.className = "kunden-offene-liste";
+      openEntries.forEach((entry) => {
+        const item = document.createElement("li");
+        const title = document.createElement("strong");
+        title.textContent = entry.beschreibung || "Posten";
+        const amountText = document.createTextNode(
+          ` – CHF ${Number(entry.betrag || 0).toFixed(2)} (${formatDateTime(entry.datum)})`
+        );
+        item.append(title, amountText);
+        list.appendChild(item);
+      });
+      body.appendChild(list);
+    }
   }
 
   section.appendChild(card);
   return section;
 }
 
-function renderZahlungshistorie(finanzen = []) {
+function renderZahlungshistorie(finanzen = [], hasError = false) {
   const section = createSectionBlock({
     title: "Zahlungshistorie",
     subtitle: "",
@@ -738,23 +836,27 @@ function renderZahlungshistorie(finanzen = []) {
   const body = card.querySelector(".ui-card__body");
   body.innerHTML = "";
 
-  const payments = finanzen.filter((entry) => entry.typ === "zahlung");
-  if (!payments.length) {
-    appendSharedEmptyState(body);
+  if (hasError) {
+    showErrorNotice(body);
   } else {
-    const list = document.createElement("ul");
-    list.className = "kunden-zahlungsliste";
-    payments.forEach((entry) => {
-      const item = document.createElement("li");
-      const time = document.createElement("strong");
-      time.textContent = formatDateTime(entry.datum);
-      const amountText = document.createTextNode(
-        ` – CHF ${Number(entry.betrag || 0).toFixed(2)} (${entry.beschreibung || "Zahlung"})`
-      );
-      item.append(time, amountText);
-      list.appendChild(item);
-    });
-    body.appendChild(list);
+    const payments = finanzen.filter((entry) => entry.typ === "zahlung");
+    if (!payments.length) {
+      appendSharedEmptyState(body);
+    } else {
+      const list = document.createElement("ul");
+      list.className = "kunden-zahlungsliste";
+      payments.forEach((entry) => {
+        const item = document.createElement("li");
+        const time = document.createElement("strong");
+        time.textContent = formatDateTime(entry.datum);
+        const amountText = document.createTextNode(
+          ` – CHF ${Number(entry.betrag || 0).toFixed(2)} (${entry.beschreibung || "Zahlung"})`
+        );
+        item.append(time, amountText);
+        list.appendChild(item);
+      });
+      body.appendChild(list);
+    }
   }
 
   section.appendChild(card);
