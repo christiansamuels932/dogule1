@@ -118,6 +118,7 @@ function appendSectionCard(section, builder, errorCode) {
       section.appendChild(node);
     }
   } catch (error) {
+    // Console output stays limited to standardized dashboard error codes.
     console.error(errorCode, error);
     section.appendChild(buildErrorCard());
   }
