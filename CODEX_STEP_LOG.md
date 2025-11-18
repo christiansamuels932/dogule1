@@ -1,5 +1,7 @@
 # Codex Step Log
 
+> Dieses Log ist eine temporäre Notiz für Codex – es dokumentiert ausschließlich den aktuellen Arbeitsstand innerhalb einer laufenden Station und wird bei Bedarf überschrieben.
+
 - **Station 18 Step 2 (completed):** Built the initial alpha-readiness checklist skeletons for Dashboard, Kunden, Hunde, Kurse in `modules/shared/alpha-checklist.md`, listing routing/UI/empty/error/detail/list/form/console items so every subsequent step has explicit checkboxes.
 - **Station 18 Step 3 (completed):** Performed a static audit (dev server blocked) and documented every concrete issue per module in `modules/shared/alpha-findings.md`, covering missing shared components, ID override gaps, console noise, and inconsistent empty states.
 - **Station 18 Step 4 (completed):** Authored `modules/shared/alpha-fix-plan.md`, sequencing remediation tasks module-by-module in the mandated order (routing → UI consistency → empty-states → error-states → detail views → list views → form views → console cleanliness → ID overrides → Kurs-ID visibility).
@@ -31,3 +33,4 @@
 - **Station 18 Step 30 (completed):** Modernized the Hunde create/edit forms with shared card/form-row helpers, shared buttons, and the ID override note—bringing them to parity with Kunden forms.
 - **Station 18 Step 31a (completed):** Began the Kurse routing cleanup by converting every navigation action in `modules/kurse/index.js` to anchor-based links, wrapping course list cards in anchors, and replacing all console errors with `[KURSE_ERR_*]` codes while leaving list/form layouts for the next pass.
 - **Station 18 Status:** Work is paused for a few days after Step 31a; remaining Kurse tasks (list/form layout normalization, final UI polish) will resume once the break concludes.
+- **Station 18.1 Preview:** Nächster Schritt ist Station 18.1 – dieselbe Alpha-Checkliste wird auf Kommunikation, Kalender, Trainer, Finanzen und Waren angewendet (Routing/UI/Empty/Error/Detail/List/Form/Console/ID). Dazu gehören neue Verifikationsabschnitte in `modules/shared/alpha-verification.md` sowie QA-Checks, bevor Station 18.x abgeschlossen und Phase 2 übergeben wird.
