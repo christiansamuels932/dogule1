@@ -1,3 +1,4 @@
+// Dashboard has no entity IDs; ID override controls are not applicable (Station 18 verification).
 // Dashboard has no form views; verified for Station 18
 // Standardized module interface for Dogule1
 /* globals document, console */
