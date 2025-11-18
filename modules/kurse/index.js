@@ -12,6 +12,11 @@ import {
 
 const createSection = createSectionHeader;
 const createEmpty = () => createEmptyState("Keine Daten vorhanden.", "", {});
+const createErrorNotice = () =>
+  createNotice("Fehler beim Laden der Daten.", {
+    variant: "warn",
+    role: "alert",
+  });
 import {
   listKurse,
   getKurs,
@@ -78,15 +83,9 @@ export async function initModule(container, routeContext = { segments: [] }) {
     if (errorCard) {
       const body = errorCard.querySelector(".ui-card__body");
       body.innerHTML = "";
-      body.appendChild(
-        createNotice("Kursansicht konnte nicht geladen werden.", {
-          variant: "warn",
-          role: "alert",
-        })
-      );
+      body.appendChild(createErrorNotice());
       const footer = errorCard.querySelector(".ui-card__footer");
-      footer.innerHTML = "";
-      footer.appendChild(createNavLink("Zurück zur Übersicht", "#/kurse", "quiet"));
+      if (footer) footer.innerHTML = "";
       section.appendChild(errorCard);
     }
   }
@@ -212,13 +211,10 @@ async function renderDetail(section, id) {
   } catch (error) {
     console.error("[KURSE_ERR_DETAIL]", error);
     body.innerHTML = "";
-    const noticeFragment = createNotice("Kurs konnte nicht geladen werden.", {
-      variant: "warn",
-      role: "alert",
-    });
-    body.appendChild(noticeFragment);
-    body.appendChild(createNavLink("Zurück zur Übersicht", "#/kurse", "primary"));
-    if (footer) footer.innerHTML = "";
+    body.appendChild(createErrorNotice());
+    if (footer) {
+      footer.innerHTML = "";
+    }
   }
 
   focusHeading(section);
@@ -558,15 +554,9 @@ async function renderForm(section, view, id) {
       if (errorCard) {
         const body = errorCard.querySelector(".ui-card__body");
         body.innerHTML = "";
-        body.appendChild(
-          createNotice("Kurs konnte nicht geladen werden.", {
-            variant: "warn",
-            role: "alert",
-          })
-        );
+        body.appendChild(createErrorNotice());
         const footer = errorCard.querySelector(".ui-card__footer");
-        footer.innerHTML = "";
-        footer.appendChild(createNavLink("Zur Übersicht", "#/kurse", "primary"));
+        if (footer) footer.innerHTML = "";
         section.appendChild(errorCard);
       }
       focusHeading(section);
@@ -647,8 +637,14 @@ async function renderForm(section, view, id) {
 }
 
 async function fetchKurse() {
-  kursCache = await listKurse();
-  return kursCache;
+  try {
+    kursCache = await listKurse();
+    return kursCache;
+  } catch (error) {
+    console.error("[KURSE_ERR_FETCH_LIST]", error);
+    kursCache = [];
+    throw error;
+  }
 }
 
 function buildCourseToolbarCard() {
@@ -739,20 +735,7 @@ async function populateCourses(cardElement) {
   } catch (error) {
     console.error("[KURSE_ERR_LIST_FETCH]", error);
     body.innerHTML = "";
-    const noticeFragment = createNotice("Fehler beim Laden der Kurse.", {
-      variant: "warn",
-      role: "alert",
-    });
-    body.appendChild(noticeFragment);
-    const retryLink = document.createElement("a");
-    retryLink.href = "#/kurse";
-    retryLink.className = "ui-btn ui-btn--secondary";
-    retryLink.textContent = "Erneut versuchen";
-    retryLink.addEventListener("click", (event) => {
-      event.preventDefault();
-      populateCourses(cardElement);
-    });
-    body.appendChild(retryLink);
+    body.appendChild(createErrorNotice());
   }
 }
 
