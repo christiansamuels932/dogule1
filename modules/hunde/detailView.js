@@ -136,7 +136,7 @@ async function buildLinkedKurseSection(hundId) {
       console.error("[HUNDE_ERR_LINKED_KURSE]", error);
     }
     if (!kurse.length) {
-      body.appendChild(createEmptyState("Noch keine Kurse", "", {}));
+      body.appendChild(createEmptyState("Keine Daten vorhanden.", ""));
     } else {
       kurse.forEach((kurs) => {
         const kursFragment = createCard({
@@ -184,7 +184,7 @@ function buildFinanzUebersichtSection(finanzen = []) {
     const payments = finanzen.filter((entry) => entry.typ === "zahlung");
     const latest = payments.length ? payments[payments.length - 1] : null;
     if (!latest && !finanzen.some((entry) => entry.typ === "offen")) {
-      body.appendChild(createEmptyState("Keine Daten vorhanden.", "", {}));
+      body.appendChild(createEmptyState("Keine Daten vorhanden.", ""));
     } else {
       const listFragment = createCard({
         eyebrow: "",
@@ -248,7 +248,7 @@ function buildFinanzOffeneSection(finanzen = []) {
     body.innerHTML = "";
     const offen = finanzen.filter((entry) => entry.typ === "offen");
     if (!offen.length) {
-      body.appendChild(createEmptyState("Keine Daten vorhanden.", "", {}));
+      body.appendChild(createEmptyState("Keine Daten vorhanden.", ""));
     } else {
       const sum = offen.reduce((total, entry) => total + Number(entry.betrag || 0), 0);
       const summaryCardFragment = createCard({
@@ -302,7 +302,7 @@ function buildFinanzHistorieSection(finanzen = []) {
       .slice()
       .reverse();
     if (!payments.length) {
-      body.appendChild(createEmptyState("Keine Daten vorhanden.", "", {}));
+      body.appendChild(createEmptyState("Keine Daten vorhanden.", ""));
     } else {
       payments.forEach((entry) => {
         const paymentCardFragment = createCard({

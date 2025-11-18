@@ -1,6 +1,5 @@
 /* globals document, console */
 import {
-  createButton,
   createCard,
   createEmptyState,
   createNotice,
@@ -82,15 +81,7 @@ async function populateHundeTable(cardElement) {
     const hunde = await listHunde();
     body.innerHTML = "";
     if (!hunde.length) {
-      const link = document.createElement("a");
-      link.href = "#/hunde/new";
-      link.className = "ui-btn ui-btn--primary";
-      link.textContent = "Neuer Hund";
-      body.appendChild(
-        createEmptyState("Noch keine Hunde erfasst.", "Füge deinen ersten Hund hinzu.", {
-          actionNode: link,
-        })
-      );
+      body.appendChild(createEmptyState("Keine Daten vorhanden.", ""));
       return;
     }
 
@@ -98,14 +89,10 @@ async function populateHundeTable(cardElement) {
   } catch (error) {
     console.error("[HUNDE_ERR_LIST_FETCH]", error);
     body.innerHTML = "";
-    const retryBtn = createButton({
-      label: "Erneut versuchen",
-      variant: "secondary",
-      onClick: () => populateHundeTable(cardElement),
-    });
     body.appendChild(
-      createEmptyState("Fehler beim Laden der Hunde.", "Bitte versuche es erneut.", {
-        actionNode: retryBtn,
+      createNotice("Fehler beim Laden der Hunde. Bitte versuche es erneut.", {
+        variant: "warn",
+        role: "alert",
       })
     );
   }
