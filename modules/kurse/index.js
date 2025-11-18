@@ -160,18 +160,18 @@ async function renderDetail(section, id) {
   section.appendChild(headerFragment);
   injectToast(section);
 
-  const detailFragment = createCard({
+  const detailStack = document.createElement("div");
+  detailStack.className = "kurse-detail-stack";
+  section.appendChild(detailStack);
+  const loadingText = document.createElement("p");
+  loadingText.textContent = "Kurs wird geladen ...";
+  const overviewCard = createDetailCard({
     eyebrow: "",
     title: "Kurs wird geladen ...",
-    body: "<p>Kurs wird geladen ...</p>",
-    footer: "",
+    bodyNodes: [loadingText],
   });
-  const detailCard = detailFragment.querySelector(".ui-card") || detailFragment.firstElementChild;
-  if (!detailCard) return;
-  section.appendChild(detailCard);
-
-  const body = detailCard.querySelector(".ui-card__body");
-  const footer = detailCard.querySelector(".ui-card__footer");
+  if (!overviewCard) return;
+  detailStack.appendChild(overviewCard.card);
 
   try {
     if (!kursCache.length) await fetchKurse();
@@ -186,35 +186,52 @@ async function renderDetail(section, id) {
       headerSubtitle.textContent = subtitleText;
       headerSubtitle.hidden = !subtitleText;
     }
-    detailCard.querySelector(".ui-card__eyebrow").textContent = formatStatusLabel(kurs.status);
-    detailCard.querySelector(".ui-card__title").textContent = kurs.title || "Ohne Titel";
-
-    body.innerHTML = "";
-    body.appendChild(renderDetailList(kurs));
-    body.appendChild(renderNotesBlock(kurs));
-    body.appendChild(renderMetaBlock(kurs));
+    overviewCard.setEyebrow(formatStatusLabel(kurs.status));
+    overviewCard.setTitle(kurs.title || "Ohne Titel");
+    overviewCard.clearBody();
+    overviewCard.body.appendChild(renderDetailList(kurs));
     const linkedHunde = await collectLinkedHunde(kurs);
     const kundenFinanzen = await buildKursKundenFinanzen(linkedHunde);
     const linkedKunden = await collectLinkedKunden(linkedHunde);
     section.__kursFinanzen = kundenFinanzen;
 
-    footer.innerHTML = "";
+    overviewCard.clearFooter();
     const editLink = createNavLink("Kurs bearbeiten", `#/kurse/${kurs.id}/edit`, "primary");
     const deleteBtn = createButton({
       label: "Kurs löschen",
       variant: "secondary",
     });
     deleteBtn.addEventListener("click", () => handleDeleteKurs(section, kurs.id, deleteBtn));
-    footer.append(editLink, deleteBtn, createNavLink("Zurück zur Übersicht", "#/kurse", "quiet"));
+    overviewCard.footer.append(
+      editLink,
+      deleteBtn,
+      createNavLink("Zurück zur Übersicht", "#/kurse", "quiet")
+    );
+
+    const notesCard = createDetailCard({
+      eyebrow: "",
+      title: "Notizen",
+      bodyNodes: [createNotesContent(kurs)],
+    });
+    if (notesCard) {
+      detailStack.appendChild(notesCard.card);
+    }
+    const metaCard = createDetailCard({
+      eyebrow: "",
+      title: "Metadaten",
+      bodyNodes: [createMetaContent(kurs)],
+    });
+    if (metaCard) {
+      detailStack.appendChild(metaCard.card);
+    }
+
     appendLinkedSections(section, linkedHunde, linkedKunden);
     appendFinanceSections(section, kundenFinanzen);
   } catch (error) {
     console.error("[KURSE_ERR_DETAIL]", error);
-    body.innerHTML = "";
-    body.appendChild(createErrorNotice());
-    if (footer) {
-      footer.innerHTML = "";
-    }
+    overviewCard.clearBody();
+    overviewCard.body.appendChild(createErrorNotice());
+    overviewCard.clearFooter();
   }
 
   focusHeading(section);
@@ -503,6 +520,46 @@ function createFinanceRow(label, text) {
 function formatCustomerName(kunde = {}) {
   const name = `${kunde.vorname ?? ""} ${kunde.nachname ?? ""}`.trim();
   return name || kunde.email || "Unbenannter Kunde";
+}
+
+function createDetailCard({ eyebrow = "", title = "", bodyNodes = [], footerNodes = [] } = {}) {
+  const cardFragment = createCard({
+    eyebrow,
+    title,
+    body: "",
+    footer: "",
+  });
+  const card = cardFragment.querySelector(".ui-card") || cardFragment.firstElementChild;
+  if (!card) return null;
+  const body = card.querySelector(".ui-card__body");
+  const footer = card.querySelector(".ui-card__footer");
+  body.innerHTML = "";
+  footer.innerHTML = "";
+  (Array.isArray(bodyNodes) ? bodyNodes : []).forEach((node) => {
+    if (node) body.appendChild(node);
+  });
+  (Array.isArray(footerNodes) ? footerNodes : []).forEach((node) => {
+    if (node) footer.appendChild(node);
+  });
+  const eyebrowEl = card.querySelector(".ui-card__eyebrow");
+  const titleEl = card.querySelector(".ui-card__title");
+  return {
+    card,
+    body,
+    footer,
+    setEyebrow(value = "") {
+      if (eyebrowEl) eyebrowEl.textContent = value;
+    },
+    setTitle(value = "") {
+      if (titleEl) titleEl.textContent = value;
+    },
+    clearBody() {
+      if (body) body.innerHTML = "";
+    },
+    clearFooter() {
+      if (footer) footer.innerHTML = "";
+    },
+  };
 }
 
 async function renderForm(section, view, id) {
@@ -819,19 +876,13 @@ function renderDetailList(kurs) {
   return list;
 }
 
-function renderNotesBlock(kurs) {
-  const wrapper = document.createElement("div");
-  wrapper.className = "kurs-detail-notes";
-  const label = document.createElement("p");
-  label.className = "kurs-detail-notes__label";
-  label.textContent = "Notizen";
+function createNotesContent(kurs) {
   const text = document.createElement("p");
   text.textContent = kurs.notes || "Keine Notizen vorhanden.";
-  wrapper.append(label, text);
-  return wrapper;
+  return text;
 }
 
-function renderMetaBlock(kurs) {
+function createMetaContent(kurs) {
   const meta = document.createElement("p");
   meta.className = "kurs-detail-meta";
   meta.textContent = `Erstellt am ${formatDateTime(kurs.createdAt)} · Aktualisiert am ${formatDateTime(
