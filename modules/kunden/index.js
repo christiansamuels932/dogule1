@@ -15,6 +15,8 @@ import {
   createCard,
   createEmptyState,
   createNotice,
+  createFormRow,
+  createButton,
 } from "../shared/components/components.js";
 
 let kundenCache = [];
@@ -406,6 +408,9 @@ async function renderDetail(root, id) {
 
 async function renderForm(root, view, id) {
   if (!root) return;
+  if (typeof window !== "undefined" && typeof window.scrollTo === "function") {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
   try {
     if (!kundenCache.length) {
       await fetchKunden();
@@ -476,8 +481,17 @@ async function renderForm(root, view, id) {
   });
   injectToast(section);
 
+  const formCard = createStandardCard("Stammdaten");
+  const formBody = formCard.querySelector(".ui-card__body");
+  formBody.innerHTML = "";
+  const formStatusSlot = document.createElement("div");
+  formStatusSlot.className = "kunden-card-status";
+  formBody.appendChild(formStatusSlot);
+
   const form = document.createElement("form");
   form.noValidate = true;
+  form.className = "kunden-form";
+  formBody.appendChild(form);
 
   const kundenCodeValue =
     mode === "edit" ? (existing?.kundenCode ?? "") : generateNextKundenCode(kundenCache);
@@ -489,57 +503,90 @@ async function renderForm(root, view, id) {
       required: true,
       readOnly: true,
       value: kundenCodeValue,
+      describedByText: "Manuelle Überschreibung folgt in einem späteren Schritt.",
     },
-    { name: "vorname", label: "Vorname*", required: true },
-    { name: "nachname", label: "Nachname*", required: true },
-    { name: "email", label: "E-Mail*", required: true, type: "email" },
-    { name: "telefon", label: "Telefon" },
-    { name: "adresse", label: "Adresse" },
-    { name: "notizen", label: "Notizen", textarea: true },
+    {
+      name: "vorname",
+      label: "Vorname*",
+      required: true,
+      placeholder: "z. B. Julia",
+    },
+    {
+      name: "nachname",
+      label: "Nachname*",
+      required: true,
+      placeholder: "z. B. Keller",
+    },
+    {
+      name: "email",
+      label: "E-Mail*",
+      required: true,
+      type: "email",
+      placeholder: "z. B. julia.keller@example.com",
+    },
+    {
+      name: "telefon",
+      label: "Telefon",
+      placeholder: "z. B. +41 44 123 45 67",
+    },
+    {
+      name: "adresse",
+      label: "Adresse",
+      placeholder: "z. B. Hauptstrasse 10, 8000 Zürich",
+    },
+    {
+      name: "notizen",
+      label: "Notizen",
+      textarea: true,
+      placeholder: "Optionale Ergänzungen zum Kundenprofil",
+    },
   ];
 
   const refs = {};
   fields.forEach((field) => {
-    const wrapper = document.createElement("div");
-    wrapper.className = "kunden-form-row";
-    const idAttr = `kunden-${field.name}`;
-    const label = document.createElement("label");
-    label.setAttribute("for", idAttr);
-    label.textContent = field.label;
-    const input = field.textarea
-      ? document.createElement("textarea")
-      : document.createElement("input");
-    input.id = idAttr;
+    const row = createFormRow({
+      id: `kunden-${field.name}`,
+      label: field.label,
+      control: field.textarea ? "textarea" : "input",
+      type: field.type || "text",
+      placeholder: field.placeholder || "",
+      required: Boolean(field.required),
+      describedByText: field.describedByText || "",
+    });
+    const input = row.querySelector("input, textarea");
     input.name = field.name;
-    if (field.type) input.type = field.type;
     const initialValue = field.value !== undefined ? field.value : (existing?.[field.name] ?? "");
-    input.value = initialValue;
+    input.value = initialValue || "";
     if (field.readOnly) {
       input.readOnly = true;
     }
-    const error = document.createElement("div");
-    error.className = "form-error";
-    error.id = `${idAttr}-error`;
-    input.setAttribute("aria-describedby", error.id);
-    input.setAttribute("aria-invalid", "false");
-    wrapper.append(label, input, error);
-    form.appendChild(wrapper);
-    refs[field.name] = { input, error };
+    const hint = row.querySelector(".ui-form-row__hint");
+    if (!field.describedByText) {
+      hint.classList.add("sr-only");
+    }
+    refs[field.name] = { input, hint };
+    form.appendChild(row);
   });
 
   const actions = document.createElement("div");
   actions.className = "kunden-actions";
-  const submit = document.createElement("button");
+  const submit = createButton({
+    label: mode === "create" ? "Erstellen" : "Speichern",
+    variant: "primary",
+  });
   submit.type = "submit";
-  submit.className = "ui-btn ui-btn--primary";
-  submit.textContent = mode === "create" ? "Erstellen" : "Speichern";
-  const cancel = createUiLink(
-    "Abbrechen",
-    mode === "create" ? "#/kunden" : `#/kunden/${id}`,
-    "quiet"
-  );
+  const cancel = createButton({
+    label: "Abbrechen",
+    variant: "quiet",
+  });
+  cancel.type = "button";
+  cancel.addEventListener("click", () => {
+    window.location.hash = mode === "create" ? "#/kunden" : `#/kunden/${id}`;
+  });
   actions.append(submit, cancel);
-  form.appendChild(actions);
+  const footer = formCard.querySelector(".ui-card__footer");
+  footer.innerHTML = "";
+  footer.appendChild(actions);
 
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -548,7 +595,9 @@ async function renderForm(root, view, id) {
     const errors = validate(values);
     applyErrors(refs, errors);
     if (Object.keys(errors).length) {
-      const firstError = Object.values(refs).find((ref) => ref.error.textContent);
+      const firstError = Object.values(refs).find(
+        (ref) => ref.hint && ref.hint.textContent && !ref.hint.classList.contains("sr-only")
+      );
       if (firstError) firstError.input.focus();
       return;
     }
@@ -583,13 +632,6 @@ async function renderForm(root, view, id) {
     }
   });
 
-  const formCard = createStandardCard("Stammdaten");
-  const formBody = formCard.querySelector(".ui-card__body");
-  formBody.innerHTML = "";
-  const formStatusSlot = document.createElement("div");
-  formStatusSlot.className = "kunden-card-status";
-  formBody.appendChild(formStatusSlot);
-  formBody.appendChild(form);
   section.appendChild(formCard);
   root.appendChild(section);
   focusHeading(root);
@@ -643,11 +685,18 @@ function validate(values) {
 
 function applyErrors(refs, errors) {
   Object.entries(refs).forEach(([key, ref]) => {
+    const hint = ref.hint;
     if (errors[key]) {
-      ref.error.textContent = errors[key];
+      if (hint) {
+        hint.textContent = errors[key];
+        hint.classList.remove("sr-only");
+      }
       ref.input.setAttribute("aria-invalid", "true");
     } else {
-      ref.error.textContent = "";
+      if (hint) {
+        hint.textContent = "";
+        hint.classList.add("sr-only");
+      }
       ref.input.setAttribute("aria-invalid", "false");
     }
   });
