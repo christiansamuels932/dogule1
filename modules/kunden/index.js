@@ -495,6 +495,8 @@ async function renderForm(root, view, id) {
 
   const kundenCodeValue =
     mode === "edit" ? (existing?.kundenCode ?? "") : generateNextKundenCode(kundenCache);
+  const defaultKundenCode = kundenCodeValue;
+  let isIdOverrideEnabled = false;
 
   const fields = [
     {
@@ -503,7 +505,8 @@ async function renderForm(root, view, id) {
       required: true,
       readOnly: true,
       value: kundenCodeValue,
-      describedByText: "Manuelle Überschreibung folgt in einem späteren Schritt.",
+      describedByText:
+        'Standardmäßig automatisch. Mit "ID manuell ändern" aktivierst du die Bearbeitung.',
     },
     {
       name: "vorname",
@@ -563,6 +566,34 @@ async function renderForm(root, view, id) {
     const hint = row.querySelector(".ui-form-row__hint");
     if (!field.describedByText) {
       hint.classList.add("sr-only");
+    }
+    if (field.name === "kundenCode") {
+      input.setAttribute("aria-readonly", "true");
+      const toggleWrap = document.createElement("div");
+      toggleWrap.className = "kunden-id-toggle";
+      const toggleButton = createButton({
+        label: "ID manuell ändern",
+        variant: "secondary",
+      });
+      toggleButton.type = "button";
+      toggleButton.addEventListener("click", () => {
+        isIdOverrideEnabled = !isIdOverrideEnabled;
+        if (isIdOverrideEnabled) {
+          input.readOnly = false;
+          input.removeAttribute("aria-readonly");
+          toggleButton.textContent = "Automatische ID verwenden";
+          input.focus();
+        } else {
+          input.readOnly = true;
+          input.setAttribute("aria-readonly", "true");
+          toggleButton.textContent = "ID manuell ändern";
+          if (!input.value.trim()) {
+            input.value = defaultKundenCode;
+          }
+        }
+      });
+      toggleWrap.appendChild(toggleButton);
+      row.appendChild(toggleWrap);
     }
     refs[field.name] = { input, hint };
     form.appendChild(row);
