@@ -670,12 +670,15 @@ async function populateCourses(cardElement) {
       role: "alert",
     });
     body.appendChild(noticeFragment);
-    const retryBtn = createButton({
-      label: "Erneut versuchen",
-      variant: "secondary",
-      onClick: () => populateCourses(cardElement),
+    const retryLink = document.createElement("a");
+    retryLink.href = "#/kurse";
+    retryLink.className = "ui-btn ui-btn--secondary";
+    retryLink.textContent = "Erneut versuchen";
+    retryLink.addEventListener("click", (event) => {
+      event.preventDefault();
+      populateCourses(cardElement);
     });
-    body.appendChild(retryBtn);
+    body.appendChild(retryLink);
   }
 }
 
