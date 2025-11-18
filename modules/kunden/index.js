@@ -509,16 +509,12 @@ function renderKundenKurseSection(kurse = []) {
             kursCardFragment.querySelector(".ui-card") || kursCardFragment.firstElementChild;
           if (!kursCard) return;
           kursCard.classList.add("kunden-kurs-item");
-          kursCard.addEventListener("click", () => {
-            window.location.hash = `#/kurse/${kurs.id}`;
-          });
-          kursCard.addEventListener("keypress", (event) => {
-            if (event.key === "Enter" || event.key === " ") {
-              event.preventDefault();
-              window.location.hash = `#/kurse/${kurs.id}`;
-            }
-          });
-          body.appendChild(kursCard);
+          const kursLink = document.createElement("a");
+          kursLink.className = "kunden-kurs-link";
+          kursLink.href = `#/kurse/${kurs.id}`;
+          kursLink.setAttribute("aria-label", `Kurs ${kurs.title || kurs.id} öffnen`);
+          kursLink.appendChild(kursCard);
+          body.appendChild(kursLink);
         });
       }
     }
