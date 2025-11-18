@@ -90,6 +90,10 @@ export async function initModule(container, routeContext = { segments: [] }) {
   viewRoot.className = "kunden-view__content";
   container.appendChild(viewRoot);
 
+  if (typeof window !== "undefined" && typeof window.scrollTo === "function") {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
   const { view, id } = resolveView(routeContext);
 
   try {
@@ -236,11 +240,15 @@ async function renderDetail(root, id) {
   } catch (error) {
     console.error("[KUNDEN_ERR_DETAIL_LOAD]", error);
     root.innerHTML = "";
-    const fallbackSection = createSectionBlock({
-      title: "Kundendetails",
-      subtitle: "",
-      level: 1,
-    });
+    const fallbackSection = document.createElement("section");
+    fallbackSection.className = "dogule-section kunden-section kunden-detail";
+    fallbackSection.appendChild(
+      createSectionHeader({
+        title: "Kunde",
+        subtitle: "",
+        level: 1,
+      })
+    );
     const errorCard = createStandardCard("Stammdaten");
     const errorBody = errorCard.querySelector(".ui-card__body");
     showErrorNotice(errorBody);
@@ -251,11 +259,15 @@ async function renderDetail(root, id) {
   }
 
   root.innerHTML = "";
-  const detailSection = createSectionBlock({
-    title: "Kundendetails",
-    subtitle: kunde ? formatFullName(kunde) : "",
-    level: 1,
-  });
+  const detailSection = document.createElement("section");
+  detailSection.className = "dogule-section kunden-section kunden-detail";
+  detailSection.appendChild(
+    createSectionHeader({
+      title: "Kunde",
+      subtitle: kunde ? formatFullName(kunde) : "",
+      level: 1,
+    })
+  );
 
   if (!kunde) {
     detailSection.appendChild(
