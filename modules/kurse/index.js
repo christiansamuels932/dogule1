@@ -11,7 +11,7 @@ import {
 } from "../shared/components/components.js";
 
 const createSection = createSectionHeader;
-const createEmpty = (message) => createEmptyState(message, "", {});
+const createEmpty = () => createEmptyState("Keine Daten vorhanden.", "", {});
 import {
   listKurse,
   getKurs,
@@ -280,7 +280,7 @@ function appendLinkedSections(section, linkedHunde, linkedKunden) {
     if (body) {
       body.innerHTML = "";
       if (!linkedHunde.length) {
-        body.appendChild(createEmptyState("Noch keine Daten", "", {}));
+        body.appendChild(createEmpty());
       } else {
         linkedHunde.forEach((hund) => {
           const cardFragment = createCard({
@@ -326,7 +326,7 @@ function appendLinkedSections(section, linkedHunde, linkedKunden) {
     if (body) {
       body.innerHTML = "";
       if (!linkedKunden.length) {
-        body.appendChild(createEmptyState("Noch keine Daten", "", {}));
+        body.appendChild(createEmpty());
       } else {
         linkedKunden.forEach((kunde) => {
           const cardFragment = createCard({
@@ -419,7 +419,7 @@ function appendFinanceSections(section, kundenFinanzen = []) {
       const renderer = renderers[title];
       const rendered = typeof renderer === "function" ? renderer(body, financeData) : false;
       if (!rendered) {
-        body.appendChild(createEmpty("Keine Daten vorhanden."));
+        body.appendChild(createEmpty());
       }
     }
     financeSection.appendChild(card);
@@ -454,7 +454,7 @@ function renderKursOffeneBetraegeContent(container, financeData = []) {
     });
   });
   if (!offeneEntries.length) {
-    container.appendChild(createEmpty("Keine Daten vorhanden."));
+    container.appendChild(createEmpty());
     return true;
   }
   offeneEntries.forEach(({ kundeId, eintrag }) => {
@@ -480,7 +480,7 @@ function renderKursZahlungshistorieContent(container, financeData = []) {
     return Number.isNaN(timeB) ? 1 : Number.isNaN(timeA) ? -1 : timeB - timeA;
   });
   if (!zahlungen.length) {
-    container.appendChild(createEmpty("Keine Daten vorhanden."));
+    container.appendChild(createEmpty());
     return true;
   }
   zahlungen.forEach(({ kundeId, eintrag }) => {
@@ -694,15 +694,7 @@ async function populateCourses(cardElement) {
     const courses = await fetchKurse();
     body.innerHTML = "";
     if (!courses.length) {
-      body.appendChild(
-        createEmptyState(
-          "Noch keine Kurse erfasst.",
-          "Lege den ersten Kurs an und plane dein Training.",
-          {
-            actionNode: createNavLink("Neuer Kurs", "#/kurse/new", "primary"),
-          }
-        )
-      );
+      body.appendChild(createEmpty());
       return;
     }
 
