@@ -58,7 +58,7 @@ export async function initModule(container, routeContext = { segments: [] }) {
       await renderList(section);
     }
   } catch (error) {
-    console.error("KURSE_VIEW_FAILED", error);
+    console.error("[KURSE_ERR_VIEW]", error);
     section.innerHTML = `
       <h1>Fehler</h1>
       <p>Kursansicht konnte nicht geladen werden.</p>
@@ -147,42 +147,24 @@ async function renderDetail(section, id) {
     section.__kursFinanzen = kundenFinanzen;
 
     footer.innerHTML = "";
-    const editBtn = createButton({
-      label: "Kurs bearbeiten",
-      variant: "primary",
-      onClick: () => {
-        window.location.hash = `#/kurse/${kurs.id}/edit`;
-      },
-    });
+    const editLink = createNavLink("Kurs bearbeiten", `#/kurse/${kurs.id}/edit`, "primary");
     const deleteBtn = createButton({
       label: "Kurs löschen",
       variant: "secondary",
     });
     deleteBtn.addEventListener("click", () => handleDeleteKurs(section, kurs.id, deleteBtn));
-    footer.append(editBtn, deleteBtn);
-    const backLink = document.createElement("a");
-    backLink.className = "ui-btn ui-btn--quiet";
-    backLink.href = "#/kurse";
-    backLink.textContent = "Zurück zur Übersicht";
-    footer.append(backLink);
+    footer.append(editLink, deleteBtn, createNavLink("Zurück zur Übersicht", "#/kurse", "quiet"));
     appendLinkedSections(section, linkedHunde, linkedKunden);
     appendFinanceSections(section, kundenFinanzen);
   } catch (error) {
-    console.error("KURSE_DETAIL_FAILED", error);
+    console.error("[KURSE_ERR_DETAIL]", error);
     body.innerHTML = "";
     const noticeFragment = createNotice("Kurs konnte nicht geladen werden.", {
       variant: "warn",
       role: "alert",
     });
     body.appendChild(noticeFragment);
-    const backBtn = createButton({
-      label: "Zurück zur Übersicht",
-      variant: "primary",
-      onClick: () => {
-        window.location.hash = "#/kurse";
-      },
-    });
-    body.appendChild(backBtn);
+    body.appendChild(createNavLink("Zurück zur Übersicht", "#/kurse", "primary"));
     if (footer) footer.innerHTML = "";
   }
 
@@ -196,7 +178,7 @@ async function collectLinkedHunde(kurs) {
     const hunde = await listHunde();
     return hunde.filter((hund) => ids.includes(hund.id));
   } catch (error) {
-    console.error("KURSE_LINKED_HUNDE_FAILED", error);
+    console.error("[KURSE_ERR_LINKED_HUNDE]", error);
     return [];
   }
 }
@@ -218,7 +200,7 @@ async function collectLinkedKunden(hunde) {
     });
     return result;
   } catch (error) {
-    console.error("KURSE_LINKED_KUNDEN_FAILED", error);
+    console.error("[KURSE_ERR_LINKED_KUNDEN]", error);
     return [];
   }
 }
@@ -257,16 +239,11 @@ function appendLinkedSections(section, linkedHunde, linkedKunden) {
           const cardEl = cardFragment.querySelector(".ui-card") || cardFragment.firstElementChild;
           if (!cardEl) return;
           cardEl.classList.add("kurse-linked-hund");
-          cardEl.addEventListener("click", () => {
-            window.location.hash = `#/hunde/${hund.id}`;
-          });
-          cardEl.addEventListener("keypress", (event) => {
-            if (event.key === "Enter" || event.key === " ") {
-              event.preventDefault();
-              window.location.hash = `#/hunde/${hund.id}`;
-            }
-          });
-          body.appendChild(cardEl);
+          const link = document.createElement("a");
+          link.href = `#/hunde/${hund.id}`;
+          link.className = "kurse-linked-hund__link";
+          link.appendChild(cardEl);
+          body.appendChild(link);
         });
       }
     }
@@ -308,16 +285,11 @@ function appendLinkedSections(section, linkedHunde, linkedKunden) {
           const cardEl = cardFragment.querySelector(".ui-card") || cardFragment.firstElementChild;
           if (!cardEl) return;
           cardEl.classList.add("kurse-linked-kunde");
-          cardEl.addEventListener("click", () => {
-            window.location.hash = `#/kunden/${kunde.id}`;
-          });
-          cardEl.addEventListener("keypress", (event) => {
-            if (event.key === "Enter" || event.key === " ") {
-              event.preventDefault();
-              window.location.hash = `#/kunden/${kunde.id}`;
-            }
-          });
-          body.appendChild(cardEl);
+          const link = document.createElement("a");
+          link.href = `#/kunden/${kunde.id}`;
+          link.className = "kurse-linked-kunde__link";
+          link.appendChild(cardEl);
+          body.appendChild(link);
         });
       }
     }
@@ -340,14 +312,14 @@ async function buildKursKundenFinanzen(linkedHunde = []) {
     try {
       kunde = await getKunde(kundeId);
     } catch (error) {
-      console.error("KURSE_FINANZ_KUNDE_FAILED", error);
+      console.error("[KURSE_ERR_FINANZ_KUNDE]", error);
     }
     if (!kunde) continue;
     let finanzen = [];
     try {
       finanzen = await listFinanzenByKundeId(kunde.id);
     } catch (finanzenError) {
-      console.error("KURSE_FINANZ_FETCH_FAILED", finanzenError);
+      console.error("[KURSE_ERR_FINANZ_FETCH]", finanzenError);
     }
     const zahlungen = finanzen.filter((entry) => entry.typ === "zahlung");
     const offeneBetraege = finanzen.filter((entry) => entry.typ === "offen");
@@ -508,7 +480,7 @@ async function renderForm(section, view, id) {
         throw new Error(`Kurs ${id} nicht gefunden`);
       }
     } catch (error) {
-      console.error("KURSE_FORM_LOAD_FAILED", error);
+      console.error("[KURSE_ERR_FORM_LOAD]", error);
       section.removeChild(loading);
       section.appendChild(
         createNotice("Kurs konnte nicht geladen werden.", {
@@ -516,14 +488,7 @@ async function renderForm(section, view, id) {
           role: "alert",
         })
       );
-      const backBtn = createButton({
-        label: "Zurück zur Übersicht",
-        variant: "primary",
-        onClick: () => {
-          window.location.hash = "#/kurse";
-        },
-      });
-      section.appendChild(backBtn);
+      section.appendChild(createNavLink("Zur Übersicht", "#/kurse", "primary"));
       focusHeading(section);
       return;
     }
@@ -615,14 +580,7 @@ function buildCourseToolbarCard() {
   if (!cardElement) return document.createDocumentFragment();
 
   const body = cardElement.querySelector(".ui-card__body");
-  const createBtn = createButton({
-    label: "Neuer Kurs",
-    variant: "primary",
-    onClick: () => {
-      window.location.hash = "#/kurse/new";
-    },
-  });
-  body.appendChild(createBtn);
+  body.appendChild(createNavLink("Neuer Kurs", "#/kurse/new", "primary"));
   body.appendChild(
     createButton({
       label: "Plan exportieren",
@@ -654,19 +612,12 @@ async function populateCourses(cardElement) {
     const courses = await fetchKurse();
     body.innerHTML = "";
     if (!courses.length) {
-      const emptyAction = createButton({
-        label: "Neuer Kurs",
-        variant: "primary",
-        onClick: () => {
-          window.location.hash = "#/kurse/new";
-        },
-      });
       body.appendChild(
         createEmptyState(
           "Noch keine Kurse erfasst.",
           "Lege den ersten Kurs an und plane dein Training.",
           {
-            actionNode: emptyAction,
+            actionNode: createNavLink("Neuer Kurs", "#/kurse/new", "primary"),
           }
         )
       );
@@ -708,11 +659,11 @@ async function populateCourses(cardElement) {
       footer.appendChild(statusBadge);
       footer.appendChild(createBadge(`${course.level || "Alltag"}`, "default"));
 
-      attachCourseNavigation(cardEl, course.id);
-      body.appendChild(cardEl);
+      const linkedCard = attachCourseNavigation(cardEl, course.id);
+      body.appendChild(linkedCard);
     });
   } catch (error) {
-    console.error("KURSE_LOAD_FAILED", error);
+    console.error("[KURSE_ERR_LIST_FETCH]", error);
     body.innerHTML = "";
     const noticeFragment = createNotice("Fehler beim Laden der Kurse.", {
       variant: "warn",
@@ -729,20 +680,12 @@ async function populateCourses(cardElement) {
 }
 
 function attachCourseNavigation(cardEl, id) {
-  if (!cardEl) return;
-  cardEl.classList.add("kurse-list-item");
-  cardEl.setAttribute("role", "button");
-  cardEl.setAttribute("tabindex", "0");
-  const navigate = () => {
-    window.location.hash = `#/kurse/${id}`;
-  };
-  cardEl.addEventListener("click", navigate);
-  cardEl.addEventListener("keypress", (event) => {
-    if (event.key === "Enter" || event.key === " ") {
-      event.preventDefault();
-      navigate();
-    }
-  });
+  if (!cardEl) return cardEl;
+  const link = document.createElement("a");
+  link.href = `#/kurse/${id}`;
+  link.className = "kurse-list__link";
+  link.appendChild(cardEl);
+  return link;
 }
 
 function formatDate(value) {
@@ -1154,7 +1097,7 @@ async function handleKursFormSubmit(event, { mode, id, refs, section, submit }) 
     }
     const createdId = result?.id;
     if (!createdId) {
-      console.error("[Kurse] create/update returned no id, cannot navigate");
+      console.error("[KURSE_ERR_FORM_RESULT]");
       showInlineToast(section, "Kurs konnte nach dem Speichern nicht geladen werden.", "error");
       return;
     }
@@ -1166,7 +1109,7 @@ async function handleKursFormSubmit(event, { mode, id, refs, section, submit }) 
     }
     window.location.hash = `#/kurse/${createdId}`;
   } catch (error) {
-    console.error("[Kurse] error in form submit handler:", error);
+    console.error("[KURSE_ERR_FORM_SUBMIT]", error);
     const message =
       mode === "create"
         ? "Kurs konnte nicht erstellt werden."
@@ -1196,7 +1139,7 @@ async function handleDeleteKurs(section, id, button) {
     setToast("Kurs wurde gelöscht.", "success");
     window.location.hash = "#/kurse";
   } catch (error) {
-    console.error("KURSE_DELETE_FAILED", error);
+    console.error("[KURSE_ERR_DELETE]", error);
     showInlineToast(section, "Fehler beim Löschen des Kurses.", "error");
     button.disabled = false;
     button.textContent = originalLabel;
@@ -1208,4 +1151,12 @@ function focusHeading(root) {
   if (!heading) return;
   heading.setAttribute("tabindex", "-1");
   heading.focus();
+}
+
+function createNavLink(label, href, variant = "primary") {
+  const link = document.createElement("a");
+  link.href = href;
+  link.className = `ui-btn ui-btn--${variant}`;
+  link.textContent = label;
+  return link;
 }
