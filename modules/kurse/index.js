@@ -702,6 +702,11 @@ async function renderForm(section, view, id) {
 
   const fields = buildFormFields(existing);
   const refs = {};
+  let isIdOverrideEnabled = false;
+  const defaultId =
+    mode === "edit"
+      ? (existing?.id ?? "")
+      : `${kursCache.length ? kursCache.length + 1 : 1}`.padStart(3, "0");
   fields.forEach((field) => {
     const row = createFormRow(field.config);
     const input = row.querySelector("input, select, textarea");
@@ -721,8 +726,34 @@ async function renderForm(section, view, id) {
       input.value = field.value;
     }
     const hint = row.querySelector(".ui-form-row__hint");
-    hint.classList.add("sr-only");
+    if (!field.config.describedByText) {
+      hint.classList.add("sr-only");
+    }
     refs[field.name] = { input, hint };
+    if (field.name === "kursId") {
+      const toggleButton = createButton({
+        label: "ID manuell ändern",
+        variant: "secondary",
+      });
+      toggleButton.type = "button";
+      toggleButton.addEventListener("click", () => {
+        isIdOverrideEnabled = !isIdOverrideEnabled;
+        if (isIdOverrideEnabled) {
+          input.readOnly = false;
+          input.removeAttribute("aria-readonly");
+          toggleButton.textContent = "Automatische ID verwenden";
+          input.focus();
+        } else {
+          input.readOnly = true;
+          input.setAttribute("aria-readonly", "true");
+          toggleButton.textContent = "ID manuell ändern";
+          if (!input.value.trim()) {
+            input.value = defaultId;
+          }
+        }
+      });
+      row.appendChild(toggleButton);
+    }
     form.appendChild(row);
   });
 
@@ -938,18 +969,21 @@ function formatDateTime(value) {
   });
 }
 
-function buildFormFields(existing = {}) {
+function buildFormFields(existing = {}, { defaultId = "" } = {}) {
   const statusValue = existing?.status ?? "geplant";
   const levelValue = existing?.level ?? "";
   return [
     {
-      name: "id",
-      value: existing?.id ?? "",
+      name: "kursId",
+      value: existing?.id ?? defaultId,
       readOnly: true,
       config: {
         id: "kurs-id",
         label: "Kurs-ID",
         placeholder: "Wird automatisch vergeben",
+        describedByText:
+          'Standardmäßig automatisch. Mit "ID manuell ändern" aktivierst du die Bearbeitung.',
+        required: true,
       },
     },
     {
