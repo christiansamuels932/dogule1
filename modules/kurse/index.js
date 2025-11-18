@@ -1240,9 +1240,9 @@ async function handleKursFormSubmit(event, { mode, id, refs, section, submit }) 
     }
     const createdId = result?.id;
     if (!createdId) {
-      console.error("[KURSE_ERR_FORM_RESULT]");
-      showInlineToast(section, "Kurs konnte nach dem Speichern nicht geladen werden.", "error");
-      return;
+      const resultError = new Error("Kurs result missing ID");
+      resultError.code = "FORM_RESULT_EMPTY";
+      throw resultError;
     }
     await fetchKurse();
     if (mode === "create") {
@@ -1252,9 +1252,11 @@ async function handleKursFormSubmit(event, { mode, id, refs, section, submit }) 
     }
     window.location.hash = `#/kurse/${createdId}`;
   } catch (error) {
-    console.error("[KURSE_ERR_FORM_SUBMIT]", error);
-    const message =
-      mode === "create"
+    const isResultError = error?.code === "FORM_RESULT_EMPTY";
+    console.error(isResultError ? "[KURSE_ERR_FORM_RESULT]" : "[KURSE_ERR_FORM_SUBMIT]", error);
+    const message = isResultError
+      ? "Kurs konnte nach dem Speichern nicht geladen werden."
+      : mode === "create"
         ? "Kurs konnte nicht erstellt werden."
         : "Fehler beim Speichern des Kurses.";
     showInlineToast(section, message, "error");
