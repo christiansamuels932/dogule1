@@ -17,7 +17,7 @@ export async function createHundeListView(container) {
     container.appendChild(
       createSectionHeader({
         title: "Hunde",
-        subtitle: "Überblick über alle Hunde in der Hundeschule",
+        subtitle: "",
         level: 2,
       })
     );
@@ -89,7 +89,26 @@ async function populateHundeTable(cardElement) {
       return;
     }
 
-    body.appendChild(buildTable(hunde));
+    const listWrapper = document.createElement("div");
+    listWrapper.className = "hunde-list";
+    hunde.forEach((hund) => {
+      const hundCardFragment = createCard({
+        eyebrow: hund.kundenId || "–",
+        title: hund.name || "Unbenannter Hund",
+        body: `<p>${hund.rasse || "Unbekannte Rasse"} · ${formatDate(hund.geburtsdatum)}</p>`,
+        footer: "",
+      });
+      const hundCard =
+        hundCardFragment.querySelector(".ui-card") || hundCardFragment.firstElementChild;
+      if (!hundCard) return;
+      hundCard.classList.add("hunde-list-item");
+      const link = document.createElement("a");
+      link.href = `#/hunde/${hund.id}`;
+      link.className = "hunde-list__link";
+      link.appendChild(hundCard);
+      listWrapper.appendChild(link);
+    });
+    body.appendChild(listWrapper);
   } catch (error) {
     console.error("[HUNDE_ERR_LIST_FETCH]", error);
     body.innerHTML = "";
@@ -100,46 +119,6 @@ async function populateHundeTable(cardElement) {
       })
     );
   }
-}
-
-function buildTable(hunde) {
-  const table = document.createElement("table");
-  table.className = "hunde-table";
-  const thead = document.createElement("thead");
-  const headRow = document.createElement("tr");
-  ["Name", "Rasse", "Geburtsdatum", "Kunden-ID", "Aktionen"].forEach((label) => {
-    const th = document.createElement("th");
-    th.textContent = label;
-    headRow.appendChild(th);
-  });
-  thead.appendChild(headRow);
-  table.appendChild(thead);
-
-  const tbody = document.createElement("tbody");
-  hunde.forEach((hund) => {
-    const row = document.createElement("tr");
-    [
-      hund.name || "–",
-      hund.rasse || "–",
-      formatDate(hund.geburtsdatum),
-      hund.kundenId || "–",
-    ].forEach((value) => {
-      const cell = document.createElement("td");
-      cell.textContent = value;
-      row.appendChild(cell);
-    });
-
-    const actionCell = document.createElement("td");
-    const detailsLink = document.createElement("a");
-    detailsLink.href = `#/hunde/${hund.id}`;
-    detailsLink.className = "ui-btn ui-btn--secondary";
-    detailsLink.textContent = "Details";
-    actionCell.appendChild(detailsLink);
-    row.appendChild(actionCell);
-    tbody.appendChild(row);
-  });
-  table.appendChild(tbody);
-  return table;
 }
 
 function formatDate(value) {

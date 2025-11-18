@@ -1,4 +1,4 @@
-/* globals console, document */
+/* globals console, document, window */
 import { createHundeListView } from "./listView.js";
 import { createHundeDetailView } from "./detailView.js";
 import { createHundeFormView } from "./formView.js";
@@ -9,6 +9,9 @@ export async function initModule(container, routeContext = { segments: [] }) {
   if (!container) return;
   container.innerHTML = "";
   container.classList.add("hunde-view");
+  if (typeof window !== "undefined" && typeof window.scrollTo === "function") {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
 
   const { view, id } = resolveView(routeContext);
   if (view === "detail" && id) {
