@@ -59,11 +59,36 @@ export async function initModule(container, routeContext = { segments: [] }) {
     }
   } catch (error) {
     console.error("[KURSE_ERR_VIEW]", error);
-    section.innerHTML = `
-      <h1>Fehler</h1>
-      <p>Kursansicht konnte nicht geladen werden.</p>
-      <p><a class="ui-btn ui-btn--quiet" href="#/kurse">Zurück zur Übersicht</a></p>
-    `;
+    section.innerHTML = "";
+    section.appendChild(
+      createSectionHeader({
+        title: "Kurse",
+        subtitle: "Fehler beim Laden",
+        level: 2,
+      })
+    );
+    const errorCardFragment = createCard({
+      eyebrow: "",
+      title: "",
+      body: "",
+      footer: "",
+    });
+    const errorCard =
+      errorCardFragment.querySelector(".ui-card") || errorCardFragment.firstElementChild;
+    if (errorCard) {
+      const body = errorCard.querySelector(".ui-card__body");
+      body.innerHTML = "";
+      body.appendChild(
+        createNotice("Kursansicht konnte nicht geladen werden.", {
+          variant: "warn",
+          role: "alert",
+        })
+      );
+      const footer = errorCard.querySelector(".ui-card__footer");
+      footer.innerHTML = "";
+      footer.appendChild(createNavLink("Zurück zur Übersicht", "#/kurse", "quiet"));
+      section.appendChild(errorCard);
+    }
   }
 }
 
@@ -77,7 +102,9 @@ function resolveView(routeContext = {}) {
 }
 
 async function renderList(section) {
+  if (!section) return;
   section.innerHTML = "";
+  scrollToTop();
   section.appendChild(
     createSectionHeader({
       title: "Kurse",
@@ -86,31 +113,52 @@ async function renderList(section) {
     })
   );
 
-  section.appendChild(
-    createNotice("Verwalte Kurse und überprüfe freie Plätze.", {
-      variant: "info",
-    })
-  );
+  const introCardFragment = createCard({
+    eyebrow: "",
+    title: "",
+    body: "",
+    footer: "",
+  });
+  const introCard =
+    introCardFragment.querySelector(".ui-card") || introCardFragment.firstElementChild;
+  if (introCard) {
+    const introBody = introCard.querySelector(".ui-card__body");
+    introBody.innerHTML = "";
+    introBody.appendChild(
+      createNotice("Verwalte Kurse und überprüfe freie Plätze.", {
+        variant: "info",
+      })
+    );
+    section.appendChild(introCard);
+  }
   injectToast(section);
 
   const toolbar = buildCourseToolbarCard();
+  if (toolbar) {
+    section.appendChild(toolbar);
+  }
   const listCard = buildCourseListCard();
-  section.appendChild(toolbar);
-  section.appendChild(listCard);
-
-  await populateCourses(listCard);
+  if (listCard) {
+    section.appendChild(listCard);
+    await populateCourses(listCard);
+  }
   focusHeading(section);
 }
 
 async function renderDetail(section, id) {
+  if (!section) return;
   section.innerHTML = "";
-  section.appendChild(
-    createSectionHeader({
-      title: "Kursdetails",
-      subtitle: "Alle Informationen auf einen Blick",
-      level: 2,
-    })
-  );
+  scrollToTop();
+  const headerFragment = createSectionHeader({
+    title: "Kurs",
+    subtitle: "",
+    level: 2,
+  });
+  const headerSubtitle = headerFragment.querySelector(".ui-section__subtitle");
+  if (headerSubtitle) {
+    headerSubtitle.hidden = true;
+  }
+  section.appendChild(headerFragment);
   injectToast(section);
 
   const detailFragment = createCard({
@@ -134,6 +182,11 @@ async function renderDetail(section, id) {
       throw new Error(`Kurs ${id} nicht gefunden`);
     }
 
+    const subtitleText = kurs.title || "Ohne Titel";
+    if (headerSubtitle) {
+      headerSubtitle.textContent = subtitleText;
+      headerSubtitle.hidden = !subtitleText;
+    }
     detailCard.querySelector(".ui-card__eyebrow").textContent = formatStatusLabel(kurs.status);
     detailCard.querySelector(".ui-card__title").textContent = kurs.title || "Ohne Titel";
 
@@ -457,11 +510,13 @@ function formatCustomerName(kunde = {}) {
 }
 
 async function renderForm(section, view, id) {
+  if (!section) return;
   const mode = view === "create" ? "create" : "edit";
   section.innerHTML = "";
+  scrollToTop();
   section.appendChild(
     createSectionHeader({
-      title: mode === "create" ? "Neuer Kurs" : "Kurs bearbeiten",
+      title: mode === "create" ? "Kurs erstellen" : "Kurs bearbeiten",
       subtitle: mode === "create" ? "Lege einen neuen Kurs an." : "Passe die Kursdaten an.",
       level: 2,
     })
@@ -470,9 +525,17 @@ async function renderForm(section, view, id) {
 
   let existing = null;
   if (mode === "edit") {
-    const loading = document.createElement("p");
-    loading.textContent = "Kurs wird geladen ...";
-    section.appendChild(loading);
+    const loadingCardFragment = createCard({
+      eyebrow: "",
+      title: "",
+      body: "<p>Kurs wird geladen ...</p>",
+      footer: "",
+    });
+    const loadingCard =
+      loadingCardFragment.querySelector(".ui-card") || loadingCardFragment.firstElementChild;
+    if (loadingCard) {
+      section.appendChild(loadingCard);
+    }
     try {
       if (!kursCache.length) await fetchKurse();
       existing = kursCache.find((kurs) => kurs.id === id) || (await getKurs(id));
@@ -481,18 +544,37 @@ async function renderForm(section, view, id) {
       }
     } catch (error) {
       console.error("[KURSE_ERR_FORM_LOAD]", error);
-      section.removeChild(loading);
-      section.appendChild(
-        createNotice("Kurs konnte nicht geladen werden.", {
-          variant: "warn",
-          role: "alert",
-        })
-      );
-      section.appendChild(createNavLink("Zur Übersicht", "#/kurse", "primary"));
+      if (loadingCard?.parentNode === section) {
+        section.removeChild(loadingCard);
+      }
+      const errorCardFragment = createCard({
+        eyebrow: "",
+        title: "",
+        body: "",
+        footer: "",
+      });
+      const errorCard =
+        errorCardFragment.querySelector(".ui-card") || errorCardFragment.firstElementChild;
+      if (errorCard) {
+        const body = errorCard.querySelector(".ui-card__body");
+        body.innerHTML = "";
+        body.appendChild(
+          createNotice("Kurs konnte nicht geladen werden.", {
+            variant: "warn",
+            role: "alert",
+          })
+        );
+        const footer = errorCard.querySelector(".ui-card__footer");
+        footer.innerHTML = "";
+        footer.appendChild(createNavLink("Zur Übersicht", "#/kurse", "primary"));
+        section.appendChild(errorCard);
+      }
       focusHeading(section);
       return;
     }
-    section.removeChild(loading);
+    if (loadingCard?.parentNode === section) {
+      section.removeChild(loadingCard);
+    }
   }
 
   const formCardFragment = createCard({
@@ -765,11 +847,12 @@ function renderDetailList(kurs) {
 function renderNotesBlock(kurs) {
   const wrapper = document.createElement("div");
   wrapper.className = "kurs-detail-notes";
-  const heading = document.createElement("h3");
-  heading.textContent = "Notizen";
+  const label = document.createElement("p");
+  label.className = "kurs-detail-notes__label";
+  label.textContent = "Notizen";
   const text = document.createElement("p");
   text.textContent = kurs.notes || "Keine Notizen vorhanden.";
-  wrapper.append(heading, text);
+  wrapper.append(label, text);
   return wrapper;
 }
 
@@ -1154,6 +1237,11 @@ function focusHeading(root) {
   if (!heading) return;
   heading.setAttribute("tabindex", "-1");
   heading.focus();
+}
+
+function scrollToTop() {
+  if (typeof window === "undefined" || typeof window.scrollTo !== "function") return;
+  window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 function createNavLink(label, href, variant = "primary") {
