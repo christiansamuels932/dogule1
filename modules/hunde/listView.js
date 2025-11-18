@@ -1,4 +1,4 @@
-/* globals document, window, console */
+/* globals document, console */
 import {
   createButton,
   createCard,
@@ -36,7 +36,7 @@ export async function createHundeListView(container) {
     await populateHundeTable(listCard);
     focusHeading(container);
   } catch (error) {
-    console.error("HUNDE_LIST_FAILED", error);
+    console.error("[HUNDE_ERR_LIST_INIT]", error);
     container.innerHTML = "";
     container.appendChild(
       createNotice("Hunde konnten nicht geladen werden. Bitte später erneut versuchen.", {
@@ -56,14 +56,11 @@ function buildActionCard() {
   });
   const card = fragment.querySelector(".ui-card") || fragment.firstElementChild;
   const body = card.querySelector(".ui-card__body");
-  const newBtn = createButton({
-    label: "Neuer Hund",
-    variant: "primary",
-    onClick: () => {
-      window.location.hash = "#/hunde/new";
-    },
-  });
-  body.appendChild(newBtn);
+  const link = document.createElement("a");
+  link.href = "#/hunde/new";
+  link.className = "ui-btn ui-btn--primary";
+  link.textContent = "Neuer Hund";
+  body.appendChild(link);
   return card;
 }
 
@@ -85,16 +82,13 @@ async function populateHundeTable(cardElement) {
     const hunde = await listHunde();
     body.innerHTML = "";
     if (!hunde.length) {
-      const actionNode = createButton({
-        label: "Neuer Hund",
-        variant: "primary",
-        onClick: () => {
-          window.location.hash = "#/hunde/new";
-        },
-      });
+      const link = document.createElement("a");
+      link.href = "#/hunde/new";
+      link.className = "ui-btn ui-btn--primary";
+      link.textContent = "Neuer Hund";
       body.appendChild(
         createEmptyState("Noch keine Hunde erfasst.", "Füge deinen ersten Hund hinzu.", {
-          actionNode,
+          actionNode: link,
         })
       );
       return;
@@ -102,7 +96,7 @@ async function populateHundeTable(cardElement) {
 
     body.appendChild(buildTable(hunde));
   } catch (error) {
-    console.error("HUNDE_LIST_LOAD_FAILED", error);
+    console.error("[HUNDE_ERR_LIST_FETCH]", error);
     body.innerHTML = "";
     const retryBtn = createButton({
       label: "Erneut versuchen",
@@ -145,14 +139,11 @@ function buildTable(hunde) {
     });
 
     const actionCell = document.createElement("td");
-    const detailsBtn = createButton({
-      label: "Details",
-      variant: "secondary",
-      onClick: () => {
-        window.location.hash = `#/hunde/${hund.id}`;
-      },
-    });
-    actionCell.appendChild(detailsBtn);
+    const detailsLink = document.createElement("a");
+    detailsLink.href = `#/hunde/${hund.id}`;
+    detailsLink.className = "ui-btn ui-btn--secondary";
+    detailsLink.textContent = "Details";
+    actionCell.appendChild(detailsLink);
     row.appendChild(actionCell);
     tbody.appendChild(row);
   });

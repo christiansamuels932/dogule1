@@ -5,8 +5,9 @@ import { createHundeFormView } from "./formView.js";
 import { getHund } from "../shared/api/hunde.js";
 
 export async function initModule(container, routeContext = { segments: [] }) {
-  console.log("[Hunde] module loaded");
   if (!container) return;
+  container.innerHTML = "";
+  container.classList.add("hunde-view");
 
   const { view, id } = resolveView(routeContext);
   if (view === "detail" && id) {
@@ -18,17 +19,7 @@ export async function initModule(container, routeContext = { segments: [] }) {
     return;
   }
   if (view === "edit" && id) {
-    try {
-      const hund = await getHund(id);
-      if (!hund) {
-        renderHundEditError(container, "Hund wurde nicht gefunden.");
-        return;
-      }
-      await createHundeFormView(container, { mode: "edit", id, hund });
-    } catch (error) {
-      console.error("HUNDE_EDIT_ROUTE_FAILED", error);
-      renderHundEditError(container, "Hund konnte nicht geladen werden.");
-    }
+    await renderHundEditRoute(container, id);
     return;
   }
 
@@ -55,10 +46,23 @@ function resolveView(routeContext = {}) {
 
 export default initModule;
 
+async function renderHundEditRoute(container, id) {
+  try {
+    const hund = await getHund(id);
+    if (!hund) {
+      renderHundEditError(container, "Hund wurde nicht gefunden.");
+      return;
+    }
+    await createHundeFormView(container, { mode: "edit", id, hund });
+  } catch (error) {
+    console.error("[HUNDE_ERR_EDIT_ROUTE]", error);
+    renderHundEditError(container, "Hund konnte nicht geladen werden.");
+  }
+}
+
 function renderHundEditError(container, message) {
   if (!container) return;
   container.innerHTML = "";
-  container.classList.add("hunde-view");
   const section = document.createElement("section");
   section.className = "dogule-section";
   const heading = document.createElement("h2");

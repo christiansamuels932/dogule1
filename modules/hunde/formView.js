@@ -1,6 +1,5 @@
 /* globals document, window, console */
 import {
-  createButton,
   createCard,
   createFormRow,
   createNotice,
@@ -47,7 +46,7 @@ export async function createHundeFormView(container, options = {}) {
   try {
     [kunden, hundeListe] = await Promise.all([listKunden(), listHunde()]);
   } catch (error) {
-    console.error("HUNDE_FORM_DATA_FAILED", error);
+    console.error("[HUNDE_ERR_FORM_DATA]", error);
     section.appendChild(
       createNotice("Daten konnten nicht geladen werden. Bitte später erneut versuchen.", {
         variant: "warn",
@@ -425,7 +424,7 @@ async function handleHundFormSubmit(event, { mode, id, refs, section, submit }) 
     );
     window.location.hash = `#/hunde/${result.id}`;
   } catch (error) {
-    console.error("HUNDE_FORM_SUBMIT_FAILED", error);
+    console.error("[HUNDE_ERR_FORM_SUBMIT]", error);
     const message =
       mode === "create"
         ? "Hund konnte nicht erstellt werden."
@@ -461,13 +460,11 @@ function showInlineToast(section, message, tone = "info") {
 }
 
 function buildBackButton() {
-  return createButton({
-    label: "Zur Liste",
-    variant: "secondary",
-    onClick: () => {
-      window.location.hash = "#/hunde";
-    },
-  });
+  const link = document.createElement("a");
+  link.href = "#/hunde";
+  link.className = "ui-btn ui-btn--secondary";
+  link.textContent = "Zur Liste";
+  return link;
 }
 
 function focusHeading(root) {
