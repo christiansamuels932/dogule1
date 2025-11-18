@@ -48,7 +48,7 @@ export async function createHundeFormView(container, options = {}) {
   } catch (error) {
     console.error("[HUNDE_ERR_FORM_DATA]", error);
     section.appendChild(
-      createNotice("Daten konnten nicht geladen werden. Bitte später erneut versuchen.", {
+      createNotice("Fehler beim Laden der Daten.", {
         variant: "warn",
         role: "alert",
       })
@@ -60,7 +60,7 @@ export async function createHundeFormView(container, options = {}) {
   if (mode === "edit") {
     if (!hundId || !initialHund) {
       section.appendChild(
-        createNotice("Hund konnte nicht geladen werden.", {
+        createNotice("Fehler beim Laden der Daten.", {
           variant: "warn",
           role: "alert",
         })

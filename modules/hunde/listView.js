@@ -37,12 +37,16 @@ export async function createHundeListView(container) {
   } catch (error) {
     console.error("[HUNDE_ERR_LIST_INIT]", error);
     container.innerHTML = "";
-    container.appendChild(
-      createNotice("Hunde konnten nicht geladen werden. Bitte später erneut versuchen.", {
+    const fallbackCard = buildListCard();
+    const body = fallbackCard.querySelector(".ui-card__body");
+    body.innerHTML = "";
+    body.appendChild(
+      createNotice("Fehler beim Laden der Daten.", {
         variant: "warn",
         role: "alert",
       })
     );
+    container.appendChild(fallbackCard);
   }
 }
 
@@ -90,7 +94,7 @@ async function populateHundeTable(cardElement) {
     console.error("[HUNDE_ERR_LIST_FETCH]", error);
     body.innerHTML = "";
     body.appendChild(
-      createNotice("Fehler beim Laden der Hunde. Bitte versuche es erneut.", {
+      createNotice("Fehler beim Laden der Daten.", {
         variant: "warn",
         role: "alert",
       })

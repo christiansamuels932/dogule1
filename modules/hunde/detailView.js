@@ -48,6 +48,8 @@ export async function createHundeDetailView(container, hundId) {
     if (!hund) {
       throw new Error(`Hund ${hundId} nicht gefunden`);
     }
+    let kundeLoadFailed = false;
+    let finanzenLoadFailed = false;
     const kundeInfo = {
       id: hund.kundenId || "",
       name: "–",
@@ -60,9 +62,15 @@ export async function createHundeDetailView(container, hundId) {
           const fullName = `${kunde.vorname ?? ""} ${kunde.nachname ?? ""}`.trim();
           kundeInfo.name = fullName || kunde.vorname || kunde.nachname || "–";
           kundeInfo.id = kunde.id || hund.kundenId;
-          kundeFinanzen = await listFinanzenByKundeId(kunde.id);
+          try {
+            kundeFinanzen = await listFinanzenByKundeId(kunde.id);
+          } catch (finanzenError) {
+            finanzenLoadFailed = true;
+            console.error("[HUNDE_ERR_DETAIL_FINANZEN]", finanzenError);
+          }
         }
       } catch (kundenError) {
+        kundeLoadFailed = true;
         console.error("[HUNDE_ERR_DETAIL_KUNDE]", kundenError);
       }
     }
@@ -70,6 +78,14 @@ export async function createHundeDetailView(container, hundId) {
 
     cardElement.querySelector(".ui-card__title").textContent = hund.name || "Unbenannter Hund";
     body.innerHTML = "";
+    if (kundeLoadFailed) {
+      body.appendChild(
+        createNotice("Fehler beim Laden der Daten.", {
+          variant: "warn",
+          role: "alert",
+        })
+      );
+    }
     body.appendChild(buildDetailList(hund, kundeInfo));
     body.appendChild(buildMetaBlock(hund));
     const kurseSection = await buildLinkedKurseSection(hund.id);
@@ -87,13 +103,19 @@ export async function createHundeDetailView(container, hundId) {
       footer.appendChild(createNavLink("Zum Kunden", `#/kunden/${kundeInfo.id}`, "secondary"));
     }
     footer.appendChild(createNavLink("Zur Liste", "#/hunde", "secondary"));
-    container.appendChild(buildFinanzUebersichtSection(container.__linkedFinanzen || []));
-    container.appendChild(buildFinanzOffeneSection(container.__linkedFinanzen || []));
-    container.appendChild(buildFinanzHistorieSection(container.__linkedFinanzen || []));
+    container.appendChild(
+      buildFinanzUebersichtSection(container.__linkedFinanzen || [], finanzenLoadFailed)
+    );
+    container.appendChild(
+      buildFinanzOffeneSection(container.__linkedFinanzen || [], finanzenLoadFailed)
+    );
+    container.appendChild(
+      buildFinanzHistorieSection(container.__linkedFinanzen || [], finanzenLoadFailed)
+    );
   } catch (error) {
     console.error("[HUNDE_ERR_DETAIL_LOAD]", error);
     body.innerHTML = "";
-    const notice = createNotice("Hund konnte nicht geladen werden.", {
+    const notice = createNotice("Fehler beim Laden der Daten.", {
       variant: "warn",
       role: "alert",
     });
@@ -127,15 +149,24 @@ async function buildLinkedKurseSection(hundId) {
   if (body) {
     body.innerHTML = "";
     let kurse = [];
+    let loadFailed = false;
     try {
       const allKurse = await listKurse();
       kurse = allKurse.filter(
         (kurs) => Array.isArray(kurs.hundIds) && kurs.hundIds.includes(hundId)
       );
     } catch (error) {
+      loadFailed = true;
       console.error("[HUNDE_ERR_LINKED_KURSE]", error);
     }
-    if (!kurse.length) {
+    if (loadFailed) {
+      body.appendChild(
+        createNotice("Fehler beim Laden der Daten.", {
+          variant: "warn",
+          role: "alert",
+        })
+      );
+    } else if (!kurse.length) {
       body.appendChild(createEmptyState("Keine Daten vorhanden.", ""));
     } else {
       kurse.forEach((kurs) => {
@@ -160,7 +191,7 @@ async function buildLinkedKurseSection(hundId) {
   return section;
 }
 
-function buildFinanzUebersichtSection(finanzen = []) {
+function buildFinanzUebersichtSection(finanzen = [], hasError = false) {
   const section = document.createElement("section");
   section.className = "hunde-finanz-section";
   section.appendChild(
@@ -181,6 +212,16 @@ function buildFinanzUebersichtSection(finanzen = []) {
   const body = card.querySelector(".ui-card__body");
   if (body) {
     body.innerHTML = "";
+    if (hasError) {
+      body.appendChild(
+        createNotice("Fehler beim Laden der Daten.", {
+          variant: "warn",
+          role: "alert",
+        })
+      );
+      section.appendChild(card);
+      return section;
+    }
     const payments = finanzen.filter((entry) => entry.typ === "zahlung");
     const latest = payments.length ? payments[payments.length - 1] : null;
     if (!latest && !finanzen.some((entry) => entry.typ === "offen")) {
@@ -225,7 +266,7 @@ function buildFinanzUebersichtSection(finanzen = []) {
   return section;
 }
 
-function buildFinanzOffeneSection(finanzen = []) {
+function buildFinanzOffeneSection(finanzen = [], hasError = false) {
   const section = document.createElement("section");
   section.className = "hunde-finanz-section";
   section.appendChild(
@@ -246,6 +287,16 @@ function buildFinanzOffeneSection(finanzen = []) {
   const body = card.querySelector(".ui-card__body");
   if (body) {
     body.innerHTML = "";
+    if (hasError) {
+      body.appendChild(
+        createNotice("Fehler beim Laden der Daten.", {
+          variant: "warn",
+          role: "alert",
+        })
+      );
+      section.appendChild(card);
+      return section;
+    }
     const offen = finanzen.filter((entry) => entry.typ === "offen");
     if (!offen.length) {
       body.appendChild(createEmptyState("Keine Daten vorhanden.", ""));
@@ -276,7 +327,7 @@ function buildFinanzOffeneSection(finanzen = []) {
   return section;
 }
 
-function buildFinanzHistorieSection(finanzen = []) {
+function buildFinanzHistorieSection(finanzen = [], hasError = false) {
   const section = document.createElement("section");
   section.className = "hunde-finanz-section";
   section.appendChild(
@@ -297,6 +348,16 @@ function buildFinanzHistorieSection(finanzen = []) {
   const body = card.querySelector(".ui-card__body");
   if (body) {
     body.innerHTML = "";
+    if (hasError) {
+      body.appendChild(
+        createNotice("Fehler beim Laden der Daten.", {
+          variant: "warn",
+          role: "alert",
+        })
+      );
+      section.appendChild(card);
+      return section;
+    }
     const payments = finanzen
       .filter((entry) => entry.typ === "zahlung")
       .slice()
