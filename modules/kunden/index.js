@@ -206,19 +206,27 @@ async function renderList(root) {
   if (!kunden.length) {
     appendSharedEmptyState(listBody);
   } else {
-    const list = document.createElement("ul");
-    list.className = "kunden-list";
+    const listWrapper = document.createElement("div");
+    listWrapper.className = "kunden-list";
     kunden.forEach((kunde) => {
-      const item = document.createElement("li");
+      const kundCardFragment = createCard({
+        eyebrow: kunde.kundenCode || kunde.id,
+        title: formatFullName(kunde),
+        body: `<p>${kunde.email?.trim() || "keine E-Mail"}</p>`,
+        footer: "",
+      });
+      const cardElement =
+        kundCardFragment.querySelector(".ui-card") || kundCardFragment.firstElementChild;
+      if (!cardElement) return;
+      cardElement.classList.add("kunden-list-item");
       const link = document.createElement("a");
       link.href = `#/kunden/${kunde.id}`;
-      const fullName = formatFullName(kunde);
-      const email = kunde.email?.trim() || "keine E-Mail";
-      link.textContent = `${fullName} – ${email}`;
-      item.appendChild(link);
-      list.appendChild(item);
+      link.className = "kunden-list__link";
+      link.setAttribute("aria-label", `${formatFullName(kunde)} öffnen`);
+      link.appendChild(cardElement);
+      listWrapper.appendChild(link);
     });
-    listBody.appendChild(list);
+    listBody.appendChild(listWrapper);
   }
 
   section.append(actionsCard, listCard);
