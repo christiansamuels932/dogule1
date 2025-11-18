@@ -136,10 +136,18 @@ async function renderList(section) {
   if (toolbar) {
     section.appendChild(toolbar);
   }
-  const listCard = buildCourseListCard();
+  const listCardFragment = createCard({
+    eyebrow: "",
+    title: "Kursübersicht",
+    body: "",
+    footer: "",
+  });
+  const listCard = listCardFragment.querySelector(".ui-card") || listCardFragment.firstElementChild;
   if (listCard) {
+    const cardBody = listCard.querySelector(".ui-card__body");
+    cardBody.innerHTML = "";
     section.appendChild(listCard);
-    await populateCourses(listCard);
+    await populateCourses(cardBody);
   }
   focusHeading(section);
 }
@@ -522,6 +530,57 @@ function formatCustomerName(kunde = {}) {
   return name || kunde.email || "Unbenannter Kunde";
 }
 
+function createCourseListItem(course = {}) {
+  if (!course.id) return null;
+  const link = document.createElement("a");
+  link.href = `#/kurse/${course.id}`;
+  link.className = "kurse-list__item";
+  const cardFragment = createCard({
+    eyebrow: formatDate(course.date),
+    title: course.title || "Ohne Titel",
+    body: "",
+    footer: "",
+  });
+  const card = cardFragment.querySelector(".ui-card") || cardFragment.firstElementChild;
+  if (!card) return null;
+  const body = card.querySelector(".ui-card__body");
+  const footer = card.querySelector(".ui-card__footer");
+  if (body) {
+    body.innerHTML = "";
+    const metaList = document.createElement("ul");
+    metaList.className = "kurse-list__meta";
+    [
+      { label: "Zeit", value: formatTimeRange(course.startTime, course.endTime) },
+      { label: "Trainer", value: course.trainerName || "Noch nicht zugewiesen" },
+      {
+        label: "Kapazität",
+        value: `${course.bookedCount ?? 0} / ${course.capacity ?? 0}`,
+      },
+      { label: "Ort", value: course.location || "Noch offen" },
+    ].forEach(({ label, value }) => {
+      const item = document.createElement("li");
+      const strong = document.createElement("strong");
+      strong.textContent = `${label}: `;
+      const span = document.createElement("span");
+      span.textContent = value;
+      item.append(strong, span);
+      metaList.appendChild(item);
+    });
+    body.appendChild(metaList);
+  }
+  if (footer) {
+    footer.innerHTML = "";
+    const statusBadge = createBadge(
+      formatStatusLabel(course.status),
+      getStatusVariant(course.status)
+    );
+    footer.appendChild(statusBadge);
+    footer.appendChild(createBadge(`${course.level || "Alltag"}`, "default"));
+  }
+  link.appendChild(card);
+  return link;
+}
+
 function createDetailCard({ eyebrow = "", title = "", bodyNodes = [], footerNodes = [] } = {}) {
   const cardFragment = createCard({
     eyebrow,
@@ -726,83 +785,29 @@ function buildCourseToolbarCard() {
   return cardElement;
 }
 
-function buildCourseListCard() {
-  const cardFragment = createCard({
-    eyebrow: "",
-    title: "Kursübersicht",
-    body: "",
-    footer: "",
-  });
-  const cardElement = cardFragment.querySelector(".ui-card") || cardFragment.firstElementChild;
-  if (!cardElement) return document.createDocumentFragment();
-  const body = cardElement.querySelector(".ui-card__body");
-  body.textContent = "Kurse werden geladen ...";
-  return cardElement;
-}
-
-async function populateCourses(cardElement) {
-  const body = cardElement.querySelector(".ui-card__body");
-  body.textContent = "Kurse werden geladen ...";
+async function populateCourses(container) {
+  if (!container) return;
+  container.innerHTML = "";
+  const loading = document.createElement("p");
+  loading.textContent = "Kurse werden geladen ...";
+  container.appendChild(loading);
   try {
     const courses = await fetchKurse();
-    body.innerHTML = "";
+    container.innerHTML = "";
     if (!courses.length) {
-      body.appendChild(createEmpty());
+      container.appendChild(createEmpty());
       return;
     }
 
     courses.forEach((course) => {
-      const courseCard = createCard({
-        eyebrow: formatDate(course.date),
-        title: course.title || "Ohne Titel",
-        body: "",
-        footer: "",
-      });
-      const cardEl = courseCard.querySelector(".ui-card") || courseCard.firstElementChild;
-      if (!cardEl) return;
-      const cardBody = cardEl.querySelector(".ui-card__body");
-      const infoList = document.createElement("ul");
-      infoList.className = "kurs-info-list";
-      [
-        { label: "Zeit", value: formatTimeRange(course.startTime, course.endTime) },
-        { label: "Trainer", value: course.trainerName || "Noch nicht zugewiesen" },
-        {
-          label: "Kapazität",
-          value: `${course.bookedCount ?? 0} / ${course.capacity ?? 0}`,
-        },
-        { label: "Ort", value: course.location || "Noch offen" },
-      ].forEach(({ label, value }) => {
-        const item = document.createElement("li");
-        item.innerHTML = `<strong>${label}:</strong> ${value}`;
-        infoList.appendChild(item);
-      });
-      cardBody.appendChild(infoList);
-
-      const footer = cardEl.querySelector(".ui-card__footer");
-      const statusBadge = createBadge(
-        formatStatusLabel(course.status),
-        getStatusVariant(course.status)
-      );
-      footer.appendChild(statusBadge);
-      footer.appendChild(createBadge(`${course.level || "Alltag"}`, "default"));
-
-      const linkedCard = attachCourseNavigation(cardEl, course.id);
-      body.appendChild(linkedCard);
+      const listItem = createCourseListItem(course);
+      if (listItem) container.appendChild(listItem);
     });
   } catch (error) {
     console.error("[KURSE_ERR_LIST_FETCH]", error);
-    body.innerHTML = "";
-    body.appendChild(createErrorNotice());
+    container.innerHTML = "";
+    container.appendChild(createErrorNotice());
   }
-}
-
-function attachCourseNavigation(cardEl, id) {
-  if (!cardEl) return cardEl;
-  const link = document.createElement("a");
-  link.href = `#/kurse/${id}`;
-  link.className = "kurse-list__link";
-  link.appendChild(cardEl);
-  return link;
 }
 
 function formatDate(value) {
