@@ -1,3 +1,4 @@
+// Dashboard has no form views; verified for Station 18
 // Standardized module interface for Dogule1
 /* globals document, console */
 import {
