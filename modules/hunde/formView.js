@@ -1,5 +1,6 @@
 /* globals document, window, console */
 import {
+  createButton,
   createCard,
   createFormRow,
   createNotice,
@@ -23,6 +24,9 @@ export async function createHundeFormView(container, options = {}) {
 
   container.innerHTML = "";
   container.classList.add("hunde-view");
+  if (typeof window !== "undefined" && typeof window.scrollTo === "function") {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
 
   const section = document.createElement("section");
   section.className = "dogule-section hunde-form-section";
@@ -74,7 +78,7 @@ export async function createHundeFormView(container, options = {}) {
 
   const cardFragment = createCard({
     eyebrow: "",
-    title: mode === "create" ? "Angaben zum Hund" : existing?.name || "Angaben zum Hund",
+    title: "Stammdaten",
     body: "",
     footer: "",
   });
@@ -95,14 +99,19 @@ export async function createHundeFormView(container, options = {}) {
   footer.innerHTML = "";
   const actions = document.createElement("div");
   actions.className = "hunde-form-actions";
-  const submit = document.createElement("button");
-  submit.type = "button";
-  submit.className = "ui-btn ui-btn--primary";
-  submit.textContent = "Speichern";
-  const cancel = document.createElement("a");
-  cancel.className = "ui-btn ui-btn--quiet";
-  cancel.href = mode === "create" ? "#/hunde" : `#/hunde/${hundId}`;
-  cancel.textContent = "Abbrechen";
+  const submit = createButton({
+    label: mode === "create" ? "Erstellen" : "Speichern",
+    variant: "primary",
+  });
+  submit.type = "submit";
+  const cancel = createButton({
+    label: "Abbrechen",
+    variant: "quiet",
+    onClick: () => {
+      window.location.hash = mode === "create" ? "#/hunde" : `#/hunde/${hundId}`;
+    },
+  });
+  cancel.type = "button";
   actions.append(submit, cancel);
   footer.appendChild(actions);
 
@@ -509,11 +518,15 @@ function showInlineToast(section, message, tone = "info") {
 }
 
 function buildBackButton() {
-  const link = document.createElement("a");
-  link.href = "#/hunde";
-  link.className = "ui-btn ui-btn--secondary";
-  link.textContent = "Zur Liste";
-  return link;
+  const button = createButton({
+    label: "Zur Liste",
+    variant: "secondary",
+    onClick: () => {
+      window.location.hash = "#/hunde";
+    },
+  });
+  button.type = "button";
+  return button;
 }
 
 function focusHeading(root) {
