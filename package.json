@@ -7,7 +7,7 @@
     "dev": "node ./scripts/dev-server.cjs",
     "lint": "echo \"DLX-LINT-001: running eslint\" && eslint .",
     "format": "echo \"DLX-FMT-001: running prettier\" && prettier --write .",
-    "build": "echo \"DLX-BUILD-001: root build placeholder\" && exit 0",
+    "build": "node ./scripts/build-alpha.cjs",
     "audit": "echo \"DLX-AUDIT-001: running pnpm audit\" && pnpm audit",
     "prepare": "echo \"DLX-HUSKY-000: installing husky hooks\" && husky install",
     "lint-staged": "echo \"DLX-LS-001: running lint-staged\" && lint-staged"
