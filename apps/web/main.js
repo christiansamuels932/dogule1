@@ -1,5 +1,9 @@
 // Simple hash-based router for Dogule1
-/* globals window, document, fetch, console, DOMParser */
+/* globals window, document, console, DOMParser */
+import "../../modules/shared/shared.css";
+import "../../modules/shared/layout.css";
+import layoutHtml from "../../modules/shared/layout.html?raw";
+import templatesHtml from "../../modules/shared/components/templates.html?raw";
 
 // --- Simple hash router for Dogule1 Module Interfaces (Station 8) ---
 const VALID_MODULES = new Set([
@@ -14,8 +18,7 @@ const VALID_MODULES = new Set([
   "waren",
 ]);
 
-const LAYOUT_URL = "../../modules/shared/layout.html";
-const TEMPLATES_URL = "../../modules/shared/components/templates.html";
+const moduleLoaders = import.meta.glob("../../modules/*/index.js");
 const TEMPLATE_HOST_ID = "dogule-shared-templates";
 let layoutMain = null;
 let layoutPromise = null;
@@ -43,7 +46,11 @@ async function loadAndRender(routeInfo) {
   }
 
   try {
-    const mod = await import(`/modules/${route}/index.js`);
+    const loader = moduleLoaders[`../../modules/${route}/index.js`];
+    if (!loader) {
+      throw new Error(`Module loader for "${route}" not found`);
+    }
+    const mod = await loader();
     const entry = typeof mod.initModule === "function" ? mod.initModule : mod.default;
     if (typeof entry !== "function") {
       throw new Error(`Module "${route}" missing export initModule(container) or default export`);
@@ -102,15 +109,13 @@ async function ensureLayout() {
 
 async function mountLayout() {
   try {
-    const response = await fetch(LAYOUT_URL);
-    if (!response.ok) {
-      throw new Error(`Failed to load layout: ${response.status}`);
+    const parser = new DOMParser();
+    const layoutDoc = parser.parseFromString(layoutHtml, "text/html");
+    if (!layoutDoc) {
+      throw new Error("Failed to parse layout HTML");
     }
 
-    const html = await response.text();
-    const parser = new DOMParser();
-    const layoutDoc = parser.parseFromString(html, "text/html");
-
+    layoutDoc.querySelectorAll("link[href]").forEach((link) => link.remove());
     adoptHeadContent(layoutDoc);
 
     // Station 7 – Load modules into persistent layout (header/footer stay)
@@ -169,11 +174,6 @@ async function ensureTemplates() {
 
 async function loadTemplates() {
   try {
-    const response = await fetch(TEMPLATES_URL);
-    if (!response.ok) {
-      throw new Error(`Failed to load templates: ${response.status}`);
-    }
-    const html = await response.text();
     let host = document.getElementById(TEMPLATE_HOST_ID);
     if (!host) {
       host = document.createElement("div");
@@ -181,7 +181,7 @@ async function loadTemplates() {
       host.hidden = true;
       document.body.appendChild(host);
     }
-    host.innerHTML = html;
+    host.innerHTML = templatesHtml;
     return true;
   } catch (error) {
     console.error("DOGULE1_TEMPLATES_FAILED", error);

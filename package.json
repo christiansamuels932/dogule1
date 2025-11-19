@@ -7,7 +7,7 @@
     "dev": "node ./scripts/dev-server.cjs",
     "lint": "echo \"DLX-LINT-001: running eslint\" && eslint .",
     "format": "echo \"DLX-FMT-001: running prettier\" && prettier --write .",
-    "build": "node ./scripts/build-alpha.cjs",
+    "build": "vite build",
     "audit": "echo \"DLX-AUDIT-001: running pnpm audit\" && pnpm audit",
     "prepare": "echo \"DLX-HUSKY-000: installing husky hooks\" && husky install",
     "lint-staged": "echo \"DLX-LS-001: running lint-staged\" && lint-staged"
@@ -19,7 +19,8 @@
     "eslint": "^9.0.0",
     "husky": "^9.0.0",
     "lint-staged": "^15.0.0",
-    "prettier": "^3.0.0"
+    "prettier": "^3.0.0",
+    "vite": "^6.0.0"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [

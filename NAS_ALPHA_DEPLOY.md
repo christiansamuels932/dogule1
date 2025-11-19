@@ -4,20 +4,20 @@
 
 1. Install dependencies once via `pnpm install`.
 2. Run `pnpm build` from repo root.
-   - The script copies `apps/web` entry assets plus every `modules/*` bundle into `dist/`.
-   - The generated router keeps hash-based navigation so no server rewrite rules are required.
+   - Vite compiles `apps/web` + `modules/*` into hashed chunks under `dist/`.
+   - Hash-based routing stays intact so no rewrite rules are needed on the NAS.
 
 ## Output
 
 ```
 dist/
-├─ index.html          → loads shared CSS + hash router entry
-├─ assets/
-│  └─ main.js         → production router (fetches layout/templates + modules)
-└─ modules/           → dashboard, kunden, hunde, kurse, etc. incl. shared assets
+├─ index.html            → ~1–2 KB shell pointing to hashed JS/CSS
+└─ assets/
+   ├─ index-*.js        → entry + module chunks (dashboard/kunden/…)
+   └─ index-*.css       → shared/layout styles bundled via Vite
 ```
 
-All links inside `dist/index.html` reference relative paths (`./modules/...`, `./assets/...`) so the package is self-contained, avoids `localhost` URLs, and keeps console output limited to the `[MODULE_ERR_*]` handlers already audited in Station 18.
+`index.html` references bundles via relative paths (e.g., `<script type="module" src="./assets/index-XXXXX.js">`), so everything stays self-contained and offline-friendly.
 
 ## NAS target
 
