@@ -1,8 +1,9 @@
 import { list, create, update, remove } from "./crud.js";
 
-const TABLE = "finanzen";
+const TABLE = "zahlungen";
 
 const EDITABLE_DEFAULTS = {
+  code: "",
   kundeId: "",
   typ: "",
   betrag: 0,

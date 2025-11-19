@@ -1,9 +1,10 @@
 import { list, create, update, remove } from "./crud.js";
 
 const TABLE = "hunde";
+const LEGACY_CODE_KEY = "hundeId";
 
 const EDITABLE_DEFAULTS = {
-  hundeId: "",
+  code: "",
   name: "",
   rufname: "",
   rasse: "",
@@ -18,6 +19,16 @@ const EDITABLE_DEFAULTS = {
 
 const NUMBER_FIELDS = new Set(["gewichtKg", "groesseCm"]);
 
+const normalizeCodePayload = (payload = {}) => {
+  if (payload.code !== undefined) {
+    return payload;
+  }
+  if (payload[LEGACY_CODE_KEY] !== undefined) {
+    return { ...payload, code: payload[LEGACY_CODE_KEY] };
+  }
+  return payload;
+};
+
 const sanitizeNumber = (value) => {
   if (typeof value === "number" && Number.isFinite(value)) {
     return value;
@@ -30,7 +41,7 @@ const sanitizeNumber = (value) => {
 };
 
 const ensureEditableDefaults = (payload = {}) => {
-  const normalized = { ...EDITABLE_DEFAULTS, ...payload };
+  const normalized = { ...EDITABLE_DEFAULTS, ...normalizeCodePayload(payload) };
   NUMBER_FIELDS.forEach((key) => {
     normalized[key] = sanitizeNumber(payload[key]);
   });
@@ -43,6 +54,8 @@ const sanitizeUpdatePayload = (payload = {}) => {
     if (!Object.prototype.hasOwnProperty.call(EDITABLE_DEFAULTS, key)) return;
     if (NUMBER_FIELDS.has(key)) {
       patch[key] = sanitizeNumber(value);
+    } else if (key === "code") {
+      patch[key] = (value || "").trim();
     } else {
       patch[key] = value ?? EDITABLE_DEFAULTS[key];
     }
@@ -50,13 +63,32 @@ const sanitizeUpdatePayload = (payload = {}) => {
   return patch;
 };
 
-const ensureHundShape = (hund = {}) => ({
-  id: "",
-  createdAt: "",
-  updatedAt: "",
-  ...EDITABLE_DEFAULTS,
-  ...hund,
-});
+const attachLegacyAlias = (record) => {
+  if (!record) return record;
+  if (Object.prototype.hasOwnProperty.call(record, LEGACY_CODE_KEY)) {
+    delete record[LEGACY_CODE_KEY];
+  }
+  Object.defineProperty(record, LEGACY_CODE_KEY, {
+    configurable: true,
+    enumerable: false,
+    get() {
+      return this.code;
+    },
+    set(value) {
+      this.code = value;
+    },
+  });
+  return record;
+};
+
+const ensureHundShape = (hund = {}) =>
+  attachLegacyAlias({
+    id: "",
+    createdAt: "",
+    updatedAt: "",
+    ...EDITABLE_DEFAULTS,
+    ...hund,
+  });
 
 export async function listHunde(options) {
   const hunde = await list(TABLE, options);
@@ -74,7 +106,7 @@ export async function createHund(data = {}, options) {
 }
 
 export async function updateHund(id, data = {}, options) {
-  const patch = sanitizeUpdatePayload(data);
+  const patch = sanitizeUpdatePayload(normalizeCodePayload(data));
   if (!Object.keys(patch).length) {
     return getHund(id, options);
   }

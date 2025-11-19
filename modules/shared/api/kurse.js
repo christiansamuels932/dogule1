@@ -1,10 +1,12 @@
 import { list, create, update, remove } from "./crud.js";
-import { db } from "./db.js";
+import { db } from "./db/index.js";
 
 const TABLE = "kurse";
 const DEFAULT_STATUS = "geplant";
+const LEGACY_CODE_KEY = "kursId";
 
 const EDITABLE_DEFAULTS = {
+  code: "",
   title: "",
   trainerName: "",
   trainerId: "",
@@ -18,6 +20,8 @@ const EDITABLE_DEFAULTS = {
   level: "",
   price: 0,
   notes: "",
+  hundIds: [],
+  kundenIds: [],
 };
 
 const NUMBER_FIELDS = new Set(["capacity", "bookedCount", "price"]);
@@ -29,6 +33,16 @@ const nextKursId = () => {
   return `kurs-${kursSequence.toString().padStart(3, "0")}`;
 };
 
+const normalizeCodePayload = (payload = {}) => {
+  if (payload.code !== undefined) {
+    return payload;
+  }
+  if (payload[LEGACY_CODE_KEY] !== undefined) {
+    return { ...payload, code: payload[LEGACY_CODE_KEY] };
+  }
+  return payload;
+};
+
 const sanitizeNumber = (value, fallback = 0) => {
   if (typeof value === "number" && Number.isFinite(value)) return value;
   const parsed = Number(value);
@@ -36,35 +50,41 @@ const sanitizeNumber = (value, fallback = 0) => {
 };
 
 const ensureEditableDefaults = (payload = {}) => {
-  const normalized = { ...EDITABLE_DEFAULTS, ...payload };
+  const normalized = { ...EDITABLE_DEFAULTS, ...normalizeCodePayload(payload) };
   normalized.status = payload.status?.trim?.() ? payload.status : DEFAULT_STATUS;
   normalized.capacity = sanitizeNumber(payload.capacity, EDITABLE_DEFAULTS.capacity);
   normalized.bookedCount = sanitizeNumber(payload.bookedCount, EDITABLE_DEFAULTS.bookedCount);
   normalized.price = sanitizeNumber(payload.price, EDITABLE_DEFAULTS.price);
+  normalized.hundIds = Array.isArray(payload.hundIds) ? payload.hundIds : EDITABLE_DEFAULTS.hundIds;
+  normalized.kundenIds = Array.isArray(payload.kundenIds)
+    ? payload.kundenIds
+    : EDITABLE_DEFAULTS.kundenIds;
   return normalized;
 };
 
 const sanitizeUpdatePayload = (payload = {}) => {
+  const normalized = normalizeCodePayload(payload);
   const patch = {};
   Object.keys(EDITABLE_DEFAULTS).forEach((key) => {
-    if (Object.prototype.hasOwnProperty.call(payload, key)) {
-      if (NUMBER_FIELDS.has(key)) {
-        patch[key] = sanitizeNumber(payload[key], EDITABLE_DEFAULTS[key]);
-      } else if (key === "status") {
-        patch[key] = payload[key]?.trim?.() ? payload[key] : DEFAULT_STATUS;
-      } else {
-        patch[key] = payload[key] ?? EDITABLE_DEFAULTS[key];
-      }
+    if (!Object.prototype.hasOwnProperty.call(normalized, key)) return;
+    if (NUMBER_FIELDS.has(key)) {
+      patch[key] = sanitizeNumber(normalized[key], EDITABLE_DEFAULTS[key]);
+    } else if (key === "status") {
+      patch[key] = normalized[key]?.trim?.() ? normalized[key] : DEFAULT_STATUS;
+    } else if (key === "code") {
+      patch[key] = (normalized[key] || "").trim();
+    } else {
+      patch[key] = normalized[key] ?? EDITABLE_DEFAULTS[key];
     }
   });
   return patch;
 };
 
-const ensureKursShape = (kurs) => ({
+const ensureKursShape = (kurs = {}) => ({
   id: "",
-  ...EDITABLE_DEFAULTS,
   createdAt: "",
   updatedAt: "",
+  ...EDITABLE_DEFAULTS,
   ...kurs,
 });
 
