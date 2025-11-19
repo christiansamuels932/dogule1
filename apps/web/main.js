@@ -1,5 +1,5 @@
 // Simple hash-based router for Dogule1
-/* globals window, document, console, DOMParser */
+/* globals window, document, console, DOMParser, requestAnimationFrame */
 import "../../modules/shared/shared.css";
 import "../../modules/shared/layout.css";
 import layoutHtml from "../../modules/shared/layout.html?raw";
@@ -18,7 +18,7 @@ const VALID_MODULES = new Set([
   "waren",
 ]);
 
-const moduleLoaders = import.meta.glob("../../modules/*/index.js");
+const moduleLoaders = import.meta.glob("../../modules/*/index.js", { eager: false });
 const TEMPLATE_HOST_ID = "dogule-shared-templates";
 let layoutMain = null;
 let layoutPromise = null;
@@ -37,13 +37,12 @@ function getRouteInfo() {
 
 async function loadAndRender(routeInfo) {
   const route = routeInfo.module;
-  const layoutContainer = await ensureLayout();
-  await ensureTemplates();
-  const container = layoutContainer || document.getElementById("dogule-main");
+  const container = await resolveRenderContainer();
   if (!container) {
     console.error("Router error: #dogule-main not found in layout.");
     return;
   }
+  await ensureTemplates();
 
   try {
     const loader = moduleLoaders[`../../modules/${route}/index.js`];
@@ -97,7 +96,18 @@ async function handleNavigation() {
 }
 
 window.addEventListener("hashchange", handleNavigation);
-window.addEventListener("DOMContentLoaded", handleNavigation);
+if (document.readyState === "loading") {
+  window.addEventListener("DOMContentLoaded", handleNavigation);
+} else {
+  handleNavigation();
+}
+
+async function resolveRenderContainer() {
+  const layoutContainer = await ensureLayout();
+  await waitForLayoutAttachment();
+  const target = document.getElementById("dogule-main") || layoutContainer;
+  return target;
+}
 
 async function ensureLayout() {
   if (layoutMain) return layoutMain;
@@ -188,4 +198,10 @@ async function loadTemplates() {
     templatesPromise = null;
     return false;
   }
+}
+
+function waitForLayoutAttachment() {
+  return new Promise((resolve) => {
+    requestAnimationFrame(() => requestAnimationFrame(resolve));
+  });
 }

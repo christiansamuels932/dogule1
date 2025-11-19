@@ -619,52 +619,18 @@ async function renderForm(root, view, id) {
   footer.innerHTML = "";
   footer.appendChild(actions);
 
-  form.addEventListener("submit", async (event) => {
-    event.preventDefault();
-    formStatusSlot.innerHTML = "";
-    const values = collectValues(refs);
-    const errors = validate(values);
-    applyErrors(refs, errors);
-    if (Object.keys(errors).length) {
-      const firstError = Object.values(refs).find(
-        (ref) => ref.hint && ref.hint.textContent && !ref.hint.classList.contains("sr-only")
-      );
-      if (firstError) firstError.input.focus();
-      return;
-    }
-
-    const defaultLabel = mode === "create" ? "Erstellen" : "Speichern";
-    const busyLabel = mode === "create" ? "Erstelle ..." : "Speichere ...";
-    submit.disabled = true;
-    submit.textContent = busyLabel;
-    let success = false;
-    try {
-      const result = mode === "create" ? await createKunde(values) : await updateKunde(id, values);
-      if (!result || !result.id) {
-        throw new Error("Save failed");
-      }
-      await fetchKunden();
-      success = true;
-      if (mode === "create") {
-        setToast("Kunde erstellt.", "success");
-        window.location.hash = "#/kunden";
-      } else {
-        setToast("Änderungen gespeichert.", "success");
-        window.location.hash = `#/kunden/${id}`;
-      }
-    } catch (error) {
-      console.error("[KUNDEN_ERR_FORM_SAVE]", error);
-      showErrorNotice(formStatusSlot, { replace: true });
-    } finally {
-      if (!success) {
-        submit.disabled = false;
-        submit.textContent = defaultLabel;
-      }
-    }
-  });
-
   section.appendChild(formCard);
   root.appendChild(section);
+
+  const submitContext = {
+    mode,
+    id,
+    refs,
+    submit,
+    formStatusSlot,
+  };
+  form.addEventListener("submit", (event) => handleKundeFormSubmit(event, submitContext));
+
   focusHeading(root);
 }
 
@@ -689,6 +655,56 @@ function injectToast(section) {
     noticeElement.classList.add("kunden-toast");
   }
   section.prepend(fragment);
+}
+
+async function handleKundeFormSubmit(event, context = {}) {
+  if (event) event.preventDefault();
+  const { mode, id, refs, submit, formStatusSlot } = context;
+  if (!refs || !submit) return;
+
+  if (formStatusSlot) {
+    formStatusSlot.innerHTML = "";
+  }
+
+  const values = collectValues(refs);
+  const errors = validate(values);
+  applyErrors(refs, errors);
+  if (Object.keys(errors).length) {
+    const firstError = Object.values(refs).find(
+      (ref) => ref.hint && ref.hint.textContent && !ref.hint.classList.contains("sr-only")
+    );
+    if (firstError) {
+      firstError.input.focus();
+    }
+    return;
+  }
+
+  const defaultLabel = mode === "create" ? "Erstellen" : "Speichern";
+  const busyLabel = mode === "create" ? "Erstelle ..." : "Speichere ...";
+  submit.disabled = true;
+  submit.textContent = busyLabel;
+
+  try {
+    const result = mode === "create" ? await createKunde(values) : await updateKunde(id, values);
+    if (!result || !result.id) {
+      throw new Error("Save failed");
+    }
+    await fetchKunden();
+    if (mode === "create") {
+      setToast("Kunde erstellt.", "success");
+      window.location.hash = "#/kunden";
+    } else {
+      setToast("Änderungen gespeichert.", "success");
+      window.location.hash = `#/kunden/${id}`;
+    }
+  } catch (error) {
+    console.error("[KUNDEN_ERR_FORM_SAVE]", error);
+    if (formStatusSlot) {
+      showErrorNotice(formStatusSlot, { replace: true });
+    }
+    submit.disabled = false;
+    submit.textContent = defaultLabel;
+  }
 }
 
 function collectValues(refs) {

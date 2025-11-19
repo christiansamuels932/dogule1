@@ -122,12 +122,7 @@ export async function createHundeFormView(container, options = {}) {
     section,
     submit,
   };
-  const hundeSubmitHandler = (event) => handleHundFormSubmit(event, submitContext);
-  form.addEventListener("submit", hundeSubmitHandler);
-  submit.addEventListener("click", (event) => {
-    event.preventDefault();
-    hundeSubmitHandler(event);
-  });
+  form.addEventListener("submit", (event) => handleHundFormSubmit(event, submitContext));
 
   focusHeading(section);
 }

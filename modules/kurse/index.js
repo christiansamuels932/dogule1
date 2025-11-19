@@ -763,7 +763,7 @@ async function renderForm(section, view, id) {
     label: mode === "create" ? "Erstellen" : "Speichern",
     variant: "primary",
   });
-  submit.type = "button";
+  submit.type = "submit";
   const cancel = createButton({
     label: "Abbrechen",
     variant: "quiet",
@@ -788,13 +788,8 @@ async function renderForm(section, view, id) {
     section,
     submit,
   };
-  const kursFormSubmitHandler = (event) => handleKursFormSubmit(event, submitContext);
 
-  form.addEventListener("submit", kursFormSubmitHandler);
-  submit.addEventListener("click", (event) => {
-    event.preventDefault();
-    kursFormSubmitHandler(event);
-  });
+  form.addEventListener("submit", (event) => handleKursFormSubmit(event, submitContext));
 
   focusHeading(section);
 }
