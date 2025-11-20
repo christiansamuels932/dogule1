@@ -14,42 +14,135 @@ import {
   createSectionHeader,
   createCard,
   createEmptyState,
+  createNotice,
+  createFormRow,
+  createButton,
 } from "../shared/components/components.js";
 
 let kundenCache = [];
 const TOAST_KEY = "__DOGULE_KUNDEN_TOAST__";
 
-export async function initModule(container, routeContext = { segments: [] }) {
-  container.innerHTML = "";
+function createSectionBlock({ title, subtitle = "", level = 2, className = "" } = {}) {
   const section = document.createElement("section");
-  section.className = "dogule-section kunden-view";
-  container.appendChild(section);
+  const baseClass = "dogule-section kunden-section";
+  section.className = className ? `${baseClass} ${className}` : baseClass;
+  section.appendChild(
+    createSectionHeader({
+      title,
+      subtitle,
+      level,
+    })
+  );
+  return section;
+}
+
+function createStandardCard(title = "", eyebrow = "") {
+  const fragment = createCard({
+    eyebrow,
+    title,
+    body: "",
+    footer: "",
+  });
+  return fragment.querySelector(".ui-card") || fragment.firstElementChild;
+}
+
+function createUiLink(label, href, variant = "primary") {
+  const link = document.createElement("a");
+  link.href = href;
+  link.textContent = label;
+  link.className = "ui-btn";
+  if (variant) {
+    link.classList.add(`ui-btn--${variant}`);
+  }
+  return link;
+}
+
+function appendSharedEmptyState(target) {
+  if (!target) return;
+  const fragment = createEmptyState("Keine Daten vorhanden.", "");
+  target.appendChild(fragment);
+}
+
+function createErrorNotice() {
+  return createNotice("Fehler beim Laden der Daten.", {
+    variant: "warn",
+    role: "alert",
+  });
+}
+
+function showErrorNotice(target, { replace = true } = {}) {
+  if (!target) return;
+  if (replace) {
+    target.innerHTML = "";
+  }
+  target.appendChild(createErrorNotice());
+}
+
+function mapToneToNoticeVariant(tone = "info") {
+  if (tone === "success") return "ok";
+  if (tone === "error" || tone === "warn") return "warn";
+  return "info";
+}
+
+export async function initModule(container, routeContext = { segments: [] }) {
+  if (!container) return;
+  container.innerHTML = "";
+  container.classList.add("kunden-view");
+  const viewRoot = document.createElement("div");
+  viewRoot.className = "kunden-view__content";
+  container.appendChild(viewRoot);
+
+  if (typeof window !== "undefined" && typeof window.scrollTo === "function") {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
 
   const { view, id } = resolveView(routeContext);
 
   try {
     if (view === "list") {
-      await renderList(section);
+      await renderList(viewRoot);
     } else if (view === "detail" && id) {
-      await renderDetail(section, id);
+      await renderDetail(viewRoot, id);
     } else if (view === "create" || (view === "edit" && id)) {
-      await renderForm(section, view, id);
+      await renderForm(viewRoot, view, id);
     } else {
-      section.innerHTML = `
-        <h1>Unbekannte Ansicht</h1>
-        <p>Der Pfad "${window.location.hash}" wird noch nicht unterstützt.</p>
-      `;
-      focusHeading(section);
+      renderUnknownView(viewRoot);
     }
   } catch (error) {
-    console.error("KUNDEN_ROUTE_FAILED", error);
-    section.innerHTML = `
-      <h1>Fehler</h1>
-      <p>Konnte Kundenansicht nicht laden.</p>
-      <p><a href="#/kunden">Zurück zur Liste</a></p>
-    `;
-    focusHeading(section);
+    console.error("[KUNDEN_ERR_ROUTE]", error);
+    renderLoadError(viewRoot);
   }
+}
+
+function renderUnknownView(root) {
+  if (!root) return;
+  root.innerHTML = "";
+  const section = createSectionBlock({
+    title: "Unbekannte Ansicht",
+    subtitle: "Diese Route wird aktuell nicht unterstützt.",
+    level: 1,
+  });
+  section.appendChild(createErrorNotice());
+  const note = document.createElement("p");
+  note.textContent = `Der Pfad "${window.location.hash}" wird noch nicht unterstützt.`;
+  section.appendChild(note);
+  section.appendChild(createUiLink("Zur Kundenliste", "#/kunden", "quiet"));
+  root.appendChild(section);
+  focusHeading(root);
+}
+
+function renderLoadError(root) {
+  if (!root) return;
+  root.innerHTML = "";
+  const section = createSectionBlock({
+    title: "Fehler",
+    subtitle: "Die Kundenansicht konnte nicht geladen werden.",
+    level: 1,
+  });
+  section.appendChild(createErrorNotice());
+  section.appendChild(createUiLink("Zur Kundenliste", "#/kunden", "quiet"));
+  root.appendChild(section);
+  focusHeading(root);
 }
 
 function resolveView(routeContext = {}) {
@@ -67,83 +160,184 @@ async function fetchKunden() {
 }
 
 function focusHeading(root) {
-  const heading = root.querySelector("h1");
+  if (!root) return;
+  const heading = root.querySelector("h1, h2");
   if (heading) {
     heading.setAttribute("tabindex", "-1");
     heading.focus();
   }
 }
 
-async function renderList(section) {
-  const kunden = await fetchKunden();
-  section.innerHTML = `
-    <header class="kunden-header">
-      <h1>Kundenliste</h1>
-      <a class="ui-btn ui-btn--primary" href="#/kunden/new">Neu</a>
-    </header>
-  `;
+async function renderList(root) {
+  if (!root) return;
+  root.innerHTML = "";
+
+  const section = createSectionBlock({
+    title: "Kunden",
+    subtitle: "Übersicht über alle Kundinnen und Kunden",
+    level: 1,
+  });
   injectToast(section);
+  section.appendChild(
+    createNotice("Verwalte Stammdaten, verbundene Hunde und Kurse an einem Ort.", {
+      variant: "info",
+    })
+  );
 
-  if (!kunden.length) {
-    const empty = document.createElement("p");
-    empty.textContent = "Noch keine Kunden.";
-    section.appendChild(empty);
-  } else {
-    const list = document.createElement("ul");
-    list.className = "kunden-list";
-    kunden.forEach((kunde) => {
-      const item = document.createElement("li");
-      const link = document.createElement("a");
-      link.href = `#/kunden/${kunde.id}`;
-      const fullName = formatFullName(kunde);
-      const email = kunde.email?.trim() || "keine E-Mail";
-      link.textContent = `${fullName} – ${email}`;
-      item.appendChild(link);
-      list.appendChild(item);
-    });
-    section.appendChild(list);
-  }
+  const actionsCard = createStandardCard("Aktionen");
+  const actionBody = actionsCard.querySelector(".ui-card__body");
+  actionBody.innerHTML = "";
+  actionBody.appendChild(createUiLink("Neuer Kunde", "#/kunden/new", "primary"));
 
-  focusHeading(section);
-}
+  const listCard = createStandardCard("Kundenliste");
+  const listBody = listCard.querySelector(".ui-card__body");
+  listBody.innerHTML = "";
 
-async function renderDetail(section, id) {
-  if (!kundenCache.length) await fetchKunden();
-  let kunde = kundenCache.find((k) => k.id === id);
-  if (!kunde) kunde = await getKunde(id);
-
-  if (!kunde) {
-    section.innerHTML = `
-      <h1>Kunde nicht gefunden</h1>
-      <p>Kein Eintrag mit ID <strong>${id}</strong> vorhanden.</p>
-      <p><a href="#/kunden">Zurück zur Liste</a></p>
-    `;
-    focusHeading(section);
+  let kunden = [];
+  try {
+    kunden = await fetchKunden();
+  } catch (error) {
+    console.error("[KUNDEN_ERR_LIST_LOAD]", error);
+    showErrorNotice(listBody);
+    section.append(actionsCard, listCard);
+    root.appendChild(section);
+    focusHeading(root);
     return;
   }
 
-  const fullName = formatFullName(kunde);
-  const detailRows = [
+  if (!kunden.length) {
+    appendSharedEmptyState(listBody);
+  } else {
+    const listWrapper = document.createElement("div");
+    listWrapper.className = "kunden-list";
+    kunden.forEach((kunde) => {
+      const kundCardFragment = createCard({
+        eyebrow: kunde.kundenCode || kunde.id,
+        title: formatFullName(kunde),
+        body: `<p>${kunde.email?.trim() || "keine E-Mail"}</p>`,
+        footer: "",
+      });
+      const cardElement =
+        kundCardFragment.querySelector(".ui-card") || kundCardFragment.firstElementChild;
+      if (!cardElement) return;
+      cardElement.classList.add("kunden-list-item");
+      const link = document.createElement("a");
+      link.href = `#/kunden/${kunde.id}`;
+      link.className = "kunden-list__link";
+      link.setAttribute("aria-label", `${formatFullName(kunde)} öffnen`);
+      link.appendChild(cardElement);
+      listWrapper.appendChild(link);
+    });
+    listBody.appendChild(listWrapper);
+  }
+
+  section.append(actionsCard, listCard);
+  root.appendChild(section);
+  focusHeading(root);
+}
+
+async function renderDetail(root, id) {
+  if (!root) return;
+  let kunde = null;
+  try {
+    if (!kundenCache.length) {
+      await fetchKunden();
+    }
+    kunde = kundenCache.find((k) => k.id === id);
+    if (!kunde) {
+      kunde = await getKunde(id);
+    }
+  } catch (error) {
+    console.error("[KUNDEN_ERR_DETAIL_LOAD]", error);
+    root.innerHTML = "";
+    const fallbackSection = document.createElement("section");
+    fallbackSection.className = "dogule-section kunden-section kunden-detail";
+    fallbackSection.appendChild(
+      createSectionHeader({
+        title: "Kunde",
+        subtitle: "",
+        level: 1,
+      })
+    );
+    const errorCard = createStandardCard("Stammdaten");
+    const errorBody = errorCard.querySelector(".ui-card__body");
+    showErrorNotice(errorBody);
+    fallbackSection.appendChild(errorCard);
+    root.appendChild(fallbackSection);
+    focusHeading(root);
+    return;
+  }
+
+  root.innerHTML = "";
+  const detailSection = document.createElement("section");
+  detailSection.className = "dogule-section kunden-section kunden-detail";
+  detailSection.appendChild(
+    createSectionHeader({
+      title: "Kunde",
+      subtitle: kunde ? formatFullName(kunde) : "",
+      level: 1,
+    })
+  );
+
+  if (!kunde) {
+    detailSection.appendChild(
+      createNotice(`Kein Eintrag mit ID ${id} vorhanden.`, {
+        variant: "warn",
+        role: "alert",
+      })
+    );
+    detailSection.appendChild(createUiLink("Zur Kundenliste", "#/kunden", "quiet"));
+    root.appendChild(detailSection);
+    focusHeading(root);
+    return;
+  }
+
+  injectToast(detailSection);
+  const detailCard = createStandardCard("Stammdaten");
+  const detailBody = detailCard.querySelector(".ui-card__body");
+  const rows = [
     { label: "Kunden-ID", value: kunde.kundenCode || kunde.id },
-    { label: "Name", value: fullName },
+    { label: "Name", value: formatFullName(kunde) },
     { label: "E-Mail", value: kunde.email },
     { label: "Telefon", value: kunde.telefon },
     { label: "Adresse", value: kunde.adresse },
     { label: "Notizen", value: kunde.notizen },
     { label: "Erstellt am", value: formatDateTime(kunde.createdAt) },
     { label: "Aktualisiert am", value: formatDateTime(kunde.updatedAt) },
-  ]
-    .map(({ label, value }) => `<dt>${label}</dt><dd>${valueOrDash(value)}</dd>`)
-    .join("");
+  ];
+  detailBody.innerHTML = "";
+  detailBody.appendChild(createDefinitionList(rows));
+  detailSection.appendChild(detailCard);
+
+  const actionsCard = createStandardCard("Aktionen");
+  const actionsBody = actionsCard.querySelector(".ui-card__body");
+  const editLink = createUiLink("Bearbeiten", `#/kunden/${id}/edit`, "primary");
+  const deleteBtn = document.createElement("button");
+  deleteBtn.type = "button";
+  deleteBtn.className = "ui-btn ui-btn--secondary";
+  deleteBtn.dataset.action = "delete";
+  deleteBtn.textContent = "Löschen";
+  const backLink = createUiLink("Zur Übersicht", "#/kunden", "quiet");
+  actionsBody.append(editLink, deleteBtn, backLink);
+  const actionStatus = document.createElement("div");
+  actionStatus.className = "kunden-card-status";
+  actionsBody.appendChild(actionStatus);
+  detailSection.appendChild(actionsCard);
+
+  root.appendChild(detailSection);
 
   let linkedHunde = [];
+  let hundeLoadFailed = false;
   try {
     const hunde = await listHunde();
     linkedHunde = hunde.filter((hund) => hund.kundenId === id);
   } catch (error) {
-    console.error("KUNDEN_HUNDE_LOAD_FAILED", error);
+    hundeLoadFailed = true;
+    console.error("[KUNDEN_ERR_HUNDE_LOAD]", error);
   }
+
   let linkedKurse = [];
+  let kurseLoadFailed = false;
   if (linkedHunde.length) {
     try {
       const kurse = await listKurse();
@@ -160,58 +354,30 @@ async function renderDetail(section, id) {
       });
       linkedKurse = unique;
     } catch (error) {
-      console.error("KUNDEN_KURSE_LOAD_FAILED", error);
+      kurseLoadFailed = true;
+      console.error("[KUNDEN_ERR_KURSE_LOAD]", error);
     }
+  } else if (hundeLoadFailed) {
+    kurseLoadFailed = true;
   }
 
-  section.innerHTML = `
-    <h1>Kundendetails</h1>
-    <dl class="kunden-details">
-      ${detailRows}
-    </dl>
-    <div class="kunden-actions">
-      <a class="ui-btn" href="#/kunden/${id}/edit">Bearbeiten</a>
-      <button type="button" class="ui-btn ui-btn--secondary" data-action="delete">Löschen</button>
-      <a class="ui-btn ui-btn--quiet" href="#/kunden">Zurück</a>
-    </div>
-  `;
-  injectToast(section);
-  const hundeSection = document.createElement("section");
-  hundeSection.className = "kunden-hunde-section";
-  hundeSection.appendChild(
-    createSectionHeader({
-      title: "Hunde",
-      subtitle: "",
-      level: 2,
-    })
-  );
-  const hundeCardFragment = createCard({
-    eyebrow: "",
-    title: "",
-    body: "",
-    footer: "",
-  });
-  const hundeCard =
-    hundeCardFragment.querySelector(".ui-card") || hundeCardFragment.firstElementChild;
-  if (hundeCard) {
-    const hundeBody = hundeCard.querySelector(".ui-card__body");
-    if (hundeBody) {
-      hundeBody.innerHTML = "";
-      hundeBody.appendChild(renderKundenHundeList(linkedHunde));
-    }
-    hundeSection.appendChild(hundeCard);
+  root.appendChild(renderKundenHundeSection(linkedHunde, hundeLoadFailed));
+  root.appendChild(renderKundenKurseSection(linkedKurse, kurseLoadFailed));
+  let finanzen = [];
+  let finanzenLoadFailed = false;
+  try {
+    finanzen = await loadFinanzen(id);
+  } catch (error) {
+    finanzenLoadFailed = true;
+    console.error("[KUNDEN_ERR_FINANZEN_LOAD]", error);
   }
-  section.appendChild(hundeSection);
-  section.appendChild(renderKundenKurseSection(linkedKurse));
-  const finanzData = await loadFinanzen(id);
-  section.appendChild(renderFinanzOverview(finanzData));
-  section.appendChild(renderOffeneBetraege(finanzData));
-  section.appendChild(renderZahlungshistorie(finanzData));
+  root.appendChild(renderFinanzOverview(finanzen, finanzenLoadFailed));
+  root.appendChild(renderOffeneBetraege(finanzen, finanzenLoadFailed));
+  root.appendChild(renderZahlungshistorie(finanzen, finanzenLoadFailed));
 
-  const deleteBtn = section.querySelector('[data-action="delete"]');
-  deleteBtn?.addEventListener("click", async () => {
+  deleteBtn.addEventListener("click", async () => {
     if (deleteBtn.disabled) return;
-    const confirmed = window.confirm(`Soll "${fullName}" wirklich gelöscht werden?`);
+    const confirmed = window.confirm(`Soll "${formatFullName(kunde)}" wirklich gelöscht werden?`);
     if (!confirmed) return;
     deleteBtn.disabled = true;
     const originalLabel = deleteBtn.textContent;
@@ -227,8 +393,8 @@ async function renderDetail(section, id) {
       setToast("Kunde gelöscht.", "success");
       window.location.hash = "#/kunden";
     } catch (error) {
-      console.error("KUNDEN_DELETE_FAILED", error);
-      showInlineToast(section, "Löschen fehlgeschlagen. Bitte erneut versuchen.", "error");
+      console.error("[KUNDEN_ERR_DELETE]", error);
+      showErrorNotice(actionStatus);
     } finally {
       if (!deleted) {
         deleteBtn.disabled = false;
@@ -237,38 +403,100 @@ async function renderDetail(section, id) {
     }
   });
 
-  focusHeading(section);
+  focusHeading(root);
 }
 
-async function renderForm(section, view, id) {
-  if (!kundenCache.length) await fetchKunden();
+async function renderForm(root, view, id) {
+  if (!root) return;
+  if (typeof window !== "undefined" && typeof window.scrollTo === "function") {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+  try {
+    if (!kundenCache.length) {
+      await fetchKunden();
+    }
+  } catch (error) {
+    console.error("[KUNDEN_ERR_FORM_INIT]", error);
+    root.innerHTML = "";
+    const fallbackSection = createSectionBlock({
+      title: "Kundenformular",
+      subtitle: "",
+      level: 1,
+    });
+    const card = createStandardCard("Stammdaten");
+    const body = card.querySelector(".ui-card__body");
+    showErrorNotice(body);
+    fallbackSection.appendChild(card);
+    root.appendChild(fallbackSection);
+    focusHeading(root);
+    return;
+  }
   const mode = view === "create" ? "create" : "edit";
   let existing = null;
 
   if (mode === "edit") {
-    existing = kundenCache.find((k) => k.id === id) || (await getKunde(id));
+    try {
+      existing = kundenCache.find((k) => k.id === id) || (await getKunde(id));
+    } catch (error) {
+      console.error("[KUNDEN_ERR_FORM_LOAD]", error);
+      root.innerHTML = "";
+      const section = createSectionBlock({
+        title: "Kunde bearbeiten",
+        subtitle: "",
+        level: 1,
+      });
+      const card = createStandardCard("Stammdaten");
+      const body = card.querySelector(".ui-card__body");
+      showErrorNotice(body);
+      section.appendChild(card);
+      root.appendChild(section);
+      focusHeading(root);
+      return;
+    }
     if (!existing) {
-      section.innerHTML = `
-        <h1>Kunde nicht gefunden</h1>
-        <p>Kein Eintrag mit ID <strong>${id}</strong> vorhanden.</p>
-        <p><a href="#/kunden">Zurück zur Liste</a></p>
-      `;
-      focusHeading(section);
+      root.innerHTML = "";
+      const section = createSectionBlock({
+        title: "Kunde nicht gefunden",
+        subtitle: `ID ${id} ist nicht verfügbar.`,
+        level: 1,
+      });
+      section.appendChild(
+        createNotice("Kein Eintrag vorhanden. Kehre zur Liste zurück und versuche es erneut.", {
+          variant: "warn",
+          role: "alert",
+        })
+      );
+      section.appendChild(createUiLink("Zur Kundenliste", "#/kunden", "quiet"));
+      root.appendChild(section);
+      focusHeading(root);
       return;
     }
   }
 
-  section.innerHTML = `
-    <h1>${mode === "create" ? "Neuer Kunde" : "Kunde bearbeiten"}</h1>
-  `;
+  root.innerHTML = "";
+  const section = createSectionBlock({
+    title: mode === "create" ? "Neuer Kunde" : "Kunde bearbeiten",
+    subtitle: mode === "edit" ? formatFullName(existing) : "Formular für neue Kundendaten",
+    level: 1,
+  });
   injectToast(section);
+
+  const formCard = createStandardCard("Stammdaten");
+  const formBody = formCard.querySelector(".ui-card__body");
+  formBody.innerHTML = "";
+  const formStatusSlot = document.createElement("div");
+  formStatusSlot.className = "kunden-card-status";
+  formBody.appendChild(formStatusSlot);
 
   const form = document.createElement("form");
   form.noValidate = true;
-  section.appendChild(form);
+  form.className = "kunden-form";
+  formBody.appendChild(form);
 
   const kundenCodeValue =
     mode === "edit" ? (existing?.kundenCode ?? "") : generateNextKundenCode(kundenCache);
+  const defaultKundenCode = kundenCodeValue;
+  let isIdOverrideEnabled = false;
 
   const fields = [
     {
@@ -277,99 +505,133 @@ async function renderForm(section, view, id) {
       required: true,
       readOnly: true,
       value: kundenCodeValue,
+      describedByText:
+        'Standardmäßig automatisch. Mit "ID manuell ändern" aktivierst du die Bearbeitung.',
     },
-    { name: "vorname", label: "Vorname*", required: true },
-    { name: "nachname", label: "Nachname*", required: true },
-    { name: "email", label: "E-Mail*", required: true, type: "email" },
-    { name: "telefon", label: "Telefon" },
-    { name: "adresse", label: "Adresse" },
-    { name: "notizen", label: "Notizen", textarea: true },
+    {
+      name: "vorname",
+      label: "Vorname*",
+      required: true,
+      placeholder: "z. B. Julia",
+    },
+    {
+      name: "nachname",
+      label: "Nachname*",
+      required: true,
+      placeholder: "z. B. Keller",
+    },
+    {
+      name: "email",
+      label: "E-Mail*",
+      required: true,
+      type: "email",
+      placeholder: "z. B. julia.keller@example.com",
+    },
+    {
+      name: "telefon",
+      label: "Telefon",
+      placeholder: "z. B. +41 44 123 45 67",
+    },
+    {
+      name: "adresse",
+      label: "Adresse",
+      placeholder: "z. B. Hauptstrasse 10, 8000 Zürich",
+    },
+    {
+      name: "notizen",
+      label: "Notizen",
+      textarea: true,
+      placeholder: "Optionale Ergänzungen zum Kundenprofil",
+    },
   ];
 
   const refs = {};
   fields.forEach((field) => {
-    const wrapper = document.createElement("div");
-    wrapper.className = "kunden-form-row";
-    const idAttr = `kunden-${field.name}`;
-    const label = document.createElement("label");
-    label.setAttribute("for", idAttr);
-    label.textContent = field.label;
-    const input = field.textarea
-      ? document.createElement("textarea")
-      : document.createElement("input");
-    input.id = idAttr;
+    const row = createFormRow({
+      id: `kunden-${field.name}`,
+      label: field.label,
+      control: field.textarea ? "textarea" : "input",
+      type: field.type || "text",
+      placeholder: field.placeholder || "",
+      required: Boolean(field.required),
+      describedByText: field.describedByText || "",
+    });
+    const input = row.querySelector("input, textarea");
     input.name = field.name;
-    if (field.type) input.type = field.type;
     const initialValue = field.value !== undefined ? field.value : (existing?.[field.name] ?? "");
-    input.value = initialValue;
+    input.value = initialValue || "";
     if (field.readOnly) {
       input.readOnly = true;
     }
-    const error = document.createElement("div");
-    error.className = "form-error";
-    error.id = `${idAttr}-error`;
-    input.setAttribute("aria-describedby", error.id);
-    input.setAttribute("aria-invalid", "false");
-    wrapper.append(label, input, error);
-    form.appendChild(wrapper);
-    refs[field.name] = { input, error };
+    const hint = row.querySelector(".ui-form-row__hint");
+    if (!field.describedByText) {
+      hint.classList.add("sr-only");
+    }
+    if (field.name === "kundenCode") {
+      input.setAttribute("aria-readonly", "true");
+      const toggleWrap = document.createElement("div");
+      toggleWrap.className = "kunden-id-toggle";
+      const toggleButton = createButton({
+        label: "ID manuell ändern",
+        variant: "secondary",
+      });
+      toggleButton.type = "button";
+      toggleButton.addEventListener("click", () => {
+        isIdOverrideEnabled = !isIdOverrideEnabled;
+        if (isIdOverrideEnabled) {
+          input.readOnly = false;
+          input.removeAttribute("aria-readonly");
+          toggleButton.textContent = "Automatische ID verwenden";
+          input.focus();
+        } else {
+          input.readOnly = true;
+          input.setAttribute("aria-readonly", "true");
+          toggleButton.textContent = "ID manuell ändern";
+          if (!input.value.trim()) {
+            input.value = defaultKundenCode;
+          }
+        }
+      });
+      toggleWrap.appendChild(toggleButton);
+      row.appendChild(toggleWrap);
+    }
+    refs[field.name] = { input, hint };
+    form.appendChild(row);
   });
 
   const actions = document.createElement("div");
   actions.className = "kunden-actions";
-  const submit = document.createElement("button");
-  submit.type = "submit";
-  submit.className = "ui-btn ui-btn--primary";
-  submit.textContent = mode === "create" ? "Erstellen" : "Speichern";
-  const cancel = document.createElement("a");
-  cancel.className = "ui-btn ui-btn--quiet";
-  cancel.href = mode === "create" ? "#/kunden" : `#/kunden/${id}`;
-  cancel.textContent = "Abbrechen";
-  actions.append(submit, cancel);
-  form.appendChild(actions);
-
-  form.addEventListener("submit", async (event) => {
-    event.preventDefault();
-    const values = collectValues(refs);
-    const errors = validate(values);
-    applyErrors(refs, errors);
-    if (Object.keys(errors).length) {
-      const firstError = Object.values(refs).find((ref) => ref.error.textContent);
-      if (firstError) firstError.input.focus();
-      return;
-    }
-
-    const defaultLabel = mode === "create" ? "Erstellen" : "Speichern";
-    const busyLabel = mode === "create" ? "Erstelle ..." : "Speichere ...";
-    submit.disabled = true;
-    submit.textContent = busyLabel;
-    let success = false;
-    try {
-      const result = mode === "create" ? await createKunde(values) : await updateKunde(id, values);
-      if (!result || !result.id) {
-        throw new Error("Save failed");
-      }
-      await fetchKunden();
-      success = true;
-      if (mode === "create") {
-        setToast("Kunde erstellt.", "success");
-        window.location.hash = "#/kunden";
-      } else {
-        setToast("Änderungen gespeichert.", "success");
-        window.location.hash = `#/kunden/${id}`;
-      }
-    } catch (error) {
-      console.error("KUNDEN_SAVE_FAILED", error);
-      showInlineToast(section, "Speichern fehlgeschlagen. Bitte erneut versuchen.", "error");
-    } finally {
-      if (!success) {
-        submit.disabled = false;
-        submit.textContent = defaultLabel;
-      }
-    }
+  const submit = createButton({
+    label: mode === "create" ? "Erstellen" : "Speichern",
+    variant: "primary",
   });
+  submit.type = "submit";
+  const cancel = createButton({
+    label: "Abbrechen",
+    variant: "quiet",
+  });
+  cancel.type = "button";
+  cancel.addEventListener("click", () => {
+    window.location.hash = mode === "create" ? "#/kunden" : `#/kunden/${id}`;
+  });
+  actions.append(submit, cancel);
+  const footer = formCard.querySelector(".ui-card__footer");
+  footer.innerHTML = "";
+  footer.appendChild(actions);
 
-  focusHeading(section);
+  section.appendChild(formCard);
+  root.appendChild(section);
+
+  const submitContext = {
+    mode,
+    id,
+    refs,
+    submit,
+    formStatusSlot,
+  };
+  form.addEventListener("submit", (event) => handleKundeFormSubmit(event, submitContext));
+
+  focusHeading(root);
 }
 
 function setToast(message, tone = "info") {
@@ -377,17 +639,72 @@ function setToast(message, tone = "info") {
 }
 
 function injectToast(section) {
+  if (!section) return;
   section.querySelectorAll(".kunden-toast").forEach((node) => node.remove());
   const toast = window[TOAST_KEY];
   if (!toast) return;
   delete window[TOAST_KEY];
   const { message, tone = "info" } =
     typeof toast === "string" ? { message: toast, tone: "info" } : toast;
-  const notice = document.createElement("p");
-  notice.className = `kunden-toast kunden-toast--${tone}`;
-  notice.setAttribute("role", "status");
-  notice.textContent = message;
-  section.prepend(notice);
+  const fragment = createNotice(message, {
+    variant: mapToneToNoticeVariant(tone),
+    role: tone === "error" ? "alert" : "status",
+  });
+  const noticeElement = fragment.firstElementChild || fragment;
+  if (noticeElement.classList) {
+    noticeElement.classList.add("kunden-toast");
+  }
+  section.prepend(fragment);
+}
+
+async function handleKundeFormSubmit(event, context = {}) {
+  if (event) event.preventDefault();
+  const { mode, id, refs, submit, formStatusSlot } = context;
+  if (!refs || !submit) return;
+
+  if (formStatusSlot) {
+    formStatusSlot.innerHTML = "";
+  }
+
+  const values = collectValues(refs);
+  const errors = validate(values);
+  applyErrors(refs, errors);
+  if (Object.keys(errors).length) {
+    const firstError = Object.values(refs).find(
+      (ref) => ref.hint && ref.hint.textContent && !ref.hint.classList.contains("sr-only")
+    );
+    if (firstError) {
+      firstError.input.focus();
+    }
+    return;
+  }
+
+  const defaultLabel = mode === "create" ? "Erstellen" : "Speichern";
+  const busyLabel = mode === "create" ? "Erstelle ..." : "Speichere ...";
+  submit.disabled = true;
+  submit.textContent = busyLabel;
+
+  try {
+    const result = mode === "create" ? await createKunde(values) : await updateKunde(id, values);
+    if (!result || !result.id) {
+      throw new Error("Save failed");
+    }
+    await fetchKunden();
+    if (mode === "create") {
+      setToast("Kunde erstellt.", "success");
+      window.location.hash = "#/kunden";
+    } else {
+      setToast("Änderungen gespeichert.", "success");
+      window.location.hash = `#/kunden/${id}`;
+    }
+  } catch (error) {
+    console.error("[KUNDEN_ERR_FORM_SAVE]", error);
+    if (formStatusSlot) {
+      showErrorNotice(formStatusSlot, { replace: true });
+    }
+    submit.disabled = false;
+    submit.textContent = defaultLabel;
+  }
 }
 
 function collectValues(refs) {
@@ -415,41 +732,53 @@ function validate(values) {
 
 function applyErrors(refs, errors) {
   Object.entries(refs).forEach(([key, ref]) => {
+    const hint = ref.hint;
     if (errors[key]) {
-      ref.error.textContent = errors[key];
+      if (hint) {
+        hint.textContent = errors[key];
+        hint.classList.remove("sr-only");
+      }
       ref.input.setAttribute("aria-invalid", "true");
     } else {
-      ref.error.textContent = "";
+      if (hint) {
+        hint.textContent = "";
+        hint.classList.add("sr-only");
+      }
       ref.input.setAttribute("aria-invalid", "false");
     }
   });
 }
 
-function showInlineToast(section, message, tone = "info") {
-  setToast(message, tone);
-  injectToast(section);
-}
-
-function renderKundenHundeList(hunde = []) {
-  if (!hunde.length) {
-    const wrapper = document.createElement("div");
-    const emptyNotice = document.createElement("p");
-    emptyNotice.className = "kunden-empty";
-    emptyNotice.textContent = "Keine Hunde zugeordnet.";
-    wrapper.appendChild(emptyNotice);
-    return wrapper;
-  }
-  const list = document.createElement("ul");
-  list.className = "kunden-list";
-  hunde.forEach((hund) => {
-    const item = document.createElement("li");
-    const link = document.createElement("a");
-    link.href = `#/hunde/${hund.id}`;
-    link.textContent = formatHundeListEntry(hund);
-    item.appendChild(link);
-    list.appendChild(item);
+function renderKundenHundeSection(hunde = [], hasError = false) {
+  const section = createSectionBlock({
+    title: "Hunde dieses Kunden",
+    subtitle: "",
+    level: 2,
   });
-  return list;
+  const card = createStandardCard("Hunde");
+  const body = card.querySelector(".ui-card__body");
+  body.innerHTML = "";
+
+  if (hasError) {
+    showErrorNotice(body);
+  } else if (!hunde.length) {
+    appendSharedEmptyState(body);
+  } else {
+    const list = document.createElement("ul");
+    list.className = "kunden-list";
+    hunde.forEach((hund) => {
+      const item = document.createElement("li");
+      const link = document.createElement("a");
+      link.href = `#/hunde/${hund.id}`;
+      link.textContent = formatHundeListEntry(hund);
+      item.appendChild(link);
+      list.appendChild(item);
+    });
+    body.appendChild(list);
+  }
+
+  section.appendChild(card);
+  return section;
 }
 
 function formatHundeListEntry(hund = {}) {
@@ -474,90 +803,65 @@ function generateNextKundenCode(list = []) {
   return `K-${String(nextNumber).padStart(3, "0")}`;
 }
 
-function renderKundenKurseSection(kurse = []) {
-  const section = document.createElement("section");
-  section.className = "kunden-kurse-section";
-  section.appendChild(
-    createSectionHeader({
-      title: "Kurse dieses Kunden",
-      subtitle: "",
-      level: 2,
-    })
-  );
-  const cardFragment = createCard({
-    eyebrow: "",
-    title: "",
-    body: "",
-    footer: "",
+function renderKundenKurseSection(kurse = [], hasError = false) {
+  const section = createSectionBlock({
+    title: "Kurse dieses Kunden",
+    subtitle: "",
+    level: 2,
   });
-  const card = cardFragment.querySelector(".ui-card") || cardFragment.firstElementChild;
-  if (card) {
-    const body = card.querySelector(".ui-card__body");
-    if (body) {
-      body.innerHTML = "";
-      if (!kurse.length) {
-        body.appendChild(createEmptyState("Noch keine Kurse", "", {}));
-      } else {
-        kurse.forEach((kurs) => {
-          const kursCardFragment = createCard({
-            eyebrow: formatDateTime(kurs.date),
-            title: kurs.title || "Ohne Titel",
-            body: `<p>${kurs.location || "Ort folgt"}</p>`,
-            footer: "",
-          });
-          const kursCard =
-            kursCardFragment.querySelector(".ui-card") || kursCardFragment.firstElementChild;
-          if (!kursCard) return;
-          kursCard.classList.add("kunden-kurs-item");
-          kursCard.addEventListener("click", () => {
-            window.location.hash = `#/kurse/${kurs.id}`;
-          });
-          kursCard.addEventListener("keypress", (event) => {
-            if (event.key === "Enter" || event.key === " ") {
-              event.preventDefault();
-              window.location.hash = `#/kurse/${kurs.id}`;
-            }
-          });
-          body.appendChild(kursCard);
-        });
-      }
-    }
-    section.appendChild(card);
+  const card = createStandardCard("Kurse");
+  const body = card.querySelector(".ui-card__body");
+  body.innerHTML = "";
+
+  if (hasError) {
+    showErrorNotice(body);
+  } else if (!kurse.length) {
+    appendSharedEmptyState(body);
+  } else {
+    kurse.forEach((kurs) => {
+      const kursCardFragment = createCard({
+        eyebrow: formatDateTime(kurs.date),
+        title: kurs.title || "Ohne Titel",
+        body: `<p>${kurs.location || "Ort folgt"}</p>`,
+        footer: "",
+      });
+      const kursCard =
+        kursCardFragment.querySelector(".ui-card") || kursCardFragment.firstElementChild;
+      if (!kursCard) return;
+      kursCard.classList.add("kunden-kurs-item");
+      const kursLink = document.createElement("a");
+      kursLink.className = "kunden-kurs-link";
+      kursLink.href = `#/kurse/${kurs.id}`;
+      kursLink.setAttribute("aria-label", `Kurs ${kurs.title || kurs.id} öffnen`);
+      kursLink.appendChild(kursCard);
+      body.appendChild(kursLink);
+    });
   }
+
+  section.appendChild(card);
   return section;
 }
 
 async function loadFinanzen(kundeId) {
-  try {
-    const finanzen = await listFinanzen();
-    return finanzen.filter((entry) => entry.kundeId === kundeId);
-  } catch (error) {
-    console.error("KUNDEN_FINANZEN_LOAD_FAILED", error);
-    return [];
-  }
+  const finanzen = await listFinanzen();
+  return finanzen.filter((entry) => entry.kundeId === kundeId);
 }
 
-function renderFinanzOverview(finanzen = []) {
-  const section = document.createElement("section");
-  section.className = "kunden-finanz-section";
-  section.appendChild(
-    createSectionHeader({
-      title: "Finanzübersicht",
-      subtitle: "",
-      level: 2,
-    })
-  );
-  const cardFragment = createCard({
-    eyebrow: "",
-    title: "",
-    body: "",
-    footer: "",
+function renderFinanzOverview(finanzen = [], hasError = false) {
+  const section = createSectionBlock({
+    title: "Finanzübersicht",
+    subtitle: "",
+    level: 2,
   });
-  const card = cardFragment.querySelector(".ui-card") || cardFragment.firstElementChild;
-  if (!card) return section;
+  const card = createStandardCard("Zusammenfassung");
   const body = card.querySelector(".ui-card__body");
-  if (body) {
-    body.innerHTML = "";
+  body.innerHTML = "";
+
+  if (hasError) {
+    showErrorNotice(body);
+  } else if (!finanzen.length) {
+    appendSharedEmptyState(body);
+  } else {
     const payments = finanzen
       .filter((entry) => entry.typ === "zahlung")
       .slice()
@@ -589,92 +893,103 @@ function renderFinanzOverview(finanzen = []) {
       body.appendChild(note);
     }
   }
+
   section.appendChild(card);
   return section;
 }
 
-function renderOffeneBetraege(finanzen = []) {
-  const section = document.createElement("section");
-  section.className = "kunden-finanz-section";
-  section.appendChild(
-    createSectionHeader({
-      title: "Offene Beträge",
-      subtitle: "",
-      level: 2,
-    })
-  );
-  const cardFragment = createCard({
-    eyebrow: "",
-    title: "",
-    body: "",
-    footer: "",
+function renderOffeneBetraege(finanzen = [], hasError = false) {
+  const section = createSectionBlock({
+    title: "Offene Beträge",
+    subtitle: "",
+    level: 2,
   });
-  const card = cardFragment.querySelector(".ui-card") || cardFragment.firstElementChild;
-  if (!card) return section;
+  const card = createStandardCard("Offene Posten");
   const body = card.querySelector(".ui-card__body");
-  if (body) {
-    body.innerHTML = "";
+  body.innerHTML = "";
+
+  if (hasError) {
+    showErrorNotice(body);
+  } else {
     const openEntries = finanzen.filter((entry) => entry.typ === "offen");
     if (!openEntries.length) {
-      body.appendChild(createEmptyState("Noch keine Daten", "", {}));
+      appendSharedEmptyState(body);
     } else {
       const sum = openEntries.reduce((total, entry) => total + Number(entry.betrag || 0), 0);
       const summary = document.createElement("p");
-      summary.innerHTML = `<strong>Total offen:</strong> CHF ${sum.toFixed(2)}`;
+      const summaryLabel = document.createElement("strong");
+      summaryLabel.textContent = "Total offen:";
+      summary.append(summaryLabel, document.createTextNode(` CHF ${sum.toFixed(2)}`));
       body.appendChild(summary);
+
       const list = document.createElement("ul");
       list.className = "kunden-offene-liste";
       openEntries.forEach((entry) => {
         const item = document.createElement("li");
-        item.innerHTML = `<strong>${entry.beschreibung || "Posten"}</strong> – CHF ${Number(
-          entry.betrag || 0
-        ).toFixed(2)} (${formatDateTime(entry.datum)})`;
+        const title = document.createElement("strong");
+        title.textContent = entry.beschreibung || "Posten";
+        const amountText = document.createTextNode(
+          ` – CHF ${Number(entry.betrag || 0).toFixed(2)} (${formatDateTime(entry.datum)})`
+        );
+        item.append(title, amountText);
         list.appendChild(item);
       });
       body.appendChild(list);
     }
   }
+
   section.appendChild(card);
   return section;
 }
 
-function renderZahlungshistorie(finanzen = []) {
-  const section = document.createElement("section");
-  section.className = "kunden-finanz-section";
-  section.appendChild(
-    createSectionHeader({
-      title: "Zahlungshistorie",
-      subtitle: "",
-      level: 2,
-    })
-  );
-  const cardFragment = createCard({
-    eyebrow: "",
-    title: "",
-    body: "",
-    footer: "",
+function renderZahlungshistorie(finanzen = [], hasError = false) {
+  const section = createSectionBlock({
+    title: "Zahlungshistorie",
+    subtitle: "",
+    level: 2,
   });
-  const card = cardFragment.querySelector(".ui-card") || cardFragment.firstElementChild;
-  if (!card) return section;
+  const card = createStandardCard("Zahlungen");
   const body = card.querySelector(".ui-card__body");
-  if (body) {
-    body.innerHTML = "";
+  body.innerHTML = "";
+
+  if (hasError) {
+    showErrorNotice(body);
+  } else {
     const payments = finanzen.filter((entry) => entry.typ === "zahlung");
     if (!payments.length) {
-      body.appendChild(createEmptyState("Noch keine Daten", "", {}));
+      appendSharedEmptyState(body);
     } else {
       const list = document.createElement("ul");
       list.className = "kunden-zahlungsliste";
       payments.forEach((entry) => {
         const item = document.createElement("li");
-        item.innerHTML = `<strong>${formatDateTime(entry.datum)}</strong> – CHF ${Number(entry.betrag || 0).toFixed(2)} (${entry.beschreibung || "Zahlung"})`;
+        const time = document.createElement("strong");
+        time.textContent = formatDateTime(entry.datum);
+        const amountText = document.createTextNode(
+          ` – CHF ${Number(entry.betrag || 0).toFixed(2)} (${entry.beschreibung || "Zahlung"})`
+        );
+        item.append(time, amountText);
         list.appendChild(item);
       });
       body.appendChild(list);
     }
   }
+
   section.appendChild(card);
   return section;
+}
+
+function createDefinitionList(rows = []) {
+  const list = document.createElement("dl");
+  list.className = "kunden-details";
+  rows.forEach(({ label, value }) => {
+    const dt = document.createElement("dt");
+    dt.textContent = label;
+    const dd = document.createElement("dd");
+    dd.textContent = valueOrDash(value);
+    list.append(dt, dd);
+  });
+  return list;
 }
 
 function formatFullName(kunde = {}) {

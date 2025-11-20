@@ -1,8 +1,9 @@
 import { list, create, update, remove } from "./crud.js";
 
-const TABLE = "finanzen";
+const TABLE = "zahlungen";
 
 const EDITABLE_DEFAULTS = {
+  code: "",
   kundeId: "",
   typ: "",
   betrag: 0,
@@ -45,4 +46,9 @@ export async function updateFinanz(id, data = {}, options) {
 
 export async function deleteFinanz(id, options) {
   return remove(TABLE, id, options);
+}
+
+export async function listFinanzenByKundeId(kundeId, options) {
+  const finanzen = await listFinanzen(options);
+  return finanzen.filter((entry) => entry.kundeId === kundeId);
 }

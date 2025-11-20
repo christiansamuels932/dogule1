@@ -1,8 +1,9 @@
+// Dashboard has no entity IDs; ID override controls are not applicable (Station 18 verification).
+// Dashboard has no form views; verified for Station 18
 // Standardized module interface for Dogule1
 /* globals document, window, console */
 import {
   createBadge,
-  createButton,
   createCard,
   createEmptyState,
   createNotice,
@@ -29,11 +30,13 @@ export async function initModule(container) {
     createSectionHeader({
       title: "Übersicht",
       subtitle: "Schnellzugriff und Status",
-      level: 2,
+      level: 1,
     })
   );
-
-  overviewSection.appendChild(
+  const statusCard = createStandardCard();
+  const statusBody = statusCard.querySelector(".ui-card__body");
+  resetCardBody(statusBody);
+  statusBody.appendChild(
     createNotice("Alles betriebsbereit.", {
       variant: "ok",
       role: "status",
@@ -173,5 +176,55 @@ async function buildMetricsCard() {
     bodyEl.textContent = "Fehler beim Laden der Daten.";
   }
 
+  bodyEl.appendChild(list);
+
   return cardElement;
+}
+
+function appendSectionCard(section, builder, errorCode) {
+  try {
+    const node = builder();
+    if (node) {
+      section.appendChild(node);
+    }
+  } catch (error) {
+    // Console output stays limited to standardized dashboard error codes.
+    console.error(errorCode, error);
+    section.appendChild(buildErrorCard());
+  }
+}
+
+function resetCardBody(target) {
+  if (target) {
+    target.innerHTML = "";
+  }
+}
+
+function appendStandardEmptyState(target) {
+  if (!target) return;
+  target.appendChild(createEmptyState("Keine Daten vorhanden.", ""));
+}
+
+function buildErrorCard() {
+  const cardElement = createStandardCard("Fehler");
+  if (!cardElement) return document.createDocumentFragment();
+  const body = cardElement.querySelector(".ui-card__body");
+  resetCardBody(body);
+  body.appendChild(
+    createNotice("Fehler beim Laden der Daten.", {
+      variant: "warn",
+      role: "alert",
+    })
+  );
+  return cardElement;
+}
+
+function createStandardCard(title = "") {
+  const cardFragment = createCard({
+    eyebrow: "",
+    title,
+    body: "",
+    footer: "",
+  });
+  return cardFragment.querySelector(".ui-card") || cardFragment.firstElementChild;
 }

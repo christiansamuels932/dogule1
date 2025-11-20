@@ -1,5 +1,2 @@
-#!/usr/bin/env sh
-. "$(dirname "$0")/_/husky.sh"
-
 echo "DLX-COMMITLINT-001: checking commit message"
 pnpm commitlint --edit "$1" || { echo "DLX-COMMITLINT-ERR-001: invalid commit message"; exit 1; }

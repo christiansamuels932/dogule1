@@ -9,6 +9,7 @@ import {
 import { deleteHund, listHunde } from "../shared/api/hunde.js";
 import { getKunde } from "../shared/api/kunden.js";
 import { listKurse } from "../shared/api/kurse.js";
+import { listFinanzenByKundeId } from "../shared/api/finanzen.js";
 import { injectHundToast, setHundToast } from "./formView.js";
 
 export async function createHundeDetailView(container, hundId) {
@@ -17,13 +18,18 @@ export async function createHundeDetailView(container, hundId) {
   container.classList.add("hunde-view");
   window.scrollTo(0, 0);
 
-  container.appendChild(
-    createSectionHeader({
-      title: "Hundedetails",
-      subtitle: "Alle Informationen zu einem Hund",
-      level: 2,
-    })
-  );
+  const headerFragment = createSectionHeader({
+    title: "Hund",
+    subtitle: "",
+    level: 2,
+  });
+  const headerSection =
+    headerFragment.querySelector(".ui-section") || headerFragment.firstElementChild;
+  const headerTitle = headerSection?.querySelector(".ui-section__title");
+  const headerSubtitle = headerSection?.querySelector(".ui-section__subtitle");
+  if (headerTitle) headerTitle.textContent = "Hund";
+  if (headerSubtitle) headerSubtitle.textContent = "";
+  container.appendChild(headerFragment);
   injectHundToast(container);
 
   const cardFragment = createCard({
@@ -47,10 +53,13 @@ export async function createHundeDetailView(container, hundId) {
     if (!hund) {
       throw new Error(`Hund ${hundId} nicht gefunden`);
     }
+    let kundeLoadFailed = false;
+    let finanzenLoadFailed = false;
     const kundeInfo = {
       id: hund.kundenId || "",
       name: "–",
     };
+    let kundeFinanzen = [];
     if (hund.kundenId) {
       try {
         const kunde = await getKunde(hund.kundenId);
@@ -58,29 +67,46 @@ export async function createHundeDetailView(container, hundId) {
           const fullName = `${kunde.vorname ?? ""} ${kunde.nachname ?? ""}`.trim();
           kundeInfo.name = fullName || kunde.vorname || kunde.nachname || "–";
           kundeInfo.id = kunde.id || hund.kundenId;
+          try {
+            kundeFinanzen = await listFinanzenByKundeId(kunde.id);
+          } catch (finanzenError) {
+            finanzenLoadFailed = true;
+            console.error("[HUNDE_ERR_DETAIL_FINANZEN]", finanzenError);
+          }
         }
       } catch (kundenError) {
-        console.error("HUNDE_DETAIL_KUNDE_FAILED", kundenError);
+        kundeLoadFailed = true;
+        console.error("[HUNDE_ERR_DETAIL_KUNDE]", kundenError);
       }
     }
+    container.__linkedFinanzen = kundeFinanzen;
 
-    cardElement.querySelector(".ui-card__title").textContent = hund.name || "Unbenannter Hund";
+    const hundName = hund.name || "Unbenannter Hund";
+    if (headerSubtitle) {
+      headerSubtitle.textContent = hundName;
+      headerSubtitle.hidden = false;
+    }
+    cardElement.querySelector(".ui-card__title").textContent = hundName;
     body.innerHTML = "";
+    if (headerSubtitle) {
+      headerSubtitle.textContent = "";
+      headerSubtitle.hidden = true;
+    }
+    if (kundeLoadFailed) {
+      body.appendChild(
+        createNotice("Fehler beim Laden der Daten.", {
+          variant: "warn",
+          role: "alert",
+        })
+      );
+    }
     body.appendChild(buildDetailList(hund, kundeInfo));
     body.appendChild(buildMetaBlock(hund));
     const kurseSection = await buildLinkedKurseSection(hund.id);
     container.appendChild(kurseSection);
 
     footer.innerHTML = "";
-    footer.appendChild(
-      createButton({
-        label: "Hund bearbeiten",
-        variant: "primary",
-        onClick: () => {
-          window.location.hash = `#/hunde/${hund.id}/edit`;
-        },
-      })
-    );
+    footer.appendChild(createNavLink("Hund bearbeiten", `#/hunde/${hund.id}/edit`, "primary"));
     const deleteBtn = createButton({
       label: "Hund löschen",
       variant: "secondary",
@@ -88,43 +114,28 @@ export async function createHundeDetailView(container, hundId) {
     deleteBtn.addEventListener("click", () => handleDeleteHund(container, hund.id, deleteBtn));
     footer.appendChild(deleteBtn);
     if (kundeInfo.id) {
-      footer.appendChild(
-        createButton({
-          label: "Zum Kunden",
-          variant: "secondary",
-          onClick: () => {
-            window.location.hash = `#/kunden/${kundeInfo.id}`;
-          },
-        })
-      );
+      footer.appendChild(createNavLink("Zum Kunden", `#/kunden/${kundeInfo.id}`, "secondary"));
     }
-    footer.appendChild(
-      createButton({
-        label: "Zur Liste",
-        variant: "secondary",
-        onClick: () => {
-          window.location.hash = "#/hunde";
-        },
-      })
+    footer.appendChild(createNavLink("Zur Liste", "#/hunde", "secondary"));
+    container.appendChild(
+      buildFinanzUebersichtSection(container.__linkedFinanzen || [], finanzenLoadFailed)
+    );
+    container.appendChild(
+      buildFinanzOffeneSection(container.__linkedFinanzen || [], finanzenLoadFailed)
+    );
+    container.appendChild(
+      buildFinanzHistorieSection(container.__linkedFinanzen || [], finanzenLoadFailed)
     );
   } catch (error) {
-    console.error("HUNDE_DETAIL_FAILED", error);
+    console.error("[HUNDE_ERR_DETAIL_LOAD]", error);
     body.innerHTML = "";
-    const notice = createNotice("Hund konnte nicht geladen werden.", {
+    const notice = createNotice("Fehler beim Laden der Daten.", {
       variant: "warn",
       role: "alert",
     });
     body.appendChild(notice);
     footer.innerHTML = "";
-    footer.appendChild(
-      createButton({
-        label: "Zur Liste",
-        variant: "secondary",
-        onClick: () => {
-          window.location.hash = "#/hunde";
-        },
-      })
-    );
+    footer.appendChild(createNavLink("Zur Liste", "#/hunde", "secondary"));
   } finally {
     focusHeading(container);
   }
@@ -152,16 +163,25 @@ async function buildLinkedKurseSection(hundId) {
   if (body) {
     body.innerHTML = "";
     let kurse = [];
+    let loadFailed = false;
     try {
       const allKurse = await listKurse();
       kurse = allKurse.filter(
         (kurs) => Array.isArray(kurs.hundIds) && kurs.hundIds.includes(hundId)
       );
     } catch (error) {
-      console.error("HUNDE_LINKED_KURSE_FAILED", error);
+      loadFailed = true;
+      console.error("[HUNDE_ERR_LINKED_KURSE]", error);
     }
-    if (!kurse.length) {
-      body.appendChild(createEmptyState("Noch keine Kurse", "", {}));
+    if (loadFailed) {
+      body.appendChild(
+        createNotice("Fehler beim Laden der Daten.", {
+          variant: "warn",
+          role: "alert",
+        })
+      );
+    } else if (!kurse.length) {
+      body.appendChild(createEmptyState("Keine Daten vorhanden.", ""));
     } else {
       kurse.forEach((kurs) => {
         const kursFragment = createCard({
@@ -173,17 +193,202 @@ async function buildLinkedKurseSection(hundId) {
         const kursCard = kursFragment.querySelector(".ui-card") || kursFragment.firstElementChild;
         if (!kursCard) return;
         kursCard.classList.add("hunde-linked-kurs");
-        const navigate = () => {
-          window.location.hash = `#/kurse/${kurs.id}`;
-        };
-        kursCard.addEventListener("click", navigate);
-        kursCard.addEventListener("keypress", (event) => {
-          if (event.key === "Enter" || event.key === " ") {
-            event.preventDefault();
-            navigate();
-          }
+        const link = document.createElement("a");
+        link.href = `#/kurse/${kurs.id}`;
+        link.className = "hunde-linked-kurs__link";
+        link.appendChild(kursCard);
+        body.appendChild(link);
+      });
+    }
+  }
+  section.appendChild(card);
+  return section;
+}
+
+function buildFinanzUebersichtSection(finanzen = [], hasError = false) {
+  const section = document.createElement("section");
+  section.className = "hunde-finanz-section";
+  section.appendChild(
+    createSectionHeader({
+      title: "Finanzübersicht",
+      subtitle: "",
+      level: 2,
+    })
+  );
+  const cardFragment = createCard({
+    eyebrow: "",
+    title: "",
+    body: "",
+    footer: "",
+  });
+  const card = cardFragment.querySelector(".ui-card") || cardFragment.firstElementChild;
+  if (!card) return section;
+  const body = card.querySelector(".ui-card__body");
+  if (body) {
+    body.innerHTML = "";
+    if (hasError) {
+      body.appendChild(
+        createNotice("Fehler beim Laden der Daten.", {
+          variant: "warn",
+          role: "alert",
+        })
+      );
+      section.appendChild(card);
+      return section;
+    }
+    const payments = finanzen.filter((entry) => entry.typ === "zahlung");
+    const latest = payments.length ? payments[payments.length - 1] : null;
+    if (!latest && !finanzen.some((entry) => entry.typ === "offen")) {
+      body.appendChild(createEmptyState("Keine Daten vorhanden.", ""));
+    } else {
+      const listFragment = createCard({
+        eyebrow: "",
+        title: "",
+        body: "",
+        footer: "",
+      });
+      const listCard = listFragment.querySelector(".ui-card") || listFragment.firstElementChild;
+      if (listCard) {
+        const listBody = listCard.querySelector(".ui-card__body");
+        if (listBody) {
+          const info = document.createElement("dl");
+          info.className = "hunde-finanz-info";
+          const addRow = (label, value) => {
+            const dt = document.createElement("dt");
+            dt.textContent = label;
+            const dd = document.createElement("dd");
+            dd.textContent = value;
+            info.append(dt, dd);
+          };
+          addRow(
+            "Letzte Zahlung",
+            latest
+              ? `${formatDateTime(latest.datum)} – CHF ${Number(latest.betrag || 0).toFixed(2)}`
+              : "Keine Zahlungen"
+          );
+          const openSum = finanzen
+            .filter((entry) => entry.typ === "offen")
+            .reduce((total, entry) => total + Number(entry.betrag || 0), 0);
+          addRow("Offen gesamt", `CHF ${openSum.toFixed(2)}`);
+          listBody.appendChild(info);
+        }
+        body.appendChild(listCard);
+      }
+    }
+  }
+  section.appendChild(card);
+  return section;
+}
+
+function buildFinanzOffeneSection(finanzen = [], hasError = false) {
+  const section = document.createElement("section");
+  section.className = "hunde-finanz-section";
+  section.appendChild(
+    createSectionHeader({
+      title: "Offene Beträge",
+      subtitle: "",
+      level: 2,
+    })
+  );
+  const cardFragment = createCard({
+    eyebrow: "",
+    title: "",
+    body: "",
+    footer: "",
+  });
+  const card = cardFragment.querySelector(".ui-card") || cardFragment.firstElementChild;
+  if (!card) return section;
+  const body = card.querySelector(".ui-card__body");
+  if (body) {
+    body.innerHTML = "";
+    if (hasError) {
+      body.appendChild(
+        createNotice("Fehler beim Laden der Daten.", {
+          variant: "warn",
+          role: "alert",
+        })
+      );
+      section.appendChild(card);
+      return section;
+    }
+    const offen = finanzen.filter((entry) => entry.typ === "offen");
+    if (!offen.length) {
+      body.appendChild(createEmptyState("Keine Daten vorhanden.", ""));
+    } else {
+      const sum = offen.reduce((total, entry) => total + Number(entry.betrag || 0), 0);
+      const summaryCardFragment = createCard({
+        eyebrow: "",
+        title: "",
+        body: `<p><strong>Total offen:</strong> CHF ${sum.toFixed(2)}</p>`,
+        footer: "",
+      });
+      const summaryCard =
+        summaryCardFragment.querySelector(".ui-card") || summaryCardFragment.firstElementChild;
+      if (summaryCard) body.appendChild(summaryCard);
+      offen.forEach((entry) => {
+        const itemFragment = createCard({
+          eyebrow: entry.beschreibung || "Offener Posten",
+          title: `CHF ${Number(entry.betrag || 0).toFixed(2)}`,
+          body: `<p>${formatDateTime(entry.datum)}</p>`,
+          footer: "",
         });
-        body.appendChild(kursCard);
+        const itemCard = itemFragment.querySelector(".ui-card") || itemFragment.firstElementChild;
+        if (itemCard) body.appendChild(itemCard);
+      });
+    }
+  }
+  section.appendChild(card);
+  return section;
+}
+
+function buildFinanzHistorieSection(finanzen = [], hasError = false) {
+  const section = document.createElement("section");
+  section.className = "hunde-finanz-section";
+  section.appendChild(
+    createSectionHeader({
+      title: "Zahlungshistorie",
+      subtitle: "",
+      level: 2,
+    })
+  );
+  const cardFragment = createCard({
+    eyebrow: "",
+    title: "",
+    body: "",
+    footer: "",
+  });
+  const card = cardFragment.querySelector(".ui-card") || cardFragment.firstElementChild;
+  if (!card) return section;
+  const body = card.querySelector(".ui-card__body");
+  if (body) {
+    body.innerHTML = "";
+    if (hasError) {
+      body.appendChild(
+        createNotice("Fehler beim Laden der Daten.", {
+          variant: "warn",
+          role: "alert",
+        })
+      );
+      section.appendChild(card);
+      return section;
+    }
+    const payments = finanzen
+      .filter((entry) => entry.typ === "zahlung")
+      .slice()
+      .reverse();
+    if (!payments.length) {
+      body.appendChild(createEmptyState("Keine Daten vorhanden.", ""));
+    } else {
+      payments.forEach((entry) => {
+        const paymentCardFragment = createCard({
+          eyebrow: formatDateTime(entry.datum),
+          title: `CHF ${Number(entry.betrag || 0).toFixed(2)}`,
+          body: `<p>${entry.beschreibung || "Zahlung"}</p>`,
+          footer: "",
+        });
+        const paymentCard =
+          paymentCardFragment.querySelector(".ui-card") || paymentCardFragment.firstElementChild;
+        if (paymentCard) body.appendChild(paymentCard);
       });
     }
   }
@@ -214,11 +419,8 @@ function buildDetailList(hund, kundeInfo) {
         }
         const link = document.createElement("a");
         link.href = `#/kunden/${kundeInfo.id}`;
+        link.className = "hunde-detail-link";
         link.textContent = kundeInfo.name;
-        link.addEventListener("click", (event) => {
-          event.preventDefault();
-          window.location.hash = `#/kunden/${kundeInfo.id}`;
-        });
         return link;
       },
     },
@@ -284,6 +486,14 @@ function focusHeading(container) {
   heading.focus();
 }
 
+function createNavLink(label, href, variant = "secondary") {
+  const link = document.createElement("a");
+  link.href = href;
+  link.className = `ui-btn ui-btn--${variant}`;
+  link.textContent = label;
+  return link;
+}
+
 async function handleDeleteHund(container, hundId, button) {
   if (!button || button.disabled) return;
   const confirmed = window.confirm("Möchten Sie diesen Hund wirklich löschen?");
@@ -299,7 +509,7 @@ async function handleDeleteHund(container, hundId, button) {
     setHundToast("Hund wurde gelöscht.", "success");
     window.location.hash = "#/hunde";
   } catch (error) {
-    console.error("HUNDE_DELETE_FAILED", error);
+    console.error("[HUNDE_ERR_DELETE]", error);
     setHundToast("Hund konnte nicht gelöscht werden.", "error");
     injectHundToast(container);
     button.disabled = false;

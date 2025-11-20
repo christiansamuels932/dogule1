@@ -1,9 +1,10 @@
 import { list, create, update, remove } from "./crud.js";
 
 const TABLE = "kunden";
+const LEGACY_CODE_KEY = "kundenCode";
 
 const EDITABLE_DEFAULTS = {
-  kundenCode: "",
+  code: "",
   vorname: "",
   nachname: "",
   email: "",
@@ -12,18 +13,47 @@ const EDITABLE_DEFAULTS = {
   notizen: "",
 };
 
+const normalizeCodePayload = (payload = {}) => {
+  if (payload.code !== undefined) {
+    return payload;
+  }
+  if (payload[LEGACY_CODE_KEY] !== undefined) {
+    return { ...payload, code: payload[LEGACY_CODE_KEY] };
+  }
+  return payload;
+};
+
 const ensureEditableDefaults = (payload = {}) => ({
   ...EDITABLE_DEFAULTS,
-  ...payload,
+  ...normalizeCodePayload(payload),
 });
 
-const ensureKundeShape = (kunde = {}) => ({
-  id: "",
-  createdAt: "",
-  updatedAt: "",
-  ...EDITABLE_DEFAULTS,
-  ...kunde,
-});
+const attachLegacyAlias = (record) => {
+  if (!record) return record;
+  if (Object.prototype.hasOwnProperty.call(record, LEGACY_CODE_KEY)) {
+    delete record[LEGACY_CODE_KEY];
+  }
+  Object.defineProperty(record, LEGACY_CODE_KEY, {
+    configurable: true,
+    enumerable: false,
+    get() {
+      return this.code;
+    },
+    set(value) {
+      this.code = value;
+    },
+  });
+  return record;
+};
+
+const ensureKundeShape = (kunde = {}) =>
+  attachLegacyAlias({
+    id: "",
+    createdAt: "",
+    updatedAt: "",
+    ...EDITABLE_DEFAULTS,
+    ...kunde,
+  });
 
 export async function listKunden(options) {
   const kunden = await list(TABLE, options);
