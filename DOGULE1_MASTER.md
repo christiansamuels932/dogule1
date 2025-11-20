@@ -12,6 +12,7 @@ Dogule1 ist eine modulare Verwaltungs-App für Hundeschulen. Die Anwendung liefe
 4. Jede Entität besitzt eine sichtbare `id` (intern, unveränderbar) und einen editierbaren `code`; das Override-Toggle wirkt nur auf `code`.
 5. Mock-Daten bilden die Realität ab, bis eine echte Persistenz folgt.
 6. Das Modul-Layout folgt der „Core Module Map – Phase 0“ (Dashboard als Rahmen, farbcodierte Kacheln, definierte Pfeile zwischen Modulen).
+7. Ein Modul darf erst als **abgeschlossen** markiert werden, wenn sein vollständiges GUI steht und es sich als eigenständige Einzweck-App bedienen und testen lässt (Navigation, Datenflüsse, Fehlermeldungen, Fokus/Scroll); Abschluss und Status-Update erfolgen erst nach manueller Prüfung und Freigabe durch den Nutzer.
 
 ## Modules & Colors
 
@@ -188,27 +189,27 @@ Die Beziehungen aus der Core Module Map sind in den Phasen 1 und A **nur logisch
     - Kursdetail zeigt Finanzdaten der Teilnehmer.
     - Fokus auf Rohdaten pro Kunde.
     - Konsistente Empty/Error States.
-18. **Station 18 – Status Quo Cleaning Up**  
-     - Dashboard/Kunden/Hunde/Kurse vereinheitlicht.  
-     - ID/Code-Regeln dokumentiert (`id` fix, `code` editierbar).  
-     - Vite-Build + NAS-Platzhalter vorbereitet.  
-     18.1. **Station 18.1 – Router Stabilization**  
-     - Clean Hash Router final in `apps/web/index.html`.  
-     - `import.meta.glob` als einzige Modullade-Strategie.  
-     - Routingtests (mehrfaches Mounten) bestehen.  
-     - Referenzielle Integrität (Router vs. Module) geprüft.
-    18.2. **Station 18.2 – Layout System Stabilization**  
-     - Statische Layout-Datei wird einmalig injiziert.  
-     - Module mounten ausschließlich in `#dogule-main`.  
-     - Keine Template-Fetches mehr.  
-     18.3. **Station 18.3 – Build Pipeline Stabilization**  
-     - Vite-Build nutzt nur relative Pfade/hashed Assets.  
-     - Dev-Server spiegelt Vite-Routing/Paths exakt.  
-     - Produktionsbundle frei von Hybrid-Injektionen.  
-    18.4. **Station 18.4 – Mock API Consolidation**  
-     - Alle Mock-Daten in `modules/shared/api/db/index.js`.  
-     - CRUD-Helper bedienen nur dieses Objekt.  
-     - Module definieren keine eigenen Mock-Arrays. - In DEV prüft `runIntegrityCheck` globale referentielle Integrität.
+18. **Station 18 – Status Quo Cleaning Up**
+    - Dashboard/Kunden/Hunde/Kurse vereinheitlicht.
+    - ID/Code-Regeln dokumentiert (`id` fix, `code` editierbar).
+    - Vite-Build + NAS-Platzhalter vorbereitet.  
+      18.1. **Station 18.1 – Router Stabilization**
+    - Clean Hash Router final in `apps/web/index.html`.
+    - `import.meta.glob` als einzige Modullade-Strategie.
+    - Routingtests (mehrfaches Mounten) bestehen.
+    - Referenzielle Integrität (Router vs. Module) geprüft.
+      18.2. **Station 18.2 – Layout System Stabilization**
+    - Statische Layout-Datei wird einmalig injiziert.
+    - Module mounten ausschließlich in `#dogule-main`.
+    - Keine Template-Fetches mehr.  
+      18.3. **Station 18.3 – Build Pipeline Stabilization**
+    - Vite-Build nutzt nur relative Pfade/hashed Assets.
+    - Dev-Server spiegelt Vite-Routing/Paths exakt.
+    - Produktionsbundle frei von Hybrid-Injektionen.  
+      18.4. **Station 18.4 – Mock API Consolidation**
+    - Alle Mock-Daten in `modules/shared/api/db/index.js`.
+    - CRUD-Helper bedienen nur dieses Objekt.
+    - Module definieren keine eigenen Mock-Arrays. - In DEV prüft `runIntegrityCheck` globale referentielle Integrität.
 
 ### Phase A — Single-Module Ready (Standalone Modules)
 
