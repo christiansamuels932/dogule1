@@ -28,4 +28,4 @@
 
 ## Active Station
 
-**Station 18.x1 – Repository & Documentation Cleanup:** Laufende Station zur Konsolidierung der Dateien, zum Entfernen obsoleter Artefakte und zum Abgleich aller Referenzdokumente (MASTER/BASELINE/STATUS) mit dem aktuellen Implementierungsstand. Waren-Daten wurden erst in Station 18.x1 Schritt 2.4 hinzugefügt; Station 12 enthielt keine Waren-Daten. Station 19 beginnt nach Abschluss dieser Aufräumarbeiten.
+**Station 18.x1 – Repository & Documentation Cleanup (abgeschlossen):** Dateien konsolidiert, obsolete Artefakte archiviert (`archive/station18x-obsolete/`), MASTER/BASELINE/STATUS/README/DOMAIN_MODEL auf Vite-only Setup, Clean Hash Router, statisches Layout, zentralisierte Mock-DB (`modules/shared/api/db/index.js`) und dev-only Integrity Check abgestimmt. Abschlussprüfung bestätigt keine offenen Widersprüche; Station 19 kann vorbereitet werden.
