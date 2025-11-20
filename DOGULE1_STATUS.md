@@ -13,7 +13,7 @@
 - **Station 9 – Shared UI Components:** Karten, Buttons, Form-Rows, Notices, Empty States.
 - **Station 10 – Central Mock API:** CRUD-Stubs + In-Memory-DB.
 - **Station 11 – Kunden CRUD:** Vollständige Kunden-Flows.
-- **Station 12 – Mock Data Expansion:** Zusätzliche Datensätze (Hunde, Trainer, Waren, Finanzen).
+- **Station 12 – Mock Data Expansion:** Zusätzliche Datensätze (Hunde, Trainer, Finanzen; Waren noch nicht angelegt).
 - **Station 13 – Hunde CRUD** + **13.1 Kunden ↔ Hunde Linking.**
 - **Station 14 – Kurse/Hunde/Kunden Linking.**
 - **Station 15 – Kunden Finanzen.**
@@ -28,4 +28,4 @@
 
 ## Active Station
 
-- **Station 18.x1 – Repository & Documentation Cleanup:** Fokus auf Konsolidierung der Dateien, Entfernen obsoleter Artefakte und Abgleich aller Referenzdokumente (MASTER/BASELINE/STATUS) mit dem aktuellen Implementierungsstand. Station 19 startet erst, wenn diese Aufräumarbeiten bestätigt sind.
+- **Station 18.x1 – Repository & Documentation Cleanup:** Fokus auf Konsolidierung der Dateien, Entfernen obsoleter Artefakte und Abgleich aller Referenzdokumente (MASTER/BASELINE/STATUS) mit dem aktuellen Implementierungsstand. Klarstellung: Waren-Daten wurden erst in Station 18.x1 Schritt 2.4 hinzugefügt; Station 12 enthielt keine Waren-Daten. Station 19 startet erst, wenn diese Aufräumarbeiten bestätigt sind.
