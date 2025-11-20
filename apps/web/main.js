@@ -4,36 +4,26 @@ import "../../modules/shared/shared.css";
 import "../../modules/shared/layout.css";
 import layoutHtml from "../../modules/shared/layout.html?raw";
 import templatesHtml from "../../modules/shared/components/templates.html?raw";
+import { runIntegrityCheck } from "../../modules/shared/api/db/integrityCheck.js";
 
-// --- Simple hash router for Dogule1 Module Interfaces (Station 8) ---
-const VALID_MODULES = new Set([
-  "dashboard",
-  "kommunikation",
-  "kurse",
-  "kunden",
-  "hunde",
-  "kalender",
-  "trainer",
-  "finanzen",
-  "waren",
-]);
+import { getRouteInfoFromHash } from "./routerUtils.js";
 
 const moduleLoaders = import.meta.glob("../../modules/*/index.js", { eager: false });
 const TEMPLATE_HOST_ID = "dogule-shared-templates";
+const INTEGRITY_FLAG = "__DOGULE_INTEGRITY_CHECK_DONE__";
 let layoutMain = null;
 let layoutPromise = null;
 let templatesPromise = null;
 
-function getRouteInfo() {
-  const raw = (window.location.hash || "").replace(/^#\/?/, "").trim().toLowerCase();
-  const segments = raw ? raw.split("/").filter(Boolean) : [];
-  const moduleSlug = segments[0] || "dashboard";
-  const route = VALID_MODULES.has(moduleSlug) ? moduleSlug : "dashboard";
-  const params = route === moduleSlug ? segments.slice(1) : [];
-  const info = { module: route, segments: params, raw };
-  window.__DOGULE_ROUTE__ = info;
-  return info;
+function ensureIntegrityOnce() {
+  if (!import.meta?.env?.DEV) return;
+  const scope = typeof globalThis !== "undefined" ? globalThis : window;
+  if (scope[INTEGRITY_FLAG]) return;
+  runIntegrityCheck();
+  scope[INTEGRITY_FLAG] = true;
 }
+
+ensureIntegrityOnce();
 
 async function loadAndRender(routeInfo) {
   const route = routeInfo.module;
@@ -91,7 +81,9 @@ function setActiveLink(route) {
 }
 
 async function handleNavigation() {
-  const routeInfo = getRouteInfo();
+  const hash = window.location.hash || "";
+  const routeInfo = getRouteInfoFromHash(hash);
+  window.__DOGULE_ROUTE__ = routeInfo;
   await loadAndRender(routeInfo);
 }
 
