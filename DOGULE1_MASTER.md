@@ -164,14 +164,14 @@ Die Beziehungen aus der Core Module Map sind in den Phasen 1 und A **nur logisch
     - Hunde/Trainer/Waren/Finanzen Datensätze ergänzt.
     - Struktur folgt DOMAIN_MODEL.
     - CRUD-Helper kennen neue Tabellen.
-13. **Station 13 – Hunde CRUD**  
-     - Hunde-Liste, Formulare, Detailansicht stabil.  
-     - Kundenrelation sichtbar, Navigation beidseitig.  
-     - ID/Code-Regeln umgesetzt.  
-    13.1. **Station 13.1 – Kunden ↔ Hunde Linking**  
-     - Kunden-Detail listet Hunde.  
-     - Hunde-Detail verlinkt zum Besitzer.  
-     - Empty/Error States konsistent.
+13. **Station 13 – Hunde CRUD**
+    - Hunde-Liste, Formulare, Detailansicht stabil.
+    - Kundenrelation sichtbar, Navigation beidseitig.
+    - ID/Code-Regeln umgesetzt.  
+      13.1. **Station 13.1 – Kunden ↔ Hunde Linking**
+    - Kunden-Detail listet Hunde.
+    - Hunde-Detail verlinkt zum Besitzer.
+    - Empty/Error States konsistent.
 14. **Station 14 – Kurse/Hunde/Kunden Linking**
     - Kursdetail zeigt Hunde/Kunden-Teilnehmer.
     - Kundenliste weist gebuchte Kurse aus.
@@ -192,7 +192,7 @@ Die Beziehungen aus der Core Module Map sind in den Phasen 1 und A **nur logisch
      - Dashboard/Kunden/Hunde/Kurse vereinheitlicht.  
      - ID/Code-Regeln dokumentiert (`id` fix, `code` editierbar).  
      - Vite-Build + NAS-Platzhalter vorbereitet.  
-    18.1. **Station 18.1 – Router Stabilization**  
+     18.1. **Station 18.1 – Router Stabilization**  
      - Clean Hash Router final in `apps/web/index.html`.  
      - `import.meta.glob` als einzige Modullade-Strategie.  
      - Routingtests (mehrfaches Mounten) bestehen.  
@@ -201,7 +201,7 @@ Die Beziehungen aus der Core Module Map sind in den Phasen 1 und A **nur logisch
      - Statische Layout-Datei wird einmalig injiziert.  
      - Module mounten ausschließlich in `#dogule-main`.  
      - Keine Template-Fetches mehr.  
-    18.3. **Station 18.3 – Build Pipeline Stabilization**  
+     18.3. **Station 18.3 – Build Pipeline Stabilization**  
      - Vite-Build nutzt nur relative Pfade/hashed Assets.  
      - Dev-Server spiegelt Vite-Routing/Paths exakt.  
      - Produktionsbundle frei von Hybrid-Injektionen.  
@@ -213,7 +213,7 @@ Die Beziehungen aus der Core Module Map sind in den Phasen 1 und A **nur logisch
 ### Phase A — Single-Module Ready (Standalone Modules)
 
 19. **Station 19 – Module Self-Test Preparation**
-    - Checkliste pro Modul (Routing, UI, Fehler, Tests).
+    - Checkliste pro Modul (Routing, UI, Fehler, Tests) in `PHASEA_SELFTEST_CHECKLIST.md` (Pflichtgrundlage für Phase A).
     - Dokumentation verständlich für neue Devs.
     - MASTER/STATUS verweisen auf die Liste.
 20. **Station 20 – Dashboard Single-Module Completion**
