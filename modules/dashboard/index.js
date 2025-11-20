@@ -4,6 +4,7 @@
 /* globals document, window, console */
 import {
   createBadge,
+  createButton,
   createCard,
   createEmptyState,
   createNotice,
@@ -30,23 +31,35 @@ export async function initModule(container) {
     createSectionHeader({
       title: "Übersicht",
       subtitle: "Schnellzugriff und Status",
-      level: 1,
+      level: 2,
     })
   );
-  const statusCard = createStandardCard();
-  const statusBody = statusCard.querySelector(".ui-card__body");
-  resetCardBody(statusBody);
-  statusBody.appendChild(
-    createNotice("Alles betriebsbereit.", {
-      variant: "ok",
-      role: "status",
-    })
-  );
+  const statusCardFragment = createCard({
+    eyebrow: "",
+    title: "Systemstatus",
+    body: "",
+    footer: "",
+  });
+  const statusCard =
+    statusCardFragment.querySelector(".ui-card") || statusCardFragment.firstElementChild;
+  const statusBody = statusCard?.querySelector(".ui-card__body");
+  if (statusBody) {
+    statusBody.innerHTML = "";
+    statusBody.appendChild(
+      createNotice("Alles betriebsbereit.", {
+        variant: "ok",
+        role: "status",
+      })
+    );
+  }
 
   const [actionsCard, metricsCard] = await Promise.all([buildActionsCard(), buildMetricsCard()]);
 
   overviewSection.appendChild(actionsCard);
   overviewSection.appendChild(metricsCard);
+  if (statusCard) {
+    overviewSection.appendChild(statusCard);
+  }
 
   fragment.appendChild(overviewSection);
   container.appendChild(fragment);
@@ -176,55 +189,5 @@ async function buildMetricsCard() {
     bodyEl.textContent = "Fehler beim Laden der Daten.";
   }
 
-  bodyEl.appendChild(list);
-
   return cardElement;
-}
-
-function appendSectionCard(section, builder, errorCode) {
-  try {
-    const node = builder();
-    if (node) {
-      section.appendChild(node);
-    }
-  } catch (error) {
-    // Console output stays limited to standardized dashboard error codes.
-    console.error(errorCode, error);
-    section.appendChild(buildErrorCard());
-  }
-}
-
-function resetCardBody(target) {
-  if (target) {
-    target.innerHTML = "";
-  }
-}
-
-function appendStandardEmptyState(target) {
-  if (!target) return;
-  target.appendChild(createEmptyState("Keine Daten vorhanden.", ""));
-}
-
-function buildErrorCard() {
-  const cardElement = createStandardCard("Fehler");
-  if (!cardElement) return document.createDocumentFragment();
-  const body = cardElement.querySelector(".ui-card__body");
-  resetCardBody(body);
-  body.appendChild(
-    createNotice("Fehler beim Laden der Daten.", {
-      variant: "warn",
-      role: "alert",
-    })
-  );
-  return cardElement;
-}
-
-function createStandardCard(title = "") {
-  const cardFragment = createCard({
-    eyebrow: "",
-    title,
-    body: "",
-    footer: "",
-  });
-  return cardFragment.querySelector(".ui-card") || cardFragment.firstElementChild;
 }
