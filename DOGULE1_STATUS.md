@@ -28,4 +28,4 @@
 
 ## Active Station
 
-- **Station 18.x1 – Repository & Documentation Cleanup:** Fokus auf Konsolidierung der Dateien, Entfernen obsoleter Artefakte und Abgleich aller Referenzdokumente (MASTER/BASELINE/STATUS) mit dem aktuellen Implementierungsstand. Klarstellung: Waren-Daten wurden erst in Station 18.x1 Schritt 2.4 hinzugefügt; Station 12 enthielt keine Waren-Daten. Station 19 startet erst, wenn diese Aufräumarbeiten bestätigt sind.
+**Station 18.x1 – Repository & Documentation Cleanup:** Laufende Station zur Konsolidierung der Dateien, zum Entfernen obsoleter Artefakte und zum Abgleich aller Referenzdokumente (MASTER/BASELINE/STATUS) mit dem aktuellen Implementierungsstand. Waren-Daten wurden erst in Station 18.x1 Schritt 2.4 hinzugefügt; Station 12 enthielt keine Waren-Daten. Station 19 beginnt nach Abschluss dieser Aufräumarbeiten.
