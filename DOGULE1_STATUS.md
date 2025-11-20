@@ -25,9 +25,9 @@
 - **Station 18.3 – Build Stabilization:** Vite-only Dev/Build-Pipeline mit relativen Pfaden, keine hybriden Template-Flows.
 - **Station 18.4 – Mock DB Consolidation:** Alle Mock-Daten in `modules/shared/api/db/index.js`, CRUD-Helper nutzen nur dieses Objekt, Integrity-Check aktiv.
 - **Phase 1 QA:** Checklist in `PHASE1_QA.md` angelegt; wird fortlaufend gepflegt, bis alle Punkte verifiziert sind.
+- **Station 19 – Module Self-Test Preparation:** `PHASEA_SELFTEST_CHECKLIST.md` erstellt und als Pflichtgrundlage in MASTER verankert; Station 19 beendet, Phase A Module können in Station 20 ff. nach den Self-Tests fortgesetzt werden.
+- **Station 20 – Dashboard Phase A:** Dashboard auf Daten aus der zentralen Mock-API umgestellt (Kunden/Hunde/Kurse-Zählungen), Fallback-Texte vereinheitlicht, Scroll/Focus beim Laden, Status-Karte via Shared Notice, Phase-A-Selftest für Dash abgeschlossen; MASTER ergänzt, dass Module nur nach vollständigem GUI + manueller Freigabe des Nutzers als abgeschlossen gelten.
 
 ## Active Station
 
-**Station 18.x1 – Repository & Documentation Cleanup (abgeschlossen):** Dateien konsolidiert, obsolete Artefakte archiviert (`archive/station18x-obsolete/`), MASTER/BASELINE/STATUS/README/DOMAIN_MODEL auf Vite-only Setup, Clean Hash Router, statisches Layout, zentralisierte Mock-DB (`modules/shared/api/db/index.js`) und dev-only Integrity Check abgestimmt. Abschlussprüfung bestätigt keine offenen Widersprüche; Station 19 kann vorbereitet werden. Abschließend wurden vitest/happy-dom aktualisiert und der Lockfile synchronisiert, um Audit- und CI-Build-Anforderungen zu erfüllen.
-
-**Station 19 – Module Self-Test Preparation (abgeschlossen):** `PHASEA_SELFTEST_CHECKLIST.md` erstellt und als Pflichtgrundlage in MASTER verankert; Station 19 beendet, Phase A Module können in Station 20 ff. nach den Self-Tests fortgesetzt werden.
+**Station 21 – Phase A Folgearbeiten (geplant):** Nächste Schritte nach Dash-Selftest: weitere Module nach Phase-A-Checkliste verifizieren und Status-Dokumentation fortschreiben.
