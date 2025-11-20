@@ -25,6 +25,13 @@ export function initModule(container) {
   container.innerHTML = "";
   const fragment = document.createDocumentFragment();
 
+  fragment.appendChild(
+    createSectionHeader({
+      title: "Dashboard",
+      level: 1,
+    })
+  );
+
   const overviewSection = document.createElement("section");
   overviewSection.className = "dogule-section";
   overviewSection.appendChild(
@@ -57,11 +64,21 @@ function buildActionsCard() {
     footer: "",
   });
   const cardElement = cardFragment.querySelector(".ui-card") || cardFragment.firstElementChild;
-  if (!cardElement) return document.createDocumentFragment();
+  if (!cardElement) {
+    const fallback = document.createElement("div");
+    fallback.textContent = "Fehler beim Laden der Daten.";
+    return fallback;
+  }
 
   const bodyEl = cardElement.querySelector(".ui-card__body");
+  if (!bodyEl) {
+    const fallback = document.createElement("p");
+    fallback.textContent = "Fehler beim Laden der Daten.";
+    cardElement.appendChild(fallback);
+    return cardElement;
+  }
   if (!QUICK_ACTIONS.length) {
-    bodyEl.appendChild(createEmptyState("Noch keine Daten", "Fügen Sie Inhalte hinzu."));
+    bodyEl.appendChild(createEmptyState("Keine Daten vorhanden.", ""));
     return cardElement;
   }
 
@@ -89,11 +106,21 @@ function buildMetricsCard() {
     footer: "",
   });
   const cardElement = cardFragment.querySelector(".ui-card") || cardFragment.firstElementChild;
-  if (!cardElement) return document.createDocumentFragment();
+  if (!cardElement) {
+    const fallback = document.createElement("div");
+    fallback.textContent = "Fehler beim Laden der Daten.";
+    return fallback;
+  }
 
   const bodyEl = cardElement.querySelector(".ui-card__body");
+  if (!bodyEl) {
+    const fallback = document.createElement("p");
+    fallback.textContent = "Fehler beim Laden der Daten.";
+    cardElement.appendChild(fallback);
+    return cardElement;
+  }
   if (!METRICS.length) {
-    bodyEl.appendChild(createEmptyState("Noch keine Daten", "Fügen Sie Inhalte hinzu."));
+    bodyEl.appendChild(createEmptyState("Keine Daten vorhanden.", ""));
     return cardElement;
   }
 
