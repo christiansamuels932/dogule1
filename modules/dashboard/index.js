@@ -1,7 +1,7 @@
 // Dashboard has no entity IDs; ID override controls are not applicable (Station 18 verification).
 // Dashboard has no form views; verified for Station 18
 // Standardized module interface for Dogule1
-/* globals document, console */
+/* globals document, window, console */
 import {
   createBadge,
   createCard,
@@ -9,23 +9,21 @@ import {
   createNotice,
   createSectionHeader,
 } from "../shared/components/components.js";
+import { listKunden } from "../shared/api/kunden.js";
+import { listHunde } from "../shared/api/hunde.js";
+import { listKurse } from "../shared/api/kurse.js";
 
-const QUICK_ACTIONS = [
-  { label: "Zu den Kunden", href: "#/kunden" },
-  { label: "Zu den Hunden", href: "#/hunde" },
-  { label: "Zu den Kursen", href: "#/kurse" },
-];
-
-const METRICS = [
-  { label: "Kundenstatus", value: "Aktiv", badge: { text: "Stabil", variant: "info" } },
-  { label: "Kurse heute", value: "6", badge: { text: "Planmäßig", variant: "ok" } },
-  { label: "Offene Aufgaben", value: "0", badge: { text: "Alles erledigt", variant: "info" } },
-];
-
-export function initModule(container) {
-  if (!container) return;
+export async function initModule(container) {
   container.innerHTML = "";
   const fragment = document.createDocumentFragment();
+
+  fragment.appendChild(
+    createSectionHeader({
+      title: "Dashboard",
+      level: 1,
+    })
+  );
+
   const overviewSection = document.createElement("section");
   overviewSection.className = "dogule-section";
   overviewSection.appendChild(
@@ -44,68 +42,139 @@ export function initModule(container) {
       role: "status",
     })
   );
-  overviewSection.appendChild(statusCard);
-  appendSectionCard(overviewSection, buildActionsCard, "[DASHBOARD_ERR_ACTIONS]");
-  appendSectionCard(overviewSection, buildMetricsCard, "[DASHBOARD_ERR_METRICS]");
+
+  const [actionsCard, metricsCard] = await Promise.all([buildActionsCard(), buildMetricsCard()]);
+
+  overviewSection.appendChild(actionsCard);
+  overviewSection.appendChild(metricsCard);
+
   fragment.appendChild(overviewSection);
   container.appendChild(fragment);
+
+  window.scrollTo(0, 0);
+  const heading = container.querySelector(".ui-section__title");
+  if (heading) {
+    heading.setAttribute("tabindex", "-1");
+    heading.focus();
+  }
 }
 
-function buildActionsCard() {
-  const cardElement = createStandardCard("Schnellaktionen");
-  if (!cardElement) return document.createDocumentFragment();
-
-  const bodyEl = cardElement.querySelector(".ui-card__body");
-  resetCardBody(bodyEl);
-  if (!QUICK_ACTIONS.length) {
-    appendStandardEmptyState(bodyEl);
-    return cardElement;
+async function buildActionsCard() {
+  const cardFragment = createCard({
+    eyebrow: "",
+    title: "Schnellaktionen",
+    body: "",
+    footer: "",
+  });
+  const cardElement = cardFragment.querySelector(".ui-card") || cardFragment.firstElementChild;
+  if (!cardElement) {
+    const fallback = document.createElement("div");
+    fallback.textContent = "Fehler beim Laden der Daten.";
+    return fallback;
   }
 
-  const list = document.createElement("ul");
-  list.className = "dashboard-list";
-  QUICK_ACTIONS.forEach((action) => {
-    const item = document.createElement("li");
-    const link = document.createElement("a");
-    link.className = "ui-btn ui-btn--primary";
-    link.href = action.href;
-    link.textContent = action.label;
-    item.appendChild(link);
-    list.appendChild(item);
-  });
-  bodyEl.appendChild(list);
+  const bodyEl = cardElement.querySelector(".ui-card__body");
+  if (!bodyEl) {
+    const fallback = document.createElement("p");
+    fallback.textContent = "Fehler beim Laden der Daten.";
+    cardElement.appendChild(fallback);
+    return cardElement;
+  }
+  try {
+    const [kunden, hunde, kurse] = await Promise.all([listKunden(), listHunde(), listKurse()]);
+    const quickActions = [
+      { label: `Kunden (${kunden.length})`, hash: "#/kunden" },
+      { label: `Hunde (${hunde.length})`, hash: "#/hunde" },
+      { label: `Kurse (${kurse.length})`, hash: "#/kurse" },
+    ];
+    if (!quickActions.length) {
+      bodyEl.appendChild(createEmptyState("Keine Daten vorhanden.", ""));
+      return cardElement;
+    }
+
+    quickActions.forEach((action) => {
+      const button = createButton({
+        label: action.label,
+        variant: "primary",
+        onClick: () => {
+          if (action.hash) {
+            window.location.hash = action.hash;
+          }
+        },
+      });
+      bodyEl.appendChild(button);
+    });
+  } catch (error) {
+    console.error("DASHBOARD_ACTIONS_LOAD_FAILED", error);
+    bodyEl.textContent = "Fehler beim Laden der Daten.";
+  }
 
   return cardElement;
 }
 
-function buildMetricsCard() {
-  const cardElement = createStandardCard("Kennzahlen");
-  if (!cardElement) return document.createDocumentFragment();
-
-  const bodyEl = cardElement.querySelector(".ui-card__body");
-  resetCardBody(bodyEl);
-  if (!METRICS.length) {
-    appendStandardEmptyState(bodyEl);
-    return cardElement;
+async function buildMetricsCard() {
+  const cardFragment = createCard({
+    eyebrow: "",
+    title: "Kennzahlen",
+    body: "",
+    footer: "",
+  });
+  const cardElement = cardFragment.querySelector(".ui-card") || cardFragment.firstElementChild;
+  if (!cardElement) {
+    const fallback = document.createElement("div");
+    fallback.textContent = "Fehler beim Laden der Daten.";
+    return fallback;
   }
 
-  const list = document.createElement("ul");
-  list.className = "dashboard-list";
-  METRICS.forEach((metric) => {
-    const item = document.createElement("li");
-    const label = document.createElement("strong");
-    label.textContent = metric.label;
-    const value = document.createElement("span");
-    value.textContent = metric.value;
-    item.appendChild(label);
-    item.appendChild(document.createTextNode(" "));
-    item.appendChild(value);
-    if (metric.badge) {
-      item.appendChild(document.createTextNode(" "));
-      item.appendChild(createBadge(metric.badge.text, metric.badge.variant));
+  const bodyEl = cardElement.querySelector(".ui-card__body");
+  if (!bodyEl) {
+    const fallback = document.createElement("p");
+    fallback.textContent = "Fehler beim Laden der Daten.";
+    cardElement.appendChild(fallback);
+    return cardElement;
+  }
+  try {
+    const [kunden, hunde, kurse] = await Promise.all([listKunden(), listHunde(), listKurse()]);
+    const offeneKurse = kurse.filter((kurs) => kurs.status === "offen").length;
+    const metrics = [
+      {
+        label: "Kunden",
+        value: String(kunden.length),
+        badge: kunden.length
+          ? { text: "Aktiv", variant: "ok" }
+          : { text: "Keine Kunden", variant: "warn" },
+      },
+      {
+        label: "Hunde",
+        value: String(hunde.length),
+        badge: hunde.length
+          ? { text: "Betreuung läuft", variant: "info" }
+          : { text: "Keine Hunde", variant: "warn" },
+      },
+      {
+        label: "Kurse offen",
+        value: String(offeneKurse),
+        badge: { text: `${kurse.length} gesamt`, variant: "info" },
+      },
+    ];
+    if (!metrics.length) {
+      bodyEl.appendChild(createEmptyState("Keine Daten vorhanden.", ""));
+      return cardElement;
     }
-    list.appendChild(item);
-  });
+
+    metrics.forEach((metric) => {
+      const wrapper = document.createElement("div");
+      wrapper.innerHTML = `<strong>${metric.label}</strong><p>${metric.value}</p>`;
+      if (metric.badge) {
+        const badge = createBadge(metric.badge.text, metric.badge.variant);
+        wrapper.appendChild(badge);
+      }
+      bodyEl.appendChild(wrapper);
+    });
+  } catch (error) {
+    console.error("DASHBOARD_METRICS_LOAD_FAILED", error);
+    bodyEl.textContent = "Fehler beim Laden der Daten.";
+  }
 
   bodyEl.appendChild(list);
 
