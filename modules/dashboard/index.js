@@ -1,5 +1,5 @@
 // Standardized module interface for Dogule1
-/* globals document, window */
+/* globals document, window, console */
 import {
   createBadge,
   createButton,
@@ -8,20 +8,11 @@ import {
   createNotice,
   createSectionHeader,
 } from "../shared/components/components.js";
+import { listKunden } from "../shared/api/kunden.js";
+import { listHunde } from "../shared/api/hunde.js";
+import { listKurse } from "../shared/api/kurse.js";
 
-const QUICK_ACTIONS = [
-  { label: "Neuer Kurs", hash: "#/kurse" },
-  { label: "Neuer Kunde", hash: "#/kunden" },
-  { label: "Termin anlegen", hash: "#/kalender" },
-];
-
-const METRICS = [
-  { label: "Kundenstatus", value: "Aktiv", badge: { text: "Stabil", variant: "info" } },
-  { label: "Kurse heute", value: "6", badge: { text: "Planmäßig", variant: "ok" } },
-  { label: "Offene Aufgaben", value: "0", badge: { text: "Alles erledigt", variant: "info" } },
-];
-
-export function initModule(container) {
+export async function initModule(container) {
   container.innerHTML = "";
   const fragment = document.createDocumentFragment();
 
@@ -49,14 +40,23 @@ export function initModule(container) {
     })
   );
 
-  overviewSection.appendChild(buildActionsCard());
-  overviewSection.appendChild(buildMetricsCard());
+  const [actionsCard, metricsCard] = await Promise.all([buildActionsCard(), buildMetricsCard()]);
+
+  overviewSection.appendChild(actionsCard);
+  overviewSection.appendChild(metricsCard);
 
   fragment.appendChild(overviewSection);
   container.appendChild(fragment);
+
+  window.scrollTo(0, 0);
+  const heading = container.querySelector(".ui-section__title");
+  if (heading) {
+    heading.setAttribute("tabindex", "-1");
+    heading.focus();
+  }
 }
 
-function buildActionsCard() {
+async function buildActionsCard() {
   const cardFragment = createCard({
     eyebrow: "",
     title: "Schnellaktionen",
@@ -77,28 +77,39 @@ function buildActionsCard() {
     cardElement.appendChild(fallback);
     return cardElement;
   }
-  if (!QUICK_ACTIONS.length) {
-    bodyEl.appendChild(createEmptyState("Keine Daten vorhanden.", ""));
-    return cardElement;
-  }
+  try {
+    const [kunden, hunde, kurse] = await Promise.all([listKunden(), listHunde(), listKurse()]);
+    const quickActions = [
+      { label: `Kunden (${kunden.length})`, hash: "#/kunden" },
+      { label: `Hunde (${hunde.length})`, hash: "#/hunde" },
+      { label: `Kurse (${kurse.length})`, hash: "#/kurse" },
+    ];
+    if (!quickActions.length) {
+      bodyEl.appendChild(createEmptyState("Keine Daten vorhanden.", ""));
+      return cardElement;
+    }
 
-  QUICK_ACTIONS.forEach((action) => {
-    const button = createButton({
-      label: action.label,
-      variant: "primary",
-      onClick: () => {
-        if (action.hash) {
-          window.location.hash = action.hash;
-        }
-      },
+    quickActions.forEach((action) => {
+      const button = createButton({
+        label: action.label,
+        variant: "primary",
+        onClick: () => {
+          if (action.hash) {
+            window.location.hash = action.hash;
+          }
+        },
+      });
+      bodyEl.appendChild(button);
     });
-    bodyEl.appendChild(button);
-  });
+  } catch (error) {
+    console.error("DASHBOARD_ACTIONS_LOAD_FAILED", error);
+    bodyEl.textContent = "Fehler beim Laden der Daten.";
+  }
 
   return cardElement;
 }
 
-function buildMetricsCard() {
+async function buildMetricsCard() {
   const cardFragment = createCard({
     eyebrow: "",
     title: "Kennzahlen",
@@ -119,20 +130,48 @@ function buildMetricsCard() {
     cardElement.appendChild(fallback);
     return cardElement;
   }
-  if (!METRICS.length) {
-    bodyEl.appendChild(createEmptyState("Keine Daten vorhanden.", ""));
-    return cardElement;
-  }
-
-  METRICS.forEach((metric) => {
-    const wrapper = document.createElement("div");
-    wrapper.innerHTML = `<strong>${metric.label}</strong><p>${metric.value}</p>`;
-    if (metric.badge) {
-      const badge = createBadge(metric.badge.text, metric.badge.variant);
-      wrapper.appendChild(badge);
+  try {
+    const [kunden, hunde, kurse] = await Promise.all([listKunden(), listHunde(), listKurse()]);
+    const offeneKurse = kurse.filter((kurs) => kurs.status === "offen").length;
+    const metrics = [
+      {
+        label: "Kunden",
+        value: String(kunden.length),
+        badge: kunden.length
+          ? { text: "Aktiv", variant: "ok" }
+          : { text: "Keine Kunden", variant: "warn" },
+      },
+      {
+        label: "Hunde",
+        value: String(hunde.length),
+        badge: hunde.length
+          ? { text: "Betreuung läuft", variant: "info" }
+          : { text: "Keine Hunde", variant: "warn" },
+      },
+      {
+        label: "Kurse offen",
+        value: String(offeneKurse),
+        badge: { text: `${kurse.length} gesamt`, variant: "info" },
+      },
+    ];
+    if (!metrics.length) {
+      bodyEl.appendChild(createEmptyState("Keine Daten vorhanden.", ""));
+      return cardElement;
     }
-    bodyEl.appendChild(wrapper);
-  });
+
+    metrics.forEach((metric) => {
+      const wrapper = document.createElement("div");
+      wrapper.innerHTML = `<strong>${metric.label}</strong><p>${metric.value}</p>`;
+      if (metric.badge) {
+        const badge = createBadge(metric.badge.text, metric.badge.variant);
+        wrapper.appendChild(badge);
+      }
+      bodyEl.appendChild(wrapper);
+    });
+  } catch (error) {
+    console.error("DASHBOARD_METRICS_LOAD_FAILED", error);
+    bodyEl.textContent = "Fehler beim Laden der Daten.";
+  }
 
   return cardElement;
 }
