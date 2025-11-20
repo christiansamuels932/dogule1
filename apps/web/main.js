@@ -1,49 +1,45 @@
 // Simple hash-based router for Dogule1
-/* globals window, document, fetch, console, DOMParser */
+/* globals window, document, console, DOMParser, requestAnimationFrame */
+import "../../modules/shared/shared.css";
+import "../../modules/shared/layout.css";
+import layoutHtml from "../../modules/shared/layout.html?raw";
+import templatesHtml from "../../modules/shared/components/templates.html?raw";
+import { runIntegrityCheck } from "../../modules/shared/api/db/integrityCheck.js";
 
-// --- Simple hash router for Dogule1 Module Interfaces (Station 8) ---
-const VALID_MODULES = new Set([
-  "dashboard",
-  "kommunikation",
-  "kurse",
-  "kunden",
-  "hunde",
-  "kalender",
-  "trainer",
-  "finanzen",
-  "waren",
-]);
+import { getRouteInfoFromHash } from "./routerUtils.js";
 
-const LAYOUT_URL = "../../modules/shared/layout.html";
-const TEMPLATES_URL = "../../modules/shared/components/templates.html";
+const moduleLoaders = import.meta.glob("../../modules/*/index.js", { eager: false });
 const TEMPLATE_HOST_ID = "dogule-shared-templates";
+const INTEGRITY_FLAG = "__DOGULE_INTEGRITY_CHECK_DONE__";
 let layoutMain = null;
 let layoutPromise = null;
 let templatesPromise = null;
 
-function getRouteInfo() {
-  const raw = (window.location.hash || "").replace(/^#\/?/, "").trim().toLowerCase();
-  const segments = raw ? raw.split("/").filter(Boolean) : [];
-  const moduleSlug = segments[0] || "dashboard";
-  const route = VALID_MODULES.has(moduleSlug) ? moduleSlug : "dashboard";
-  const params = route === moduleSlug ? segments.slice(1) : [];
-  const info = { module: route, segments: params, raw };
-  window.__DOGULE_ROUTE__ = info;
-  return info;
+function ensureIntegrityOnce() {
+  if (!import.meta?.env?.DEV) return;
+  const scope = typeof globalThis !== "undefined" ? globalThis : window;
+  if (scope[INTEGRITY_FLAG]) return;
+  runIntegrityCheck();
+  scope[INTEGRITY_FLAG] = true;
 }
+
+ensureIntegrityOnce();
 
 async function loadAndRender(routeInfo) {
   const route = routeInfo.module;
-  const layoutContainer = await ensureLayout();
-  await ensureTemplates();
-  const container = layoutContainer || document.getElementById("dogule-main");
+  const container = await resolveRenderContainer();
   if (!container) {
     console.error("Router error: #dogule-main not found in layout.");
     return;
   }
+  await ensureTemplates();
 
   try {
-    const mod = await import(`/modules/${route}/index.js`);
+    const loader = moduleLoaders[`../../modules/${route}/index.js`];
+    if (!loader) {
+      throw new Error(`Module loader for "${route}" not found`);
+    }
+    const mod = await loader();
     const entry = typeof mod.initModule === "function" ? mod.initModule : mod.default;
     if (typeof entry !== "function") {
       throw new Error(`Module "${route}" missing export initModule(container) or default export`);
@@ -85,12 +81,25 @@ function setActiveLink(route) {
 }
 
 async function handleNavigation() {
-  const routeInfo = getRouteInfo();
+  const hash = window.location.hash || "";
+  const routeInfo = getRouteInfoFromHash(hash);
+  window.__DOGULE_ROUTE__ = routeInfo;
   await loadAndRender(routeInfo);
 }
 
 window.addEventListener("hashchange", handleNavigation);
-window.addEventListener("DOMContentLoaded", handleNavigation);
+if (document.readyState === "loading") {
+  window.addEventListener("DOMContentLoaded", handleNavigation);
+} else {
+  handleNavigation();
+}
+
+async function resolveRenderContainer() {
+  const layoutContainer = await ensureLayout();
+  await waitForLayoutAttachment();
+  const target = document.getElementById("dogule-main") || layoutContainer;
+  return target;
+}
 
 async function ensureLayout() {
   if (layoutMain) return layoutMain;
@@ -102,15 +111,13 @@ async function ensureLayout() {
 
 async function mountLayout() {
   try {
-    const response = await fetch(LAYOUT_URL);
-    if (!response.ok) {
-      throw new Error(`Failed to load layout: ${response.status}`);
+    const parser = new DOMParser();
+    const layoutDoc = parser.parseFromString(layoutHtml, "text/html");
+    if (!layoutDoc) {
+      throw new Error("Failed to parse layout HTML");
     }
 
-    const html = await response.text();
-    const parser = new DOMParser();
-    const layoutDoc = parser.parseFromString(html, "text/html");
-
+    layoutDoc.querySelectorAll("link[href]").forEach((link) => link.remove());
     adoptHeadContent(layoutDoc);
 
     // Station 7 – Load modules into persistent layout (header/footer stay)
@@ -169,11 +176,6 @@ async function ensureTemplates() {
 
 async function loadTemplates() {
   try {
-    const response = await fetch(TEMPLATES_URL);
-    if (!response.ok) {
-      throw new Error(`Failed to load templates: ${response.status}`);
-    }
-    const html = await response.text();
     let host = document.getElementById(TEMPLATE_HOST_ID);
     if (!host) {
       host = document.createElement("div");
@@ -181,11 +183,17 @@ async function loadTemplates() {
       host.hidden = true;
       document.body.appendChild(host);
     }
-    host.innerHTML = html;
+    host.innerHTML = templatesHtml;
     return true;
   } catch (error) {
     console.error("DOGULE1_TEMPLATES_FAILED", error);
     templatesPromise = null;
     return false;
   }
+}
+
+function waitForLayoutAttachment() {
+  return new Promise((resolve) => {
+    requestAnimationFrame(() => requestAnimationFrame(resolve));
+  });
 }

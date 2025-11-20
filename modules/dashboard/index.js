@@ -1,8 +1,9 @@
+// Dashboard has no entity IDs; ID override controls are not applicable (Station 18 verification).
+// Dashboard has no form views; verified for Station 18
 // Standardized module interface for Dogule1
-/* globals document, window */
+/* globals document, console */
 import {
   createBadge,
-  createButton,
   createCard,
   createEmptyState,
   createNotice,
@@ -10,9 +11,9 @@ import {
 } from "../shared/components/components.js";
 
 const QUICK_ACTIONS = [
-  { label: "Neuer Kurs", hash: "#/kurse" },
-  { label: "Neuer Kunde", hash: "#/kunden" },
-  { label: "Termin anlegen", hash: "#/kalender" },
+  { label: "Zu den Kunden", href: "#/kunden" },
+  { label: "Zu den Hunden", href: "#/hunde" },
+  { label: "Zu den Kursen", href: "#/kurse" },
 ];
 
 const METRICS = [
@@ -22,90 +23,139 @@ const METRICS = [
 ];
 
 export function initModule(container) {
+  if (!container) return;
   container.innerHTML = "";
   const fragment = document.createDocumentFragment();
-
   const overviewSection = document.createElement("section");
   overviewSection.className = "dogule-section";
   overviewSection.appendChild(
     createSectionHeader({
       title: "Übersicht",
       subtitle: "Schnellzugriff und Status",
-      level: 2,
+      level: 1,
     })
   );
-
-  overviewSection.appendChild(
+  const statusCard = createStandardCard();
+  const statusBody = statusCard.querySelector(".ui-card__body");
+  resetCardBody(statusBody);
+  statusBody.appendChild(
     createNotice("Alles betriebsbereit.", {
       variant: "ok",
       role: "status",
     })
   );
-
-  overviewSection.appendChild(buildActionsCard());
-  overviewSection.appendChild(buildMetricsCard());
-
+  overviewSection.appendChild(statusCard);
+  appendSectionCard(overviewSection, buildActionsCard, "[DASHBOARD_ERR_ACTIONS]");
+  appendSectionCard(overviewSection, buildMetricsCard, "[DASHBOARD_ERR_METRICS]");
   fragment.appendChild(overviewSection);
   container.appendChild(fragment);
 }
 
 function buildActionsCard() {
-  const cardFragment = createCard({
-    eyebrow: "",
-    title: "Schnellaktionen",
-    body: "",
-    footer: "",
-  });
-  const cardElement = cardFragment.querySelector(".ui-card") || cardFragment.firstElementChild;
+  const cardElement = createStandardCard("Schnellaktionen");
   if (!cardElement) return document.createDocumentFragment();
 
   const bodyEl = cardElement.querySelector(".ui-card__body");
+  resetCardBody(bodyEl);
   if (!QUICK_ACTIONS.length) {
-    bodyEl.appendChild(createEmptyState("Noch keine Daten", "Fügen Sie Inhalte hinzu."));
+    appendStandardEmptyState(bodyEl);
     return cardElement;
   }
 
+  const list = document.createElement("ul");
+  list.className = "dashboard-list";
   QUICK_ACTIONS.forEach((action) => {
-    const button = createButton({
-      label: action.label,
-      variant: "primary",
-      onClick: () => {
-        if (action.hash) {
-          window.location.hash = action.hash;
-        }
-      },
-    });
-    bodyEl.appendChild(button);
+    const item = document.createElement("li");
+    const link = document.createElement("a");
+    link.className = "ui-btn ui-btn--primary";
+    link.href = action.href;
+    link.textContent = action.label;
+    item.appendChild(link);
+    list.appendChild(item);
   });
+  bodyEl.appendChild(list);
 
   return cardElement;
 }
 
 function buildMetricsCard() {
-  const cardFragment = createCard({
-    eyebrow: "",
-    title: "Kennzahlen",
-    body: "",
-    footer: "",
-  });
-  const cardElement = cardFragment.querySelector(".ui-card") || cardFragment.firstElementChild;
+  const cardElement = createStandardCard("Kennzahlen");
   if (!cardElement) return document.createDocumentFragment();
 
   const bodyEl = cardElement.querySelector(".ui-card__body");
+  resetCardBody(bodyEl);
   if (!METRICS.length) {
-    bodyEl.appendChild(createEmptyState("Noch keine Daten", "Fügen Sie Inhalte hinzu."));
+    appendStandardEmptyState(bodyEl);
     return cardElement;
   }
 
+  const list = document.createElement("ul");
+  list.className = "dashboard-list";
   METRICS.forEach((metric) => {
-    const wrapper = document.createElement("div");
-    wrapper.innerHTML = `<strong>${metric.label}</strong><p>${metric.value}</p>`;
+    const item = document.createElement("li");
+    const label = document.createElement("strong");
+    label.textContent = metric.label;
+    const value = document.createElement("span");
+    value.textContent = metric.value;
+    item.appendChild(label);
+    item.appendChild(document.createTextNode(" "));
+    item.appendChild(value);
     if (metric.badge) {
-      const badge = createBadge(metric.badge.text, metric.badge.variant);
-      wrapper.appendChild(badge);
+      item.appendChild(document.createTextNode(" "));
+      item.appendChild(createBadge(metric.badge.text, metric.badge.variant));
     }
-    bodyEl.appendChild(wrapper);
+    list.appendChild(item);
   });
 
+  bodyEl.appendChild(list);
+
   return cardElement;
+}
+
+function appendSectionCard(section, builder, errorCode) {
+  try {
+    const node = builder();
+    if (node) {
+      section.appendChild(node);
+    }
+  } catch (error) {
+    // Console output stays limited to standardized dashboard error codes.
+    console.error(errorCode, error);
+    section.appendChild(buildErrorCard());
+  }
+}
+
+function resetCardBody(target) {
+  if (target) {
+    target.innerHTML = "";
+  }
+}
+
+function appendStandardEmptyState(target) {
+  if (!target) return;
+  target.appendChild(createEmptyState("Keine Daten vorhanden.", ""));
+}
+
+function buildErrorCard() {
+  const cardElement = createStandardCard("Fehler");
+  if (!cardElement) return document.createDocumentFragment();
+  const body = cardElement.querySelector(".ui-card__body");
+  resetCardBody(body);
+  body.appendChild(
+    createNotice("Fehler beim Laden der Daten.", {
+      variant: "warn",
+      role: "alert",
+    })
+  );
+  return cardElement;
+}
+
+function createStandardCard(title = "") {
+  const cardFragment = createCard({
+    eyebrow: "",
+    title,
+    body: "",
+    footer: "",
+  });
+  return cardFragment.querySelector(".ui-card") || cardFragment.firstElementChild;
 }
