@@ -1,36 +1,28 @@
-# Codex Step Log
+# Codex Step Log — Station 21 (Phase A Kunden)
 
-> Dieses Log ist eine temporäre Notiz für Codex – es dokumentiert ausschließlich den aktuellen Arbeitsstand innerhalb einer laufenden Station und wird bei Bedarf überschrieben.
+Context: Station 21 – Kunden Single-Module Completion. Self-test gap analysis requested; no code changes yet.
 
-- **Station 18 Step 2 (completed):** Built the initial alpha-readiness checklist skeletons for Dashboard, Kunden, Hunde, Kurse in `modules/shared/alpha-checklist.md`, listing routing/UI/empty/error/detail/list/form/console items so every subsequent step has explicit checkboxes.
-- **Station 18 Step 3 (completed):** Performed a static audit (dev server blocked) and documented every concrete issue per module in `modules/shared/alpha-findings.md`, covering missing shared components, ID override gaps, console noise, and inconsistent empty states.
-- **Station 18 Step 4 (completed):** Authored `modules/shared/alpha-fix-plan.md`, sequencing remediation tasks module-by-module in the mandated order (routing → UI consistency → empty-states → error-states → detail views → list views → form views → console cleanliness → ID overrides → Kurs-ID visibility).
-- **Station 18 Step 5 (completed):** Converted dashboard quick actions to proper hash links, updated the fallback HTML placeholder, removed inline click handlers, and committed the routing cleanup.
-- **Station 18 Step 6 (completed):** Rebuilt dashboard quick-action and metric cards with shared helpers, standardized empty states, and ensured initModule mounts cleanly into `#dogule-main`.
-- **Station 18 Step 6a (completed):** Added helper utilities to reset card bodies and append the “Keine Daten vorhanden.” empty state consistently, removing any bespoke placeholders.
-- **Station 18 Step 8 (completed):** Wrapped each dashboard card builder in try/catch, logging `console.error("[DASHBOARD_ERR_*"]` codes and rendering the shared error notice (`createNotice` “Fehler beim Laden der Daten.”) when failures occur.
-- **Station 18 Step 9 (completed):** Introduced `createStandardCard()` so the notice, quick actions, metrics, and error fallbacks all use identical card shells with shared headers/bodies, preventing duplicate content on remount.
-- **Station 18 Step 10 (completed):** Replaced ad-hoc `<div>`/`<dl>` structures with normalized list bodies for quick actions and metrics, re-rendering into cleared containers and keeping empty states centralized.
-- **Station 18 Step 11 (completed):** Verified that `modules/dashboard/index.html` and `index.js` contain no unintended form elements, documented the guarantee via a code comment, and ensured the dashboard remains a read-only surface in Station 18 audits.
-- **Station 18 Step 12 (completed):** Audited `modules/dashboard/index.js` for console noise, leaving only the `[DASHBOARD_ERR_*]` error logs inside catch blocks so repeated mounts stay silent in success scenarios.
-- **Station 18 Step 13 (completed):** Confirmed Dashboard has no entity IDs and added a Station 18 verification comment at the top of `modules/dashboard/index.js` to record the ID-override exemption.
-- **Station 18 Step 14 (completed):** Cleaned Kunden routing in `modules/kunden/index.js` by clearing the container before every render, removing inline onclick handlers, ensuring all CTA links use `#/kunden/...`, and keeping coded errors confined to `[KUNDEN_ERR_*]`.
-- **Station 18 Step 15 (completed):** Rebuilt Kunden list/detail/form/finance layouts to use `createSectionHeader`, `createCard`, shared list bodies, and shared empty/error notices so every subsection matches the dashboard/Hunde polish.
-- **Station 18 Step 16 (completed):** Normalized every Kunden empty state to `createEmptyState("Keine Daten vorhanden.", "")`, removed bespoke copy, and guaranteed card bodies clear before inserting empty placeholders.
-- **Station 18 Step 17 (completed):** Wrapped Kunden API calls in try/catch, converted every `console.error` to `[KUNDEN_ERR_*]`, and rendered `createNotice("Fehler beim Laden der Daten.", ...)` inside the correct cards for list/detail/form/finance sections.
-- **Station 18 Step 18 (completed):** Updated the Kunden detail view to mount under the shared layout header, use standard cards for Stammdaten/actions/relations/finances, and reset scroll position plus headings on each render.
-- **Station 18 Step 19 (completed):** Converted the Kunden list to anchor-wrapped cards with German copy, shared empty/error states, and hash-based navigation so repeated mounts never duplicate DOM.
-- **Station 18 Step 20 (completed):** Modernized the Kunden form to use shared card/form-row helpers, added the manual ID override note, anchored save/cancel buttons, and restored default hints after validation clears.
-- **Station 18 Step 21 (completed):** Rechecked Kunden for console cleanliness; only `[KUNDEN_ERR_*]` logs remain, and normal navigation emits no console output.
-- **Station 18 Step 22 (completed):** Added the “ID manuell ändern” toggle in Kunden forms, wiring the read-only/override behavior through `createFormRow`, blocking empty IDs, and persisting the control across rerenders.
-- **Station 18 Step 23 (completed):** Performed the routing fix pass on Hunde (container reset, anchor navigation, `[HUNDE_ERR_*]` logging), eliminating inline onclick handlers and duplicate DOM.
-- **Station 18 Step 24 (completed):** Confirmed Hunde screens already consumed shared UI primitives; no structural changes were required beyond earlier steps.
-- **Station 18 Step 25 (completed):** Normalized Hunde empty states by reusing `createEmptyState("Keine Daten vorhanden.", "")` for list, linked Kurse/Kunden, and finance cards—no bespoke text remains.
-- **Station 18 Step 26 (completed):** Implemented the Hunde “ID manuell ändern” override toggle inside `modules/hunde/formView.js`, mirroring the Kunden behavior with shared form rows and validation.
-- **Station 18 Step 27 (completed):** Hardened Hunde error handling: every API call now has `[HUNDE_ERR_*]` logging plus shared notices inside the relevant cards (list/detail/form/finance/relations).
-- **Station 18 Step 28 (completed):** Updated the Hunde detail header to `createSectionHeader("Hund")` with dynamic subtitles, reusing shared cards for all subsections and ensuring scroll reset on mount.
-- **Station 18 Step 29 (completed):** Rebuilt the Hunde list view to use anchor-wrapped cards instead of tables, normalized empty states, and reintroduced scroll reset in `modules/hunde/index.js`.
-- **Station 18 Step 30 (completed):** Modernized the Hunde create/edit forms with shared card/form-row helpers, shared buttons, and the ID override note—bringing them to parity with Kunden forms.
-- **Station 18 Step 31a (completed):** Began the Kurse routing cleanup by converting every navigation action in `modules/kurse/index.js` to anchor-based links, wrapping course list cards in anchors, and replacing all console errors with `[KURSE_ERR_*]` codes while leaving list/form layouts for the next pass.
-- **Station 18 Status:** Work is paused for a few days after Step 31a; remaining Kurse tasks (list/form layout normalization, final UI polish) will resume once the break concludes.
-- **Station 18.1 Preview:** Nächster Schritt ist Station 18.1 – dieselbe Alpha-Checkliste wird auf Kommunikation, Kalender, Trainer, Finanzen und Waren angewendet (Routing/UI/Empty/Error/Detail/List/Form/Console/ID). Dazu gehören neue Verifikationsabschnitte in `modules/shared/alpha-verification.md` sowie QA-Checks, bevor Station 18.x abgeschlossen und Phase 2 übergeben wird.
+Progress:
+
+- Read PHASEA_SELFTEST_CHECKLIST.md, DOGULE1_MASTER.md, baseline/README, shared API/helpers (kunden/hunde/kurse/finanzen, CRUD, integrity check), shared components templates/helpers, router/main.js.
+- Scanned complete Kunden module (modules/kunden/index.js + index.html) with line references noted in gap report.
+- Domain model file is missing (DOMAIN_MODEL.md not in repo), so field/relationship alignment can’t be verified.
+
+Findings for Kunden vs. Phase A checklist (to act on next):
+
+- IDs vs. codes: Detail view shows only code alias (`kundenCode || id`) and no immutable `id` field; form toggle edits code, not the true id (see modules/kunden/index.js:295-307, 501-597).
+- Waren linkage absent: Kunden detail does not load or show Warenverkäufe; only Hunde, Kurse, Finanzen are rendered (modules/kunden/index.js:752-980).
+- Delete leaves orphans: Deleting a Kunde doesn’t cascade to Hunde/Waren/Zahlungen; integrity check would fail if run post-delete (modules/kunden/index.js:378-404, integrityCheck.js).
+- Kurs relation bias: Kurse are discovered only via Hunde → hundIds; Kurse with kundenIds but no hundIds stay hidden (modules/kunden/index.js:329-366).
+- Heading semantics: createSectionHeader renders h2 with aria-level; no explicit h1 on Kunden views, may miss checklist “h1 then h2/h3” requirement (templates.html + Kunden usage).
+- Domain model unknown: Need DOMAIN_MODEL.md or confirmation to ensure fields/relations are complete.
+- Positives: Hash routing works for list/detail/create/edit; shared components/empty/error states are used; validations and ID override toggle exist; scroll/focus reset implemented; uses only shared mock APIs.
+
+Next actions:
+
+1. Add immutable id display and clarify code override toggle per MASTER rules.
+2. Add Waren section using shared API and empty/error states.
+3. Decide on cascade/warning behavior on delete to avoid orphaning relations and integrity failures.
+4. Expand Kurs discovery to include kundenIds-only entries if domain model expects it.
+5. Address heading hierarchy if h1 is required by checklist.
+6. Obtain/restore DOMAIN_MODEL.md to validate field/relationship coverage.
