@@ -30,4 +30,14 @@
 
 ## Active Station
 
-**Station 21 – Phase A Folgearbeiten (geplant):** Nächste Schritte nach Dash-Selftest: weitere Module nach Phase-A-Checkliste verifizieren und Status-Dokumentation fortschreiben.
+**Station 21 – Phase A Folgearbeiten (laufend):**
+
+- **Aktueller Branch/PR:** `feature/kunden-waren` · PR #31 offen gegen `main` (Add Waren handling to Kunden module).
+- **Umgesetzte Arbeiten (Code):**
+  - Kunden: Waren-Sektion im Detail (Mock-API), Delete-Guard verhindert Löschen bei verknüpften Hunde/Kurse/Finanzen/Waren; Aktions-Buttons auf Shared Buttons umgestellt; Code-Override-Toggle präzisiert, Pflicht-Kundencode wird bei Auto-Modus generiert; Eyebrow in Liste zeigt Platzhalter statt Fallback-ID; Währungsformatierung und Listen-Styles ergänzt.
+  - Shared API: neues `waren.js` mit `listWaren`/`listWarenByKundeId`; Export in `modules/shared/api/index.js`.
+  - Router: `parseHash` Helper hinzugefügt; Vitest-Coverage unter `apps/web/routerUtils.test.js`.
+  - Styles: Shared Empty-State-Typografie und Kunden-Listen/Finanz/Waren-Listen in `components.css`/`shared.css` ergänzt.
+  - Docs: `DOMAIN_MODEL.md` wiederhergestellt; MASTER ergänzt Pflichtläufe (lint/test/build) nach jedem Change; `CODEX_STEP_LOG.md` bereinigt (war Station-Log, jetzt leer).
+- **Tests (lokal, heute):** `pnpm lint` ✅ (vorher dist-Artefakte entfernt), `pnpm vitest run` ✅ (1 Datei, 4 Tests), `pnpm build` ✅ (dist anschließend gelöscht, Repo wieder clean).
+- **Offen/Nächste Schritte:** PR #31 reviewen/mergen; Kunden-Modul in UI gegen Phase-A-Checklist revalidieren (v. a. Waren/Empty/Error States); ähnliche Waren-Verknüpfungen ggf. in Finanzen/Waren-Modul prüfen; weitere Module gemäß Self-Test-Plan (Stations 22–26) durchgehen.
