@@ -91,6 +91,7 @@ Der vollständige Entitäts-/Beziehungsplan steht in `DOMAIN_MODEL.md` und über
 - **NAS Expectations:** Einfache File-basierte Bereitstellung; manuelles Backup/Restore des `dist/`-Ordners reicht für die Alpha.
 
 - **Testing & CI:** Stations, die Routing, Modulverhalten oder Datenstruktur anfassen, müssen Vitest-Coverage (router/hash parsing, initModule-Verhalten, Mock-DB-Integrität) liefern. CI (GitHub Actions) führt `pnpm lint`, `pnpm build`, `pnpm test` aus.
+- **Local Pflichtläufe:** Nach jeder Codeänderung sind lokal mindestens `pnpm lint`, `pnpm test` und `pnpm build` auszuführen, bevor Übergaben/Commits erfolgen. Vor Abschluss jeder Station und jedes Moduls führen Planner und Builder diese Checks gemeinsam aus, ergänzt um einen manuellen UI-Funktionstest der betroffenen Flows.
 
 #### Authentication & Roles (V0.1)
 
