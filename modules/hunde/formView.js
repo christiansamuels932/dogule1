@@ -8,6 +8,7 @@ import {
 } from "../shared/components/components.js";
 import { createHund, updateHund, listHunde } from "../shared/api/hunde.js";
 import { listKunden } from "../shared/api/kunden.js";
+import { runIntegrityCheck } from "../shared/api/db/integrityCheck.js";
 
 const TOAST_KEY = "__DOGULE_HUNDE_TOAST__";
 const GESCHLECHT_OPTIONS = [
@@ -34,12 +35,12 @@ export async function createHundeFormView(container, options = {}) {
 
   section.appendChild(
     createSectionHeader({
-      title: mode === "create" ? "Neuer Hund" : "Hund bearbeiten",
+      title: "Hunde",
       subtitle:
         mode === "create"
-          ? "Erfasse einen neuen Hund für deine Hundeschule."
-          : "Passe die Daten dieses Hundes an.",
-      level: 2,
+          ? "Neuer Hund – Erfasse einen neuen Hund für deine Hundeschule."
+          : "Hund bearbeiten – Passe die Daten dieses Hundes an.",
+      level: 1,
     })
   );
   injectHundToast(section);
@@ -89,11 +90,15 @@ export async function createHundeFormView(container, options = {}) {
   const form = document.createElement("form");
   form.noValidate = true;
   form.dataset.hundeForm = "true";
+  const formId = `hunde-form-${mode}-${hundId || "new"}`;
+  form.id = formId;
   const body = cardElement.querySelector(".ui-card__body");
   body.innerHTML = "";
   body.appendChild(form);
 
-  const refs = buildFormFields(form, existing, kunden, hundeListe, mode);
+  const hundeCodeValue = mode === "edit" ? (existing?.code ?? existing?.hundeId ?? "") : "";
+  const defaultHundCode = mode === "edit" ? hundeCodeValue : generateNextHundCode(hundeListe);
+  const refs = buildFormFields(form, existing, kunden, { hundeCodeValue, defaultHundCode });
 
   const footer = cardElement.querySelector(".ui-card__footer");
   footer.innerHTML = "";
@@ -104,6 +109,7 @@ export async function createHundeFormView(container, options = {}) {
     variant: "primary",
   });
   submit.type = "submit";
+  submit.setAttribute("form", formId);
   const cancel = createButton({
     label: "Abbrechen",
     variant: "quiet",
@@ -121,13 +127,19 @@ export async function createHundeFormView(container, options = {}) {
     refs,
     section,
     submit,
+    hundeListe,
   };
   form.addEventListener("submit", (event) => handleHundFormSubmit(event, submitContext));
 
   focusHeading(section);
 }
 
-function buildFormFields(form, existing = {}, kunden = [], hundeListe = [], mode = "create") {
+function buildFormFields(
+  form,
+  existing = {},
+  kunden = [],
+  { hundeCodeValue = "", defaultHundCode = "" } = {}
+) {
   const kundeOptions = [
     { value: "", label: "Bitte wählen" },
     ...kunden.map((kunde) => ({
@@ -135,61 +147,44 @@ function buildFormFields(form, existing = {}, kunden = [], hundeListe = [], mode
       label: formatKundeName(kunde),
     })),
   ];
-  const assignedHundeId =
-    existing?.hundeId ?? (mode === "create" ? generateNextHundeId(hundeListe) : existing?.id || "");
-  const resolvedHundeId = assignedHundeId || generateNextHundeId(hundeListe);
-  const defaultId = resolvedHundeId;
   const refs = {};
 
-  // Hunde-ID row with manual override toggle
-  const idRow = createFormRow({
+  const immutableIdRow = createFormRow({
     id: "hund-id",
-    label: "Hunde-ID*",
-    placeholder: "z. B. hund-001",
-    required: true,
-    describedByText:
-      'Standardmäßig automatisch. Mit "ID manuell ändern" aktivierst du die Bearbeitung.',
+    label: "ID",
+    placeholder: "Wird nach dem Speichern vergeben",
+    describedByText: "Systemgeneriert und nicht änderbar.",
   });
-  const idInput = idRow.querySelector("input");
-  idInput.name = "hundeId";
-  idInput.value = resolvedHundeId;
-  idInput.readOnly = true;
-  idInput.setAttribute("aria-readonly", "true");
-  const idHint = idRow.querySelector(".ui-form-row__hint");
-  if (idHint) {
-    idHint.classList.remove("sr-only");
-  }
-  refs.hundeId = { input: idInput, hint: idHint, defaultHint: idHint?.textContent || "" };
-  form.appendChild(idRow);
+  const immutableIdInput = immutableIdRow.querySelector("input");
+  immutableIdInput.name = "immutableId";
+  immutableIdInput.value = existing?.id || "Wird nach dem Speichern vergeben";
+  immutableIdInput.readOnly = true;
+  immutableIdInput.setAttribute("aria-readonly", "true");
+  const immutableIdHint = immutableIdRow.querySelector(".ui-form-row__hint");
+  immutableIdHint.classList.remove("sr-only");
+  refs.id = {
+    input: immutableIdInput,
+    hint: immutableIdHint,
+    defaultHint: immutableIdHint?.textContent || "",
+  };
+  form.appendChild(immutableIdRow);
 
-  const toggleWrap = document.createElement("div");
-  toggleWrap.className = "hunde-id-toggle";
-  const toggleBtn = document.createElement("button");
-  toggleBtn.type = "button";
-  toggleBtn.className = "ui-btn ui-btn--secondary";
-  toggleBtn.textContent = "ID manuell ändern";
-  toggleWrap.appendChild(toggleBtn);
-  form.appendChild(toggleWrap);
-
-  let manualOverride = false;
-  toggleBtn.addEventListener("click", () => {
-    manualOverride = !manualOverride;
-    if (manualOverride) {
-      idInput.readOnly = false;
-      idInput.removeAttribute("aria-readonly");
-      toggleBtn.textContent = "Automatische ID verwenden";
-      idInput.focus();
-    } else {
-      idInput.readOnly = true;
-      idInput.setAttribute("aria-readonly", "true");
-      toggleBtn.textContent = "ID manuell ändern";
-      if (!idInput.value.trim()) {
-        idInput.value = defaultId;
-      }
-    }
-  });
+  let isCodeOverrideEnabled = false;
 
   const fields = [
+    {
+      name: "hundeCode",
+      value: hundeCodeValue,
+      config: {
+        id: "hund-code",
+        label: "Hundecode*",
+        placeholder: "z. B. H-001",
+        required: true,
+        describedByText:
+          'Standardmäßig automatisch. Mit "Code manuell ändern" aktivierst du die Bearbeitung.',
+      },
+      readOnly: true,
+    },
     {
       name: "name",
       value: existing?.name ?? "",
@@ -308,7 +303,14 @@ function buildFormFields(form, existing = {}, kunden = [], hundeListe = [], mode
       if (field.step !== undefined) input.step = field.step;
     }
     if (field.value !== undefined && field.value !== null) {
-      input.value = field.value;
+      input.value = field.value || "";
+    }
+    if (field.name === "hundeCode" && !input.value) {
+      input.value = defaultHundCode;
+    }
+    if (field.readOnly) {
+      input.readOnly = true;
+      input.setAttribute("aria-readonly", "true");
     }
     const hint = row.querySelector(".ui-form-row__hint");
     const defaultHint = field.config.describedByText || "";
@@ -317,6 +319,33 @@ function buildFormFields(form, existing = {}, kunden = [], hundeListe = [], mode
       hint.classList.remove("sr-only");
     } else {
       hint.classList.add("sr-only");
+    }
+    if (field.name === "hundeCode") {
+      const toggleWrap = document.createElement("div");
+      toggleWrap.className = "hunde-id-toggle";
+      const toggleButton = createButton({
+        label: "Code manuell ändern",
+        variant: "secondary",
+      });
+      toggleButton.type = "button";
+      toggleButton.addEventListener("click", () => {
+        isCodeOverrideEnabled = !isCodeOverrideEnabled;
+        if (isCodeOverrideEnabled) {
+          input.readOnly = false;
+          input.removeAttribute("aria-readonly");
+          toggleButton.textContent = "Automatischen Code verwenden";
+          input.focus();
+        } else {
+          input.readOnly = true;
+          input.setAttribute("aria-readonly", "true");
+          toggleButton.textContent = "Code manuell ändern";
+          if (!input.value.trim()) {
+            input.value = defaultHundCode;
+          }
+        }
+      });
+      toggleWrap.appendChild(toggleButton);
+      row.appendChild(toggleWrap);
     }
     refs[field.name] = { input, hint, defaultHint };
     form.appendChild(row);
@@ -333,10 +362,12 @@ function collectFormValues(refs) {
   return values;
 }
 
-function validate(values) {
+function validate(values, { isManualCode = false } = {}) {
   const errors = {};
-  if (!values.hundeId) {
-    errors.hundeId = "Bitte eine Hunde-ID angeben.";
+  if (!values.hundeCode) {
+    errors.hundeCode = isManualCode
+      ? "Bitte einen gültigen Hundecode eingeben."
+      : "Hundecode fehlt.";
   }
   if (!values.name) {
     errors.name = "Bitte den Namen des Hundes angeben.";
@@ -387,7 +418,7 @@ function applyErrors(refs, errors) {
 
 function buildPayload(values) {
   return {
-    hundeId: values.hundeId,
+    code: values.hundeCode,
     name: values.name,
     rufname: values.rufname || "",
     rasse: values.rasse || "",
@@ -415,22 +446,22 @@ function formatKundeName(kunde = {}) {
   return kunde.id || "Unbekannter Kunde";
 }
 
-async function isHundeIdDuplicate(hundeId, currentId) {
-  const normalized = (hundeId || "").trim();
+async function isHundCodeDuplicate(hundeCode, currentId) {
+  const normalized = (hundeCode || "").trim();
   if (!normalized) return false;
   const hunde = await listHunde();
   return hunde.some((hund) => {
-    const existing = (hund.hundeId || "").trim();
+    const existing = (hund.code || hund.hundeId || "").trim();
     if (!existing) return false;
     if (currentId && hund.id === currentId) return false;
     return existing === normalized;
   });
 }
 
-function generateNextHundeId(hundeListe = []) {
+function generateNextHundCode(hundeListe = []) {
   let maxNumber = 0;
   hundeListe.forEach((hund) => {
-    const raw = (hund?.hundeId || hund?.id || "").trim();
+    const raw = (hund?.code || hund?.hundeId || "").trim();
     const match = raw.match(/(\d+)/);
     if (!match) return;
     const num = Number.parseInt(match[1], 10);
@@ -442,15 +473,28 @@ function generateNextHundeId(hundeListe = []) {
   return `H-${String(next).padStart(3, "0")}`;
 }
 
-async function handleHundFormSubmit(event, { mode, id, refs, section, submit }) {
+async function handleHundFormSubmit(event, { mode, id, refs, section, submit, hundeListe }) {
   event.preventDefault();
+  const codeInput = refs.hundeCode?.input;
+  const isManualCode = codeInput ? !codeInput.readOnly : false;
   const values = collectFormValues(refs);
-  const errors = validate(values);
+  if (!isManualCode && !values.hundeCode) {
+    const nextCode = generateNextHundCode(hundeListe);
+    values.hundeCode = nextCode;
+    if (codeInput) {
+      codeInput.value = nextCode;
+    }
+  }
+  const errors = validate(values, { isManualCode });
   applyErrors(refs, errors);
-  if (Object.keys(errors).length) {
-    const firstError = Object.values(refs).find((ref) => !ref.hint.classList.contains("sr-only"));
-    firstError?.input.focus();
-    return;
+  const hasErrors = Object.keys(errors).length > 0;
+  if (hasErrors) {
+    const proceed = window.confirm("Es fehlen Pflichtfelder. Trotzdem speichern?");
+    if (!proceed) {
+      const firstError = Object.values(refs).find((ref) => !ref.hint.classList.contains("sr-only"));
+      firstError?.input.focus();
+      return;
+    }
   }
 
   const payload = buildPayload(values);
@@ -460,9 +504,9 @@ async function handleHundFormSubmit(event, { mode, id, refs, section, submit }) 
   submit.textContent = busyLabel;
 
   try {
-    const hasDuplicate = await isHundeIdDuplicate(values.hundeId, mode === "edit" ? id : null);
+    const hasDuplicate = await isHundCodeDuplicate(values.hundeCode, mode === "edit" ? id : null);
     if (hasDuplicate) {
-      showInlineToast(section, "Hunde-ID ist bereits vergeben.", "error");
+      showInlineToast(section, "Hundecode ist bereits vergeben.", "error");
       submit.disabled = false;
       submit.textContent = defaultLabel;
       return;
@@ -470,6 +514,11 @@ async function handleHundFormSubmit(event, { mode, id, refs, section, submit }) 
     const result = mode === "create" ? await createHund(payload) : await updateHund(id, payload);
     if (!result?.id) {
       throw new Error("Hund speichern ohne ID");
+    }
+    try {
+      runIntegrityCheck();
+    } catch (integrityError) {
+      console.error("[HUNDE_ERR_INTEGRITY]", integrityError);
     }
     setHundToast(
       mode === "create" ? "Hund wurde erstellt." : "Hund wurde aktualisiert.",
