@@ -35,6 +35,7 @@
 - **Aktueller Branch/PR:** `feature/kunden-waren` · PR #31 offen gegen `main` (Add Waren handling to Kunden module).
 - **Umgesetzte Arbeiten (Code):**
   - Kunden: Waren-Sektion im Detail (Mock-API), Delete-Guard verhindert Löschen bei verknüpften Hunde/Kurse/Finanzen/Waren; Aktions-Buttons auf Shared Buttons umgestellt; Code-Override-Toggle präzisiert, Pflicht-Kundencode wird bei Auto-Modus generiert; Eyebrow in Liste zeigt Platzhalter statt Fallback-ID; Währungsformatierung und Listen-Styles ergänzt.
+  - Hunde (Station 22): ID/Code-Handhabung an Kunden-Pattern angepasst (Detail zeigt id + code, Liste zeigt code/id, Form mit Code-Override, ID read-only), Heading-Hierarchie auf h1/h2 korrigiert, Delete-Flow blockt bei verknüpften Kursen/Finanzen und ruft Integrity-Check, Finanzsektionen mit Guards/Errors/Empty-States wie Kunden, Besitzer-/Kurs-Relationen in Cards mit Codes/Links, Button-UI in Detail vereinheitlicht, Form-Submit warnt bei fehlenden Pflichtfeldern (optional überspringbar).
   - Shared API: neues `waren.js` mit `listWaren`/`listWarenByKundeId`; Export in `modules/shared/api/index.js`.
   - Router: `parseHash` Helper hinzugefügt; Vitest-Coverage unter `apps/web/routerUtils.test.js`.
   - Styles: Shared Empty-State-Typografie und Kunden-Listen/Finanz/Waren-Listen in `components.css`/`shared.css` ergänzt.
