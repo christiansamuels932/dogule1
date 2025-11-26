@@ -13,6 +13,7 @@ Dogule1 ist eine modulare Verwaltungs-App für Hundeschulen. Die Anwendung liefe
 5. Mock-Daten bilden die Realität ab, bis eine echte Persistenz folgt.
 6. Das Modul-Layout folgt der „Core Module Map – Phase 0“ (Dashboard als Rahmen, farbcodierte Kacheln, definierte Pfeile zwischen Modulen).
 7. Ein Modul darf erst als **abgeschlossen** markiert werden, wenn sein vollständiges GUI steht und es sich als eigenständige Einzweck-App bedienen und testen lässt (Navigation, Datenflüsse, Fehlermeldungen, Fokus/Scroll); Abschluss und Status-Update erfolgen erst nach manueller Prüfung und Freigabe durch den Nutzer.
+8. Pre-Alpha Validierung: Formulare blockieren nur zwingend notwendige Pflichtfelder; weiche/optionale Checks dürfen Eingaben nicht stoppen (harte Validierung wird in späteren Stationen nachgezogen).
 
 ## Modules & Colors
 
