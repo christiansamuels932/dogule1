@@ -33,7 +33,7 @@
 **Station 21 – Phase A Folgearbeiten (laufend):**
 
 - **Neue Vorgabe (Pre-Alpha Validierung):** Formulare prüfen nur zwingend nötige Felder; weiche/optionale Checks dürfen nicht blockieren (Ziel: Speichern/Bearbeiten/Löschen bleibt möglich, harte Validierung erfolgt in späteren Stationen).
-- **Aktueller Branch/PR:** `feature/kunden-waren` · PR #31 offen gegen `main` (Add Waren handling to Kunden module). Kurse-Arbeiten vorbereitet für PR „Station 23 – Kurse Single-Module Completion“ (lokal, noch nicht geöffnet).
+- **Aktueller Branch/PR:** `feature/kunden-waren` · PR #31 offen gegen `main` (Add Waren handling to Kunden module). Zusätzlich: PR #33 „Station 23 – Kurse Single-Module Completion“ geöffnet.
 - **Umgesetzte Arbeiten (Code):**
   - Kunden: Waren-Sektion im Detail (Mock-API), Delete-Guard verhindert Löschen bei verknüpften Hunde/Kurse/Finanzen/Waren; Aktions-Buttons auf Shared Buttons umgestellt; Code-Override-Toggle präzisiert, Pflicht-Kundencode wird bei Auto-Modus generiert; Eyebrow in Liste zeigt Platzhalter statt Fallback-ID; Währungsformatierung und Listen-Styles ergänzt.
   - Hunde (Station 22): ID/Code-Handhabung an Kunden-Pattern angepasst (Detail zeigt id + code, Liste zeigt code/id, Form mit Code-Override, ID read-only), Heading-Hierarchie auf h1/h2 korrigiert, Delete-Flow blockt bei verknüpften Kursen/Finanzen und ruft Integrity-Check, Finanzsektionen mit Guards/Errors/Empty-States wie Kunden, Besitzer-/Kurs-Relationen in Cards mit Codes/Links, Button-UI in Detail vereinheitlicht, Form-Submit warnt bei fehlenden Pflichtfeldern (optional überspringbar).
@@ -51,4 +51,4 @@
   - Zero-Validation-Policy: Nur minimale Crash-Prävention (Code auto, Arrays init), keine Soft-Feld-Pflicht.
   - Self-Test: Phase-A erneut durchlaufen → alle Kurse-Checks PASS.
 - **Tests (lokal, heute):** `pnpm lint` ✅ (vorher dist-Artefakte entfernt), `pnpm vitest run` ✅ (1 Datei, 4 Tests), `pnpm build` ✅ (dist anschließend gelöscht, Repo wieder clean).
-- **Offen/Nächste Schritte:** PR #31 reviewen/mergen; Kunden-Modul in UI gegen Phase-A-Checklist revalidieren (v. a. Waren/Empty/Error States); ähnliche Waren-Verknüpfungen ggf. in Finanzen/Waren-Modul prüfen; weitere Module gemäß Self-Test-Plan (Stations 22–26) durchgehen.
+- **Offen/Nächste Schritte:** PR #31 und PR #33 reviewen/mergen; Kunden-Modul in UI gegen Phase-A-Checklist revalidieren (v. a. Waren/Empty/Error States); ähnliche Waren-Verknüpfungen ggf. in Finanzen/Waren-Modul prüfen; weitere Module gemäß Self-Test-Plan (Stations 22–26) durchgehen.
