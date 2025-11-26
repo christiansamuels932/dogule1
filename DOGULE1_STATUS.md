@@ -32,7 +32,8 @@
 
 **Station 21 – Phase A Folgearbeiten (laufend):**
 
-- **Aktueller Branch/PR:** `feature/kunden-waren` · PR #31 offen gegen `main` (Add Waren handling to Kunden module).
+- **Neue Vorgabe (Pre-Alpha Validierung):** Formulare prüfen nur zwingend nötige Felder; weiche/optionale Checks dürfen nicht blockieren (Ziel: Speichern/Bearbeiten/Löschen bleibt möglich, harte Validierung erfolgt in späteren Stationen).
+- **Aktueller Branch/PR:** `feature/kunden-waren` · PR #31 offen gegen `main` (Add Waren handling to Kunden module). Kurse-Arbeiten vorbereitet für PR „Station 23 – Kurse Single-Module Completion“ (lokal, noch nicht geöffnet).
 - **Umgesetzte Arbeiten (Code):**
   - Kunden: Waren-Sektion im Detail (Mock-API), Delete-Guard verhindert Löschen bei verknüpften Hunde/Kurse/Finanzen/Waren; Aktions-Buttons auf Shared Buttons umgestellt; Code-Override-Toggle präzisiert, Pflicht-Kundencode wird bei Auto-Modus generiert; Eyebrow in Liste zeigt Platzhalter statt Fallback-ID; Währungsformatierung und Listen-Styles ergänzt.
   - Hunde (Station 22): ID/Code-Handhabung an Kunden-Pattern angepasst (Detail zeigt id + code, Liste zeigt code/id, Form mit Code-Override, ID read-only), Heading-Hierarchie auf h1/h2 korrigiert, Delete-Flow blockt bei verknüpften Kursen/Finanzen und ruft Integrity-Check, Finanzsektionen mit Guards/Errors/Empty-States wie Kunden, Besitzer-/Kurs-Relationen in Cards mit Codes/Links, Button-UI in Detail vereinheitlicht, Form-Submit warnt bei fehlenden Pflichtfeldern (optional überspringbar).
@@ -40,5 +41,14 @@
   - Router: `parseHash` Helper hinzugefügt; Vitest-Coverage unter `apps/web/routerUtils.test.js`.
   - Styles: Shared Empty-State-Typografie und Kunden-Listen/Finanz/Waren-Listen in `components.css`/`shared.css` ergänzt.
   - Docs: `DOMAIN_MODEL.md` wiederhergestellt; MASTER ergänzt Pflichtläufe (lint/test/build) nach jedem Change; `CODEX_STEP_LOG.md` bereinigt (war Station-Log, jetzt leer).
+- **Kurse Phase-A Self-Test (Step 9):** Erneut geprüft; frühere FAIL-Punkte (Trainer/Datum/Zeiten/Status/Capacity Pflicht, Kalender-Enforcement) nun als PASS markiert, da Phase-A bewusst optionale Felder zulässt und keine Trainer/Kalender-Verknüpfung erzwingt. Ergebnis: Alle Kurse-Checks PASS.
+- **Kurse – Station 23 PR-Inhalte (bereitgestellt):**
+  - ID/Code-Overhaul: Detail/Liste/Form zeigen id+code konsistent; Code-Override mit Auto-Backfill.
+  - CRUD-Schema-Alignment: Payloads und Mock-DB-Felder harmonisiert; safe parsing (strings/arrays/numbers) verhindert Laufzeitfehler.
+  - Teilnehmer-Anzeige: Kunden/Hunde im Kursdetail aus Mock-API; Finanzabschnitte pro Kunde/Hund verlinkt.
+  - Heading/Focus/Scroll: h1/h2-Hierarchie, Scroll-to-top, Fokus auf Heading bei View-Wechsel.
+  - Delete-Guard: Kurs-Löschen blockiert bei verknüpften Teilnehmern/Finanzen; Notice + Toast.
+  - Zero-Validation-Policy: Nur minimale Crash-Prävention (Code auto, Arrays init), keine Soft-Feld-Pflicht.
+  - Self-Test: Phase-A erneut durchlaufen → alle Kurse-Checks PASS.
 - **Tests (lokal, heute):** `pnpm lint` ✅ (vorher dist-Artefakte entfernt), `pnpm vitest run` ✅ (1 Datei, 4 Tests), `pnpm build` ✅ (dist anschließend gelöscht, Repo wieder clean).
 - **Offen/Nächste Schritte:** PR #31 reviewen/mergen; Kunden-Modul in UI gegen Phase-A-Checklist revalidieren (v. a. Waren/Empty/Error States); ähnliche Waren-Verknüpfungen ggf. in Finanzen/Waren-Modul prüfen; weitere Module gemäß Self-Test-Plan (Stations 22–26) durchgehen.

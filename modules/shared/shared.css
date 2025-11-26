@@ -53,6 +53,33 @@ a:focus-visible {
   transform: translateY(-1px);
 }
 
+.kurse-list__item {
+  display: block;
+  margin-bottom: 1rem;
+}
+
+.kurse-list__item:last-child {
+  margin-bottom: 0;
+}
+
+.kurse-detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.kurse-delete-guard {
+  margin-bottom: 0.75rem;
+}
+
+.kurse-delete-guard__list {
+  margin: 0.5rem 0 0.25rem;
+  padding-left: 1.25rem;
+  color: #374151;
+  font-size: 0.95rem;
+}
+
 .kunden-offene-liste,
 .kunden-zahlungsliste,
 .kunden-waren-liste {
