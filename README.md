@@ -37,6 +37,19 @@ pnpm build   # erzeugt den Vite-Build (dist/)
 - `pnpm build` erzeugt das Produktions-Bundle via Vite (relative Pfade, hashed Assets).
 - Der frühere Node-Dev-Server wurde entfernt; benötigte Referenzen finden sich nur noch in der Git-History.
 
+### Local QA Loop (empfohlen)
+
+- `pnpm dev` starten, Browser öffnen, Hash-Route des Moduls ansteuern (`#/trainer`, `#/kunden`, …).
+- Konsole offen halten, CRUD-Flows testen (Create/Edit/Delete), leere/error States erzwingen, Überschriften/Shared-Komponenten prüfen.
+- IDs müssen read-only angezeigt werden; Code-Override nur für `code`, nicht für `id`.
+- Form-Buttons: müssen das Formular submitten (`requestSubmit` oder innerhalb des `<form>`), sonst keine Navigation/Validierung.
+
+### Häufige Stolpersteine
+
+- Lint nicht auf `dist/` laufen lassen; bei Bedarf `rm -rf dist` vor `pnpm lint`.
+- Form-Buttons außerhalb des `<form>` → keine Submit-Events. Lösung: Button ins Form setzen oder `requestSubmit()` auf das Form auslösen.
+- Fehlende Required-Felder (Name/Code) verhindern Submit ohne sichtbare Fehler, wenn Hints `sr-only` bleiben – Hints sichtbar machen bei Fehler.
+
 ## Folder Structure
 
 ```

@@ -44,3 +44,15 @@
 - `pnpm lint`, `pnpm test` (vitest + happy-dom), and `pnpm build` succeed locally.
 - DOMAIN_MODEL, MASTER, and STATUS reflect any model changes introduced during Phase A work.
 - Obsolete assets are archived (not loaded by router/build); repository remains Vite-only.
+
+## Self-Test Log Template (per Modul)
+
+- Modul: \_\_\_
+- Datum: \_\_\_
+- Hashroute geprüft: ✅/❌
+- CRUD: ✅/❌ (Create/Edit/Delete + ID/Code-Anzeige, Override-Toggle)
+- Empty/Error States: ✅/❌
+- Heading/Shared Components: ✅/❌
+- Console clean: ✅/❌
+- Tests (lint/test/build): \_\_\_
+- Notizen/Risiken: \_\_\_
