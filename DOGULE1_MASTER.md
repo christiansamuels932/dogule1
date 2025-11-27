@@ -13,6 +13,7 @@ Dogule1 ist eine modulare Verwaltungs-App für Hundeschulen. Die Anwendung liefe
 5. Mock-Daten bilden die Realität ab, bis eine echte Persistenz folgt.
 6. Das Modul-Layout folgt der „Core Module Map – Phase 0“ (Dashboard als Rahmen, farbcodierte Kacheln, definierte Pfeile zwischen Modulen).
 7. Ein Modul darf erst als **abgeschlossen** markiert werden, wenn sein vollständiges GUI steht und es sich als eigenständige Einzweck-App bedienen und testen lässt (Navigation, Datenflüsse, Fehlermeldungen, Fokus/Scroll); Abschluss und Status-Update erfolgen erst nach manueller Prüfung und Freigabe durch den Nutzer.
+8. Pre-Alpha Validierung: Formulare blockieren nur zwingend notwendige Pflichtfelder; weiche/optionale Checks dürfen Eingaben nicht stoppen (harte Validierung wird in späteren Stationen nachgezogen).
 
 ## Modules & Colors
 
@@ -91,6 +92,7 @@ Der vollständige Entitäts-/Beziehungsplan steht in `DOMAIN_MODEL.md` und über
 - **NAS Expectations:** Einfache File-basierte Bereitstellung; manuelles Backup/Restore des `dist/`-Ordners reicht für die Alpha.
 
 - **Testing & CI:** Stations, die Routing, Modulverhalten oder Datenstruktur anfassen, müssen Vitest-Coverage (router/hash parsing, initModule-Verhalten, Mock-DB-Integrität) liefern. CI (GitHub Actions) führt `pnpm lint`, `pnpm build`, `pnpm test` aus.
+- **Local Pflichtläufe:** Nach jeder Codeänderung sind lokal mindestens `pnpm lint`, `pnpm test` und `pnpm build` auszuführen, bevor Übergaben/Commits erfolgen. Vor Abschluss jeder Station und jedes Moduls führen Planner und Builder diese Checks gemeinsam aus, ergänzt um einen manuellen UI-Funktionstest der betroffenen Flows.
 
 #### Authentication & Roles (V0.1)
 

@@ -6,6 +6,7 @@ import {
   createSectionHeader,
 } from "../shared/components/components.js";
 import { listHunde } from "../shared/api/hunde.js";
+import { listKunden } from "../shared/api/kunden.js";
 import { injectHundToast } from "./formView.js";
 
 export async function createHundeListView(container) {
@@ -14,13 +15,12 @@ export async function createHundeListView(container) {
   container.classList.add("hunde-view");
 
   try {
-    container.appendChild(
-      createSectionHeader({
-        title: "Hunde",
-        subtitle: "",
-        level: 2,
-      })
-    );
+    const header = createSectionHeader({
+      title: "Hunde",
+      subtitle: "",
+      level: 1,
+    });
+    container.appendChild(header);
 
     const noticeFragment = createNotice("Verwalte Hunde und ihre Besitzer.", {
       variant: "info",
@@ -33,7 +33,7 @@ export async function createHundeListView(container) {
     container.append(actionCard, listCard);
 
     await populateHundeTable(listCard);
-    focusHeading(container);
+    focusHeading(header);
   } catch (error) {
     console.error("[HUNDE_ERR_LIST_INIT]", error);
     container.innerHTML = "";
@@ -82,7 +82,7 @@ async function populateHundeTable(cardElement) {
   body.textContent = "Hunde werden geladen ...";
 
   try {
-    const hunde = await listHunde();
+    const [hunde, kunden] = await Promise.all([listHunde(), listKunden()]);
     body.innerHTML = "";
     if (!hunde.length) {
       body.appendChild(createEmptyState("Keine Daten vorhanden.", ""));
@@ -92,10 +92,16 @@ async function populateHundeTable(cardElement) {
     const listWrapper = document.createElement("div");
     listWrapper.className = "hunde-list";
     hunde.forEach((hund) => {
+      const kunde = kunden.find((k) => k.id === hund.kundenId);
+      const ownerLabel = kunde
+        ? `${kunde.code || kunde.kundenCode || kunde.id || "–"} · ${formatOwnerName(kunde)}`
+        : "Kein Kunde verknüpft";
       const hundCardFragment = createCard({
-        eyebrow: hund.kundenId || "–",
+        eyebrow: hund.code || hund.hundeId || "–",
         title: hund.name || "Unbenannter Hund",
-        body: `<p>${hund.rasse || "Unbekannte Rasse"} · ${formatDate(hund.geburtsdatum)}</p>`,
+        body: `<p>ID: ${hund.id || "–"} · ${ownerLabel}</p><p>${hund.rasse || "Unbekannte Rasse"} · ${formatDate(
+          hund.geburtsdatum
+        )}</p>`,
         footer: "",
       });
       const hundCard =
@@ -137,4 +143,11 @@ function focusHeading(container) {
   if (!heading) return;
   heading.setAttribute("tabindex", "-1");
   heading.focus();
+}
+
+function formatOwnerName(kunde = {}) {
+  const parts = [kunde.vorname, kunde.nachname].filter((val) => Boolean(val && val.trim()));
+  const name = parts.join(" ").trim();
+  if (name) return name;
+  return kunde.email || kunde.code || kunde.kundenCode || kunde.id || "–";
 }

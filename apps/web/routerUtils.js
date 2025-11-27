@@ -12,6 +12,11 @@ export const VALID_MODULES = new Set([
 
 export const DEFAULT_MODULE = "dashboard";
 
+export function parseHash(rawHash = "") {
+  const info = getRouteInfoFromHash(rawHash);
+  return { route: info.module, segments: info.segments };
+}
+
 export function getRouteInfoFromHash(rawHash = "") {
   const raw = rawHash.replace(/^#\/?/, "").trim().toLowerCase();
   const segments = raw ? raw.split("/").filter(Boolean) : [];

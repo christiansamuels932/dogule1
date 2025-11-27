@@ -52,3 +52,74 @@ a:focus-visible {
   box-shadow: 0 4px 10px rgba(15, 23, 42, 0.16);
   transform: translateY(-1px);
 }
+
+.kurse-list__item {
+  display: block;
+  margin-bottom: 1rem;
+}
+
+.kurse-list__item:last-child {
+  margin-bottom: 0;
+}
+
+.kurse-detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.kurse-delete-guard {
+  margin-bottom: 0.75rem;
+}
+
+.kurse-delete-guard__list {
+  margin: 0.5rem 0 0.25rem;
+  padding-left: 1.25rem;
+  color: #374151;
+  font-size: 0.95rem;
+}
+
+.kunden-offene-liste,
+.kunden-zahlungsliste,
+.kunden-waren-liste {
+  list-style: none;
+  padding-left: 0;
+  margin: 0;
+  color: #374151;
+  font-weight: 400;
+}
+
+.kunden-offene-liste li,
+.kunden-zahlungsliste li,
+.kunden-waren-liste li {
+  font-size: 0.95rem;
+  margin: 0.35rem 0;
+}
+
+.kunden-offene-liste span,
+.kunden-zahlungsliste span,
+.kunden-waren-liste span {
+  font-weight: 400;
+}
+
+.kunden-waren-liste div {
+  margin-top: 0.2rem;
+  color: #4b5563;
+  font-size: 0.9rem;
+}
+
+.kunden-list .ui-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+  padding: 0.75rem;
+  transition:
+    box-shadow 120ms ease,
+    transform 120ms ease;
+}
+
+.kunden-list .ui-card:hover,
+.kunden-list .ui-card:focus-visible {
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
+  transform: translateY(-1px);
+}

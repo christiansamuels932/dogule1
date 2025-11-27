@@ -10,6 +10,7 @@ import {
 import { listHunde } from "../shared/api/hunde.js";
 import { listKurse } from "../shared/api/kurse.js";
 import { listFinanzen } from "../shared/api/finanzen.js";
+import { listWarenByKundeId } from "../shared/api/waren.js";
 import {
   createSectionHeader,
   createCard,
@@ -212,7 +213,7 @@ async function renderList(root) {
     listWrapper.className = "kunden-list";
     kunden.forEach((kunde) => {
       const kundCardFragment = createCard({
-        eyebrow: kunde.kundenCode || kunde.id,
+        eyebrow: kunde.kundenCode || "–",
         title: formatFullName(kunde),
         body: `<p>${kunde.email?.trim() || "keine E-Mail"}</p>`,
         footer: "",
@@ -296,7 +297,8 @@ async function renderDetail(root, id) {
   const detailCard = createStandardCard("Stammdaten");
   const detailBody = detailCard.querySelector(".ui-card__body");
   const rows = [
-    { label: "Kunden-ID", value: kunde.kundenCode || kunde.id },
+    { label: "ID", value: kunde.id },
+    { label: "Kundencode", value: kunde.kundenCode },
     { label: "Name", value: formatFullName(kunde) },
     { label: "E-Mail", value: kunde.email },
     { label: "Telefon", value: kunde.telefon },
@@ -311,14 +313,29 @@ async function renderDetail(root, id) {
 
   const actionsCard = createStandardCard("Aktionen");
   const actionsBody = actionsCard.querySelector(".ui-card__body");
-  const editLink = createUiLink("Bearbeiten", `#/kunden/${id}/edit`, "primary");
-  const deleteBtn = document.createElement("button");
+  const editBtn = createButton({
+    label: "Bearbeiten",
+    variant: "primary",
+  });
+  editBtn.type = "button";
+  editBtn.addEventListener("click", () => {
+    window.location.hash = `#/kunden/${id}/edit`;
+  });
+  const deleteBtn = createButton({
+    label: "Löschen",
+    variant: "secondary",
+  });
   deleteBtn.type = "button";
-  deleteBtn.className = "ui-btn ui-btn--secondary";
   deleteBtn.dataset.action = "delete";
-  deleteBtn.textContent = "Löschen";
-  const backLink = createUiLink("Zur Übersicht", "#/kunden", "quiet");
-  actionsBody.append(editLink, deleteBtn, backLink);
+  const backBtn = createButton({
+    label: "Zur Übersicht",
+    variant: "quiet",
+  });
+  backBtn.type = "button";
+  backBtn.addEventListener("click", () => {
+    window.location.hash = "#/kunden";
+  });
+  actionsBody.append(editBtn, deleteBtn, backBtn);
   const actionStatus = document.createElement("div");
   actionStatus.className = "kunden-card-status";
   actionsBody.appendChild(actionStatus);
@@ -374,9 +391,47 @@ async function renderDetail(root, id) {
   root.appendChild(renderFinanzOverview(finanzen, finanzenLoadFailed));
   root.appendChild(renderOffeneBetraege(finanzen, finanzenLoadFailed));
   root.appendChild(renderZahlungshistorie(finanzen, finanzenLoadFailed));
+  let waren = [];
+  let warenLoadFailed = false;
+  try {
+    waren = await listWarenByKundeId(id);
+  } catch (error) {
+    warenLoadFailed = true;
+    console.error("[KUNDEN_ERR_WAREN_LOAD]", error);
+  }
+  root.appendChild(renderWarenSection(waren, warenLoadFailed));
 
   deleteBtn.addEventListener("click", async () => {
     if (deleteBtn.disabled) return;
+    actionStatus.innerHTML = "";
+    try {
+      const [allHunde, allKurse, allFinanzen, kundeWaren] = await Promise.all([
+        listHunde(),
+        listKurse(),
+        listFinanzen(),
+        listWarenByKundeId(id),
+      ]);
+      const linkedHunde = allHunde.filter((hund) => hund.kundenId === id);
+      const linkedKurse = allKurse.filter(
+        (kurs) => Array.isArray(kurs.kundenIds) && kurs.kundenIds.includes(id)
+      );
+      const linkedFinanzen = allFinanzen.filter((entry) => entry.kundeId === id);
+      const linkedWaren = Array.isArray(kundeWaren) ? kundeWaren : [];
+      const hasRelations =
+        linkedHunde.length || linkedKurse.length || linkedFinanzen.length || linkedWaren.length;
+      if (hasRelations) {
+        const notice = createNotice(
+          "Der Kunde kann nicht gelöscht werden, da noch verknüpfte Daten existieren.",
+          { variant: "warn", role: "alert" }
+        );
+        actionStatus.appendChild(notice);
+        return;
+      }
+    } catch (error) {
+      console.error("[KUNDEN_ERR_DELETE_CHECK]", error);
+      showErrorNotice(actionStatus);
+      return;
+    }
     const confirmed = window.confirm(`Soll "${formatFullName(kunde)}" wirklich gelöscht werden?`);
     if (!confirmed) return;
     deleteBtn.disabled = true;
@@ -490,23 +545,24 @@ async function renderForm(root, view, id) {
 
   const form = document.createElement("form");
   form.noValidate = true;
+  const formId = `kunden-form-${mode}-${id || "new"}`;
+  form.id = formId;
   form.className = "kunden-form";
   formBody.appendChild(form);
 
-  const kundenCodeValue =
-    mode === "edit" ? (existing?.kundenCode ?? "") : generateNextKundenCode(kundenCache);
-  const defaultKundenCode = kundenCodeValue;
-  let isIdOverrideEnabled = false;
+  const kundenCodeValue = mode === "edit" ? (existing?.kundenCode ?? existing?.code ?? "") : "";
+  const defaultKundenCode = mode === "edit" ? kundenCodeValue : generateNextKundenCode(kundenCache);
+  let isCodeOverrideEnabled = false;
 
   const fields = [
     {
       name: "kundenCode",
-      label: "Kunden-ID*",
+      label: "Kundencode*",
       required: true,
       readOnly: true,
       value: kundenCodeValue,
       describedByText:
-        'Standardmäßig automatisch. Mit "ID manuell ändern" aktivierst du die Bearbeitung.',
+        'Standardmäßig automatisch. Mit "Code manuell ändern" aktivierst du die Bearbeitung.',
     },
     {
       name: "vorname",
@@ -572,21 +628,21 @@ async function renderForm(root, view, id) {
       const toggleWrap = document.createElement("div");
       toggleWrap.className = "kunden-id-toggle";
       const toggleButton = createButton({
-        label: "ID manuell ändern",
+        label: "Code manuell ändern",
         variant: "secondary",
       });
       toggleButton.type = "button";
       toggleButton.addEventListener("click", () => {
-        isIdOverrideEnabled = !isIdOverrideEnabled;
-        if (isIdOverrideEnabled) {
+        isCodeOverrideEnabled = !isCodeOverrideEnabled;
+        if (isCodeOverrideEnabled) {
           input.readOnly = false;
           input.removeAttribute("aria-readonly");
-          toggleButton.textContent = "Automatische ID verwenden";
+          toggleButton.textContent = "Automatischen Code verwenden";
           input.focus();
         } else {
           input.readOnly = true;
           input.setAttribute("aria-readonly", "true");
-          toggleButton.textContent = "ID manuell ändern";
+          toggleButton.textContent = "Code manuell ändern";
           if (!input.value.trim()) {
             input.value = defaultKundenCode;
           }
@@ -606,6 +662,7 @@ async function renderForm(root, view, id) {
     variant: "primary",
   });
   submit.type = "submit";
+  submit.setAttribute("form", formId);
   const cancel = createButton({
     label: "Abbrechen",
     variant: "quiet",
@@ -666,10 +723,29 @@ async function handleKundeFormSubmit(event, context = {}) {
     formStatusSlot.innerHTML = "";
   }
 
+  const codeInput = refs.kundenCode?.input;
+  const isManualCode = codeInput ? !codeInput.readOnly : false;
   const values = collectValues(refs);
-  const errors = validate(values);
+  if (!isManualCode && !values.kundenCode) {
+    const nextCode = generateNextKundenCode(kundenCache);
+    values.kundenCode = nextCode;
+    if (codeInput) {
+      codeInput.value = nextCode;
+    }
+  }
+  const errors = validate(values, { isManualCode });
   applyErrors(refs, errors);
   if (Object.keys(errors).length) {
+    if (formStatusSlot) {
+      const msg =
+        errors.kundenCode || "Bitte prüfen Sie die Eingaben und ergänzen Sie fehlende Felder.";
+      formStatusSlot.appendChild(
+        createNotice(msg, {
+          variant: "warn",
+          role: "alert",
+        })
+      );
+    }
     const firstError = Object.values(refs).find(
       (ref) => ref.hint && ref.hint.textContent && !ref.hint.classList.contains("sr-only")
     );
@@ -715,18 +791,15 @@ function collectValues(refs) {
   return values;
 }
 
-function validate(values) {
+function validate(values, { isManualCode = false } = {}) {
   const errors = {};
   if (!values.kundenCode) {
-    errors.kundenCode = "Kunden-ID fehlt.";
+    errors.kundenCode = isManualCode
+      ? "Bitte einen gültigen Kundencode eingeben."
+      : "Kundencode fehlt.";
   }
   if (!values.vorname) errors.vorname = "Bitte den Vornamen ausfüllen.";
   if (!values.nachname) errors.nachname = "Bitte den Nachnamen ausfüllen.";
-  if (!values.email) {
-    errors.email = "Bitte eine E-Mail-Adresse angeben.";
-  } else if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(values.email)) {
-    errors.email = "Bitte eine gültige E-Mail-Adresse eingeben.";
-  }
   return errors;
 }
 
@@ -791,7 +864,7 @@ function formatHundeListEntry(hund = {}) {
 function generateNextKundenCode(list = []) {
   let max = 0;
   list.forEach((kunde) => {
-    const source = (kunde.kundenCode || kunde.id || "").trim();
+    const source = (kunde.kundenCode || "").trim();
     const match = source.match(/(\d+)/);
     if (!match) return;
     const num = Number.parseInt(match[1], 10);
@@ -917,7 +990,7 @@ function renderOffeneBetraege(finanzen = [], hasError = false) {
     } else {
       const sum = openEntries.reduce((total, entry) => total + Number(entry.betrag || 0), 0);
       const summary = document.createElement("p");
-      const summaryLabel = document.createElement("strong");
+      const summaryLabel = document.createElement("span");
       summaryLabel.textContent = "Total offen:";
       summary.append(summaryLabel, document.createTextNode(` CHF ${sum.toFixed(2)}`));
       body.appendChild(summary);
@@ -926,7 +999,7 @@ function renderOffeneBetraege(finanzen = [], hasError = false) {
       list.className = "kunden-offene-liste";
       openEntries.forEach((entry) => {
         const item = document.createElement("li");
-        const title = document.createElement("strong");
+        const title = document.createElement("span");
         title.textContent = entry.beschreibung || "Posten";
         const amountText = document.createTextNode(
           ` – CHF ${Number(entry.betrag || 0).toFixed(2)} (${formatDateTime(entry.datum)})`
@@ -963,7 +1036,7 @@ function renderZahlungshistorie(finanzen = [], hasError = false) {
       list.className = "kunden-zahlungsliste";
       payments.forEach((entry) => {
         const item = document.createElement("li");
-        const time = document.createElement("strong");
+        const time = document.createElement("span");
         time.textContent = formatDateTime(entry.datum);
         const amountText = document.createTextNode(
           ` – CHF ${Number(entry.betrag || 0).toFixed(2)} (${entry.beschreibung || "Zahlung"})`
@@ -973,6 +1046,46 @@ function renderZahlungshistorie(finanzen = [], hasError = false) {
       });
       body.appendChild(list);
     }
+  }
+
+  section.appendChild(card);
+  return section;
+}
+
+function renderWarenSection(waren = [], hasError = false) {
+  const section = createSectionBlock({
+    title: "Waren",
+    subtitle: "",
+    level: 2,
+  });
+  const card = createStandardCard("Warenverkäufe");
+  const body = card.querySelector(".ui-card__body");
+  body.innerHTML = "";
+
+  if (hasError) {
+    showErrorNotice(body);
+  } else if (!waren.length) {
+    appendSharedEmptyState(body);
+  } else {
+    const list = document.createElement("ul");
+    list.className = "kunden-waren-liste";
+    waren.forEach((verkauf) => {
+      const item = document.createElement("li");
+      const title = document.createElement("span");
+      title.textContent = verkauf.produktName || "Produkt";
+      const meta = document.createElement("span");
+      meta.textContent = ` – ${formatDateTime(verkauf.datum)} · CHF ${formatCurrency(
+        verkauf.preis
+      )}`;
+      item.append(title, meta);
+      if (verkauf.beschreibung) {
+        const desc = document.createElement("div");
+        desc.textContent = verkauf.beschreibung;
+        item.appendChild(desc);
+      }
+      list.appendChild(item);
+    });
+    body.appendChild(list);
   }
 
   section.appendChild(card);
@@ -1001,6 +1114,12 @@ function valueOrDash(value) {
   if (value === null || value === undefined) return "–";
   const str = typeof value === "string" ? value.trim() : String(value);
   return str || "–";
+}
+
+function formatCurrency(value) {
+  const amount = Number(value);
+  if (!Number.isFinite(amount)) return "0.00";
+  return amount.toFixed(2);
 }
 
 function formatDateTime(value) {

@@ -19,9 +19,9 @@
 ## 2. CRUD Checks
 
 - List renders all records from the mock API and supports refresh without stale data.
-- Create: Form validates required fields, prevents submit on invalid, and shows success/error notice.
+- Create: Form blockiert nur zwingend nötige Felder (kein Hard-Stop bei weichen Checks), zeigt Success/Error Notice.
 - Read: Detail view shows IDs (`id`) and user-facing codes (`code`); shows linked entities where applicable.
-- Update: Edits persist in mock API helpers; validation mirrors Create; codes editable with override toggle.
+- Update: Edits persist in mock API helpers; nur harte Pflichtfelder blockieren, Codes editierbar mit Override-Toggle.
 - Delete: Confirm flow prevents accidental removal; removal updates lists and dependent views.
 - Integrity: After CRUD ops, calling `runIntegrityCheck()` stays silent (no thrown errors) in DEV.
 

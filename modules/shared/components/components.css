@@ -42,3 +42,23 @@
 .dogule-alert__message {
   margin: 0;
 }
+
+.ui-empty {
+  padding: 0.5rem 0;
+  color: #4b5563;
+  font-size: 0.95rem;
+  font-weight: 400;
+}
+
+.ui-empty__title {
+  margin: 0 0 0.1rem;
+  font-size: 0.95rem;
+  font-weight: 400;
+}
+
+.ui-empty__hint {
+  margin: 0;
+  color: #6b7280;
+  font-size: 0.9rem;
+  font-weight: 400;
+}
