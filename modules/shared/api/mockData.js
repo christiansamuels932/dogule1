@@ -247,7 +247,46 @@ export const finanzenMock = [
 ];
 
 export const trainerMock = [
-  { id: "t1", name: "Martina Frei", spezialisierung: "Welpentraining" },
-  { id: "t2", name: "Jonas Graf", spezialisierung: "Agility" },
-  { id: "t3", name: "Lena Vogt", spezialisierung: "Alltag + Leine" },
+  {
+    id: "t1",
+    code: "TR-001",
+    name: "Martina Frei",
+    email: "martina.frei@hundeschule.ch",
+    telefon: "+41 44 700 00 01",
+    notizen: "Leitet Welpen- und Alltagskurse.",
+    verfuegbarkeiten: [
+      { weekday: 1, startTime: "08:00", endTime: "14:00" },
+      { weekday: 3, startTime: "12:00", endTime: "18:00" },
+    ],
+    createdAt: "2024-11-01T08:00:00.000Z",
+    updatedAt: "2025-02-10T10:00:00.000Z",
+  },
+  {
+    id: "t2",
+    code: "TR-002",
+    name: "Jonas Graf",
+    email: "jonas.graf@hundeschule.ch",
+    telefon: "+41 79 888 77 66",
+    notizen: "Spezialist für Agility und Sporthunde.",
+    verfuegbarkeiten: [
+      { weekday: 2, startTime: "10:00", endTime: "16:00" },
+      { weekday: 4, startTime: "14:00", endTime: "20:00" },
+    ],
+    createdAt: "2024-11-15T09:30:00.000Z",
+    updatedAt: "2025-02-08T14:45:00.000Z",
+  },
+  {
+    id: "t3",
+    code: "TR-003",
+    name: "Lena Vogt",
+    email: "lena.vogt@hundeschule.ch",
+    telefon: "+41 32 555 44 33",
+    notizen: "Fokus Alltagstraining & Nasenarbeit.",
+    verfuegbarkeiten: [
+      { weekday: 1, startTime: "10:00", endTime: "16:00" },
+      { weekday: 5, startTime: "08:00", endTime: "13:00" },
+    ],
+    createdAt: "2024-12-02T11:00:00.000Z",
+    updatedAt: "2025-02-12T16:30:00.000Z",
+  },
 ];

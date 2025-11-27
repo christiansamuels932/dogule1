@@ -5,4 +5,4 @@ export * from "./kunden.js";
 export * from "./kurse.js";
 export * from "./hunde.js";
 export * from "./finanzen.js";
-export * from "./waren.js";
+export * from "./trainer.js";
