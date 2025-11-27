@@ -59,6 +59,17 @@ Migration ensures clean state, fast performance, and perfect continuity.
 
 The new chat then becomes the official execution environment for the next station.
 
+#### When _not_ to migrate
+
+- Kein Chat-Wechsel mitten im aktiven Station-Flow, solange Performance stabil ist.
+- Nicht migrieren, nur weil der Verlauf lang wirkt; zuerst STATUS aktualisieren.
+
+#### Restart checklist
+
+- STATUS posten (immer zuerst).
+- Opening Instruction Block posten (inkl. Branch + Stationziel).
+- `git status` prüfen, dann geplante Kommandos/Tests angeben.
+
 ---
 
 ## 4 — STANDING RULES (Always Passed to the Next Chat)

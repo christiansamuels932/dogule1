@@ -84,6 +84,12 @@ Weitere Exporte sind optional, aber `initModule(container, routeInfo)` ist Pflic
 Der vollständige Entitäts-/Beziehungsplan steht in `DOMAIN_MODEL.md` und überschreibt ältere implizite Annahmen.  
 **ID-Regel:** Jede Entität hat `id` (intern, vom System generiert, unveränderbar) und `code` (menschenlesbar, durch den Nutzer editierbar). Relationen basieren ausschließlich auf `id`; das Override-Toggle wirkt nur auf `code`.
 
+### ID/Code Patterns (Phase A)
+
+- IDs: systemgeneriert, unveränderbar, UI nur read-only anzeigen. Keine Modul-spezifischen Overrides.
+- Codes: menschenlesbar, per Override-Toggle editierbar; Standardpräfixe folgen Stations-Logik (z. B. TR-xyz, K-xyz, H-xyz, kurs-xyz).
+- UI zeigt immer beide Felder in Detailansichten; Formulare zeigen ID read-only, Code optional überschreibbar.
+
 ### Non-Functional Requirements
 
 - **Target Environment:** Desktop-first, Chrome + Edge (jeweils aktuelle Version); Mobile-Support wird später adressiert.
