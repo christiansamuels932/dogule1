@@ -223,10 +223,12 @@ export const db = {
       email: "martina.frei@hundeschule.ch",
       telefon: "+41 44 700 00 01",
       notizen: "Leitet Welpen- und Alltagskurse.",
-      verfuegbarkeit: [
+      verfuegbarkeiten: [
         { weekday: 1, startTime: "08:00", endTime: "14:00" },
         { weekday: 3, startTime: "12:00", endTime: "18:00" },
       ],
+      createdAt: "2024-11-01T08:00:00.000Z",
+      updatedAt: "2025-02-10T10:00:00.000Z",
     },
     {
       id: "t2",
@@ -235,10 +237,12 @@ export const db = {
       email: "jonas.graf@hundeschule.ch",
       telefon: "+41 79 888 77 66",
       notizen: "Spezialist für Agility und Sporthunde.",
-      verfuegbarkeit: [
+      verfuegbarkeiten: [
         { weekday: 2, startTime: "10:00", endTime: "16:00" },
         { weekday: 4, startTime: "14:00", endTime: "20:00" },
       ],
+      createdAt: "2024-11-15T09:30:00.000Z",
+      updatedAt: "2025-02-08T14:45:00.000Z",
     },
     {
       id: "t3",
@@ -247,10 +251,12 @@ export const db = {
       email: "lena.vogt@hundeschule.ch",
       telefon: "+41 32 555 44 33",
       notizen: "Fokus Alltagstraining & Nasenarbeit.",
-      verfuegbarkeit: [
+      verfuegbarkeiten: [
         { weekday: 1, startTime: "10:00", endTime: "16:00" },
         { weekday: 5, startTime: "08:00", endTime: "13:00" },
       ],
+      createdAt: "2024-12-02T11:00:00.000Z",
+      updatedAt: "2025-02-12T16:30:00.000Z",
     },
   ],
   kalender: [
