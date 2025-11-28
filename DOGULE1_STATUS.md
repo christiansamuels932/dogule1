@@ -28,10 +28,11 @@
 - **Station 19 – Module Self-Test Preparation:** `PHASEA_SELFTEST_CHECKLIST.md` erstellt und als Pflichtgrundlage in MASTER verankert; Station 19 beendet, Phase A Module können in Station 20 ff. nach den Self-Tests fortgesetzt werden.
 - **Station 20 – Dashboard Phase A:** Dashboard auf Daten aus der zentralen Mock-API umgestellt (Kunden/Hunde/Kurse-Zählungen), Fallback-Texte vereinheitlicht, Scroll/Focus beim Laden, Status-Karte via Shared Notice, Phase-A-Selftest für Dash abgeschlossen; MASTER ergänzt, dass Module nur nach vollständigem GUI + manueller Freigabe des Nutzers als abgeschlossen gelten.
 - **Station 24 – Trainer Single-Module Completion:** Branch `feature/station24-trainer`. Trainer-Modul auf Phase-A-Stand gebracht: saubere h1/h2-Hierarchie, Router-Mount bleibt unverändert, Shared-Komponenten durchgängig genutzt. ID-System am Master ausgerichtet (Trainer-IDs nun API-seitig sequenziell `t<n>`, UI nur read-only Vorschau), Code-Override-Toggle auf Create/Edit, Verfügbarkeiten-Eingabe als interaktives Textarea mit Persistenz. Formular-Buttons an die Form gebunden (`requestSubmit`), sodass CRUD (Create/Edit/Delete) wieder auslösbar ist; Detail/List zeigen ID/Code/Kontakt/Notizen/Verfügbarkeiten. Manual UI validation bestätigt 100 % Phase-A-Readiness (CRUD, Validierung, Empty/Error States, Navigation, Shared-Styles). Lint/Build laufen grün.
+- **Station 25 – Finanzen Phase-A (Listen/Detail/Filter) in Progress:** Branch `feature/station25-finanzen`. Finanzen-Modul mit Phase-A-Skelett ergänzt: `initModule` mit Scroll/Fokus/Hash-Segmente, Loading/Error/Empty via Shared Notices, Summary-Karte (Summe Zahlungen/Offen/Saldo), Filter-Karte (Kunde/Typ), Einträge-Tabelle mit Kundenauflösung und Hash-Details, Detail-Card mit Kunde-Link + Back-Link. Keine CRUD-Formulare/Deletes (für Station 27 vorgesehen). Manuell geprüft: `#/finanzen` und `#/finanzen/<id>` laden ohne Console-Errors. `pnpm lint` ✅, `pnpm build` ✅.
 
 ## Active Station
 
-**Station 24 – Trainer Single-Module Completion (PR ausstehend):** Branch `feature/station24-trainer`, PR “Station 24 – Trainer Single-Module Completion” gegen `main` wird erstellt. Trainer-Selftest: bestanden nach manueller UI-Validierung (CRUD, ID/Code-Regeln, Override-Toggle, Verfügbarkeiten-Editor, Heading-Hierarchie, Shared-Komponenten, Submit-Wiring, Empty/Error States). `pnpm lint` und `pnpm build` grün. Nächste Schritte: PR erstellen/mergen, danach Status/Master aktualisieren falls erforderlich.
+**Station 25 – Kommunikation Single-Module Completion (Finanzen-Scope aktuell aktiv):** Branch `feature/station25-finanzen`. Status: Finanzen Phase-A Listen/Detail/Filter umgesetzt, CRUD offen. Testergebnisse: `pnpm lint` ✅, `pnpm build` ✅, manuelle UI (List/Detail/Filter) ✅. Nächste Schritte: (1) PR für Station 24 finalisieren/mergen; (2) Station 25 ggf. formell abschließen nach Review; (3) Station 27 – Finanzen Single-Module Completion: CRUD/Create/Edit/Delete, Code-Override, Confirm/Delete, Persistenz über API-Helfer; (4) Phase B: Station 35 Kunden↔Finanzen Linking, Station 36 Finanzen↔Waren Linking.
 
 ### Status-Update-Kadenz
 
@@ -41,3 +42,4 @@
 ### Aktive Branches/PRs
 
 - `feature/station24-trainer` → PR “Station 24 – Trainer Single-Module Completion” → Ziel: `main`
+- `feature/station25-finanzen` → Finanzen Phase-A Listen/Detail/Filter (PR ausstehend)
