@@ -1,6 +1,13 @@
-// Finanzen module – list/detail flows with mock API
+// Finanzen module – list/detail/create/edit/delete flows with mock API
 /* globals document, console, window */
-import { listFinanzen, listFinanzenByKundeId } from "../shared/api/finanzen.js";
+import {
+  listFinanzen,
+  listFinanzenByKundeId,
+  createFinanz,
+  updateFinanz,
+  deleteFinanz,
+  getFinanz,
+} from "../shared/api/finanzen.js";
 import { listKunden } from "../shared/api/kunden.js";
 import {
   createButton,
@@ -8,6 +15,7 @@ import {
   createEmptyState,
   createNotice,
   createSectionHeader,
+  createFormRow,
 } from "../shared/components/components.js";
 
 let kundenMapCache = null;
@@ -33,7 +41,7 @@ export function initModule(container, routeInfo = {}) {
 
     const segments = Array.isArray(routeInfo?.segments) ? routeInfo.segments : [];
     const routeState = parseRouteSegments(segments);
-    const { detailId, filters } = routeState;
+    const { detailId, filters, mode } = routeState;
 
     const section = document.createElement("section");
     section.className = "dogule-section finanzen-section";
@@ -46,9 +54,9 @@ export function initModule(container, routeInfo = {}) {
     contentHost.setAttribute("data-fin-content", "host");
     section.appendChild(contentHost);
 
-    void loadFinanzen(detailId, filters);
+    void loadFinanzen(mode, detailId, filters);
 
-    async function loadFinanzen(activeDetailId = null, activeFilters = {}) {
+    async function loadFinanzen(activeMode = "list", activeDetailId = null, activeFilters = {}) {
       contentHost.innerHTML = "";
       const loadingNotice = createNotice("Lade Finanzen...", { variant: "info", role: "status" });
       contentHost.appendChild(loadingNotice);
@@ -56,42 +64,37 @@ export function initModule(container, routeInfo = {}) {
       try {
         const { finanzen, kundenMap } = await loadData(activeFilters);
         contentHost.innerHTML = "";
-        if (!Array.isArray(finanzen) || finanzen.length === 0) {
-          const empty = createEmptyState("Keine Daten vorhanden.", "");
-          contentHost.appendChild(empty);
-        } else {
-          if (activeDetailId) {
-            const match = finanzen.find((entry) => entry?.id === activeDetailId);
-            if (!match) {
-              const notFound = createEmptyState("Keine Daten vorhanden.", "");
-              contentHost.appendChild(notFound);
-            } else {
-              renderDetailCard(contentHost, match, kundenMap);
-            }
-          } else {
-            renderSummaryCard(contentHost, finanzen);
-            renderFilterCard(contentHost, kundenMap, activeFilters, loadFinanzen);
-            renderListCard(contentHost, finanzen, kundenMap);
-          }
-        }
-        scrollToTop(container);
-        focusHeading(section);
-        return finanzen || [];
+        await renderByMode({
+          mode: activeMode,
+          detailId: activeDetailId,
+          finanzen,
+          kundenMap,
+          filters: activeFilters,
+          target: contentHost,
+          container,
+          section,
+          reload: (nextMode, nextId, nextFilters) =>
+            loadFinanzen(
+              nextMode || activeMode,
+              nextId ?? activeDetailId,
+              nextFilters ?? activeFilters
+            ),
+        });
       } catch (error) {
         console.error("FINANZEN_LOAD_FAILED", error);
         contentHost.innerHTML = "";
         const retryButton = createButton({
           label: "Erneut versuchen",
-          onClick: () => loadFinanzen(activeDetailId, activeFilters),
+          onClick: () => loadFinanzen(activeMode, activeDetailId, activeFilters),
         });
         const errorNotice = createNotice("Fehler beim Laden der Daten.", {
           variant: "warn",
           role: "alert",
         });
         contentHost.append(errorNotice, retryButton);
+      } finally {
         scrollToTop(container);
         focusHeading(section);
-        return [];
       }
     }
   } catch (error) {
@@ -100,11 +103,23 @@ export function initModule(container, routeInfo = {}) {
 }
 
 function parseRouteSegments(segments = []) {
-  const [detailId] = segments;
-  return {
-    detailId: detailId || null,
-    filters: {},
-  };
+  const normalized = (segments || []).filter(Boolean);
+  const withoutPrefix = normalized[0] === "finanzen" ? normalized.slice(1) : normalized;
+
+  if (!withoutPrefix.length) {
+    return { mode: "list", detailId: null, filters: {} };
+  }
+
+  const [first, second] = withoutPrefix;
+  if (first === "new") {
+    return { mode: "create", detailId: null, filters: {} };
+  }
+
+  if (second === "edit") {
+    return { mode: "edit", detailId: first || null, filters: {} };
+  }
+
+  return { mode: "detail", detailId: first || null, filters: {} };
 }
 
 function createMainHeading(title = "") {
@@ -142,7 +157,7 @@ function renderSummaryCard(target, finanzen = []) {
   const card = fragment.querySelector(".ui-card") || fragment.firstElementChild;
   const body = card?.querySelector(".ui-card__body");
   if (body) {
-    const sumZahlungen = sumByTyp(finanzen, "zahlung");
+    const sumZahlungen = sumByTyp(finanzen, "bezahlt");
     const sumOffen = sumByTyp(finanzen, "offen");
     const saldo = sumZahlungen - sumOffen;
 
@@ -185,6 +200,19 @@ function formatCurrency(value) {
 
 function renderListCard(target, finanzen = [], kundenMap = new Map()) {
   if (!target) return;
+
+  const actions = document.createElement("div");
+  actions.className = "finanzen-list-actions";
+  const newButton = createButton({
+    label: "Neu",
+    variant: "primary",
+    onClick: () => {
+      window.location.hash = "#/finanzen/new";
+    },
+  });
+  actions.appendChild(newButton);
+  target.appendChild(actions);
+
   const fragment = createCard({
     eyebrow: "",
     title: "Einträge",
@@ -232,6 +260,11 @@ function renderListCard(target, finanzen = [], kundenMap = new Map()) {
       link.textContent = "Details";
       actionTd.appendChild(link);
       tr.appendChild(actionTd);
+      tr.addEventListener("click", (event) => {
+        const isLink = event.target?.closest("a");
+        if (isLink) return;
+        window.location.hash = `#/finanzen/${entry?.id || ""}`;
+      });
       tbody.appendChild(tr);
     });
     table.appendChild(tbody);
@@ -280,7 +313,7 @@ function renderFilterCard(target, kundenMap = new Map(), filters = {}, reloadFn)
     typSelect.id = "finanzen-filter-typ";
     [
       { value: "", label: "Alle Typen" },
-      { value: "zahlung", label: "Zahlung" },
+      { value: "bezahlt", label: "Bezahlt" },
       { value: "offen", label: "Offen" },
     ].forEach(({ value, label }) => {
       const option = document.createElement("option");
@@ -296,7 +329,7 @@ function renderFilterCard(target, kundenMap = new Map(), filters = {}, reloadFn)
         typ: typSelect.value || "",
       };
       if (typeof reloadFn === "function") {
-        reloadFn(null, nextFilters);
+        reloadFn("list", nextFilters);
       }
     };
 
@@ -359,6 +392,25 @@ function renderDetailCard(target, entry, kundenMap = new Map()) {
   }
 
   if (footer) {
+    const actions = document.createElement("div");
+    actions.className = "finanzen-detail__actions";
+    const editBtn = createButton({
+      label: "Bearbeiten",
+      variant: "primary",
+      onClick: () => {
+        window.location.hash = `#/finanzen/${entry.id}/edit`;
+      },
+    });
+    const deleteBtn = createButton({
+      label: "Löschen",
+      variant: "quiet",
+      onClick: () => {
+        renderDeleteCard(target, entry);
+      },
+    });
+    actions.append(editBtn, deleteBtn);
+    footer.appendChild(actions);
+
     const backLink = document.createElement("a");
     backLink.href = "#/finanzen";
     backLink.className = "ui-btn ui-btn--ghost";
@@ -394,9 +446,365 @@ function formatKundeLabel(kundeId, kundenMap = new Map()) {
 function formatTyp(typ) {
   if (!typ) return "–";
   const normalized = String(typ).toLowerCase();
-  if (normalized === "zahlung") return "Zahlung";
+  if (normalized === "zahlung") return "Bezahlt";
+  if (normalized === "bezahlt") return "Bezahlt";
   if (normalized === "offen") return "Offen";
   return typ;
+}
+
+async function renderByMode({
+  mode,
+  detailId,
+  finanzen,
+  kundenMap,
+  filters,
+  target,
+  container,
+  section,
+  reload,
+}) {
+  const effectiveMode = mode || "list";
+
+  if (effectiveMode === "create") {
+    const form = await renderFormCard({
+      kundenMap,
+      mode: "create",
+      onSave: async (payload, setError) => {
+        try {
+          const created = await createFinanz(payload);
+          window.location.hash = `#/finanzen/${created.id}`;
+        } catch (error) {
+          console.error("FINANZEN_CREATE_FAILED", error);
+          setError("Fehler beim Speichern.");
+        }
+      },
+      onCancel: () => {
+        window.location.hash = "#/finanzen";
+      },
+    });
+    target.appendChild(form);
+    scrollToTop(container);
+    focusHeading(section);
+    return;
+  }
+
+  if (effectiveMode === "edit") {
+    const entry = finanzen.find((item) => item.id === detailId) || (await getFinanz(detailId));
+    if (!entry) {
+      target.appendChild(createEmptyState("Keine Daten vorhanden.", ""));
+      scrollToTop(container);
+      focusHeading(section);
+      return;
+    }
+    const form = await renderFormCard({
+      kundenMap,
+      mode: "edit",
+      entry,
+      onSave: async (payload, setError) => {
+        try {
+          const updated = await updateFinanz(detailId, payload);
+          if (!updated) {
+            setError("Fehler beim Speichern.");
+            return;
+          }
+          window.location.hash = `#/finanzen/${detailId}`;
+        } catch (error) {
+          console.error("FINANZEN_UPDATE_FAILED", error);
+          setError("Fehler beim Speichern.");
+        }
+      },
+      onCancel: () => {
+        window.location.hash = `#/finanzen/${detailId}`;
+      },
+    });
+    target.appendChild(form);
+    scrollToTop(container);
+    focusHeading(section);
+    return;
+  }
+
+  if (effectiveMode === "detail") {
+    const entry = finanzen.find((item) => item.id === detailId) || (await getFinanz(detailId));
+    if (!entry) {
+      target.appendChild(createEmptyState("Keine Daten vorhanden.", ""));
+    } else {
+      renderDetailCard(target, entry, kundenMap);
+    }
+    scrollToTop(container);
+    focusHeading(section);
+    return;
+  }
+
+  if (!Array.isArray(finanzen) || finanzen.length === 0) {
+    renderFilterCard(target, kundenMap, filters, (nextMode, nextFilters) =>
+      reload(nextMode || "list", null, nextFilters)
+    );
+    target.appendChild(createEmptyState("Keine Daten vorhanden.", ""));
+  } else {
+    renderSummaryCard(target, finanzen);
+    renderFilterCard(target, kundenMap, filters, (nextMode, nextFilters) =>
+      reload(nextMode || "list", null, nextFilters)
+    );
+    renderListCard(target, finanzen, kundenMap);
+  }
+  scrollToTop(container);
+  focusHeading(section);
+}
+
+function buildCodeToggle(codeInput) {
+  const wrapper = document.createElement("div");
+  wrapper.className = "finanzen-code-toggle";
+  const checkbox = document.createElement("input");
+  checkbox.type = "checkbox";
+  checkbox.id = "finanzen-code-toggle";
+  const label = document.createElement("label");
+  label.setAttribute("for", "finanzen-code-toggle");
+  label.textContent = "Code manuell bearbeiten";
+
+  const setState = (enabled) => {
+    if (enabled) {
+      codeInput.removeAttribute("readonly");
+      codeInput.removeAttribute("disabled");
+      codeInput.focus();
+    } else {
+      codeInput.setAttribute("readonly", "true");
+      codeInput.setAttribute("disabled", "true");
+    }
+  };
+
+  setState(false);
+  checkbox.addEventListener("change", () => setState(checkbox.checked));
+
+  wrapper.append(checkbox, label);
+  return wrapper;
+}
+
+async function renderFormCard({ kundenMap, mode, entry = {}, onSave, onCancel }) {
+  const fragment = createCard({
+    eyebrow: "",
+    title: mode === "edit" ? "Buchung bearbeiten" : "Neue Buchung",
+    body: "",
+    footer: "",
+  });
+  const card = fragment.querySelector(".ui-card") || fragment.firstElementChild;
+  const body = card?.querySelector(".ui-card__body");
+  const footer = card?.querySelector(".ui-card__footer");
+  const errorSlot = document.createElement("div");
+  errorSlot.className = "finanzen-form__errors";
+
+  const form = document.createElement("form");
+  form.className = "finanzen-form";
+
+  const idRow = createFormRow({
+    id: "finanzen-id",
+    label: "ID",
+    type: "text",
+    placeholder: "System generiert",
+  });
+  const idInput = idRow.querySelector("input");
+  idInput.name = "id";
+  idInput.value = entry.id || "Wird automatisch vergeben";
+  idInput.readOnly = true;
+  idInput.disabled = true;
+  form.appendChild(idRow);
+
+  const codeRow = createFormRow({
+    id: "finanzen-code",
+    label: "Code",
+    type: "text",
+    placeholder: "Optionaler Code",
+  });
+  const codeInput = codeRow.querySelector("input");
+  codeInput.name = "code";
+  codeInput.value = entry.code || "";
+  form.appendChild(codeRow);
+  const toggle = buildCodeToggle(codeInput);
+  form.appendChild(toggle);
+
+  const kundeRow = createFormRow({
+    id: "finanzen-kunde",
+    label: "Kunde",
+    control: "select",
+    options: buildKundenOptions(kundenMap),
+  });
+  const kundeSelect = kundeRow.querySelector("select");
+  kundeSelect.name = "kundeId";
+  kundeSelect.value = entry.kundeId || "";
+  form.appendChild(kundeRow);
+
+  const typRow = createFormRow({
+    id: "finanzen-typ",
+    label: "Typ",
+    control: "select",
+    options: [
+      { value: "", label: "Bitte auswählen" },
+      { value: "bezahlt", label: "Bezahlt" },
+      { value: "offen", label: "Offen" },
+    ],
+  });
+  const typSelect = typRow.querySelector("select");
+  typSelect.name = "typ";
+  typSelect.value = normalizeTyp(entry.typ) || "";
+  form.appendChild(typRow);
+
+  const betragRow = createFormRow({
+    id: "finanzen-betrag",
+    label: "Betrag (CHF)",
+    type: "number",
+    placeholder: "z. B. 120",
+  });
+  const betragInput = betragRow.querySelector("input");
+  betragInput.name = "betrag";
+  betragInput.step = "0.01";
+  betragInput.min = "0";
+  betragInput.value = entry.betrag ?? "";
+  form.appendChild(betragRow);
+
+  const datumRow = createFormRow({
+    id: "finanzen-datum",
+    label: "Datum",
+    type: "date",
+  });
+  const datumInput = datumRow.querySelector("input");
+  datumInput.name = "datum";
+  datumInput.value = entry.datum || "";
+  form.appendChild(datumRow);
+
+  const beschreibungRow = createFormRow({
+    id: "finanzen-beschreibung",
+    label: "Beschreibung",
+    control: "textarea",
+    placeholder: "Optional",
+  });
+  const beschreibungInput = beschreibungRow.querySelector("textarea");
+  beschreibungInput.name = "beschreibung";
+  beschreibungInput.value = entry.beschreibung || "";
+  form.appendChild(beschreibungRow);
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    errorSlot.innerHTML = "";
+    const payload = {
+      code: codeInput.value || "",
+      kundeId: kundeSelect.value || "",
+      typ: typSelect.value || "",
+      betrag: Number.parseFloat(betragInput.value),
+      datum: datumInput.value || "",
+      beschreibung: beschreibungInput.value || "",
+    };
+
+    const missing = [];
+    if (!payload.kundeId) missing.push("Kunde");
+    if (!payload.typ) missing.push("Typ");
+    if (!Number.isFinite(payload.betrag)) missing.push("Betrag");
+    if (!payload.datum) missing.push("Datum");
+
+    if (missing.length) {
+      errorSlot.appendChild(
+        createNotice(`Bitte ausfüllen: ${missing.join(", ")}`, { variant: "warn", role: "alert" })
+      );
+      return;
+    }
+
+    if (typeof onSave === "function") {
+      await onSave(payload, (message) => {
+        errorSlot.innerHTML = "";
+        errorSlot.appendChild(
+          createNotice(message || "Fehler beim Speichern.", { variant: "warn", role: "alert" })
+        );
+      });
+    }
+  });
+
+  if (body) {
+    body.innerHTML = "";
+    body.append(errorSlot, form);
+  }
+
+  if (footer) {
+    footer.innerHTML = "";
+    const actions = document.createElement("div");
+    actions.className = "finanzen-form__actions";
+    const saveBtn = createButton({ label: "Speichern", variant: "primary" });
+    saveBtn.type = "submit";
+    saveBtn.addEventListener("click", () => form.requestSubmit());
+    const cancelBtn = createButton({ label: "Abbrechen", variant: "quiet" });
+    cancelBtn.type = "button";
+    cancelBtn.addEventListener("click", () => {
+      if (typeof onCancel === "function") onCancel();
+    });
+    actions.append(saveBtn, cancelBtn);
+    footer.appendChild(actions);
+  }
+
+  return card || fragment;
+}
+
+function buildKundenOptions(kundenMap = new Map()) {
+  const options = [{ value: "", label: "Bitte auswählen" }];
+  kundenMap.forEach((kunde, id) => {
+    options.push({
+      value: id,
+      label: formatKundeLabel(id, kundenMap),
+      selected: false,
+    });
+  });
+  return options;
+}
+
+function renderDeleteCard(target, entry) {
+  const fragment = createCard({
+    eyebrow: "",
+    title: "Buchung löschen?",
+    body: "",
+    footer: "",
+  });
+  const card = fragment.querySelector(".ui-card") || fragment.firstElementChild;
+  const body = card?.querySelector(".ui-card__body");
+  const footer = card?.querySelector(".ui-card__footer");
+
+  if (body) {
+    body.innerHTML = "";
+    body.appendChild(
+      createNotice("Dieser Vorgang kann nicht rückgängig gemacht werden.", {
+        variant: "warn",
+        role: "alert",
+      })
+    );
+  }
+
+  if (footer) {
+    footer.innerHTML = "";
+    const actions = document.createElement("div");
+    actions.className = "finanzen-delete__actions";
+    const confirm = createButton({
+      label: "Löschen",
+      variant: "primary",
+      onClick: async () => {
+        try {
+          await deleteFinanz(entry.id);
+          window.location.hash = "#/finanzen";
+        } catch (error) {
+          console.error("FINANZEN_DELETE_FAILED", error);
+          footer.appendChild(
+            createNotice("Fehler beim Löschen.", { variant: "warn", role: "alert" })
+          );
+        }
+      },
+    });
+    const cancel = createButton({
+      label: "Abbrechen",
+      variant: "quiet",
+      onClick: () => {
+        window.location.hash = `#/finanzen/${entry.id}`;
+      },
+    });
+    actions.append(confirm, cancel);
+    footer.appendChild(actions);
+  }
+
+  target.innerHTML = "";
+  target.appendChild(card || fragment);
 }
 
 async function getKundenMap() {
@@ -433,10 +841,15 @@ async function loadData(filters = {}) {
     finanzen = await listFinanzen();
   }
 
-  // Refresh kundenMap if empty (in case earlier fetch failed)
   if (!kundenMap || kundenMap.size === 0) {
     kundenMap = await getKundenMap();
   }
+
+  finanzen = finanzen.map((entry) => ({
+    ...entry,
+    kundeId: entry?.kundeId || entry?.kundenId || "",
+    typ: normalizeTyp(entry?.typ),
+  }));
 
   const typFilter = (filters?.typ || "").toLowerCase();
   if (typFilter) {
@@ -470,4 +883,12 @@ function focusHeading(scope) {
     heading.tabIndex = heading.tabIndex || -1;
     heading.focus();
   }
+}
+
+function normalizeTyp(typ) {
+  const normalized = String(typ || "").toLowerCase();
+  if (normalized === "zahlung") return "bezahlt";
+  if (normalized === "bezahlt") return "bezahlt";
+  if (normalized === "offen") return "offen";
+  return normalized || "";
 }

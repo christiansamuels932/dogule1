@@ -29,10 +29,11 @@
 - **Station 20 – Dashboard Phase A:** Dashboard auf Daten aus der zentralen Mock-API umgestellt (Kunden/Hunde/Kurse-Zählungen), Fallback-Texte vereinheitlicht, Scroll/Focus beim Laden, Status-Karte via Shared Notice, Phase-A-Selftest für Dash abgeschlossen; MASTER ergänzt, dass Module nur nach vollständigem GUI + manueller Freigabe des Nutzers als abgeschlossen gelten.
 - **Station 24 – Trainer Single-Module Completion:** Branch `feature/station24-trainer`. Trainer-Modul auf Phase-A-Stand gebracht: saubere h1/h2-Hierarchie, Router-Mount bleibt unverändert, Shared-Komponenten durchgängig genutzt. ID-System am Master ausgerichtet (Trainer-IDs nun API-seitig sequenziell `t<n>`, UI nur read-only Vorschau), Code-Override-Toggle auf Create/Edit, Verfügbarkeiten-Eingabe als interaktives Textarea mit Persistenz. Formular-Buttons an die Form gebunden (`requestSubmit`), sodass CRUD (Create/Edit/Delete) wieder auslösbar ist; Detail/List zeigen ID/Code/Kontakt/Notizen/Verfügbarkeiten. Manual UI validation bestätigt 100 % Phase-A-Readiness (CRUD, Validierung, Empty/Error States, Navigation, Shared-Styles). Lint/Build laufen grün.
 - **Station 25 – Finanzen Phase-A (Listen/Detail/Filter) in Progress:** Branch `feature/station25-finanzen`. Finanzen-Modul mit Phase-A-Skelett ergänzt: `initModule` mit Scroll/Fokus/Hash-Segmente, Loading/Error/Empty via Shared Notices, Summary-Karte (Summe Zahlungen/Offen/Saldo), Filter-Karte (Kunde/Typ), Einträge-Tabelle mit Kundenauflösung und Hash-Details, Detail-Card mit Kunde-Link + Back-Link. Keine CRUD-Formulare/Deletes (für Station 27 vorgesehen). Manuell geprüft: `#/finanzen` und `#/finanzen/<id>` laden ohne Console-Errors. `pnpm lint` ✅, `pnpm build` ✅.
+- **Station 27 – Finanzen Single-Module Completion (Phase A):** Branch `feature/station27-finanzen`. Finanzen-Modul auf vollständige CRUD-Flows gebracht: Hash-Routen `#/finanzen`/`new`/`<id>`/`<id>/edit`, Shared-Formular mit ID read-only + Code-Override-Toggle, Kunde/Typ/Betrag/Datum/Beschreibung-Felder, Filter + Summary behalten, Detail mit Edit/Delete-Actions, Inline-Löschbestätigung, Typen auf „Bezahlt/Offen“ vereinheitlicht, Kundenlabels aus zentraler Map. Shared Notices/Empty, Fokus/Scroll-Reset, German UI. Self-Test: manuell ✅ (Listen → Create → Detail → Edit → Delete → Refresh), Console clean. Tests: `pnpm lint` ✅, `pnpm test` ✅, `pnpm build` ✅.
 
 ## Active Station
 
-**Station 26 – Kalender Phase-A Completion (Restart):** Branch `feature/station26-kalender-restart`. Kalender-Modul komplett neu aufgebaut: neue Date- und Routen-Helper, Overlap-Engine, Toolbar-Navigation, 30-Minuten-Slot-Grid mit Zeitachse, Event-Blocks mit Scroll-to-first-event, vollständiges CSS-Gridsystem, Tag/Woche/Monat/Jahr/Event-Detail-Views, German headings/ARIA, Empty/Error-Handling, Fokus auf h1. Tests/Built: `pnpm lint` ✅, `pnpm test` ✅, `pnpm build` ✅. Modul erfüllt die Phase-A-Kriterien aus `kalender.md` und ist bereit für Phase B (Integration/Verknüpfungen) später.
+**Station 27 – Finanzen Phase-A Single-Module Completion:** Branch `feature/station27-finanzen`. Ziel: PR gegen `main` mit vollwertigem CRUD, Typen „Bezahlt/Offen“, UI laut Phase-A-Checkliste, Tests grün. Station 26 bleibt abgeschlossen; nächste Schritte nach Merge definieren.
 
 ### Status-Update-Kadenz
 
@@ -43,4 +44,4 @@
 ### Aktive Branches/PRs
 
 - `feature/station24-trainer` → PR “Station 24 – Trainer Single-Module Completion” → Ziel: `main`
-- `feature/station25-finanzen` → Finanzen Phase-A Listen/Detail/Filter (PR ausstehend)
+- `feature/station27-finanzen` → PR “Station 27 – Finanzen Single-Module Completion” → Ziel: `main`
