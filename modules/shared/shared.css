@@ -69,6 +69,38 @@ a:focus-visible {
   align-items: center;
 }
 
+.finanzen-list-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 0.5rem;
+}
+
+.finanzen-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.finanzen-table th,
+.finanzen-table td {
+  text-align: left;
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.finanzen-table th {
+  background-color: #f9fafb;
+  font-weight: 600;
+  color: #111827;
+}
+
+.finanzen-table tbody tr:nth-child(even) {
+  background-color: #f8fafc;
+}
+
+.finanzen-table__row:hover {
+  background-color: #eef2ff;
+}
+
 .kurse-delete-guard {
   margin-bottom: 0.75rem;
 }
