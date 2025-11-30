@@ -32,12 +32,13 @@
 
 ## Active Station
 
-**Station 25 – Kommunikation Single-Module Completion (Finanzen-Scope aktuell aktiv):** Branch `feature/station25-finanzen`. Status: Finanzen Phase-A Listen/Detail/Filter umgesetzt, CRUD offen. Testergebnisse: `pnpm lint` ✅, `pnpm build` ✅, manuelle UI (List/Detail/Filter) ✅. Nächste Schritte: (1) PR für Station 24 finalisieren/mergen; (2) Station 25 ggf. formell abschließen nach Review; (3) Station 27 – Finanzen Single-Module Completion: CRUD/Create/Edit/Delete, Code-Override, Confirm/Delete, Persistenz über API-Helfer; (4) Phase B: Station 35 Kunden↔Finanzen Linking, Station 36 Finanzen↔Waren Linking.
+**Station 26 – Kalender Phase-A Completion (Restart):** Branch `feature/station26-kalender-restart`. Kalender-Modul komplett neu aufgebaut: neue Date- und Routen-Helper, Overlap-Engine, Toolbar-Navigation, 30-Minuten-Slot-Grid mit Zeitachse, Event-Blocks mit Scroll-to-first-event, vollständiges CSS-Gridsystem, Tag/Woche/Monat/Jahr/Event-Detail-Views, German headings/ARIA, Empty/Error-Handling, Fokus auf h1. Tests/Built: `pnpm lint` ✅, `pnpm test` ✅, `pnpm build` ✅. Modul erfüllt die Phase-A-Kriterien aus `kalender.md` und ist bereit für Phase B (Integration/Verknüpfungen) später.
 
 ### Status-Update-Kadenz
 
 - Nach jedem gemergten PR und zum Ende jeder Station `DOGULE1_STATUS.md` ergänzen.
 - Immer Branch/PR, Zusammenfassung, Testergebnisse (lint/test/build), offene Risiken/Nächste Schritte notieren.
+- Der detaillierte aktuelle Arbeitsstand liegt zusätzlich in `CODEX_STEP_LOG.md`.
 
 ### Aktive Branches/PRs
 
