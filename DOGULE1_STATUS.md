@@ -30,10 +30,11 @@
 - **Station 24 – Trainer Single-Module Completion:** Branch `feature/station24-trainer`. Trainer-Modul auf Phase-A-Stand gebracht: saubere h1/h2-Hierarchie, Router-Mount bleibt unverändert, Shared-Komponenten durchgängig genutzt. ID-System am Master ausgerichtet (Trainer-IDs nun API-seitig sequenziell `t<n>`, UI nur read-only Vorschau), Code-Override-Toggle auf Create/Edit, Verfügbarkeiten-Eingabe als interaktives Textarea mit Persistenz. Formular-Buttons an die Form gebunden (`requestSubmit`), sodass CRUD (Create/Edit/Delete) wieder auslösbar ist; Detail/List zeigen ID/Code/Kontakt/Notizen/Verfügbarkeiten. Manual UI validation bestätigt 100 % Phase-A-Readiness (CRUD, Validierung, Empty/Error States, Navigation, Shared-Styles). Lint/Build laufen grün.
 - **Station 25 – Finanzen Phase-A (Listen/Detail/Filter) in Progress:** Branch `feature/station25-finanzen`. Finanzen-Modul mit Phase-A-Skelett ergänzt: `initModule` mit Scroll/Fokus/Hash-Segmente, Loading/Error/Empty via Shared Notices, Summary-Karte (Summe Zahlungen/Offen/Saldo), Filter-Karte (Kunde/Typ), Einträge-Tabelle mit Kundenauflösung und Hash-Details, Detail-Card mit Kunde-Link + Back-Link. Keine CRUD-Formulare/Deletes (für Station 27 vorgesehen). Manuell geprüft: `#/finanzen` und `#/finanzen/<id>` laden ohne Console-Errors. `pnpm lint` ✅, `pnpm build` ✅.
 - **Station 27 – Finanzen Single-Module Completion (Phase A):** Branch `feature/station27-finanzen`. Finanzen-Modul auf vollständige CRUD-Flows gebracht: Hash-Routen `#/finanzen`/`new`/`<id>`/`<id>/edit`, Shared-Formular mit ID read-only + Code-Override-Toggle, Kunde/Typ/Betrag/Datum/Beschreibung-Felder, Filter + Summary behalten, Detail mit Edit/Delete-Actions, Inline-Löschbestätigung, Typen auf „Bezahlt/Offen“ vereinheitlicht, Kundenlabels aus zentraler Map. Shared Notices/Empty, Fokus/Scroll-Reset, German UI. Self-Test: manuell ✅ (Listen → Create → Detail → Edit → Delete → Refresh), Console clean. Tests: `pnpm lint` ✅, `pnpm test` ✅, `pnpm build` ✅.
+- **Station 28 – Waren Single-Module Completion (Phase A):** Branch `feature/station28-waren`. Waren-Modul auf vollständige Phase-A-CRUD gebracht: Hash-Routen `#/waren`/`new`/`<id>`/`<id>/edit`, Listen/Detail/Form/Delete über Shared Cards/Buttons/Notices/Form-Rows, German UI, Loading/Error/Empty/Not-Found States, Fokus/H1/H2 korrekt, kein Routing- oder Konsolenrauschen. CRUD nutzt die zentrale Waren-API (list/get/create/update/delete), keine Relationen zu Kunden/Finanzen/Kurse. Manual Self-Test ✅ (CRUD end-to-end inkl. Delete), `pnpm lint` ✅, `pnpm build` ✅.
 
 ## Active Station
 
-**Station 27 – Finanzen Phase-A Single-Module Completion:** Branch `feature/station27-finanzen`. Ziel: PR gegen `main` mit vollwertigem CRUD, Typen „Bezahlt/Offen“, UI laut Phase-A-Checkliste, Tests grün. Station 26 bleibt abgeschlossen; nächste Schritte nach Merge definieren.
+**Station 28 – Waren Phase-A Single-Module Completion:** Branch `feature/station28-waren`. PR gegen `main` vorbereitet; Scope: Waren-CRUD (list/detail/create/edit/delete) mit Shared-Komponenten, Loading/Error/Empty, German UI, keine Relationen, Konsolen-clean. Self-Test bestanden; lint/build grün. Nächster Schritt: PR-Review/Merge.
 
 ### Status-Update-Kadenz
 
@@ -45,3 +46,4 @@
 
 - `feature/station24-trainer` → PR “Station 24 – Trainer Single-Module Completion” → Ziel: `main`
 - `feature/station27-finanzen` → PR “Station 27 – Finanzen Single-Module Completion” → Ziel: `main`
+- `feature/station28-waren` → PR “Station 28 – Waren Single-Module Completion” → Ziel: `main`
