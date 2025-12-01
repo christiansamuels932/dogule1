@@ -21,12 +21,38 @@ const EDITABLE_DEFAULTS = {
   price: 0,
   notes: "",
   hundIds: [],
-  kundenIds: [],
 };
 
 const NUMBER_FIELDS = new Set(["capacity", "bookedCount", "price"]);
 
 let kursSequence = db[TABLE]?.length ?? 0;
+
+const normalizeIdArray = (value = []) => {
+  if (Array.isArray(value)) {
+    const cleaned = value
+      .map((entry) => (typeof entry === "string" ? entry.trim() : entry))
+      .filter(Boolean);
+    return Array.from(new Set(cleaned));
+  }
+  if (typeof value === "string" && value.trim()) return [value.trim()];
+  return [];
+};
+
+const ensureParticipantIntegrity = (payload = {}) => {
+  const hundIds = normalizeIdArray(payload.hundIds);
+
+  const validatedHundIds = hundIds.map((hundId) => {
+    const hund = Array.isArray(db.hunde) ? db.hunde.find((entry) => entry.id === hundId) : null;
+    if (!hund) {
+      throw new Error(`Hund ${hundId} existiert nicht`);
+    }
+    return hundId;
+  });
+
+  return {
+    hundIds: validatedHundIds,
+  };
+};
 
 const nextKursId = () => {
   kursSequence += 1;
@@ -55,10 +81,8 @@ const ensureEditableDefaults = (payload = {}) => {
   normalized.capacity = sanitizeNumber(payload.capacity, EDITABLE_DEFAULTS.capacity);
   normalized.bookedCount = sanitizeNumber(payload.bookedCount, EDITABLE_DEFAULTS.bookedCount);
   normalized.price = sanitizeNumber(payload.price, EDITABLE_DEFAULTS.price);
-  normalized.hundIds = Array.isArray(payload.hundIds) ? payload.hundIds : EDITABLE_DEFAULTS.hundIds;
-  normalized.kundenIds = Array.isArray(payload.kundenIds)
-    ? payload.kundenIds
-    : EDITABLE_DEFAULTS.kundenIds;
+  const participants = ensureParticipantIntegrity(normalized);
+  normalized.hundIds = participants.hundIds;
   return normalized;
 };
 
@@ -73,6 +97,8 @@ const sanitizeUpdatePayload = (payload = {}) => {
       patch[key] = normalized[key]?.trim?.() ? normalized[key] : DEFAULT_STATUS;
     } else if (key === "code") {
       patch[key] = (normalized[key] || "").trim();
+    } else if (key === "hundIds") {
+      patch[key] = normalizeIdArray(normalized[key]);
     } else {
       patch[key] = normalized[key] ?? EDITABLE_DEFAULTS[key];
     }
@@ -101,20 +127,21 @@ export async function getKurs(id, options) {
 export async function createKurs(data = {}, options) {
   const record = await create(
     TABLE,
-    {
-      id: nextKursId(),
-      ...ensureEditableDefaults(data),
-    },
+    { id: nextKursId(), ...ensureEditableDefaults(data) },
     options
   );
   return ensureKursShape(record);
 }
 
 export async function updateKurs(id, data = {}, options) {
+  const existing = await getKurs(id, options);
+  if (!existing) return null;
   const patch = sanitizeUpdatePayload(data);
   if (!Object.keys(patch).length) {
-    return getKurs(id, options);
+    return existing;
   }
+  const participants = ensureParticipantIntegrity({ ...existing, ...patch });
+  patch.hundIds = participants.hundIds;
   const updated = await update(TABLE, id, patch, options);
   return updated ? ensureKursShape(updated) : null;
 }

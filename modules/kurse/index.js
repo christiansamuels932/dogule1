@@ -283,7 +283,6 @@ async function renderDetail(section, id) {
 
 async function collectLinkedParticipants(kurs = {}) {
   const hundIds = Array.isArray(kurs.hundIds) ? kurs.hundIds.filter(Boolean) : [];
-  const kundenIds = Array.isArray(kurs.kundenIds) ? kurs.kundenIds.filter(Boolean) : [];
   const result = {
     linkedHunde: [],
     linkedKunden: [],
@@ -305,19 +304,14 @@ async function collectLinkedParticipants(kurs = {}) {
     const kunden = await listKunden();
     const seen = new Set();
     const candidates = [];
-    const addKunde = (kundeId) => {
+    result.linkedHunde.forEach((hund) => {
+      const kundeId = hund?.kundenId;
       const id = kundeId || "";
       if (!id || seen.has(id)) return;
       seen.add(id);
       const kunde = kunden.find((entry) => entry.id === id);
-      if (kunde) {
-        candidates.push(kunde);
-      } else {
-        candidates.push({ id, code: id, vorname: "", nachname: "" });
-      }
-    };
-    result.linkedHunde.forEach((hund) => addKunde(hund.kundenId));
-    kundenIds.forEach((kundenId) => addKunde(kundenId));
+      candidates.push(kunde || { id, code: id, vorname: "", nachname: "" });
+    });
     result.linkedKunden = candidates;
   } catch (error) {
     console.error("[KURSE_ERR_LINKED_KUNDEN]", error);
@@ -422,9 +416,13 @@ function appendLinkedSections(
             meta.className = "kurse-linked-kunde__meta";
             const idRow = document.createElement("p");
             idRow.textContent = `ID: ${kunde.id || "–"}`;
+            const codeRow = document.createElement("p");
+            codeRow.textContent = `Code: ${displayCode}`;
             const phoneRow = document.createElement("p");
             phoneRow.textContent = `Telefon: ${kunde.telefon || "–"}`;
-            meta.append(idRow, phoneRow);
+            const mailRow = document.createElement("p");
+            mailRow.textContent = `E-Mail: ${kunde.email || "–"}`;
+            meta.append(idRow, codeRow, phoneRow, mailRow);
             cardBody.appendChild(meta);
           }
           const link = document.createElement("a");
@@ -485,6 +483,8 @@ async function buildKursKundenFinanzen(linkedKunden = [], linkedHunde = []) {
     const lastZahlung = zahlungen.length ? zahlungen[zahlungen.length - 1] : null;
     financeResults.push({
       kundeId: kundeId,
+      label: formatCustomerName(kundeData) || `Kunde ${kundeId}`,
+      code: getCustomerDisplayCode(kundeData),
       offeneBetraege,
       zahlungen,
       lastZahlung,
@@ -536,8 +536,9 @@ function appendFinanceSections(section, kundenFinanzen = []) {
 function renderKursFinanzOverviewContent(container, financeData = []) {
   if (!financeData.length) return false;
   financeData.forEach((entry) => {
+    const label = entryLabel(entry, financeData);
     const infoRow = createFinanceRow(
-      `Kunde ${entry.kundeId}`,
+      label,
       entry.lastZahlung
         ? `Letzte Zahlung: ${formatFinanceAmount(entry.lastZahlung.betrag)} · Datum: ${formatDateTime(
             entry.lastZahlung.datum
@@ -555,6 +556,8 @@ function renderKursOffeneBetraegeContent(container, financeData = []) {
     entry.offeneBetraege.forEach((offen) => {
       offeneEntries.push({
         kundeId: entry.kundeId,
+        label: entry.label,
+        code: entry.code,
         eintrag: offen,
       });
     });
@@ -563,9 +566,10 @@ function renderKursOffeneBetraegeContent(container, financeData = []) {
     container.appendChild(createEmpty());
     return true;
   }
-  offeneEntries.forEach(({ kundeId, eintrag }) => {
+  offeneEntries.forEach(({ kundeId, label: kundeLabel, code, eintrag }) => {
+    const label = entryLabel({ kundeId, label: kundeLabel, code }, financeData);
     const infoRow = createFinanceRow(
-      `Kunde ${kundeId}`,
+      label,
       `Betrag: ${formatFinanceAmount(eintrag.betrag)} · Datum: ${formatDateTime(eintrag.datum)}`
     );
     container.appendChild(infoRow);
@@ -577,7 +581,12 @@ function renderKursZahlungshistorieContent(container, financeData = []) {
   const zahlungen = [];
   financeData.forEach((entry) => {
     entry.zahlungen.forEach((zahlung) => {
-      zahlungen.push({ kundeId: entry.kundeId, eintrag: zahlung });
+      zahlungen.push({
+        kundeId: entry.kundeId,
+        label: entry.label,
+        code: entry.code,
+        eintrag: zahlung,
+      });
     });
   });
   zahlungen.sort((a, b) => {
@@ -589,14 +598,26 @@ function renderKursZahlungshistorieContent(container, financeData = []) {
     container.appendChild(createEmpty());
     return true;
   }
-  zahlungen.forEach(({ kundeId, eintrag }) => {
+  zahlungen.forEach(({ kundeId, label: kundeLabel, code, eintrag }) => {
+    const label = entryLabel({ kundeId, label: kundeLabel, code }, financeData);
     const infoRow = createFinanceRow(
-      `Kunde ${kundeId}`,
+      label,
       `Zahlung: ${formatFinanceAmount(eintrag.betrag)} · Datum: ${formatDateTime(eintrag.datum)}`
     );
     container.appendChild(infoRow);
   });
   return true;
+}
+
+function entryLabel(entry, financeData = []) {
+  const baseLabel = entry.label || `Kunde ${entry.kundeId}`;
+  const prefix = entry.code || findFinanceCode(financeData, entry.kundeId);
+  return prefix ? `${prefix} · ${baseLabel}` : baseLabel;
+}
+
+function findFinanceCode(financeData = [], kundeId = "") {
+  const match = financeData.find((item) => item.kundeId === kundeId);
+  return match?.code || "";
 }
 
 function createFinanceRow(label, text) {
@@ -650,7 +671,6 @@ function createCourseListItem(course = {}) {
         value: `${course.bookedCount ?? 0} / ${course.capacity ?? 0}`,
       },
       { label: "Ort", value: course.location || "Noch offen" },
-      { label: "Kunden", value: formatIdList(course.kundenIds) },
       { label: "Hunde", value: formatIdList(course.hundIds) },
     ].forEach(({ label, value }) => {
       const item = document.createElement("li");
@@ -816,12 +836,11 @@ async function renderForm(section, view, id) {
   } catch (error) {
     console.error("[KURSE_ERR_FORM_KUNDEN]", error);
   }
+  const selectedHundIds = Array.isArray(existing?.hundIds) ? existing.hundIds : [];
   let isCodeOverrideEnabled = false;
   const fields = buildFormFields(existing, {
     defaultCode: kursCodeValue,
     trainerOptions,
-    hundeOptions,
-    kundenOptions,
   });
   const refs = {};
   fields.forEach((field) => {
@@ -874,6 +893,14 @@ async function renderForm(section, view, id) {
     }
     form.appendChild(row);
   });
+
+  const hundeRow = createHundSearchField({
+    kundenOptions,
+    hundeOptions,
+    selectedHundIds,
+  });
+  refs.hundIds = hundeRow.__ref;
+  form.appendChild(hundeRow);
 
   const actions = document.createElement("div");
   actions.className = "kurse-form-actions";
@@ -1036,7 +1063,6 @@ function renderDetailList(kurs) {
     },
     { term: "Level", value: kurs.level || "–" },
     { term: "Preis", value: formatPrice(kurs.price) },
-    { term: "Kunden (IDs)", value: formatIdList(kurs.kundenIds) },
     { term: "Hunde (IDs)", value: formatIdList(kurs.hundIds) },
   ].forEach(({ term, value }) => {
     const dt = document.createElement("dt");
@@ -1123,34 +1149,6 @@ function buildTrainerSelectOptions(options = [], selectedId = "") {
   }));
 }
 
-function buildOptions(selectEl, items = [], selectedValues = [], kind = "") {
-  if (!selectEl) return;
-  const selectedSet = new Set(Array.isArray(selectedValues) ? selectedValues : []);
-  const list = Array.isArray(items) ? items : [];
-  if (!list.length) {
-    const option = document.createElement("option");
-    option.value = "";
-    option.textContent =
-      kind === "kunden" ? "Keine Kunden" : kind === "hunde" ? "Keine Hunde" : "Keine Einträge";
-    selectEl.appendChild(option);
-    return;
-  }
-  list.forEach((item) => {
-    const option = document.createElement("option");
-    const id = item.id || "";
-    option.value = id;
-    if (kind === "kunden") {
-      option.textContent = `${item.kundenCode || item.code || id} · ${formatCustomerName(item)}`;
-    } else if (kind === "hunde") {
-      option.textContent = `${item.code || id} · ${item.name || "Hund"}`;
-    } else {
-      option.textContent = id || "Eintrag";
-    }
-    option.selected = selectedSet.has(id);
-    selectEl.appendChild(option);
-  });
-}
-
 function formatIdList(value) {
   if (Array.isArray(value) && value.length) return value.join(", ");
   if (typeof value === "string" && value.trim()) return value;
@@ -1167,14 +1165,9 @@ function formatDateTime(value) {
   });
 }
 
-function buildFormFields(
-  existing = {},
-  { defaultCode = "", trainerOptions = [], hundeOptions = [], kundenOptions = [] } = {}
-) {
+function buildFormFields(existing = {}, { defaultCode = "", trainerOptions = [] } = {}) {
   const statusValue = existing?.status ?? "geplant";
   const levelValue = existing?.level ?? "";
-  const selectedHundIds = Array.isArray(existing?.hundIds) ? existing.hundIds : [];
-  const selectedKundenIds = Array.isArray(existing?.kundenIds) ? existing.kundenIds : [];
   return [
     {
       name: "kursId",
@@ -1311,40 +1304,6 @@ function buildFormFields(
       step: "1",
     },
     {
-      name: "kundenIds",
-      value: selectedKundenIds,
-      readOnly: true,
-      multiple: true,
-      setValue(input) {
-        input.multiple = true;
-        input.disabled = true;
-        buildOptions(input, kundenOptions, selectedKundenIds, "kunden");
-      },
-      config: {
-        id: "kurs-kunden",
-        label: "Kunden (lesend)",
-        control: "select",
-        describedByText: "Phase A: Auswahl ist schreibgeschützt.",
-      },
-    },
-    {
-      name: "hundIds",
-      value: selectedHundIds,
-      readOnly: true,
-      multiple: true,
-      setValue(input) {
-        input.multiple = true;
-        input.disabled = true;
-        buildOptions(input, hundeOptions, selectedHundIds, "hunde");
-      },
-      config: {
-        id: "kurs-hunde",
-        label: "Hunde (lesend)",
-        control: "select",
-        describedByText: "Phase A: Auswahl ist schreibgeschützt.",
-      },
-    },
-    {
       name: "level",
       config: {
         id: "kurs-level",
@@ -1394,6 +1353,220 @@ function ensureArray(value) {
   return [];
 }
 
+function createHundSearchField({
+  kundenOptions = [],
+  hundeOptions = [],
+  selectedHundIds = [],
+} = {}) {
+  const wrapper = document.createElement("div");
+  wrapper.className = "kurse-hunde-search";
+
+  const searchRow = createFormRow({
+    id: "kurs-hunde-search",
+    label: "Teilnehmende Hunde",
+    control: "input",
+    type: "text",
+    placeholder: "Kunde oder Hund eingeben ...",
+    describedByText:
+      "Tippe nach Kunde oder Hund. Links siehst du Kunden-Treffer (fügt deren Hunde hinzu), rechts Hund-Treffer. Auswahl kann leer bleiben.",
+  });
+  const searchInput = searchRow.querySelector("input");
+  const hint = searchRow.querySelector(".ui-form-row__hint");
+  wrapper.appendChild(searchRow);
+
+  const selectedIds = new Set(
+    Array.isArray(selectedHundIds) ? selectedHundIds.filter(Boolean) : []
+  );
+  const hundMap = new Map(
+    (Array.isArray(hundeOptions) ? hundeOptions : []).map((hund) => [hund.id, hund])
+  );
+
+  const selectionInfo = document.createElement("div");
+  selectionInfo.className = "kurse-hunde-search__selection";
+  wrapper.appendChild(selectionInfo);
+
+  const results = document.createElement("div");
+  results.className = "kurse-hunde-search__results";
+  wrapper.appendChild(results);
+
+  const kundenCol = document.createElement("div");
+  kundenCol.className = "kurse-hunde-search__col";
+  const kundenTitle = document.createElement("h3");
+  kundenTitle.textContent = "Kunden";
+  kundenCol.appendChild(kundenTitle);
+  const kundenList = document.createElement("div");
+  kundenList.className = "kurse-hunde-search__list";
+  kundenCol.appendChild(kundenList);
+
+  const hundeCol = document.createElement("div");
+  hundeCol.className = "kurse-hunde-search__col";
+  const hundeTitle = document.createElement("h3");
+  hundeTitle.textContent = "Hunde";
+  hundeCol.appendChild(hundeTitle);
+  const hundeList = document.createElement("div");
+  hundeList.className = "kurse-hunde-search__list";
+  hundeCol.appendChild(hundeList);
+
+  results.append(kundenCol, hundeCol);
+
+  const clearBtn = createButton({
+    label: "Auswahl leeren",
+    variant: "secondary",
+  });
+  clearBtn.type = "button";
+  clearBtn.addEventListener("click", () => {
+    selectedIds.clear();
+    updateSelection();
+  });
+  wrapper.appendChild(clearBtn);
+
+  const addHund = (hundId) => {
+    if (!hundId) return;
+    selectedIds.add(hundId);
+    updateSelection();
+  };
+
+  const removeHund = (hundId) => {
+    selectedIds.delete(hundId);
+    updateSelection();
+  };
+
+  const addCustomerDogs = (kundeId) => {
+    const dogs = (Array.isArray(hundeOptions) ? hundeOptions : []).filter(
+      (hund) => hund.kundenId === kundeId
+    );
+    if (!dogs.length) return;
+    dogs.forEach((hund) => addHund(hund.id));
+  };
+
+  const renderList = (target, items, clickHandler, emptyText) => {
+    target.innerHTML = "";
+    if (!items.length) {
+      const empty = document.createElement("p");
+      empty.textContent = emptyText;
+      target.appendChild(empty);
+      return;
+    }
+    items.forEach((item) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "kurse-hunde-search__option";
+      button.textContent = item.label;
+      if (item.sublabel) {
+        const sub = document.createElement("span");
+        sub.className = "kurse-hunde-search__sublabel";
+        sub.textContent = item.sublabel;
+        button.appendChild(sub);
+      }
+      button.addEventListener("click", () => clickHandler(item));
+      target.appendChild(button);
+    });
+  };
+
+  const filterOptions = (term) => {
+    const t = term.trim().toLowerCase();
+    if (!t) return { kunden: [], hunde: [] };
+    const kundenMatches = (Array.isArray(kundenOptions) ? kundenOptions : []).filter((kunde) =>
+      [kunde.vorname, kunde.nachname, kunde.email, kunde.code, kunde.kundenCode]
+        .map((v) => (v || "").toLowerCase())
+        .some((value) => value.includes(t))
+    );
+    const hundeMatches = (Array.isArray(hundeOptions) ? hundeOptions : []).filter((hund) =>
+      [hund.name, hund.rufname, hund.code, hund.rasse, hund.kundenId]
+        .map((v) => (v || "").toLowerCase())
+        .some((value) => value.includes(t))
+    );
+
+    // Add owners for matched dogs
+    const kundenById = new Map(
+      (Array.isArray(kundenOptions) ? kundenOptions : []).map((k) => [k.id, k])
+    );
+    const kundenByHunde = new Map(kundenMatches.map((kunde) => [kunde.id, kunde]));
+    hundeMatches.forEach((hund) => {
+      const owner = kundenById.get(hund.kundenId);
+      if (owner && !kundenByHunde.has(owner.id)) {
+        kundenByHunde.set(owner.id, owner);
+      }
+    });
+
+    // Add dogs for matched customers
+    const kundenIds = new Set(kundenMatches.map((kunde) => kunde.id));
+    kundenIds.forEach((kundeId) => {
+      const dogs = (Array.isArray(hundeOptions) ? hundeOptions : []).filter(
+        (hund) => hund.kundenId === kundeId
+      );
+      dogs.forEach((hund) => {
+        if (!hundeMatches.includes(hund)) {
+          hundeMatches.push(hund);
+        }
+      });
+    });
+
+    return {
+      kunden: Array.from(kundenByHunde.values()),
+      hunde: hundeMatches,
+    };
+  };
+
+  const updateSelection = () => {
+    selectionInfo.innerHTML = "";
+    if (!selectedIds.size) {
+      const empty = document.createElement("p");
+      empty.textContent = "Keine Hunde ausgewählt.";
+      selectionInfo.appendChild(empty);
+    } else {
+      const list = document.createElement("div");
+      list.className = "kurse-hunde-selected";
+      selectedIds.forEach((id) => {
+        const hund = hundMap.get(id);
+        const label = hund ? `${hund.code || id} · ${hund.name || "Hund"}` : id;
+        const chip = document.createElement("button");
+        chip.type = "button";
+        chip.className = "kurse-hunde-chip";
+        chip.textContent = label;
+        chip.addEventListener("click", () => removeHund(id));
+        list.appendChild(chip);
+      });
+      selectionInfo.appendChild(list);
+    }
+  };
+
+  const updateResults = () => {
+    const { kunden, hunde } = filterOptions(searchInput.value || "");
+    renderList(
+      kundenList,
+      kunden.map((kunde) => ({
+        id: kunde.id,
+        label: `${kunde.code || kunde.kundenCode || kunde.id} · ${formatCustomerName(kunde)}`,
+        sublabel: kunde.email || "",
+      })),
+      (item) => addCustomerDogs(item.id),
+      "Keine Kunden gefunden."
+    );
+    renderList(
+      hundeList,
+      hunde.map((hund) => ({
+        id: hund.id,
+        label: `${hund.code || hund.id} · ${hund.name || "Hund"}`,
+        sublabel: hund.rufname || "",
+      })),
+      (item) => addHund(item.id),
+      "Keine Hunde gefunden."
+    );
+  };
+
+  searchInput.addEventListener("input", updateResults);
+  updateSelection();
+  updateResults();
+
+  wrapper.__ref = {
+    getValue: () => Array.from(selectedIds),
+    inputs: [searchInput],
+    hint,
+  };
+  return wrapper;
+}
+
 function toNumber(value, fallback = 0) {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : fallback;
@@ -1402,8 +1575,16 @@ function toNumber(value, fallback = 0) {
 function collectFormValues(refs) {
   const values = {};
   Object.entries(refs).forEach(([key, ref]) => {
-    const raw = ref.input.value;
-    if (ref.input.multiple) {
+    if (typeof ref.getValue === "function") {
+      values[key] = ref.getValue();
+      return;
+    }
+    if (ref.inputs) {
+      values[key] = ref.inputs.filter((input) => input.checked).map((input) => input.value);
+      return;
+    }
+    const raw = ref.input ? ref.input.value : "";
+    if (ref.input?.multiple) {
       values[key] = Array.from(ref.input.selectedOptions || []).map((opt) => opt.value);
     } else {
       values[key] = typeof raw === "string" ? raw.trim() : raw;
@@ -1415,7 +1596,6 @@ function collectFormValues(refs) {
 function validate(values = {}) {
   const safeValues = { ...values };
   safeValues.kursCode = ensureString(values.kursCode).trim();
-  safeValues.kundenIds = ensureArray(values.kundenIds);
   safeValues.hundIds = ensureArray(values.hundIds);
   if (!safeValues.kursCode) {
     safeValues.kursCode = generateNextKursCode(kursCache);
@@ -1426,16 +1606,15 @@ function validate(values = {}) {
 function applyErrors(refs, errors) {
   Object.entries(refs).forEach(([key, ref]) => {
     const hint = ref.hint;
-    const input = ref.input;
-    if (errors[key]) {
-      hint.textContent = errors[key];
-      hint.classList.remove("sr-only");
-      input.setAttribute("aria-invalid", "true");
-    } else {
-      hint.textContent = "";
-      hint.classList.add("sr-only");
-      input.setAttribute("aria-invalid", "false");
+    const inputs = ref.inputs || (ref.input ? [ref.input] : []);
+    const hasError = Boolean(errors[key]);
+    if (hint) {
+      hint.textContent = hasError ? errors[key] : "";
+      hint.classList.toggle("sr-only", !hasError);
     }
+    inputs.forEach((input) => {
+      input.setAttribute("aria-invalid", hasError ? "true" : "false");
+    });
   });
 }
 
@@ -1455,7 +1634,6 @@ function buildPayload(values) {
     level: ensureString(values.level, ""),
     price: toNumber(values.price, 0),
     notes: ensureString(values.notes, ""),
-    kundenIds: ensureArray(values.kundenIds),
     hundIds: ensureArray(values.hundIds),
   };
 }
@@ -1560,14 +1738,12 @@ async function handleDeleteKurs(section, id, button) {
     if (!kursRecord) {
       throw new Error("Kurs nicht gefunden");
     }
-    const hasParticipants =
-      (Array.isArray(kursRecord.hundIds) && kursRecord.hundIds.length > 0) ||
-      (Array.isArray(kursRecord.kundenIds) && kursRecord.kundenIds.length > 0);
+    const hasParticipants = Array.isArray(kursRecord.hundIds) && kursRecord.hundIds.length > 0;
     const hasFinanzen =
       Array.isArray(finanzen) && finanzen.some((entry) => entry?.kursId === kursRecord.id);
     if (hasParticipants || hasFinanzen) {
       const reasons = [];
-      if (hasParticipants) reasons.push("Teilnehmer (Hunde/Kunden) sind zugeordnet.");
+      if (hasParticipants) reasons.push("Teilnehmer (Hunde) sind zugeordnet.");
       if (hasFinanzen)
         reasons.push("Finanzbuchungen verknüpfen diesen Kurs (kursId in Zahlungen).");
       guardHost.innerHTML = "";
