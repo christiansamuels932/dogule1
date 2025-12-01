@@ -1,4 +1,5 @@
 import { list, create, update, remove } from "./crud.js";
+import { db } from "./db.js";
 
 const TABLE = "hunde";
 const LEGACY_CODE_KEY = "hundeId";
@@ -46,6 +47,18 @@ const ensureEditableDefaults = (payload = {}) => {
     normalized[key] = sanitizeNumber(payload[key]);
   });
   return normalized;
+};
+
+const assertValidKundenId = (kundenId) => {
+  const trimmed = (kundenId || "").trim();
+  if (!trimmed) {
+    throw new Error("kundenId ist erforderlich");
+  }
+  const exists = Array.isArray(db.kunden) && db.kunden.some((kunde) => kunde.id === trimmed);
+  if (!exists) {
+    throw new Error(`kundenId ${trimmed} existiert nicht`);
+  }
+  return trimmed;
 };
 
 const sanitizeUpdatePayload = (payload = {}) => {
@@ -101,15 +114,21 @@ export async function getHund(id, options) {
 }
 
 export async function createHund(data = {}, options) {
-  const record = await create(TABLE, ensureEditableDefaults(data), options);
+  const normalized = ensureEditableDefaults(data);
+  normalized.kundenId = assertValidKundenId(normalized.kundenId);
+  const record = await create(TABLE, normalized, options);
   return ensureHundShape(record);
 }
 
 export async function updateHund(id, data = {}, options) {
   const patch = sanitizeUpdatePayload(normalizeCodePayload(data));
+  const existing = await getHund(id, options);
+  if (!existing) return null;
   if (!Object.keys(patch).length) {
-    return getHund(id, options);
+    return existing;
   }
+  const nextKundenId = patch.kundenId ?? existing.kundenId;
+  patch.kundenId = assertValidKundenId(nextKundenId);
   const updated = await update(TABLE, id, patch, options);
   return updated ? ensureHundShape(updated) : null;
 }

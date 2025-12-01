@@ -31,10 +31,11 @@
 - **Station 25 – Finanzen Phase-A (Listen/Detail/Filter) in Progress:** Branch `feature/station25-finanzen`. Finanzen-Modul mit Phase-A-Skelett ergänzt: `initModule` mit Scroll/Fokus/Hash-Segmente, Loading/Error/Empty via Shared Notices, Summary-Karte (Summe Zahlungen/Offen/Saldo), Filter-Karte (Kunde/Typ), Einträge-Tabelle mit Kundenauflösung und Hash-Details, Detail-Card mit Kunde-Link + Back-Link. Keine CRUD-Formulare/Deletes (für Station 27 vorgesehen). Manuell geprüft: `#/finanzen` und `#/finanzen/<id>` laden ohne Console-Errors. `pnpm lint` ✅, `pnpm build` ✅.
 - **Station 27 – Finanzen Single-Module Completion (Phase A):** Branch `feature/station27-finanzen`. Finanzen-Modul auf vollständige CRUD-Flows gebracht: Hash-Routen `#/finanzen`/`new`/`<id>`/`<id>/edit`, Shared-Formular mit ID read-only + Code-Override-Toggle, Kunde/Typ/Betrag/Datum/Beschreibung-Felder, Filter + Summary behalten, Detail mit Edit/Delete-Actions, Inline-Löschbestätigung, Typen auf „Bezahlt/Offen“ vereinheitlicht, Kundenlabels aus zentraler Map. Shared Notices/Empty, Fokus/Scroll-Reset, German UI. Self-Test: manuell ✅ (Listen → Create → Detail → Edit → Delete → Refresh), Console clean. Tests: `pnpm lint` ✅, `pnpm test` ✅, `pnpm build` ✅.
 - **Station 28 – Waren Single-Module Completion (Phase A):** Branch `feature/station28-waren`. Waren-Modul auf vollständige Phase-A-CRUD gebracht: Hash-Routen `#/waren`/`new`/`<id>`/`<id>/edit`, Listen/Detail/Form/Delete über Shared Cards/Buttons/Notices/Form-Rows, German UI, Loading/Error/Empty/Not-Found States, Fokus/H1/H2 korrekt, kein Routing- oder Konsolenrauschen. CRUD nutzt die zentrale Waren-API (list/get/create/update/delete), keine Relationen zu Kunden/Finanzen/Kurse. Manual Self-Test ✅ (CRUD end-to-end inkl. Delete), `pnpm lint` ✅, `pnpm build` ✅.
+- **Station 29 – Connect Kunden ↔ Hunde:** Branch `feature/station29-kunden-hunde`. Scope: bidirektionale Navigation Kunden↔Hunde in Phase-B-Stil ohne Router/Init-Änderungen. Änderungen: Kunden-Detail zeigt verlinkte Hunde mit ID/Code, Hunde-Liste/Detail verlinkt Besitzer inkl. Rücksprung nach Delete, Hund-API erzwingt gültige `kundenId` bei Create/Update, Self-Test-Checkliste um Station-29-Block ergänzt. Tests: `runIntegrityCheck` ✅, `pnpm lint` ✅, `pnpm test` ✅, `pnpm build` ✅. UI deutsch, Links nur `#/kunden/<id>`/`#/hunde/<id>`, keine weiteren Module betroffen.
 
 ## Active Station
 
-**Station 28 – Waren Phase-A Single-Module Completion:** Branch `feature/station28-waren`. PR gegen `main` vorbereitet; Scope: Waren-CRUD (list/detail/create/edit/delete) mit Shared-Komponenten, Loading/Error/Empty, German UI, keine Relationen, Konsolen-clean. Self-Test bestanden; lint/build grün. Nächster Schritt: PR-Review/Merge.
+**Station 29 – Connect Kunden ↔ Hunde:** Branch `feature/station29-kunden-hunde`. Status: Umsetzung abgeschlossen, PR wird erstellt. Scope: Nur Kunden/Hunde + Shared API für `kundenId`-Integrität, bidirektionale Navigation, Self-Test-Update. Nächster Schritt: PR “Station 29 – Connect Kunden ↔ Hunde” gegen `main`.
 
 ### Status-Update-Kadenz
 
@@ -47,3 +48,4 @@
 - `feature/station24-trainer` → PR “Station 24 – Trainer Single-Module Completion” → Ziel: `main`
 - `feature/station27-finanzen` → PR “Station 27 – Finanzen Single-Module Completion” → Ziel: `main`
 - `feature/station28-waren` → PR “Station 28 – Waren Single-Module Completion” → Ziel: `main`
+- `feature/station29-kunden-hunde` → PR “Station 29 – Connect Kunden ↔ Hunde” → Ziel: `main`
