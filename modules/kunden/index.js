@@ -838,12 +838,28 @@ function renderKundenHundeSection(hunde = [], hasError = false) {
     appendSharedEmptyState(body);
   } else {
     const list = document.createElement("ul");
-    list.className = "kunden-list";
+    list.className = "kunden-hunde-list";
     hunde.forEach((hund) => {
       const item = document.createElement("li");
       const link = document.createElement("a");
       link.href = `#/hunde/${hund.id}`;
-      link.textContent = formatHundeListEntry(hund);
+      link.className = "kunden-hunde-link";
+      link.setAttribute("aria-label", `Hund ${hund.name || hund.code || hund.id} öffnen`);
+
+      const title = document.createElement("p");
+      title.className = "kunden-hunde-title";
+      const name = (hund.name || "").trim() || "Unbenannter Hund";
+      const rufname = (hund.rufname || "").trim();
+      title.textContent = rufname ? `${name} (${rufname})` : name;
+
+      const meta = document.createElement("p");
+      meta.className = "kunden-hunde-meta";
+      const code = hund.code || hund.hundeId || "–";
+      meta.textContent = `ID: ${hund.id || "–"} · Code: ${code} · ${
+        hund.rasse || "unbekannte Rasse"
+      }`;
+
+      link.append(title, meta);
       item.appendChild(link);
       list.appendChild(item);
     });
@@ -852,13 +868,6 @@ function renderKundenHundeSection(hunde = [], hasError = false) {
 
   section.appendChild(card);
   return section;
-}
-
-function formatHundeListEntry(hund = {}) {
-  const name = (hund.name || "").trim() || "Unbenannter Hund";
-  const rufname = (hund.rufname || "").trim() || "kein Rufname";
-  const rasse = (hund.rasse || "").trim() || "unbekannte Rasse";
-  return `${name} – ${rufname} · ${rasse}`;
 }
 
 function generateNextKundenCode(list = []) {

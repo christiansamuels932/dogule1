@@ -37,6 +37,13 @@
 - Waren: Verkäufe pro Kunde; Beträge konsistent mit Finanzen.
 - Kommunikation: Placeholder module loads with shared layout/components; strings in German.
 
+## Station 29 – Kunden ↔ Hunde Linking
+
+- From Kunden detail, I see all dogs (correct names, codes, IDs, links).
+- From Hunde detail, I can jump to owner and back, hash stays clean.
+- Creating/deleting a dog updates Kunden view immediately (no orphan).
+- Integrity check green; `pnpm lint`, `pnpm test`, `pnpm build` green.
+
 ## 4. Phase A Acceptance Criteria
 
 - All Universal and CRUD checks pass for every module without manual fixtures.

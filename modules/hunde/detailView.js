@@ -117,7 +117,9 @@ export async function createHundeDetailView(container, hundId) {
     footer.appendChild(editBtn);
 
     const deleteBtn = createButton({ label: "Löschen", variant: "secondary" });
-    deleteBtn.addEventListener("click", () => handleDeleteHund(container, hund.id, deleteBtn));
+    deleteBtn.addEventListener("click", () =>
+      handleDeleteHund(container, hund.id, kundeInfo.id, deleteBtn)
+    );
     footer.appendChild(deleteBtn);
 
     if (kundeInfo.id) {
@@ -494,11 +496,19 @@ function buildOwnerCard(kundeInfo = {}, hasError = false) {
   } else {
     const name = kundeInfo.name || "–";
     const code = kundeInfo.code || kundeInfo.id;
+    const idEl = document.createElement("p");
+    idEl.textContent = `ID: ${kundeInfo.id}`;
     const nameEl = document.createElement("p");
     nameEl.textContent = name;
     const codeEl = document.createElement("p");
     codeEl.textContent = `Code: ${code}`;
-    body.append(nameEl, codeEl);
+    const linkRow = document.createElement("p");
+    const linkInline = document.createElement("a");
+    linkInline.href = `#/kunden/${kundeInfo.id}`;
+    linkInline.className = "hunde-owner-inline-link";
+    linkInline.textContent = "Zum Kundenprofil";
+    linkRow.appendChild(linkInline);
+    body.append(idEl, nameEl, codeEl, linkRow);
     const footer = card.querySelector(".ui-card__footer");
     footer.innerHTML = "";
     const link = document.createElement("a");
@@ -554,7 +564,7 @@ function createNavLink(label, href, variant = "secondary") {
   return link;
 }
 
-async function handleDeleteHund(container, hundId, button) {
+async function handleDeleteHund(container, hundId, kundenId, button) {
   if (!button || button.disabled) return;
   const confirmed = window.confirm("Möchten Sie diesen Hund wirklich löschen?");
   if (!confirmed) return;
@@ -562,35 +572,13 @@ async function handleDeleteHund(container, hundId, button) {
   button.disabled = true;
   button.textContent = "Lösche ...";
   try {
-    const blocker = document.createElement("div");
-    blocker.className = "hunde-delete-block";
-    const card = createCard({
-      eyebrow: "",
-      title: "",
-      body: "",
-      footer: "",
-    });
-    const cardEl = card.querySelector(".ui-card") || card.firstElementChild;
-    const body = cardEl?.querySelector(".ui-card__body");
-    if (body) {
-      body.innerHTML = "";
-    }
-    const [kurse, finanzen] = await Promise.all([listKurse(), listFinanzenByKundeId(hundId)]);
+    const kurse = await listKurse();
     const linkedKurse = kurse.filter(
       (kurs) => Array.isArray(kurs.hundIds) && kurs.hundIds.includes(hundId)
     );
-    const linkedFinanzen = finanzen || [];
-    if (linkedKurse.length || linkedFinanzen.length) {
-      if (body) {
-        body.appendChild(
-          createNotice(
-            "Der Hund kann nicht gelöscht werden, da noch verknüpfte Kurse oder Finanzdaten existieren.",
-            { variant: "warn", role: "alert" }
-          )
-        );
-      }
+    if (linkedKurse.length) {
       setHundToast(
-        "Löschen blockiert: Bitte zuerst Kurse/Finanzen auflösen oder entfernen.",
+        "Löschen blockiert: Bitte zuerst Kurse entfernen oder Hund aus Kursen lösen.",
         "error"
       );
       injectHundToast(container);
@@ -604,7 +592,11 @@ async function handleDeleteHund(container, hundId, button) {
     }
     runIntegrityCheck();
     setHundToast("Hund wurde gelöscht.", "success");
-    window.location.hash = "#/hunde";
+    if (kundenId) {
+      window.location.hash = `#/kunden/${kundenId}`;
+    } else {
+      window.location.hash = "#/hunde";
+    }
   } catch (error) {
     console.error("[HUNDE_ERR_DELETE]", error);
     setHundToast("Hund konnte nicht gelöscht werden.", "error");

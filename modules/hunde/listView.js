@@ -94,20 +94,41 @@ async function populateHundeTable(cardElement) {
     hunde.forEach((hund) => {
       const kunde = kunden.find((k) => k.id === hund.kundenId);
       const ownerLabel = kunde
-        ? `${kunde.code || kunde.kundenCode || kunde.id || "–"} · ${formatOwnerName(kunde)}`
+        ? `${formatOwnerName(kunde)} (${kunde.code || kunde.kundenCode || kunde.id || "–"})`
         : "Kein Kunde verknüpft";
       const hundCardFragment = createCard({
         eyebrow: hund.code || hund.hundeId || "–",
         title: hund.name || "Unbenannter Hund",
-        body: `<p>ID: ${hund.id || "–"} · ${ownerLabel}</p><p>${hund.rasse || "Unbekannte Rasse"} · ${formatDate(
-          hund.geburtsdatum
-        )}</p>`,
+        body: "",
         footer: "",
       });
       const hundCard =
         hundCardFragment.querySelector(".ui-card") || hundCardFragment.firstElementChild;
       if (!hundCard) return;
       hundCard.classList.add("hunde-list-item");
+      const cardBody = hundCard.querySelector(".ui-card__body");
+      if (cardBody) {
+        cardBody.innerHTML = "";
+        const ownerRow = document.createElement("p");
+        ownerRow.textContent = `ID: ${hund.id || "–"} · `;
+        if (kunde) {
+          const ownerLink = document.createElement("a");
+          ownerLink.href = `#/kunden/${kunde.id}`;
+          ownerLink.textContent = ownerLabel;
+          ownerLink.className = "hunde-list__owner-link";
+          ownerLink.setAttribute("aria-label", `Kunde ${ownerLabel} öffnen`);
+          ownerRow.appendChild(ownerLink);
+        } else {
+          const ownerText = document.createElement("span");
+          ownerText.textContent = ownerLabel;
+          ownerRow.appendChild(ownerText);
+        }
+        const metaRow = document.createElement("p");
+        metaRow.textContent = `${hund.rasse || "Unbekannte Rasse"} · ${formatDate(
+          hund.geburtsdatum
+        )}`;
+        cardBody.append(ownerRow, metaRow);
+      }
       const link = document.createElement("a");
       link.href = `#/hunde/${hund.id}`;
       link.className = "hunde-list__link";
