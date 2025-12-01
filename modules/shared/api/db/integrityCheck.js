@@ -32,11 +32,6 @@ function ensureForeignKeys() {
         throw new Error(`[INTEGRITY] Kurs ${kurs.id} references missing Hund ${hundId}`);
       }
     });
-    kurs.kundenIds?.forEach((kundenId) => {
-      if (!exists("kunden", kundenId)) {
-        throw new Error(`[INTEGRITY] Kurs ${kurs.id} references missing Kunde ${kundenId}`);
-      }
-    });
   });
 
   db.kalender?.forEach((entry) => {

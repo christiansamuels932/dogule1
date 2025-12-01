@@ -44,6 +44,14 @@
 - Creating/deleting a dog updates Kunden view immediately (no orphan).
 - Integrity check green; `pnpm lint`, `pnpm test`, `pnpm build` green.
 
+## Station 30 – Kunden ↔ Kurse Linking
+
+- Kunden-Detail listet alle Kurse (über Hundeverknüpfung), Links `#/kurse/<id>` mit ID/Code sichtbar.
+- Kurs-Detail/Liste zeigt Teilnehmerkunden (abgeleitet aus Hunden) mit ID/Code/Telefon/E-Mail und Links `#/kunden/<id>`.
+- Kurs-Formulare erlauben Mehrfachauswahl für Hunde; Besitzer werden automatisch abgeleitet (keine direkte Kunden-Auswahl).
+- API validiert hundIds gegen zentrale DB; `runIntegrityCheck` bleibt still.
+- `pnpm lint`, `pnpm test`, `pnpm build` grün; Hash-Routen bleiben sauber.
+
 ## 4. Phase A Acceptance Criteria
 
 - All Universal and CRUD checks pass for every module without manual fixtures.

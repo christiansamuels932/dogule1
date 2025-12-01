@@ -355,27 +355,25 @@ async function renderDetail(root, id) {
 
   let linkedKurse = [];
   let kurseLoadFailed = false;
-  if (linkedHunde.length) {
-    try {
-      const kurse = await listKurse();
-      const hundIds = new Set(linkedHunde.map((hund) => hund.id));
-      const filtered = kurse.filter(
-        (kurs) => Array.isArray(kurs.hundIds) && kurs.hundIds.some((hundId) => hundIds.has(hundId))
-      );
-      const unique = [];
-      const seen = new Set();
-      filtered.forEach((kurs) => {
-        if (seen.has(kurs.id)) return;
-        seen.add(kurs.id);
-        unique.push(kurs);
-      });
-      linkedKurse = unique;
-    } catch (error) {
-      kurseLoadFailed = true;
-      console.error("[KUNDEN_ERR_KURSE_LOAD]", error);
-    }
-  } else if (hundeLoadFailed) {
+  try {
+    const kurse = await listKurse();
+    const hundIds = new Set(linkedHunde.map((hund) => hund.id));
+    const filtered = kurse.filter((kurs) => {
+      const hasHundBezug =
+        Array.isArray(kurs.hundIds) && kurs.hundIds.some((hundId) => hundIds.has(hundId));
+      return hasHundBezug;
+    });
+    const unique = [];
+    const seen = new Set();
+    filtered.forEach((kurs) => {
+      if (seen.has(kurs.id)) return;
+      seen.add(kurs.id);
+      unique.push(kurs);
+    });
+    linkedKurse = unique;
+  } catch (error) {
     kurseLoadFailed = true;
+    console.error("[KUNDEN_ERR_KURSE_LOAD]", error);
   }
 
   root.appendChild(renderKundenHundeSection(linkedHunde, hundeLoadFailed));
@@ -412,8 +410,9 @@ async function renderDetail(root, id) {
         listWarenByKundeId(id),
       ]);
       const linkedHunde = allHunde.filter((hund) => hund.kundenId === id);
+      const hundIds = new Set(linkedHunde.map((hund) => hund.id));
       const linkedKurse = allKurse.filter(
-        (kurs) => Array.isArray(kurs.kundenIds) && kurs.kundenIds.includes(id)
+        (kurs) => Array.isArray(kurs.hundIds) && kurs.hundIds.some((hundId) => hundIds.has(hundId))
       );
       const linkedFinanzen = allFinanzen.filter((entry) => entry.kundeId === id);
       const linkedWaren = Array.isArray(kundeWaren) ? kundeWaren : [];
@@ -904,12 +903,23 @@ function renderKundenKurseSection(kurse = [], hasError = false) {
       const kursCardFragment = createCard({
         eyebrow: formatDateTime(kurs.date),
         title: kurs.title || "Ohne Titel",
-        body: `<p>${kurs.location || "Ort folgt"}</p>`,
+        body: "",
         footer: "",
       });
       const kursCard =
         kursCardFragment.querySelector(".ui-card") || kursCardFragment.firstElementChild;
       if (!kursCard) return;
+      const cardBody = kursCard.querySelector(".ui-card__body");
+      if (cardBody) {
+        cardBody.innerHTML = "";
+        const ort = document.createElement("p");
+        ort.textContent = kurs.location || "Ort folgt";
+        const meta = document.createElement("p");
+        meta.className = "kunden-kurs-meta";
+        const kursCode = kurs.code || kurs.kursId || "–";
+        meta.textContent = `ID: ${kurs.id || "–"} · Code: ${kursCode} · Hunde: ${formatIdList(kurs.hundIds)}`;
+        cardBody.append(ort, meta);
+      }
       kursCard.classList.add("kunden-kurs-item");
       const kursLink = document.createElement("a");
       kursLink.className = "kunden-kurs-link";
@@ -922,6 +932,12 @@ function renderKundenKurseSection(kurse = [], hasError = false) {
 
   section.appendChild(card);
   return section;
+}
+
+function formatIdList(value) {
+  if (Array.isArray(value) && value.length) return value.join(", ");
+  if (typeof value === "string" && value.trim()) return value;
+  return "–";
 }
 
 async function loadFinanzen(kundeId) {
