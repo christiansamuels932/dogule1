@@ -8,7 +8,7 @@ import {
 } from "../shared/components/components.js";
 import { deleteHund, listHunde } from "../shared/api/hunde.js";
 import { getKunde } from "../shared/api/kunden.js";
-import { listKurse } from "../shared/api/kurse.js";
+import { getKurseForHund } from "../shared/api/kurse.js";
 import { listFinanzenByKundeId } from "../shared/api/finanzen.js";
 import { runIntegrityCheck } from "../shared/api/db/integrityCheck.js";
 import { injectHundToast, setHundToast } from "./formView.js";
@@ -59,6 +59,7 @@ export async function createHundeDetailView(container, hundId) {
     const kundeInfo = {
       id: hund.kundenId || "",
       name: "–",
+      town: "",
     };
     let kundeFinanzen = [];
     if (hund.kundenId) {
@@ -69,6 +70,7 @@ export async function createHundeDetailView(container, hundId) {
           kundeInfo.name = fullName || kunde.vorname || kunde.nachname || "–";
           kundeInfo.id = kunde.id || hund.kundenId;
           kundeInfo.code = kunde.code || kunde.kundenCode || kunde.id;
+          kundeInfo.town = extractTown(kunde.adresse || kunde.address || "");
           try {
             kundeFinanzen = await listFinanzenByKundeId(kunde.id);
             container.__linkedFinanzen = kundeFinanzen;
@@ -191,10 +193,7 @@ async function buildLinkedKurseSection(hundId) {
     let kurse = [];
     let loadFailed = false;
     try {
-      const allKurse = await listKurse();
-      kurse = allKurse.filter(
-        (kurs) => Array.isArray(kurs.hundIds) && kurs.hundIds.includes(hundId)
-      );
+      kurse = await getKurseForHund(hundId);
     } catch (error) {
       loadFailed = true;
       console.error("[HUNDE_ERR_LINKED_KURSE]", error);
@@ -207,18 +206,38 @@ async function buildLinkedKurseSection(hundId) {
         })
       );
     } else if (!kurse.length) {
-      body.appendChild(createEmptyState("Keine Daten vorhanden.", ""));
+      body.appendChild(createEmptyState("Keine Kurse vorhanden.", ""));
     } else {
-      kurse.forEach((kurs) => {
+      const sorted = [...kurse].sort((a, b) => {
+        const timeA = new Date(a.date).getTime();
+        const timeB = new Date(b.date).getTime();
+        if (Number.isNaN(timeA) && Number.isNaN(timeB)) return 0;
+        if (Number.isNaN(timeA)) return 1;
+        if (Number.isNaN(timeB)) return -1;
+        return timeA - timeB;
+      });
+      sorted.forEach((kurs) => {
         const kursFragment = createCard({
           eyebrow: kurs.code || kurs.title || "–",
           title: kurs.title || "Ohne Titel",
-          body: `<p>${formatDate(kurs.date)} · ${kurs.location || "Ort offen"}</p>`,
+          body: "",
           footer: "",
         });
         const kursCard = kursFragment.querySelector(".ui-card") || kursFragment.firstElementChild;
         if (!kursCard) return;
         kursCard.classList.add("hunde-linked-kurs");
+        const kursBody = kursCard.querySelector(".ui-card__body");
+        if (kursBody) {
+          kursBody.innerHTML = "";
+          const info = document.createElement("div");
+          info.className = "hunde-linked-kurs__info";
+          const dateRow = document.createElement("p");
+          dateRow.textContent = `${formatDate(kurs.date)} · ${kurs.location || "Ort offen"}`;
+          const trainerRow = document.createElement("p");
+          trainerRow.textContent = `Trainer: ${kurs.trainerName || kurs.trainerId || "–"}`;
+          info.append(dateRow, trainerRow);
+          kursBody.appendChild(info);
+        }
         const link = document.createElement("a");
         link.href = `#/kurse/${kurs.id}`;
         link.className = "hunde-linked-kurs__link";
@@ -502,13 +521,9 @@ function buildOwnerCard(kundeInfo = {}, hasError = false) {
     nameEl.textContent = name;
     const codeEl = document.createElement("p");
     codeEl.textContent = `Code: ${code}`;
-    const linkRow = document.createElement("p");
-    const linkInline = document.createElement("a");
-    linkInline.href = `#/kunden/${kundeInfo.id}`;
-    linkInline.className = "hunde-owner-inline-link";
-    linkInline.textContent = "Zum Kundenprofil";
-    linkRow.appendChild(linkInline);
-    body.append(idEl, nameEl, codeEl, linkRow);
+    const townEl = document.createElement("p");
+    townEl.textContent = `Ort: ${kundeInfo.town || "–"}`;
+    body.append(idEl, nameEl, codeEl, townEl);
     const footer = card.querySelector(".ui-card__footer");
     footer.innerHTML = "";
     const link = document.createElement("a");
@@ -544,6 +559,18 @@ function formatDateTime(value) {
   });
 }
 
+function extractTown(address = "") {
+  if (typeof address !== "string") return "";
+  const parts = address
+    .split(",")
+    .map((part) => part.trim())
+    .filter(Boolean);
+  if (!parts.length) return "";
+  const townRaw = parts[parts.length - 1];
+  const cleaned = townRaw.replace(/^\d+\s*/, "").trim();
+  return cleaned || townRaw;
+}
+
 function valueOrDash(value) {
   if (value === null || value === undefined || value === "") return "–";
   return String(value);
@@ -572,10 +599,7 @@ async function handleDeleteHund(container, hundId, kundenId, button) {
   button.disabled = true;
   button.textContent = "Lösche ...";
   try {
-    const kurse = await listKurse();
-    const linkedKurse = kurse.filter(
-      (kurs) => Array.isArray(kurs.hundIds) && kurs.hundIds.includes(hundId)
-    );
+    const linkedKurse = await getKurseForHund(hundId);
     if (linkedKurse.length) {
       setHundToast(
         "Löschen blockiert: Bitte zuerst Kurse entfernen oder Hund aus Kursen lösen.",

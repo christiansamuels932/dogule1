@@ -376,7 +376,7 @@ async function renderDetail(root, id) {
     console.error("[KUNDEN_ERR_KURSE_LOAD]", error);
   }
 
-  root.appendChild(renderKundenHundeSection(linkedHunde, hundeLoadFailed));
+  root.appendChild(renderKundenHundeSection(linkedHunde, kunde, hundeLoadFailed));
   root.appendChild(renderKundenKurseSection(linkedKurse, kurseLoadFailed));
   let finanzen = [];
   let finanzenLoadFailed = false;
@@ -821,7 +821,7 @@ function applyErrors(refs, errors) {
   });
 }
 
-function renderKundenHundeSection(hunde = [], hasError = false) {
+function renderKundenHundeSection(hunde = [], kunde = null, hasError = false) {
   const section = createSectionBlock({
     title: "Hunde dieses Kunden",
     subtitle: "",
@@ -839,6 +839,12 @@ function renderKundenHundeSection(hunde = [], hasError = false) {
     const list = document.createElement("ul");
     list.className = "kunden-hunde-list";
     hunde.forEach((hund) => {
+      const ownerTown = extractTown(kunde?.adresse || kunde?.address || "");
+      const ownerName = formatFullName(kunde || {});
+      const ownerCode = kunde?.code || kunde?.kundenCode || kunde?.id || "–";
+      const ownerDescriptor = kunde
+        ? `${ownerCode} · ${ownerName}${ownerTown ? ` · ${ownerTown}` : ""}`
+        : "–";
       const item = document.createElement("li");
       const link = document.createElement("a");
       link.href = `#/hunde/${hund.id}`;
@@ -854,7 +860,7 @@ function renderKundenHundeSection(hunde = [], hasError = false) {
       const meta = document.createElement("p");
       meta.className = "kunden-hunde-meta";
       const code = hund.code || hund.hundeId || "–";
-      meta.textContent = `ID: ${hund.id || "–"} · Code: ${code} · ${
+      meta.textContent = `ID: ${hund.id || "–"} · Code: ${code} · Besitzer: ${ownerDescriptor} · ${
         hund.rasse || "unbekannte Rasse"
       }`;
 
@@ -1133,6 +1139,18 @@ function createDefinitionList(rows = []) {
 function formatFullName(kunde = {}) {
   const fullName = `${kunde.vorname ?? ""} ${kunde.nachname ?? ""}`.trim();
   return fullName || "Unbenannt";
+}
+
+function extractTown(address = "") {
+  if (typeof address !== "string") return "";
+  const parts = address
+    .split(",")
+    .map((part) => part.trim())
+    .filter(Boolean);
+  if (!parts.length) return "";
+  const townRaw = parts[parts.length - 1];
+  const cleaned = townRaw.replace(/^\d+\s*/, "").trim();
+  return cleaned || townRaw;
 }
 
 function valueOrDash(value) {

@@ -24,6 +24,7 @@ import {
   updateKurs,
   deleteKurs,
   listHunde,
+  getHundeForKurs,
   getKunde,
   listKunden,
   listFinanzenByKundeId,
@@ -215,9 +216,8 @@ async function renderDetail(section, id) {
     overviewCard.setTitle(kurs.title || "Ohne Titel");
     overviewCard.clearBody();
     overviewCard.body.appendChild(renderDetailList(kurs));
-    const { linkedHunde, linkedKunden, hundeError, kundenError } =
-      await collectLinkedParticipants(kurs);
-    const kundenFinanzen = await buildKursKundenFinanzen(linkedKunden, linkedHunde);
+    const participantContext = await buildParticipantContext(kurs);
+    const kundenFinanzen = await buildKursKundenFinanzen(participantContext.participants);
     section.__kursFinanzen = kundenFinanzen;
 
     overviewCard.clearFooter();
@@ -264,12 +264,7 @@ async function renderDetail(section, id) {
       detailStack.appendChild(metaCard.card);
     }
 
-    appendLinkedSections(section, {
-      linkedHunde,
-      linkedKunden,
-      hundeError,
-      kundenError,
-    });
+    appendParticipantsSection(section, participantContext);
     appendFinanceSections(section, kundenFinanzen);
   } catch (error) {
     console.error("[KURSE_ERR_DETAIL]", error);
@@ -281,180 +276,153 @@ async function renderDetail(section, id) {
   focusHeading(section);
 }
 
-async function collectLinkedParticipants(kurs = {}) {
-  const hundIds = Array.isArray(kurs.hundIds) ? kurs.hundIds.filter(Boolean) : [];
-  const result = {
-    linkedHunde: [],
-    linkedKunden: [],
-    hundeError: false,
-    kundenError: false,
-  };
-  if (hundIds.length) {
-    try {
-      const hunde = await listHunde();
-      result.linkedHunde = hunde.filter((hund) => hundIds.includes(hund.id));
-    } catch (error) {
-      console.error("[KURSE_ERR_LINKED_HUNDE]", error);
-      result.hundeError = true;
-      result.linkedHunde = [];
-    }
-  }
-
+async function buildParticipantContext(kurs = {}) {
+  const result = { participants: [], hasMissing: false, loadError: false };
+  if (!kurs?.id) return result;
   try {
-    const kunden = await listKunden();
-    const seen = new Set();
-    const candidates = [];
-    result.linkedHunde.forEach((hund) => {
-      const kundeId = hund?.kundenId;
-      const id = kundeId || "";
-      if (!id || seen.has(id)) return;
-      seen.add(id);
-      const kunde = kunden.find((entry) => entry.id === id);
-      candidates.push(kunde || { id, code: id, vorname: "", nachname: "" });
-    });
-    result.linkedKunden = candidates;
+    const hunde = await getHundeForKurs(kurs.id);
+    result.participants = Array.isArray(hunde) ? hunde : [];
+    result.hasMissing = result.participants.some((participant) => participant?._missing);
   } catch (error) {
-    console.error("[KURSE_ERR_LINKED_KUNDEN]", error);
-    result.kundenError = true;
-    result.linkedKunden = [];
+    console.error("[KURSE_ERR_LINKED_HUNDE]", error);
+    result.loadError = true;
   }
   return result;
 }
-function appendLinkedSections(
-  section,
-  { linkedHunde = [], linkedKunden = [], hundeError = false, kundenError = false } = {}
-) {
-  const hundeSection = document.createElement("section");
-  hundeSection.className = "kurse-linked-section";
-  hundeSection.appendChild(
-    createSectionHeader({
-      title: "Hunde im Kurs",
-      subtitle: "",
-      level: 2,
-    })
-  );
-  const hundeCardFragment = createCard({
-    eyebrow: "",
-    title: "",
-    body: "",
-    footer: "",
-  });
-  const hundeCard =
-    hundeCardFragment.querySelector(".ui-card") || hundeCardFragment.firstElementChild;
-  if (hundeCard) {
-    const body = hundeCard.querySelector(".ui-card__body");
-    if (body) {
-      body.innerHTML = "";
-      if (hundeError) {
-        body.appendChild(createErrorNotice());
-      } else if (!linkedHunde.length) {
-        body.appendChild(createEmpty());
-      } else {
-        linkedHunde.forEach((hund) => {
-          const cardFragment = createCard({
-            eyebrow: hund.rasse || "",
-            title: hund.name || "Unbenannter Hund",
-            body: `<p>Rufname: ${hund.rufname || "–"}</p>`,
-            footer: "",
-          });
-          const cardEl = cardFragment.querySelector(".ui-card") || cardFragment.firstElementChild;
-          if (!cardEl) return;
-          cardEl.classList.add("kurse-linked-hund");
-          const link = document.createElement("a");
-          link.href = `#/hunde/${hund.id}`;
-          link.className = "kurse-linked-hund__link";
-          link.appendChild(cardEl);
-          body.appendChild(link);
-        });
-      }
-    }
-    hundeSection.appendChild(hundeCard);
-  }
-  section.appendChild(hundeSection);
 
-  const kundenSection = document.createElement("section");
-  kundenSection.className = "kurse-linked-section";
-  kundenSection.appendChild(
+function appendParticipantsSection(
+  section,
+  { participants = [], hasMissing = false, loadError } = {}
+) {
+  const participantSection = document.createElement("section");
+  participantSection.className = "kurse-linked-section";
+  participantSection.appendChild(
     createSectionHeader({
-      title: "Kunden im Kurs",
+      title: "Teilnehmende Hunde",
       subtitle: "",
       level: 2,
     })
   );
-  const kundenCardFragment = createCard({
+  const cardFragment = createCard({
     eyebrow: "",
     title: "",
     body: "",
     footer: "",
   });
-  const kundenCard =
-    kundenCardFragment.querySelector(".ui-card") || kundenCardFragment.firstElementChild;
-  if (kundenCard) {
-    const body = kundenCard.querySelector(".ui-card__body");
-    if (body) {
-      body.innerHTML = "";
-      if (kundenError) {
-        body.appendChild(createErrorNotice());
-      } else if (!linkedKunden.length) {
+  const card = cardFragment.querySelector(".ui-card") || cardFragment.firstElementChild;
+  if (card) {
+    const body = card.querySelector(".ui-card__body");
+    body.innerHTML = "";
+    if (loadError) {
+      body.appendChild(createErrorNotice());
+    } else {
+      if (hasMissing) {
+        body.appendChild(
+          createNotice("Teilnehmerliste enthält ungültige Einträge. Bitte Kurs bearbeiten.", {
+            variant: "warn",
+            role: "alert",
+          })
+        );
+      }
+      if (!participants.length) {
         body.appendChild(createEmpty());
       } else {
-        linkedKunden.forEach((kunde) => {
-          const displayCode = getCustomerDisplayCode(kunde);
-          const cardFragment = createCard({
-            eyebrow: displayCode,
-            title: formatCustomerName(kunde),
-            body: "",
-            footer: "",
-          });
-          const cardEl = cardFragment.querySelector(".ui-card") || cardFragment.firstElementChild;
-          if (!cardEl) return;
-          cardEl.classList.add("kurse-linked-kunde");
-          const cardBody = cardEl.querySelector(".ui-card__body");
-          if (cardBody) {
-            cardBody.innerHTML = "";
-            const meta = document.createElement("div");
-            meta.className = "kurse-linked-kunde__meta";
-            const idRow = document.createElement("p");
-            idRow.textContent = `ID: ${kunde.id || "–"}`;
-            const codeRow = document.createElement("p");
-            codeRow.textContent = `Code: ${displayCode}`;
-            const phoneRow = document.createElement("p");
-            phoneRow.textContent = `Telefon: ${kunde.telefon || "–"}`;
-            const mailRow = document.createElement("p");
-            mailRow.textContent = `E-Mail: ${kunde.email || "–"}`;
-            meta.append(idRow, codeRow, phoneRow, mailRow);
-            cardBody.appendChild(meta);
-          }
-          const link = document.createElement("a");
-          link.href = kunde.id ? `#/kunden/${kunde.id}` : "#/kunden";
-          link.className = "kurse-linked-kunde__link";
-          link.appendChild(cardEl);
-          body.appendChild(link);
+        const sorted = [...participants].sort(participantSorter);
+        sorted.forEach((participant) => {
+          const row = renderParticipantRow(participant);
+          if (row) body.appendChild(row);
         });
       }
     }
-    kundenSection.appendChild(kundenCard);
+    participantSection.appendChild(card);
   }
-  section.appendChild(kundenSection);
+  section.appendChild(participantSection);
+}
+
+function participantSorter(a, b) {
+  if (a?._missing && b?._missing) return 0;
+  if (a?._missing) return 1;
+  if (b?._missing) return -1;
+  const codeA = (a?.code || a?.id || "").toLowerCase();
+  const codeB = (b?.code || b?.id || "").toLowerCase();
+  if (codeA === codeB) return 0;
+  return codeA > codeB ? 1 : -1;
+}
+
+function renderParticipantRow(participant) {
+  if (participant?._missing) {
+    const wrapper = document.createElement("div");
+    wrapper.className = "kurse-participant kurse-participant--missing";
+    const icon = createBadge("!", "warn");
+    icon.classList.add("kurse-participant__warning");
+    const label = document.createElement("span");
+    label.className = "kurse-participant__label";
+    label.textContent = "Unbekannter Hund (verwaiste Zuordnung)";
+    const idNote = document.createElement("span");
+    idNote.className = "kurse-participant__meta";
+    idNote.textContent = participant.id ? `ID: ${participant.id}` : "";
+    wrapper.append(icon, label);
+    if (participant.id) {
+      wrapper.appendChild(idNote);
+    }
+    return wrapper;
+  }
+  const displayCode = participant.code || participant.id || "–";
+  const name = participant.name || "Unbenannter Hund";
+  const ownerText = formatParticipantOwner(participant.owner, participant.kundenId);
+
+  const cardFragment = createCard({
+    eyebrow: displayCode,
+    title: name,
+    body: "",
+    footer: "",
+  });
+  const card = cardFragment.querySelector(".ui-card") || cardFragment.firstElementChild;
+  if (!card) return null;
+  card.classList.add("kurse-linked-hund");
+  const body = card.querySelector(".ui-card__body");
+  if (body) {
+    body.innerHTML = "";
+    const meta = document.createElement("div");
+    meta.className = "kurse-linked-hund__meta";
+    const ownerRow = document.createElement("p");
+    ownerRow.textContent = `Besitzer: ${ownerText}`;
+    const idRow = document.createElement("p");
+    idRow.textContent = `ID: ${participant.id || "–"}`;
+    meta.append(ownerRow, idRow);
+    body.appendChild(meta);
+  }
+  const link = document.createElement("a");
+  link.href = `#/hunde/${participant.id}`;
+  link.className = "kurse-linked-hund__link";
+  link.appendChild(card);
+  return link;
+}
+
+function formatParticipantOwner(owner, kundenId) {
+  if (!owner && !kundenId) return "–";
+  if (owner) {
+    const name = formatCustomerName(owner);
+    const code = getCustomerDisplayCode(owner);
+    const town = formatCustomerTown(owner);
+    const townPart = town ? ` · ${town}` : "";
+    return `${code} · ${name}${townPart}`;
+  }
+  return kundenId;
 }
 
 const KURSE_FINANCE_SECTION_TITLES = ["Finanzübersicht", "Offene Beträge", "Zahlungshistorie"];
 
-async function buildKursKundenFinanzen(linkedKunden = [], linkedHunde = []) {
+async function buildKursKundenFinanzen(participants = []) {
   const seen = new Set();
   const candidates = [];
-  const kundenList = Array.isArray(linkedKunden) ? linkedKunden : [];
-  kundenList.forEach((kunde) => {
-    const id = kunde?.id;
-    if (!id || seen.has(id)) return;
-    seen.add(id);
-    candidates.push(kunde);
-  });
-  (Array.isArray(linkedHunde) ? linkedHunde : []).forEach((hund) => {
-    const kundeId = hund?.kundenId;
+  (Array.isArray(participants) ? participants : []).forEach((participant) => {
+    if (participant?._missing) return;
+    const owner = participant?.owner;
+    const kundeId = owner?.id || participant?.kundenId;
     if (!kundeId || seen.has(kundeId)) return;
     seen.add(kundeId);
-    candidates.push({ id: kundeId });
+    candidates.push(owner?.id ? owner : { id: kundeId });
   });
   const financeResults = [];
   if (!candidates.length) return financeResults;
@@ -634,6 +602,22 @@ function createFinanceRow(label, text) {
 function formatCustomerName(kunde = {}) {
   const name = `${kunde.vorname ?? ""} ${kunde.nachname ?? ""}`.trim();
   return name || kunde.email || "Unbenannter Kunde";
+}
+
+function extractTown(address = "") {
+  if (typeof address !== "string") return "";
+  const parts = address
+    .split(",")
+    .map((part) => part.trim())
+    .filter(Boolean);
+  if (!parts.length) return "";
+  const townRaw = parts[parts.length - 1];
+  const cleaned = townRaw.replace(/^\d+\s*/, "").trim();
+  return cleaned || townRaw;
+}
+
+function formatCustomerTown(kunde = {}) {
+  return extractTown(kunde.adresse || kunde.address || "");
 }
 
 function getCustomerDisplayCode(kunde = {}) {
@@ -1374,11 +1358,21 @@ function createHundSearchField({
   const hint = searchRow.querySelector(".ui-form-row__hint");
   wrapper.appendChild(searchRow);
 
-  const selectedIds = new Set(
-    Array.isArray(selectedHundIds) ? selectedHundIds.filter(Boolean) : []
-  );
   const hundMap = new Map(
     (Array.isArray(hundeOptions) ? hundeOptions : []).map((hund) => [hund.id, hund])
+  );
+  const getKundeById = (id) =>
+    (Array.isArray(kundenOptions) ? kundenOptions : []).find((kunde) => kunde.id === id);
+  const formatOwnerWithTown = (kunde) => {
+    if (!kunde) return "Besitzer unbekannt";
+    const town = formatCustomerTown(kunde);
+    const townPart = town ? ` · ${town}` : "";
+    return `${getCustomerDisplayCode(kunde)} · ${formatCustomerName(kunde)}${townPart}`;
+  };
+  const selectedIds = new Set(
+    (Array.isArray(selectedHundIds) ? selectedHundIds.filter(Boolean) : []).filter((id) =>
+      hundMap.has(id)
+    )
   );
 
   const selectionInfo = document.createElement("div");
@@ -1421,7 +1415,7 @@ function createHundSearchField({
   wrapper.appendChild(clearBtn);
 
   const addHund = (hundId) => {
-    if (!hundId) return;
+    if (!hundId || !hundMap.has(hundId)) return;
     selectedIds.add(hundId);
     updateSelection();
   };
@@ -1519,7 +1513,9 @@ function createHundSearchField({
       list.className = "kurse-hunde-selected";
       selectedIds.forEach((id) => {
         const hund = hundMap.get(id);
-        const label = hund ? `${hund.code || id} · ${hund.name || "Hund"}` : id;
+        const owner = getKundeById(hund?.kundenId);
+        const ownerLabel = formatOwnerWithTown(owner);
+        const label = hund ? `${hund.code || id} · ${hund.name || "Hund"} · ${ownerLabel}` : id;
         const chip = document.createElement("button");
         chip.type = "button";
         chip.className = "kurse-hunde-chip";
@@ -1532,6 +1528,9 @@ function createHundSearchField({
   };
 
   const updateResults = () => {
+    const kundenById = new Map(
+      (Array.isArray(kundenOptions) ? kundenOptions : []).map((kunde) => [kunde.id, kunde])
+    );
     const { kunden, hunde } = filterOptions(searchInput.value || "");
     renderList(
       kundenList,
@@ -1548,7 +1547,7 @@ function createHundSearchField({
       hunde.map((hund) => ({
         id: hund.id,
         label: `${hund.code || hund.id} · ${hund.name || "Hund"}`,
-        sublabel: hund.rufname || "",
+        sublabel: formatOwnerWithTown(kundenById.get(hund.kundenId)),
       })),
       (item) => addHund(item.id),
       "Keine Hunde gefunden."

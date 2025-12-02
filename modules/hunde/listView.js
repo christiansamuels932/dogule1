@@ -93,9 +93,7 @@ async function populateHundeTable(cardElement) {
     listWrapper.className = "hunde-list";
     hunde.forEach((hund) => {
       const kunde = kunden.find((k) => k.id === hund.kundenId);
-      const ownerLabel = kunde
-        ? `${formatOwnerName(kunde)} (${kunde.code || kunde.kundenCode || kunde.id || "–"})`
-        : "Kein Kunde verknüpft";
+      const ownerLabel = kunde ? formatOwnerDescriptor(kunde) : "Kein Kunde verknüpft";
       const hundCardFragment = createCard({
         eyebrow: hund.code || hund.hundeId || "–",
         title: hund.name || "Unbenannter Hund",
@@ -110,7 +108,7 @@ async function populateHundeTable(cardElement) {
       if (cardBody) {
         cardBody.innerHTML = "";
         const ownerRow = document.createElement("p");
-        ownerRow.textContent = `ID: ${hund.id || "–"} · `;
+        ownerRow.textContent = `ID: ${hund.id || "–"} · Besitzer: `;
         if (kunde) {
           const ownerLink = document.createElement("a");
           ownerLink.href = `#/kunden/${kunde.id}`;
@@ -171,4 +169,24 @@ function formatOwnerName(kunde = {}) {
   const name = parts.join(" ").trim();
   if (name) return name;
   return kunde.email || kunde.code || kunde.kundenCode || kunde.id || "–";
+}
+
+function extractTown(address = "") {
+  if (typeof address !== "string") return "";
+  const parts = address
+    .split(",")
+    .map((part) => part.trim())
+    .filter(Boolean);
+  if (!parts.length) return "";
+  const townRaw = parts[parts.length - 1];
+  const cleaned = townRaw.replace(/^\d+\s*/, "").trim();
+  return cleaned || townRaw;
+}
+
+function formatOwnerDescriptor(kunde = {}) {
+  const code = kunde.code || kunde.kundenCode || kunde.id || "–";
+  const name = formatOwnerName(kunde);
+  const town = extractTown(kunde.adresse || kunde.address || "");
+  const townPart = town ? ` · ${town}` : "";
+  return `${code} · ${name}${townPart}`;
 }
