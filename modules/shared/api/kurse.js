@@ -114,6 +114,34 @@ const ensureKursShape = (kurs = {}) => ({
   ...kurs,
 });
 
+export async function getKurseForHund(hundId) {
+  const targetId = (hundId || "").trim();
+  if (!targetId) return [];
+  const kurse = Array.isArray(db[TABLE]) ? db[TABLE] : [];
+  const matches = kurse.filter((kurs) => normalizeIdArray(kurs.hundIds).includes(targetId));
+  return matches.map(ensureKursShape);
+}
+
+export async function getHundeForKurs(kursId) {
+  if (!kursId) return [];
+  const kurs = Array.isArray(db[TABLE]) ? db[TABLE].find((entry) => entry.id === kursId) : null;
+  if (!kurs) return [];
+  const hundIds = normalizeIdArray(kurs.hundIds);
+  const hundeTable = Array.isArray(db.hunde) ? db.hunde : [];
+  const kundenTable = Array.isArray(db.kunden) ? db.kunden : [];
+  return hundIds.map((hundId) => {
+    const hund = hundeTable.find((entry) => entry.id === hundId);
+    if (!hund) {
+      return { id: hundId, _missing: true };
+    }
+    const owner = kundenTable.find((kunde) => kunde.id === hund.kundenId) || null;
+    return {
+      ...hund,
+      owner: owner ? { ...owner } : null,
+    };
+  });
+}
+
 export async function listKurse(options) {
   const kurse = await list(TABLE, options);
   return kurse.map(ensureKursShape);
@@ -148,4 +176,21 @@ export async function updateKurs(id, data = {}, options) {
 
 export async function deleteKurs(id, options) {
   return remove(TABLE, id, options);
+}
+
+export async function removeHundFromAllKurse(hundId, options) {
+  const targetId = (hundId || "").trim();
+  if (!targetId) return [];
+  const kurse = Array.isArray(db[TABLE]) ? db[TABLE] : [];
+  const updated = [];
+  for (const kurs of kurse) {
+    const existingIds = normalizeIdArray(kurs.hundIds);
+    if (!existingIds.includes(targetId)) continue;
+    const nextIds = existingIds.filter((id) => id !== targetId);
+    const result = await update(TABLE, kurs.id, { hundIds: nextIds }, options);
+    if (result) {
+      updated.push(ensureKursShape(result));
+    }
+  }
+  return updated;
 }
