@@ -16,7 +16,7 @@ export default [
     },
   },
   {
-    files: ["*.cjs", "**/*.cjs", "vite.config.js"],
+    files: ["*.cjs", "**/*.cjs", "vite.config.js", "vitest.config.js"],
     languageOptions: {
       ecmaVersion: 2021,
       sourceType: "script",

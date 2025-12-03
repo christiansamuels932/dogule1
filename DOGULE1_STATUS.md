@@ -40,7 +40,7 @@
 
 ## Active Station
 
-**Station 33 – Connect Kurse ↔ Kalender:** Branch `feature/station33-kurse-kalender`. Status: implementiert und lokal getestet. Scope: Kurs ist Source-of-Truth für Kalender (Create/Update/Delete), bidirektionale Navigation (Kalender-Block → Kurs; Event-Detail → Kurs/Tag). Tests: `pnpm lint` ✅, `pnpm vitest run` ✅, `pnpm build` ✅, manuelle Checks siehe History. Nächster Schritt: PR für Station 33 erstellen/prüfen.
+**Station 34 – Connect Trainer ↔ Kalender:** Trainer-Infos werden im Kalender aus Kursen aufgelöst (keine neuen DB-Felder). Event-Blöcke und Detail zeigen Trainername/Code, Detail bietet „Zum Trainer“. Trainer-Detail enthält neue „Kalendereinsätze“-Karte mit datierten Kursen + Links. Keine Router/Layout-Änderungen. Tests: `pnpm lint` ✅, `pnpm vitest run` ✅, `pnpm build` ✅. Branch: lokal, noch kein PR.
 
 ### Status-Update-Kadenz
 
