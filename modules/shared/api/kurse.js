@@ -1,5 +1,6 @@
 import { list, create, update, remove } from "./crud.js";
 import { db } from "./db/index.js";
+import { removeKalenderEventByKursId, upsertKalenderEventForKurs } from "./kalender.js";
 
 const TABLE = "kurse";
 const DEFAULT_STATUS = "geplant";
@@ -183,7 +184,9 @@ export async function createKurs(data = {}, options) {
     { id: nextKursId(), ...ensureEditableDefaults(data) },
     options
   );
-  return ensureKursShape(record);
+  const shaped = ensureKursShape(record);
+  await upsertKalenderEventForKurs(shaped, options);
+  return shaped;
 }
 
 export async function updateKurs(id, data = {}, options) {
@@ -199,11 +202,18 @@ export async function updateKurs(id, data = {}, options) {
   const participants = ensureParticipantIntegrity({ ...existing, ...patch });
   patch.hundIds = participants.hundIds;
   const updated = await update(TABLE, id, patch, options);
-  return updated ? ensureKursShape(updated) : null;
+  if (!updated) return null;
+  const shaped = ensureKursShape(updated);
+  await upsertKalenderEventForKurs(shaped, options);
+  return shaped;
 }
 
 export async function deleteKurs(id, options) {
-  return remove(TABLE, id, options);
+  const result = await remove(TABLE, id, options);
+  if (result?.ok) {
+    await removeKalenderEventByKursId(id, options);
+  }
+  return result;
 }
 
 export async function removeHundFromAllKurse(hundId, options) {
