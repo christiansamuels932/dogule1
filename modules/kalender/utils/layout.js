@@ -66,6 +66,13 @@ function normalizeEvent(evt, gridStart, gridEnd) {
   const title = evt?.title ?? "";
   const start = toDate(evt?.start, "event-start");
   const end = toDate(evt?.end, "event-end");
+  const extras = { ...evt };
+  delete extras.start;
+  delete extras.end;
+  delete extras.rowStart;
+  delete extras.rowEnd;
+  delete extras.column;
+  delete extras.columnCount;
 
   let clampedStart = start < gridStart ? gridStart : start;
   let clampedEnd = end > gridEnd ? gridEnd : end;
@@ -79,6 +86,7 @@ function normalizeEvent(evt, gridStart, gridEnd) {
   const rowEnd = Math.max(rowStart + 1, rowEndRaw);
 
   return {
+    ...extras,
     id,
     title,
     start: clampedStart,

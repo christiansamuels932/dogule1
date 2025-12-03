@@ -1,7 +1,13 @@
+/* globals console, Node */
 import "./components/calendarGrid.css";
 import "./components/eventBlock.css";
-import { createButton, createEmptyState, createNotice } from "../shared/components/components.js";
-import { listKalenderEvents, getKalenderEvent } from "../shared/api/index.js";
+import {
+  createButton,
+  createCard,
+  createEmptyState,
+  createNotice,
+} from "../shared/components/components.js";
+import { listKalenderEvents, getKalenderEvent, getKurs } from "../shared/api/index.js";
 import { buildKalenderHash, parseKalenderRoute } from "./utils/routes.js";
 import { addDays, parseLocalDate, getIsoWeek, getMondayOfIsoWeek } from "./utils/date.js";
 import { computeEventLayout } from "./utils/layout.js";
@@ -282,13 +288,18 @@ function renderEventBlocks(canvas, positioned, { includeExtras = true } = {}) {
     block.append(titleEl, metaEl);
     block.tabIndex = 0;
     block.setAttribute("aria-label", `${evt.title}, ${timeRange}`);
-    block.addEventListener("click", () => {
-      window.location.hash = buildKalenderHash({ mode: "event", eventId: evt.id });
-    });
+    const targetHash = evt.kursId
+      ? `#/kurse/${encodeURIComponent(evt.kursId)}`
+      : buildKalenderHash({ mode: "event", eventId: evt.id });
+    block.dataset.kursId = evt.kursId || "";
+    const navigateToTarget = () => {
+      window.location.hash = targetHash;
+    };
+    block.addEventListener("click", navigateToTarget);
     block.addEventListener("keydown", (e) => {
       if (e.key === "Enter" || e.key === " ") {
         e.preventDefault();
-        window.location.hash = buildKalenderHash({ mode: "event", eventId: evt.id });
+        navigateToTarget();
       }
     });
 
@@ -315,6 +326,8 @@ async function getEventsForRange(startDate, endDate) {
       end: evt.endDate,
       code: evt.code,
       location: evt.location,
+      kursId: evt.kursId,
+      trainerId: evt.trainerId,
     }));
 
   return computeEventLayout(matches, rangeStart, rangeEnd);
@@ -401,6 +414,8 @@ async function renderWeekView(section, mondayDate) {
           end: evt.endDate,
           code: evt.code,
           location: evt.location,
+          kursId: evt.kursId,
+          trainerId: evt.trainerId,
         }));
       const positioned = computeEventLayout(dayEvents, gridStart, gridEnd);
       positionedByDay.push({ date: dayDate, positioned });
@@ -740,27 +755,95 @@ async function renderEventDetail(section, eventId) {
       return;
     }
 
-    h2.textContent = event.title || event.code || "Ereignis";
-
-    const card = document.createElement("section");
-    card.className = "ui-card";
-
-    const body = document.createElement("div");
-    body.className = "ui-card__body";
     const start = toDate(event.start);
     const end = toDate(event.end);
     const dateLabel = formatDateDMY(start);
     const timeLabel = formatTimeRange(start, end);
     const durationLabel = formatDuration(start, end);
+    const kursId = event.kursId ? String(event.kursId) : "";
+    let kurs = null;
+    if (kursId) {
+      try {
+        kurs = await getKurs(kursId);
+      } catch (error) {
+        console.error("[KALENDER_ERR_KURS_FETCH]", error);
+      }
+    }
 
-    body.innerHTML = `
-      <div><strong>Datum:</strong> ${dateLabel}</div>
-      <div><strong>Zeit:</strong> ${timeLabel}</div>
-      <div><strong>Dauer:</strong> ${durationLabel}</div>
-      ${event.code ? `<div><strong>Code:</strong> ${event.code}</div>` : ""}
-      ${event.location ? `<div><strong>Ort:</strong> ${event.location}</div>` : ""}
-    `;
-    card.appendChild(body);
+    h2.textContent = event.title || event.code || "Ereignis";
+
+    const cardFragment = createCard({
+      eyebrow: event.code || "",
+      title: event.title || event.code || "Ereignis",
+      body: "",
+      footer: "",
+    });
+    const card = cardFragment.querySelector(".ui-card") || cardFragment.firstElementChild;
+    const body = card.querySelector(".ui-card__body");
+
+    body.innerHTML = "";
+    const dl = document.createElement("dl");
+    dl.className = "kalender-event-detail";
+    const addRow = (label, value) => {
+      const dt = document.createElement("dt");
+      dt.textContent = label;
+      const dd = document.createElement("dd");
+      if (value instanceof Node) {
+        dd.appendChild(value);
+      } else {
+        dd.textContent = value;
+      }
+      dl.append(dt, dd);
+    };
+    addRow("Datum", dateLabel);
+    addRow("Zeit", timeLabel);
+    addRow("Dauer", durationLabel);
+    if (event.location) addRow("Ort", event.location);
+    if (event.notes) addRow("Notiz", event.notes);
+    if (kurs) {
+      addRow("Kurs", `${kurs.title || kurs.code || kurs.id}`);
+      addRow("Kurs-ID", kurs.id);
+    } else if (kursId) {
+      const warn = createNotice("Verknüpfter Kurs nicht gefunden.", {
+        variant: "warn",
+        role: "alert",
+      });
+      addRow("Kurs", warn);
+    }
+    body.appendChild(dl);
+
+    const footer = card.querySelector(".ui-card__footer");
+    if (footer) {
+      footer.innerHTML = "";
+      const actions = [];
+      if (kursId) {
+        actions.push(
+          createButton({
+            label: "Zum Kurs",
+            variant: "primary",
+            onClick: () => {
+              window.location.hash = `#/kurse/${encodeURIComponent(kursId)}`;
+            },
+          })
+        );
+      }
+      actions.push(
+        createButton({
+          label: "Zum Tag",
+          variant: "secondary",
+          onClick: () => {
+            const dateStr = [
+              start.getFullYear(),
+              String(start.getMonth() + 1).padStart(2, "0"),
+              String(start.getDate()).padStart(2, "0"),
+            ].join("-");
+            window.location.hash = buildKalenderHash({ mode: "tag", date: dateStr });
+          },
+        })
+      );
+      actions.forEach((btn) => footer.appendChild(btn));
+    }
+
     section.appendChild(card);
 
     focusHeading(section);
