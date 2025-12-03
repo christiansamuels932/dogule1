@@ -257,9 +257,22 @@ async function renderDetail(section, id) {
   detailBody.appendChild(list);
   section.append(actionsCard, detailCard);
 
-  const kurseSection = await buildTrainerKurseSection(id);
+  let trainerKurse = [];
+  let kurseLoadFailed = false;
+  try {
+    trainerKurse = await getKurseForTrainer(id);
+  } catch (error) {
+    kurseLoadFailed = true;
+    console.error("[TRAINER_KURSE_LOAD_FAIL]", error);
+  }
+
+  const kurseSection = buildTrainerKurseSection(trainerKurse, kurseLoadFailed);
   if (kurseSection) {
     section.appendChild(kurseSection);
+  }
+  const kalenderSection = buildTrainerKalenderSection(trainerKurse, kurseLoadFailed);
+  if (kalenderSection) {
+    section.appendChild(kalenderSection);
   }
 }
 
@@ -276,7 +289,7 @@ function renderErrorState(section) {
   );
 }
 
-async function buildTrainerKurseSection(trainerId) {
+function buildTrainerKurseSection(kurse = [], loadFailed = false) {
   const section = document.createElement("section");
   section.className = "trainer-linked-kurse";
   section.appendChild(
@@ -296,14 +309,6 @@ async function buildTrainerKurseSection(trainerId) {
   if (!cardEl) return section;
   const body = cardEl.querySelector(".ui-card__body");
   body.innerHTML = "";
-  let kurse = [];
-  let loadFailed = false;
-  try {
-    kurse = await getKurseForTrainer(trainerId);
-  } catch (error) {
-    loadFailed = true;
-    console.error("[TRAINER_KURSE_LOAD_FAIL]", error);
-  }
   if (loadFailed) {
     body.appendChild(
       createNotice("Fehler beim Laden der Daten.", { variant: "warn", role: "alert" })
@@ -311,14 +316,7 @@ async function buildTrainerKurseSection(trainerId) {
   } else if (!kurse.length) {
     body.appendChild(createEmptyState("Keine Daten vorhanden.", ""));
   } else {
-    const sorted = [...kurse].sort((a, b) => {
-      const timeA = new Date(a.date || "").getTime();
-      const timeB = new Date(b.date || "").getTime();
-      if (Number.isNaN(timeA) && Number.isNaN(timeB)) return 0;
-      if (Number.isNaN(timeA)) return 1;
-      if (Number.isNaN(timeB)) return -1;
-      return timeA - timeB;
-    });
+    const sorted = sortKurseBySchedule(kurse);
     sorted.forEach((kurs) => {
       const kursCard = createCard({
         eyebrow: kurs.code || kurs.id,
@@ -346,6 +344,72 @@ async function buildTrainerKurseSection(trainerId) {
       body.appendChild(link);
     });
   }
+  section.appendChild(cardEl);
+  return section;
+}
+
+function buildTrainerKalenderSection(kurse = [], loadFailed = false) {
+  const section = document.createElement("section");
+  section.className = "trainer-calendar-assignments";
+  section.appendChild(
+    createSectionHeader({
+      title: "Kalendereinsätze",
+      subtitle: "",
+      level: 2,
+    })
+  );
+
+  const card = createCard({ eyebrow: "", title: "", body: "", footer: "" });
+  const cardEl = card.querySelector(".ui-card") || card.firstElementChild;
+  if (!cardEl) return section;
+  const body = cardEl.querySelector(".ui-card__body");
+  body.innerHTML = "";
+
+  if (loadFailed) {
+    body.appendChild(
+      createNotice("Fehler beim Laden der Daten.", { variant: "warn", role: "alert" })
+    );
+  } else {
+    const scheduled = kurse.filter(kursHasSchedule);
+    if (!scheduled.length) {
+      body.appendChild(createEmptyState("Keine Kalendereinträge für diesen Trainer.", ""));
+    } else {
+      const sorted = sortKurseBySchedule(scheduled);
+      const listWrapper = document.createElement("div");
+      listWrapper.className = "trainer-calendar-assignments__list";
+      sorted.forEach((kurs) => {
+        const kursCard = createCard({
+          eyebrow: kurs.code || kurs.id,
+          title: kurs.title || "Ohne Titel",
+          body: "",
+          footer: "",
+        });
+        const kursEl = kursCard.querySelector(".ui-card") || kursCard.firstElementChild;
+        if (!kursEl) return;
+        kursEl.classList.add("trainer-linked-kurs");
+        const kursBody = kursEl.querySelector(".ui-card__body");
+        kursBody.innerHTML = "";
+        const info = document.createElement("div");
+        info.className = "trainer-linked-kurs__info";
+        const dateRow = document.createElement("p");
+        dateRow.textContent = `${formatDate(kurs.date)} · ${formatScheduleTimeRange(
+          kurs.startTime,
+          kurs.endTime
+        )}`;
+        const locationRow = document.createElement("p");
+        locationRow.textContent = kurs.location || "Ort offen";
+        info.append(dateRow, locationRow);
+        kursBody.appendChild(info);
+        const link = document.createElement("a");
+        link.href = `#/kurse/${kurs.id}`;
+        link.className = "trainer-linked-kurs__link";
+        link.appendChild(kursEl);
+        listWrapper.appendChild(link);
+      });
+      body.appendChild(listWrapper);
+    }
+  }
+
   section.appendChild(cardEl);
   return section;
 }
@@ -661,6 +725,48 @@ function formatDate(value) {
     month: "2-digit",
     year: "numeric",
   });
+}
+
+function kursHasSchedule(kurs = {}) {
+  return Boolean((kurs.date || "").trim() && (kurs.startTime || "").trim());
+}
+
+function parseTimeToMinutes(timeStr = "") {
+  const match = /^(\d{1,2}):(\d{2})$/.exec(timeStr.trim());
+  if (!match) return null;
+  const hours = Number.parseInt(match[1], 10);
+  const minutes = Number.parseInt(match[2], 10);
+  if (!Number.isFinite(hours) || !Number.isFinite(minutes)) return null;
+  return hours * 60 + minutes;
+}
+
+function buildScheduleTimestamp(kurs = {}) {
+  if (!kursHasSchedule(kurs)) return Number.POSITIVE_INFINITY;
+  const base = new Date(kurs.date);
+  if (Number.isNaN(base.getTime())) return Number.POSITIVE_INFINITY;
+  const minutes = parseTimeToMinutes(kurs.startTime) ?? 0;
+  return new Date(
+    base.getFullYear(),
+    base.getMonth(),
+    base.getDate(),
+    Math.floor(minutes / 60),
+    minutes % 60,
+    0,
+    0
+  ).getTime();
+}
+
+function sortKurseBySchedule(kurse = []) {
+  return [...kurse].sort((a, b) => {
+    const timeA = buildScheduleTimestamp(a);
+    const timeB = buildScheduleTimestamp(b);
+    if (timeA !== timeB) return timeA - timeB;
+    return String(a.id || "").localeCompare(String(b.id || ""));
+  });
+}
+
+function formatScheduleTimeRange(start, end) {
+  return formatTimeRange(start, end);
 }
 
 function formatTimeRange(start, end) {
