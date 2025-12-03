@@ -4,6 +4,7 @@ import { db } from "./db/index.js";
 const TABLE = "kurse";
 const DEFAULT_STATUS = "geplant";
 const LEGACY_CODE_KEY = "kursId";
+const TRAINER_ERROR_CODE = "KURS_TRAINER_INVALID";
 
 const EDITABLE_DEFAULTS = {
   code: "",
@@ -54,6 +55,27 @@ const ensureParticipantIntegrity = (payload = {}) => {
   };
 };
 
+const ensureTrainerIntegrity = (payload = {}) => {
+  const trainerId = (payload.trainerId || "").trim();
+  if (!trainerId) {
+    const error = new Error("Trainer ist erforderlich");
+    error.code = TRAINER_ERROR_CODE;
+    throw error;
+  }
+  const trainer = Array.isArray(db.trainer)
+    ? db.trainer.find((entry) => entry.id === trainerId)
+    : null;
+  if (!trainer) {
+    const error = new Error(`Trainer ${trainerId} existiert nicht`);
+    error.code = TRAINER_ERROR_CODE;
+    throw error;
+  }
+  return {
+    trainerId,
+    trainerName: trainer.name || payload.trainerName || trainerId,
+  };
+};
+
 const nextKursId = () => {
   kursSequence += 1;
   return `kurs-${kursSequence.toString().padStart(3, "0")}`;
@@ -83,6 +105,9 @@ const ensureEditableDefaults = (payload = {}) => {
   normalized.price = sanitizeNumber(payload.price, EDITABLE_DEFAULTS.price);
   const participants = ensureParticipantIntegrity(normalized);
   normalized.hundIds = participants.hundIds;
+  const trainerIntegrity = ensureTrainerIntegrity(normalized);
+  normalized.trainerId = trainerIntegrity.trainerId;
+  normalized.trainerName = trainerIntegrity.trainerName;
   return normalized;
 };
 
@@ -168,6 +193,9 @@ export async function updateKurs(id, data = {}, options) {
   if (!Object.keys(patch).length) {
     return existing;
   }
+  const trainerIntegrity = ensureTrainerIntegrity({ ...existing, ...patch });
+  patch.trainerId = trainerIntegrity.trainerId;
+  patch.trainerName = trainerIntegrity.trainerName;
   const participants = ensureParticipantIntegrity({ ...existing, ...patch });
   patch.hundIds = participants.hundIds;
   const updated = await update(TABLE, id, patch, options);
@@ -193,4 +221,12 @@ export async function removeHundFromAllKurse(hundId, options) {
     }
   }
   return updated;
+}
+
+export async function getKurseForTrainer(trainerId) {
+  const targetId = (trainerId || "").trim();
+  if (!targetId) return [];
+  const kurse = Array.isArray(db[TABLE]) ? db[TABLE] : [];
+  const matches = kurse.filter((kurs) => kurs.trainerId === targetId);
+  return matches.map(ensureKursShape);
 }

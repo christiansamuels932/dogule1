@@ -16,6 +16,7 @@ function ensureUniqueIds(tableName, records = []) {
 
 function ensureForeignKeys() {
   const exists = (table, id) => db[table]?.some((item) => item.id === id);
+  ensureKursHundIntegrity(exists);
 
   db.hunde?.forEach((hund) => {
     if (!exists("kunden", hund.kundenId)) {
@@ -24,14 +25,14 @@ function ensureForeignKeys() {
   });
 
   db.kurse?.forEach((kurs) => {
-    if (kurs.trainerId && !exists("trainer", kurs.trainerId)) {
-      throw new Error(`[INTEGRITY] Kurs ${kurs.id} references missing Trainer ${kurs.trainerId}`);
+    if (!kurs.trainerId) {
+      throw new Error(`[INTEGRITY][IC-32] Kurs ${kurs.id} missing trainerId`);
     }
-    kurs.hundIds?.forEach((hundId) => {
-      if (!exists("hunde", hundId)) {
-        throw new Error(`[INTEGRITY] Kurs ${kurs.id} references missing Hund ${hundId}`);
-      }
-    });
+    if (!exists("trainer", kurs.trainerId)) {
+      throw new Error(
+        `[INTEGRITY][IC-32] Kurs ${kurs.id} references missing Trainer ${kurs.trainerId}`
+      );
+    }
   });
 
   db.kalender?.forEach((entry) => {
@@ -72,4 +73,20 @@ export function runIntegrityCheck() {
   ensureUniqueIds("zahlungen", db.zahlungen);
   ensureUniqueIds("waren", db.waren);
   ensureForeignKeys();
+}
+
+function ensureKursHundIntegrity(exists) {
+  const violations = [];
+  (db.kurse || []).forEach((kurs) => {
+    const hundIds = Array.isArray(kurs.hundIds) ? kurs.hundIds.filter(Boolean) : [];
+    const missing = hundIds.filter((hundId) => !exists("hunde", hundId));
+    if (missing.length) {
+      violations.push(
+        `[INTEGRITY][IC-31.1] Kurs ${kurs.id} references missing Hund IDs: ${missing.join(", ")}`
+      );
+    }
+  });
+  if (violations.length) {
+    throw new Error(violations.join(" | "));
+  }
 }

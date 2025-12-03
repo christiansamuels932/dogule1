@@ -6,6 +6,8 @@ import {
   updateTrainer,
   deleteTrainer,
 } from "../shared/api/trainer.js";
+import { getKurseForTrainer } from "../shared/api/kurse.js";
+import { runIntegrityCheck } from "../shared/api/db/integrityCheck.js";
 import {
   createSectionHeader,
   createCard,
@@ -254,6 +256,11 @@ async function renderDetail(section, id) {
 
   detailBody.appendChild(list);
   section.append(actionsCard, detailCard);
+
+  const kurseSection = await buildTrainerKurseSection(id);
+  if (kurseSection) {
+    section.appendChild(kurseSection);
+  }
 }
 
 function renderPlaceholder(section, heading) {
@@ -267,6 +274,80 @@ function renderErrorState(section) {
   section.appendChild(
     createNotice("Fehler beim Laden der Daten.", { variant: "warn", role: "alert" })
   );
+}
+
+async function buildTrainerKurseSection(trainerId) {
+  const section = document.createElement("section");
+  section.className = "trainer-linked-kurse";
+  section.appendChild(
+    createSectionHeader({
+      title: "Kurse dieses Trainers",
+      subtitle: "",
+      level: 2,
+    })
+  );
+  const card = createCard({
+    eyebrow: "",
+    title: "",
+    body: "",
+    footer: "",
+  });
+  const cardEl = card.querySelector(".ui-card") || card.firstElementChild;
+  if (!cardEl) return section;
+  const body = cardEl.querySelector(".ui-card__body");
+  body.innerHTML = "";
+  let kurse = [];
+  let loadFailed = false;
+  try {
+    kurse = await getKurseForTrainer(trainerId);
+  } catch (error) {
+    loadFailed = true;
+    console.error("[TRAINER_KURSE_LOAD_FAIL]", error);
+  }
+  if (loadFailed) {
+    body.appendChild(
+      createNotice("Fehler beim Laden der Daten.", { variant: "warn", role: "alert" })
+    );
+  } else if (!kurse.length) {
+    body.appendChild(createEmptyState("Keine Daten vorhanden.", ""));
+  } else {
+    const sorted = [...kurse].sort((a, b) => {
+      const timeA = new Date(a.date || "").getTime();
+      const timeB = new Date(b.date || "").getTime();
+      if (Number.isNaN(timeA) && Number.isNaN(timeB)) return 0;
+      if (Number.isNaN(timeA)) return 1;
+      if (Number.isNaN(timeB)) return -1;
+      return timeA - timeB;
+    });
+    sorted.forEach((kurs) => {
+      const kursCard = createCard({
+        eyebrow: kurs.code || kurs.id,
+        title: kurs.title || "Ohne Titel",
+        body: "",
+        footer: "",
+      });
+      const kursEl = kursCard.querySelector(".ui-card") || kursCard.firstElementChild;
+      if (!kursEl) return;
+      kursEl.classList.add("trainer-linked-kurs");
+      const kursBody = kursEl.querySelector(".ui-card__body");
+      kursBody.innerHTML = "";
+      const info = document.createElement("div");
+      info.className = "trainer-linked-kurs__info";
+      const dateRow = document.createElement("p");
+      dateRow.textContent = `${formatDate(kurs.date)} · ${kurs.location || "Ort offen"}`;
+      const timeRow = document.createElement("p");
+      timeRow.textContent = `Zeit: ${formatTimeRange(kurs.startTime, kurs.endTime)}`;
+      info.append(dateRow, timeRow);
+      kursBody.appendChild(info);
+      const link = document.createElement("a");
+      link.href = `#/kurse/${kurs.id}`;
+      link.className = "trainer-linked-kurs__link";
+      link.appendChild(kursEl);
+      body.appendChild(link);
+    });
+  }
+  section.appendChild(cardEl);
+  return section;
 }
 
 async function renderCreate(section) {
@@ -571,6 +652,23 @@ function appendBackLink(section, href) {
   section.appendChild(back);
 }
 
+function formatDate(value) {
+  if (!value) return "Datum folgt";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleDateString("de-CH", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+}
+
+function formatTimeRange(start, end) {
+  const safeStart = start || "00:00";
+  const safeEnd = end || "00:00";
+  return `${safeStart}–${safeEnd}`;
+}
+
 function generateNextTrainerCode(list = []) {
   let max = 0;
   list.forEach((trainer) => {
@@ -676,6 +774,14 @@ async function renderDelete(section, id) {
     return;
   }
 
+  let assignedKurse = [];
+  try {
+    assignedKurse = await getKurseForTrainer(id);
+  } catch (error) {
+    console.error("[TRAINER_DELETE_KURSE_FAIL]", error);
+  }
+  const hasAssignments = assignedKurse.length > 0;
+
   const card = createCard({
     eyebrow: "",
     title: "Löschen bestätigen",
@@ -684,46 +790,100 @@ async function renderDelete(section, id) {
   });
   const cardEl = card.querySelector(".ui-card") || card.firstElementChild;
   const body = cardEl.querySelector(".ui-card__body");
-  body.innerHTML = `
-    <p>Dieser Schritt entfernt den Trainer dauerhaft aus dem System.</p>
-    <p><strong>ID:</strong> ${trainer.id}</p>
-    <p><strong>Code:</strong> ${trainer.code || "—"}</p>
-    <p><strong>Name:</strong> ${trainer.name || "—"}</p>
-  `;
+  body.innerHTML = "";
+  const intro = document.createElement("p");
+  intro.textContent = "Dieser Schritt entfernt den Trainer dauerhaft aus dem System.";
+  const idRow = document.createElement("p");
+  idRow.innerHTML = `<strong>ID:</strong> ${trainer.id}`;
+  const codeRow = document.createElement("p");
+  codeRow.innerHTML = `<strong>Code:</strong> ${trainer.code || "—"}`;
+  const nameRow = document.createElement("p");
+  nameRow.innerHTML = `<strong>Name:</strong> ${trainer.name || "—"}`;
+  body.append(intro, idRow, codeRow, nameRow);
 
   const statusSlot = document.createElement("div");
   statusSlot.className = "trainer-delete-status";
   body.appendChild(statusSlot);
+
+  if (hasAssignments) {
+    const guard = createNotice(
+      "Löschen blockiert: Der Trainer ist aktuell Kursen zugewiesen. Bitte zuerst umhängen.",
+      { variant: "warn", role: "alert" }
+    );
+    statusSlot.appendChild(guard);
+    const list = document.createElement("ul");
+    list.className = "trainer-delete-assignments";
+    assignedKurse.forEach((kurs) => {
+      const li = document.createElement("li");
+      const link = document.createElement("a");
+      link.href = `#/kurse/${kurs.id}`;
+      link.textContent = `${kurs.code || kurs.id} · ${kurs.title || "Kurs"}`;
+      li.appendChild(link);
+      list.appendChild(li);
+    });
+    body.appendChild(list);
+  }
 
   const footer = cardEl.querySelector(".ui-card__footer");
   footer.innerHTML = "";
   const actions = document.createElement("div");
   actions.className = "trainer-delete-actions";
 
-  const confirmBtn = createButton({ label: "Löschen", variant: "warn" });
-  confirmBtn.type = "button";
-  confirmBtn.addEventListener("click", async () => {
-    statusSlot.innerHTML = "";
-    confirmBtn.disabled = true;
-    confirmBtn.textContent = "Lösche ...";
-    try {
-      const result = await deleteTrainer(id);
-      if (!result?.ok) {
-        throw new Error("Trainer Delete failed");
-      }
-      statusSlot.appendChild(
-        createNotice("Trainer wurde gelöscht.", { variant: "ok", role: "status" })
-      );
-      window.location.hash = "#/trainer";
-    } catch (error) {
-      console.error("[TRAINER_DELETE_FAIL]", error);
-      statusSlot.appendChild(
-        createNotice("Fehler beim Löschen.", { variant: "warn", role: "alert" })
-      );
-      confirmBtn.disabled = false;
-      confirmBtn.textContent = "Löschen";
-    }
+  const confirmBtn = createButton({
+    label: hasAssignments ? "Löschen blockiert" : "Löschen",
+    variant: "warn",
   });
+  confirmBtn.type = "button";
+  if (!hasAssignments) {
+    confirmBtn.addEventListener("click", async () => {
+      statusSlot.innerHTML = "";
+      confirmBtn.disabled = true;
+      confirmBtn.textContent = "Lösche ...";
+      try {
+        const result = await deleteTrainer(id);
+        if (!result?.ok) {
+          throw new Error("Trainer Delete failed");
+        }
+        runIntegrityCheck();
+        statusSlot.appendChild(
+          createNotice("Trainer wurde gelöscht.", { variant: "ok", role: "status" })
+        );
+        window.location.hash = "#/trainer";
+      } catch (error) {
+        console.error("[TRAINER_DELETE_FAIL]", error);
+        const isBlocked = error?.code === "TRAINER_DELETE_BLOCKED";
+        const message = isBlocked
+          ? "Löschen blockiert: Trainer ist Kursen zugewiesen."
+          : "Fehler beim Löschen.";
+        statusSlot.appendChild(createNotice(message, { variant: "warn", role: "alert" }));
+        if (isBlocked) {
+          let latestAssignments = [];
+          try {
+            latestAssignments = await getKurseForTrainer(id);
+          } catch (refreshError) {
+            console.error("[TRAINER_DELETE_REFRESH_FAIL]", refreshError);
+          }
+          if (latestAssignments.length) {
+            const list = document.createElement("ul");
+            list.className = "trainer-delete-assignments";
+            latestAssignments.forEach((kurs) => {
+              const li = document.createElement("li");
+              const link = document.createElement("a");
+              link.href = `#/kurse/${kurs.id}`;
+              link.textContent = `${kurs.code || kurs.id} · ${kurs.title || "Kurs"}`;
+              li.appendChild(link);
+              list.appendChild(li);
+            });
+            statusSlot.appendChild(list);
+          }
+        }
+        confirmBtn.disabled = false;
+        confirmBtn.textContent = "Löschen";
+      }
+    });
+  } else {
+    confirmBtn.disabled = true;
+  }
 
   const cancelBtn = createButton({ label: "Abbrechen", variant: "quiet" });
   cancelBtn.type = "button";

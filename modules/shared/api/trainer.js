@@ -1,5 +1,6 @@
 import { list, create, update, remove } from "./crud.js";
 import { db } from "./db/index.js";
+import { getKurseForTrainer } from "./kurse.js";
 
 const TABLE = "trainer";
 const LEGACY_AVAILABILITY_KEY = "verfuegbarkeit";
@@ -106,5 +107,12 @@ export async function updateTrainer(id, data = {}, options) {
 }
 
 export async function deleteTrainer(id, options) {
+  const kursAssignments = await getKurseForTrainer(id);
+  if (kursAssignments.length) {
+    const error = new Error(`Trainer ${id} ist Kursen zugeordnet und kann nicht gelöscht werden.`);
+    error.code = "TRAINER_DELETE_BLOCKED";
+    error.kurse = kursAssignments.map((kurs) => kurs.id);
+    throw error;
+  }
   return remove(TABLE, id, options);
 }

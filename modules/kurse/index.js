@@ -7,6 +7,7 @@ import {
   createEmptyState,
   createFormRow,
   createNotice,
+  createLinkedTrainerCard,
   createSectionHeader,
 } from "../shared/components/components.js";
 
@@ -29,10 +30,12 @@ import {
   listKunden,
   listFinanzenByKundeId,
   listFinanzen,
+  listTrainer,
 } from "../shared/api/index.js";
 import { runIntegrityCheck } from "../shared/api/db/integrityCheck.js";
 
 let kursCache = [];
+let trainerCache = [];
 const TOAST_KEY = "__DOGULE_KURSE_TOAST__";
 const STATUS_OPTIONS = [
   { value: "geplant", label: "Geplant" },
@@ -48,6 +51,40 @@ const LEVEL_OPTIONS = [
   { value: "Fortgeschrittene", label: "Fortgeschrittene" },
   { value: "Sporthunde", label: "Sporthunde" },
 ];
+
+async function fetchTrainer(force = false) {
+  if (trainerCache.length && !force) {
+    return trainerCache;
+  }
+  try {
+    trainerCache = await listTrainer();
+  } catch (error) {
+    console.error("[KURSE_ERR_TRAINER_FETCH]", error);
+    trainerCache = [];
+  }
+  return trainerCache;
+}
+
+async function hydrateKurseWithTrainer(kurse = []) {
+  const trainers = await fetchTrainer();
+  const trainerMap = new Map(trainers.map((trainer) => [trainer.id, trainer]));
+  return (Array.isArray(kurse) ? kurse : []).map((kurs) => {
+    const trainer = kurs?.trainerId ? trainerMap.get(kurs.trainerId) || null : null;
+    return {
+      ...kurs,
+      trainer,
+      trainerName: trainer?.name || kurs.trainerName || "",
+      trainerCode: trainer?.code || "",
+    };
+  });
+}
+
+function findTrainerById(trainerId, trainerList = trainerCache) {
+  const safeId = (trainerId || "").trim();
+  if (!safeId) return null;
+  const list = Array.isArray(trainerList) ? trainerList : trainerCache;
+  return list.find((trainer) => trainer.id === safeId) || null;
+}
 
 function createMainHeading(title, subtitle = "") {
   const fragment = createSectionHeader({
@@ -132,6 +169,7 @@ async function renderList(section) {
   if (!section) return;
   section.innerHTML = "";
   scrollToTop();
+  await fetchTrainer(true);
   const { fragment: headingFragment } = createMainHeading("Kurse", "Planung und Übersicht");
   section.appendChild(headingFragment);
 
@@ -179,6 +217,7 @@ async function renderDetail(section, id) {
   if (!section) return;
   section.innerHTML = "";
   scrollToTop();
+  await fetchTrainer(true);
   const { fragment: headerFragment, subtitleEl: headerSubtitle } = createMainHeading("Kurs", "");
   if (headerSubtitle) {
     headerSubtitle.hidden = true;
@@ -205,6 +244,10 @@ async function renderDetail(section, id) {
     if (!kurs) kurs = await getKurs(id);
     if (!kurs) {
       throw new Error(`Kurs ${id} nicht gefunden`);
+    }
+    if (!kurs?.trainer) {
+      const hydrated = await hydrateKurseWithTrainer([kurs]);
+      kurs = hydrated[0] || kurs;
     }
 
     const subtitleText = kurs.title || "Ohne Titel";
@@ -247,6 +290,10 @@ async function renderDetail(section, id) {
     footerActions.append(editLink, deleteBtn, backBtn);
     overviewCard.footer.appendChild(footerActions);
 
+    const trainerCard = buildTrainerCard(kurs);
+    if (trainerCard) {
+      detailStack.appendChild(trainerCard);
+    }
     const notesCard = createDetailCard({
       eyebrow: "",
       title: "Notizen",
@@ -624,6 +671,28 @@ function getCustomerDisplayCode(kunde = {}) {
   return kunde.code || kunde.kundenCode || kunde.id || "–";
 }
 
+function formatTrainerLabel(trainer = {}, fallbackName = "", fallbackId = "") {
+  const name = trainer?.name || fallbackName || "";
+  const code = trainer?.code || "";
+  if (name && code) return `${code} · ${name}`;
+  if (name) return name;
+  if (code) return code;
+  return fallbackId || "Noch nicht zugewiesen";
+}
+
+function renderTrainerInline(kurs = {}) {
+  const label = formatTrainerLabel(kurs.trainer, kurs.trainerName, kurs.trainerId);
+  if (kurs.trainerId) {
+    const link = document.createElement("a");
+    link.href = `#/trainer/${kurs.trainerId}`;
+    link.textContent = label;
+    return link;
+  }
+  const span = document.createElement("span");
+  span.textContent = label;
+  return span;
+}
+
 function createCourseListItem(course = {}) {
   if (!course.id) return null;
   const link = document.createElement("a");
@@ -644,24 +713,36 @@ function createCourseListItem(course = {}) {
     body.innerHTML = "";
     const metaList = document.createElement("ul");
     metaList.className = "kurse-list__meta";
+    const trainerLabel = formatTrainerLabel(course.trainer, course.trainerName, course.trainerId);
     [
       { label: "ID", value: course.id },
       { label: "Trainer-ID", value: course.trainerId || "–" },
       { label: "Datum", value: formatDate(course.date) },
       { label: "Zeit", value: formatTimeRange(course.startTime, course.endTime) },
-      { label: "Trainer", value: course.trainerName || "Noch nicht zugewiesen" },
+      {
+        label: "Trainer",
+        value: trainerLabel,
+        link: course.trainerId ? `#/trainer/${course.trainerId}` : "",
+      },
       {
         label: "Kapazität",
         value: `${course.bookedCount ?? 0} / ${course.capacity ?? 0}`,
       },
       { label: "Ort", value: course.location || "Noch offen" },
       { label: "Hunde", value: formatIdList(course.hundIds) },
-    ].forEach(({ label, value }) => {
+    ].forEach(({ label, value, link }) => {
       const item = document.createElement("li");
       const strong = document.createElement("strong");
       strong.textContent = `${label}: `;
       const span = document.createElement("span");
-      span.textContent = value;
+      if (link) {
+        const anchor = document.createElement("a");
+        anchor.href = link;
+        anchor.textContent = value;
+        span.appendChild(anchor);
+      } else {
+        span.textContent = value;
+      }
       item.append(strong, span);
       metaList.appendChild(item);
     });
@@ -731,6 +812,7 @@ async function renderForm(section, view, id) {
   );
   section.appendChild(headingFragment);
   injectToast(section);
+  await fetchTrainer(true);
 
   let existing = null;
   if (mode === "edit") {
@@ -807,7 +889,49 @@ async function renderForm(section, view, id) {
   body.appendChild(form);
 
   const kursCodeValue = mode === "edit" ? (existing?.code ?? "") : generateNextKursCode(kursCache);
-  const trainerOptions = buildTrainerOptions(kursCache, existing);
+  let trainerOptions = [];
+  let trainerList = [];
+  try {
+    trainerList = await fetchTrainer();
+    trainerOptions = buildTrainerOptions(trainerList, existing);
+  } catch (error) {
+    console.error("[KURSE_ERR_FORM_TRAINER]", error);
+  }
+  if (!trainerOptions.length) {
+    const errorCardFragment = createCard({
+      eyebrow: "",
+      title: "Keine Trainer gefunden",
+      body: "",
+      footer: "",
+    });
+    const errorCard =
+      errorCardFragment.querySelector(".ui-card") || errorCardFragment.firstElementChild;
+    if (errorCard) {
+      const errorBody = errorCard.querySelector(".ui-card__body");
+      errorBody.innerHTML = "";
+      errorBody.appendChild(
+        createNotice(
+          "Ohne Trainer kann kein Kurs erstellt werden. Bitte zuerst einen Trainer anlegen.",
+          {
+            variant: "warn",
+            role: "alert",
+          }
+        )
+      );
+      const errorFooter = errorCard.querySelector(".ui-card__footer");
+      if (errorFooter) {
+        const backLink = createButton({ label: "Zur Trainer-Übersicht", variant: "secondary" });
+        backLink.type = "button";
+        backLink.addEventListener("click", () => {
+          window.location.hash = "#/trainer";
+        });
+        errorFooter.appendChild(backLink);
+      }
+      section.appendChild(errorCard);
+      focusHeading(section);
+      return;
+    }
+  }
   let hundeOptions = [];
   let kundenOptions = [];
   try {
@@ -825,6 +949,10 @@ async function renderForm(section, view, id) {
   const fields = buildFormFields(existing, {
     defaultCode: kursCodeValue,
     trainerOptions,
+    trainerNameValue:
+      (existing?.trainerId && findTrainerById(existing.trainerId, trainerList)?.name) ||
+      existing?.trainerName ||
+      "",
   });
   const refs = {};
   fields.forEach((field) => {
@@ -878,6 +1006,19 @@ async function renderForm(section, view, id) {
     form.appendChild(row);
   });
 
+  const trainerIdRef = refs.trainerId;
+  const trainerNameRef = refs.trainerName;
+  if (trainerIdRef?.input && trainerNameRef?.input) {
+    trainerNameRef.input.readOnly = true;
+    trainerNameRef.input.setAttribute("aria-readonly", "true");
+    const syncTrainerName = () => {
+      const trainer = findTrainerById(trainerIdRef.input.value, trainerList);
+      trainerNameRef.input.value = trainer?.name || "";
+    };
+    trainerIdRef.input.addEventListener("change", syncTrainerName);
+    syncTrainerName();
+  }
+
   const hundeRow = createHundSearchField({
     kundenOptions,
     hundeOptions,
@@ -918,6 +1059,7 @@ async function renderForm(section, view, id) {
     refs,
     section,
     submit,
+    trainerList,
   };
 
   form.addEventListener("submit", (event) => handleKursFormSubmit(event, submitContext));
@@ -927,7 +1069,8 @@ async function renderForm(section, view, id) {
 
 async function fetchKurse() {
   try {
-    kursCache = await listKurse();
+    const kurse = await listKurse();
+    kursCache = await hydrateKurseWithTrainer(kurse);
     return kursCache;
   } catch (error) {
     console.error("[KURSE_ERR_FETCH_LIST]", error);
@@ -947,13 +1090,25 @@ function buildCourseToolbarCard() {
   if (!cardElement) return document.createDocumentFragment();
 
   const body = cardElement.querySelector(".ui-card__body");
-  body.appendChild(createNavLink("Neuer Kurs", "#/kurse/new", "primary"));
-  body.appendChild(
+  body.innerHTML = "";
+  const actions = document.createElement("div");
+  actions.className = "module-actions";
+  actions.appendChild(
+    createButton({
+      label: "Neuer Kurs",
+      variant: "primary",
+      onClick: () => {
+        window.location.hash = "#/kurse/new";
+      },
+    })
+  );
+  actions.appendChild(
     createButton({
       label: "Plan exportieren",
       variant: "secondary",
     })
   );
+  body.appendChild(actions);
 
   return cardElement;
 }
@@ -1036,7 +1191,7 @@ function renderDetailList(kurs) {
     { term: "ID", value: kurs.id || "–" },
     { term: "Code", value: kurs.code || "–" },
     { term: "Trainer-ID", value: kurs.trainerId || "–" },
-    { term: "Trainer", value: kurs.trainerName || "–" },
+    { term: "Trainer", render: () => renderTrainerInline(kurs) },
     { term: "Datum", value: formatDate(kurs.date) },
     { term: "Zeit", value: formatTimeRange(kurs.startTime, kurs.endTime) },
     { term: "Ort", value: kurs.location || "–" },
@@ -1048,11 +1203,16 @@ function renderDetailList(kurs) {
     { term: "Level", value: kurs.level || "–" },
     { term: "Preis", value: formatPrice(kurs.price) },
     { term: "Hunde (IDs)", value: formatIdList(kurs.hundIds) },
-  ].forEach(({ term, value }) => {
+  ].forEach(({ term, value, render }) => {
     const dt = document.createElement("dt");
     dt.textContent = term;
     const dd = document.createElement("dd");
-    dd.textContent = value;
+    if (typeof render === "function") {
+      const rendered = render();
+      if (rendered) dd.appendChild(rendered);
+    } else {
+      dd.textContent = value;
+    }
     list.append(dt, dd);
   });
   return list;
@@ -1071,6 +1231,48 @@ function createMetaContent(kurs) {
     kurs.updatedAt
   )}`;
   return meta;
+}
+
+function buildTrainerCard(kurs = {}) {
+  const buildNoticeCard = (message) => {
+    const fallbackCardFragment = createCard({
+      eyebrow: "Trainer",
+      title: "Trainer",
+      body: "",
+      footer: "",
+    });
+    const fallbackCard =
+      fallbackCardFragment.querySelector(".ui-card") || fallbackCardFragment.firstElementChild;
+    if (!fallbackCard) return null;
+    const body = fallbackCard.querySelector(".ui-card__body");
+    if (body) {
+      body.innerHTML = "";
+      body.appendChild(
+        createNotice(message, {
+          variant: "warn",
+          role: "alert",
+        })
+      );
+    }
+    const footer = fallbackCard.querySelector(".ui-card__footer");
+    if (footer) footer.innerHTML = "";
+    return fallbackCard;
+  };
+
+  if (!kurs.trainerId) {
+    return buildNoticeCard("Kein Trainer zugewiesen. Bitte Kurs bearbeiten.");
+  }
+  if (!kurs.trainer) {
+    return buildNoticeCard("Zugewiesener Trainer konnte nicht geladen werden.");
+  }
+  const trainerCard = createLinkedTrainerCard(kurs.trainer, {
+    href: kurs.trainer.id ? `#/trainer/${kurs.trainer.id}` : "",
+  });
+  if (trainerCard) {
+    trainerCard.classList.add("kurse-trainer-card");
+    return trainerCard;
+  }
+  return buildNoticeCard("Trainerkarte konnte nicht dargestellt werden.");
 }
 
 function formatPrice(value) {
@@ -1104,20 +1306,25 @@ function generateNextKursCode(list = []) {
   return `KS-${String(nextNumber).padStart(3, "0")}`;
 }
 
-function buildTrainerOptions(kurse = [], existing = {}) {
-  const map = new Map();
-  kurse.forEach((kurs) => {
-    if (!kurs.trainerId) return;
-    if (map.has(kurs.trainerId)) return;
-    map.set(kurs.trainerId, kurs.trainerName || `Trainer ${kurs.trainerId}`);
-  });
-  if (existing?.trainerId && !map.has(existing.trainerId)) {
-    map.set(existing.trainerId, existing.trainerName || `Trainer ${existing.trainerId}`);
+function buildTrainerOptions(trainerList = [], existing = {}) {
+  const options = (Array.isArray(trainerList) ? trainerList : []).map((trainer) => ({
+    value: trainer.id,
+    label: formatTrainerLabel(trainer, "", trainer.id),
+  }));
+  if (
+    existing?.trainerId &&
+    !options.some((option) => option.value === existing.trainerId) &&
+    existing.trainerName
+  ) {
+    options.push({
+      value: existing.trainerId,
+      label: formatTrainerLabel({ name: existing.trainerName }, "", existing.trainerId),
+    });
   }
-  if (!map.size) {
-    map.set("", "Bitte wählen");
+  if (!options.some((opt) => opt.value === "")) {
+    options.unshift({ value: "", label: "Bitte wählen" });
   }
-  return Array.from(map.entries()).map(([value, label]) => ({ value, label }));
+  return options;
 }
 
 function buildTrainerSelectOptions(options = [], selectedId = "") {
@@ -1149,7 +1356,10 @@ function formatDateTime(value) {
   });
 }
 
-function buildFormFields(existing = {}, { defaultCode = "", trainerOptions = [] } = {}) {
+function buildFormFields(
+  existing = {},
+  { defaultCode = "", trainerOptions = [], trainerNameValue = "" } = {}
+) {
   const statusValue = existing?.status ?? "geplant";
   const levelValue = existing?.level ?? "";
   return [
@@ -1190,11 +1400,13 @@ function buildFormFields(existing = {}, { defaultCode = "", trainerOptions = [] 
     },
     {
       name: "trainerName",
-      value: existing?.trainerName ?? "",
+      value: trainerNameValue ?? existing?.trainerName ?? "",
+      readOnly: true,
       config: {
         id: "kurs-trainer",
         label: "Trainer",
-        placeholder: "z. B. Martina Frei",
+        placeholder: "Automatisch aus Auswahl",
+        describedByText: "Trainer wird automatisch aus der Auswahl unten übernommen.",
         required: false,
       },
     },
@@ -1205,7 +1417,8 @@ function buildFormFields(existing = {}, { defaultCode = "", trainerOptions = [] 
         id: "kurs-trainer-id",
         label: "Trainer-ID",
         control: "select",
-        required: false,
+        required: true,
+        describedByText: "Trainer ist Pflichtfeld. Bitte ausw\u00e4hlen.",
         options: buildTrainerSelectOptions(trainerOptions, existing?.trainerId),
       },
     },
@@ -1592,14 +1805,24 @@ function collectFormValues(refs) {
   return values;
 }
 
-function validate(values = {}) {
+function validate(values = {}, { trainers = [] } = {}) {
   const safeValues = { ...values };
   safeValues.kursCode = ensureString(values.kursCode).trim();
   safeValues.hundIds = ensureArray(values.hundIds);
+  const errors = {};
+  const trainerId = ensureString(values.trainerId).trim();
+  const trainerIds = Array.isArray(trainers) ? trainers.map((trainer) => trainer.id) : [];
+  if (!trainerId) {
+    errors.trainerId = "Bitte Trainer auswählen.";
+  } else if (trainerIds.length && !trainerIds.includes(trainerId)) {
+    errors.trainerId = "Ausgewählter Trainer ist ungültig.";
+  }
+  safeValues.trainerId = trainerId;
+  safeValues.trainerName = ensureString(values.trainerName, "");
   if (!safeValues.kursCode) {
     safeValues.kursCode = generateNextKursCode(kursCache);
   }
-  return { errors: {}, values: safeValues };
+  return { errors, values: safeValues };
 }
 
 function applyErrors(refs, errors) {
@@ -1617,11 +1840,12 @@ function applyErrors(refs, errors) {
   });
 }
 
-function buildPayload(values) {
+function buildPayload(values, trainerList = []) {
+  const trainer = findTrainerById(values.trainerId, trainerList);
   return {
     code: ensureString(values.kursCode, ""),
     title: ensureString(values.title, ""),
-    trainerName: ensureString(values.trainerName, ""),
+    trainerName: trainer?.name || ensureString(values.trainerName, ""),
     trainerId: ensureString(values.trainerId, ""),
     date: ensureString(values.date, ""),
     startTime: ensureString(values.startTime, ""),
@@ -1660,7 +1884,7 @@ function showInlineToast(section, message, tone = "info") {
   injectToast(section);
 }
 
-async function handleKursFormSubmit(event, { mode, id, refs, section, submit }) {
+async function handleKursFormSubmit(event, { mode, id, refs, section, submit, trainerList = [] }) {
   event.preventDefault();
   const values = collectFormValues(refs);
   const codeInput = refs.kursCode?.input;
@@ -1672,7 +1896,7 @@ async function handleKursFormSubmit(event, { mode, id, refs, section, submit }) 
       codeInput.value = nextCode;
     }
   }
-  const { errors, values: safeValues } = validate(values);
+  const { errors, values: safeValues } = validate(values, { trainers: trainerList });
   applyErrors(refs, errors);
   if (Object.keys(errors).length) {
     const firstError = Object.values(refs).find((ref) => !ref.hint.classList.contains("sr-only"));
@@ -1680,7 +1904,7 @@ async function handleKursFormSubmit(event, { mode, id, refs, section, submit }) 
     return;
   }
 
-  const payload = buildPayload(safeValues);
+  const payload = buildPayload(safeValues, trainerList);
   const defaultLabel = submit.textContent;
   submit.disabled = true;
   submit.textContent = mode === "create" ? "Erstelle ..." : "Speichere ...";
@@ -1699,6 +1923,7 @@ async function handleKursFormSubmit(event, { mode, id, refs, section, submit }) 
       throw resultError;
     }
     await fetchKurse();
+    runIntegrityCheck();
     if (mode === "create") {
       setToast("Kurs wurde erstellt.", "success");
     } else {
@@ -1707,12 +1932,18 @@ async function handleKursFormSubmit(event, { mode, id, refs, section, submit }) 
     window.location.hash = `#/kurse/${createdId}`;
   } catch (error) {
     const isResultError = error?.code === "FORM_RESULT_EMPTY";
+    const isTrainerError = error?.code === "KURS_TRAINER_INVALID";
+    if (isTrainerError) {
+      applyErrors(refs, { trainerId: "Ausgewählter Trainer ist ungültig oder gelöscht." });
+    }
     console.error(isResultError ? "[KURSE_ERR_FORM_RESULT]" : "[KURSE_ERR_FORM_SUBMIT]", error);
     const message = isResultError
       ? "Kurs konnte nach dem Speichern nicht geladen werden."
-      : mode === "create"
-        ? "Kurs konnte nicht erstellt werden."
-        : "Fehler beim Speichern des Kurses.";
+      : isTrainerError
+        ? "Trainer-Auswahl ist ungültig. Bitte einen vorhandenen Trainer wählen."
+        : mode === "create"
+          ? "Kurs konnte nicht erstellt werden."
+          : "Fehler beim Speichern des Kurses.";
     showInlineToast(section, message, "error");
   } finally {
     submit.disabled = false;
@@ -1827,12 +2058,4 @@ function focusHeading(root) {
 function scrollToTop() {
   if (typeof window === "undefined" || typeof window.scrollTo !== "function") return;
   window.scrollTo({ top: 0, behavior: "smooth" });
-}
-
-function createNavLink(label, href, variant = "primary") {
-  const link = document.createElement("a");
-  link.href = href;
-  link.className = `ui-btn ui-btn--${variant}`;
-  link.textContent = label;
-  return link;
 }

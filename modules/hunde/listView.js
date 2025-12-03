@@ -1,9 +1,10 @@
-/* globals document, console */
+/* globals document, console, window */
 import {
   createCard,
   createEmptyState,
   createNotice,
   createSectionHeader,
+  createButton,
 } from "../shared/components/components.js";
 import { listHunde } from "../shared/api/hunde.js";
 import { listKunden } from "../shared/api/kunden.js";
@@ -59,11 +60,19 @@ function buildActionCard() {
   });
   const card = fragment.querySelector(".ui-card") || fragment.firstElementChild;
   const body = card.querySelector(".ui-card__body");
-  const link = document.createElement("a");
-  link.href = "#/hunde/new";
-  link.className = "ui-btn ui-btn--primary";
-  link.textContent = "Neuer Hund";
-  body.appendChild(link);
+  body.innerHTML = "";
+  const actions = document.createElement("div");
+  actions.className = "module-actions";
+  actions.appendChild(
+    createButton({
+      label: "Neuer Hund",
+      variant: "primary",
+      onClick: () => {
+        window.location.hash = "#/hunde/new";
+      },
+    })
+  );
+  body.appendChild(actions);
   return card;
 }
 
