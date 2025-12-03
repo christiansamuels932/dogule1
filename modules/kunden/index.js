@@ -188,7 +188,18 @@ async function renderList(root) {
   const actionsCard = createStandardCard("Aktionen");
   const actionBody = actionsCard.querySelector(".ui-card__body");
   actionBody.innerHTML = "";
-  actionBody.appendChild(createUiLink("Neuer Kunde", "#/kunden/new", "primary"));
+  const actionWrap = document.createElement("div");
+  actionWrap.className = "module-actions";
+  actionWrap.appendChild(
+    createButton({
+      label: "Neuer Kunde",
+      variant: "primary",
+      onClick: () => {
+        window.location.hash = "#/kunden/new";
+      },
+    })
+  );
+  actionBody.appendChild(actionWrap);
 
   const listCard = createStandardCard("Kundenliste");
   const listBody = listCard.querySelector(".ui-card__body");

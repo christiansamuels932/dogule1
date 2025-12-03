@@ -69,6 +69,14 @@ a:focus-visible {
   align-items: center;
 }
 
+.kurse-toolbar-actions,
+.module-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
 .finanzen-list-actions {
   display: flex;
   justify-content: flex-end;

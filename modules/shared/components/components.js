@@ -215,3 +215,45 @@ function buildControl({ id, control, type, placeholder, value, required, options
   input.value = value;
   return input;
 }
+
+export function createLinkedTrainerCard(trainer = {}, { href = "", showContact = true } = {}) {
+  const cardFragment = createCard({
+    eyebrow: trainer.code || trainer.id || "Trainer",
+    title: trainer.name || "Trainer",
+    body: "",
+    footer: "",
+  });
+  const card = cardFragment.querySelector(".ui-card") || cardFragment.firstElementChild;
+  if (!card) return null;
+  const body = card.querySelector(".ui-card__body");
+  const footer = card.querySelector(".ui-card__footer");
+  body.innerHTML = "";
+  footer.innerHTML = "";
+
+  const meta = document.createElement("dl");
+  meta.className = "ui-trainer-card__meta";
+  const addRow = (label, value) => {
+    const dt = document.createElement("dt");
+    dt.textContent = label;
+    const dd = document.createElement("dd");
+    dd.textContent = value || "–";
+    meta.append(dt, dd);
+  };
+  addRow("Trainer-ID", trainer.id || "–");
+  addRow("Code", trainer.code || "–");
+  if (showContact) {
+    addRow("E-Mail", trainer.email || "–");
+    addRow("Telefon", trainer.telefon || "–");
+  }
+  body.appendChild(meta);
+
+  if (href) {
+    const link = document.createElement("a");
+    link.href = href;
+    link.className = "ui-btn ui-btn--secondary";
+    link.textContent = "Zum Trainer";
+    footer.appendChild(link);
+  }
+
+  return card;
+}
