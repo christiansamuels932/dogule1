@@ -7,6 +7,7 @@ import {
   deleteTrainer,
 } from "../shared/api/trainer.js";
 import { listKunden } from "../shared/api/kunden.js";
+import { listKalenderEvents } from "../shared/api/kalender.js";
 import { getFinanzenReportForTrainer } from "../shared/api/finanzen.js";
 import { getKurseForTrainer } from "../shared/api/kurse.js";
 import { runIntegrityCheck } from "../shared/api/db/integrityCheck.js";
@@ -18,6 +19,7 @@ import {
   createButton,
   createFormRow,
 } from "../shared/components/components.js";
+import { buildKalenderHash } from "../kalender/utils/routes.js";
 
 const VIEW_TITLES = {
   list: "Übersicht",
@@ -275,6 +277,11 @@ async function renderDetail(section, id) {
     section.appendChild(kurseSection);
   }
 
+  const kalenderSection = await buildTrainerKalenderSection(id);
+  if (kalenderSection) {
+    section.appendChild(kalenderSection);
+  }
+
   const revenueSection = await buildTrainerRevenueSection(id);
   if (revenueSection) {
     section.appendChild(revenueSection);
@@ -349,6 +356,97 @@ function buildTrainerKurseSection(kurse = [], loadFailed = false) {
       body.appendChild(link);
     });
   }
+  section.appendChild(cardEl);
+  return section;
+}
+
+async function buildTrainerKalenderSection(trainerId) {
+  const section = document.createElement("section");
+  section.className = "trainer-linked-kalender";
+  section.appendChild(
+    createSectionHeader({
+      title: "Kalendereinsätze",
+      subtitle: "",
+      level: 2,
+    })
+  );
+
+  const card = createCard({
+    eyebrow: "",
+    title: "",
+    body: "",
+    footer: "",
+  });
+  const cardEl = card.querySelector(".ui-card") || card.firstElementChild;
+  if (!cardEl) return section;
+  const body = cardEl.querySelector(".ui-card__body");
+  body.innerHTML = "";
+
+  let events = [];
+  let loadFailed = false;
+  try {
+    const allEvents = await listKalenderEvents();
+    events = (allEvents || []).filter((evt) => String(evt.trainerId || "") === String(trainerId));
+  } catch (error) {
+    loadFailed = true;
+    console.error("[TRAINER_KALENDER_LOAD_FAIL]", error);
+  }
+
+  if (loadFailed) {
+    body.appendChild(
+      createNotice("Fehler beim Laden der Kalenderdaten.", { variant: "warn", role: "alert" })
+    );
+  } else if (!events.length) {
+    body.appendChild(createEmptyState("Keine Kalenderereignisse für diesen Trainer.", ""));
+  } else {
+    const sorted = sortEventsByStart(events);
+    const list = document.createElement("div");
+    list.className = "trainer-kalender__list";
+
+    sorted.forEach((evt) => {
+      const row = document.createElement("div");
+      row.className = "trainer-kalender__row";
+
+      const timeCol = document.createElement("div");
+      timeCol.className = "trainer-kalender__time";
+      timeCol.textContent = `${formatDate(evt.start)} · ${formatEventTimeRange(evt.start, evt.end)}`;
+
+      const titleCol = document.createElement("div");
+      titleCol.className = "trainer-kalender__title";
+      titleCol.textContent = evt.title || evt.code || "Ereignis";
+
+      const actionsCol = document.createElement("div");
+      actionsCol.className = "trainer-kalender__actions";
+      const links = [];
+      if (evt.kursId) {
+        const kursLink = document.createElement("a");
+        kursLink.href = `#/kurse/${encodeURIComponent(evt.kursId)}`;
+        kursLink.className = "ui-btn ui-btn--ghost";
+        kursLink.textContent = "Zum Kurs";
+        links.push(kursLink);
+      }
+      if (evt.id) {
+        const detailLink = document.createElement("a");
+        detailLink.href = buildKalenderHash({ mode: "event", eventId: evt.id });
+        detailLink.className = "ui-btn ui-btn--ghost";
+        detailLink.textContent = "Ereignis";
+        links.push(detailLink);
+      }
+      if (!links.length) {
+        const placeholder = document.createElement("span");
+        placeholder.textContent = "Keine Links verfügbar";
+        actionsCol.appendChild(placeholder);
+      } else {
+        links.forEach((link) => actionsCol.appendChild(link));
+      }
+
+      row.append(timeCol, titleCol, actionsCol);
+      list.appendChild(row);
+    });
+
+    body.appendChild(list);
+  }
+
   section.appendChild(cardEl);
   return section;
 }
@@ -834,6 +932,35 @@ function formatTimeRange(start, end) {
   const safeStart = start || "00:00";
   const safeEnd = end || "00:00";
   return `${safeStart}–${safeEnd}`;
+}
+
+function formatEventTimeRange(start, end) {
+  const startDate = new Date(start);
+  const endDate = new Date(end || start);
+  if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) {
+    return "Zeit offen";
+  }
+  return `${formatTime(startDate)}–${formatTime(endDate)}`;
+}
+
+function formatTime(date) {
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  return `${hours}:${minutes}`;
+}
+
+function sortEventsByStart(events = []) {
+  return [...events].sort((a, b) => {
+    const timeA = new Date(a.start || "").getTime();
+    const timeB = new Date(b.start || "").getTime();
+    if (Number.isNaN(timeA) && Number.isNaN(timeB)) {
+      return String(a.id || "").localeCompare(String(b.id || ""));
+    }
+    if (Number.isNaN(timeA)) return 1;
+    if (Number.isNaN(timeB)) return -1;
+    if (timeA !== timeB) return timeA - timeB;
+    return String(a.id || "").localeCompare(String(b.id || ""));
+  });
 }
 
 function formatCurrency(value) {
