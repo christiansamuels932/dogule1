@@ -6,6 +6,8 @@ import {
   updateTrainer,
   deleteTrainer,
 } from "../shared/api/trainer.js";
+import { listKunden } from "../shared/api/kunden.js";
+import { getFinanzenReportForTrainer } from "../shared/api/finanzen.js";
 import { getKurseForTrainer } from "../shared/api/kurse.js";
 import { runIntegrityCheck } from "../shared/api/db/integrityCheck.js";
 import {
@@ -24,6 +26,8 @@ const VIEW_TITLES = {
   edit: "Bearbeiten",
   delete: "Löschen",
 };
+
+let kundenMapCache = null;
 
 // Standardized module interface for Dogule1
 export async function initModule(container, routeInfo) {
@@ -270,9 +274,10 @@ async function renderDetail(section, id) {
   if (kurseSection) {
     section.appendChild(kurseSection);
   }
-  const kalenderSection = buildTrainerKalenderSection(trainerKurse, kurseLoadFailed);
-  if (kalenderSection) {
-    section.appendChild(kalenderSection);
+
+  const revenueSection = await buildTrainerRevenueSection(id);
+  if (revenueSection) {
+    section.appendChild(revenueSection);
   }
 }
 
@@ -348,70 +353,130 @@ function buildTrainerKurseSection(kurse = [], loadFailed = false) {
   return section;
 }
 
-function buildTrainerKalenderSection(kurse = [], loadFailed = false) {
+async function buildTrainerRevenueSection(trainerId) {
   const section = document.createElement("section");
-  section.className = "trainer-calendar-assignments";
+  section.className = "trainer-revenue";
   section.appendChild(
     createSectionHeader({
-      title: "Kalendereinsätze",
+      title: "Umsatz aus Kursen",
       subtitle: "",
       level: 2,
     })
   );
 
-  const card = createCard({ eyebrow: "", title: "", body: "", footer: "" });
+  const card = createCard({
+    eyebrow: "",
+    title: "",
+    body: "",
+    footer: "",
+  });
   const cardEl = card.querySelector(".ui-card") || card.firstElementChild;
   if (!cardEl) return section;
   const body = cardEl.querySelector(".ui-card__body");
   body.innerHTML = "";
 
+  let report = { entries: [], totals: { bezahlt: 0, offen: 0, saldo: 0 } };
+  let kundenMap = new Map();
+  let loadFailed = false;
+  try {
+    const [reportResult, kundenResult] = await Promise.all([
+      getFinanzenReportForTrainer(trainerId),
+      getTrainerKundenMap(),
+    ]);
+    report = reportResult || report;
+    kundenMap = kundenResult || kundenMap;
+  } catch (error) {
+    loadFailed = true;
+    console.error("[TRAINER_FINANZEN_LOAD_FAIL]", error);
+  }
+
   if (loadFailed) {
     body.appendChild(
-      createNotice("Fehler beim Laden der Daten.", { variant: "warn", role: "alert" })
+      createNotice("Fehler beim Laden der Finanzdaten.", { variant: "warn", role: "alert" })
     );
+  } else if (!report.entries.length) {
+    body.appendChild(createEmptyState("Keine Finanzdaten für diesen Trainer vorhanden.", ""));
   } else {
-    const scheduled = kurse.filter(kursHasSchedule);
-    if (!scheduled.length) {
-      body.appendChild(createEmptyState("Keine Kalendereinträge für diesen Trainer.", ""));
-    } else {
-      const sorted = sortKurseBySchedule(scheduled);
-      const listWrapper = document.createElement("div");
-      listWrapper.className = "trainer-calendar-assignments__list";
-      sorted.forEach((kurs) => {
-        const kursCard = createCard({
-          eyebrow: kurs.code || kurs.id,
-          title: kurs.title || "Ohne Titel",
-          body: "",
-          footer: "",
-        });
-        const kursEl = kursCard.querySelector(".ui-card") || kursCard.firstElementChild;
-        if (!kursEl) return;
-        kursEl.classList.add("trainer-linked-kurs");
-        const kursBody = kursEl.querySelector(".ui-card__body");
-        kursBody.innerHTML = "";
-        const info = document.createElement("div");
-        info.className = "trainer-linked-kurs__info";
-        const dateRow = document.createElement("p");
-        dateRow.textContent = `${formatDate(kurs.date)} · ${formatScheduleTimeRange(
-          kurs.startTime,
-          kurs.endTime
-        )}`;
-        const locationRow = document.createElement("p");
-        locationRow.textContent = kurs.location || "Ort offen";
-        info.append(dateRow, locationRow);
-        kursBody.appendChild(info);
-        const link = document.createElement("a");
-        link.href = `#/kurse/${kurs.id}`;
-        link.className = "trainer-linked-kurs__link";
-        link.appendChild(kursEl);
-        listWrapper.appendChild(link);
-      });
-      body.appendChild(listWrapper);
-    }
+    const summary = document.createElement("dl");
+    summary.className = "trainer-revenue__summary";
+    summary.appendChild(createSummaryRow("Summe Bezahlt", report.totals.bezahlt));
+    summary.appendChild(createSummaryRow("Summe Offen", report.totals.offen));
+    summary.appendChild(createSummaryRow("Saldo", report.totals.saldo));
+    body.appendChild(summary);
+
+    const list = document.createElement("div");
+    list.className = "trainer-revenue__list";
+    report.entries.slice(0, 5).forEach((entry) => {
+      const row = document.createElement("div");
+      row.className = "trainer-revenue__row";
+      const dateCol = document.createElement("div");
+      dateCol.className = "trainer-revenue__date";
+      dateCol.textContent = formatDate(entry.datum);
+      const kundeCol = document.createElement("div");
+      kundeCol.className = "trainer-revenue__kunde";
+      kundeCol.textContent = formatKundeLabel(entry.kundeId, kundenMap);
+      const typCol = document.createElement("div");
+      typCol.className = "trainer-revenue__typ";
+      typCol.textContent = formatFinanzTyp(entry.typ);
+      const betragCol = document.createElement("div");
+      betragCol.className = "trainer-revenue__betrag";
+      betragCol.textContent = formatCurrency(entry.betrag);
+      const linkCol = document.createElement("div");
+      linkCol.className = "trainer-revenue__link";
+      const link = document.createElement("a");
+      link.href = `#/finanzen/${entry.id}`;
+      link.className = "ui-btn ui-btn--ghost";
+      link.textContent = "Details";
+      linkCol.appendChild(link);
+      row.append(dateCol, kundeCol, typCol, betragCol, linkCol);
+      list.appendChild(row);
+    });
+    body.appendChild(list);
   }
 
   section.appendChild(cardEl);
   return section;
+}
+
+function createSummaryRow(label, value) {
+  const row = document.createElement("div");
+  row.className = "trainer-revenue__summary-row";
+  const term = document.createElement("dt");
+  term.textContent = label;
+  const detail = document.createElement("dd");
+  detail.textContent = formatCurrency(value);
+  row.append(term, detail);
+  return row;
+}
+
+async function getTrainerKundenMap() {
+  if (kundenMapCache) return kundenMapCache;
+  try {
+    const kunden = await listKunden();
+    const map = new Map();
+    kunden.forEach((kunde) => {
+      const code = kunde?.code || kunde?.id || "";
+      const name = `${kunde?.vorname || ""} ${kunde?.nachname || ""}`.trim();
+      map.set(kunde.id, { ...kunde, code, name });
+    });
+    kundenMapCache = map;
+    return kundenMapCache;
+  } catch (error) {
+    console.error("[TRAINER_KUNDEN_MAP_FAIL]", error);
+    kundenMapCache = new Map();
+    return kundenMapCache;
+  }
+}
+
+function formatKundeLabel(kundeId, kundenMap = new Map()) {
+  if (!kundeId) return "Kein Kunde verknüpft";
+  const kunde = kundenMap.get(kundeId);
+  if (!kunde) {
+    return `Unbekannter Kunde (${kundeId})`;
+  }
+  const code = kunde.code || kunde.id || "–";
+  const name = kunde.name || `${kunde.vorname || ""} ${kunde.nachname || ""}`.trim() || "Unbenannt";
+  return `${code} – ${name}`;
 }
 
 async function renderCreate(section) {
@@ -765,14 +830,22 @@ function sortKurseBySchedule(kurse = []) {
   });
 }
 
-function formatScheduleTimeRange(start, end) {
-  return formatTimeRange(start, end);
-}
-
 function formatTimeRange(start, end) {
   const safeStart = start || "00:00";
   const safeEnd = end || "00:00";
   return `${safeStart}–${safeEnd}`;
+}
+
+function formatCurrency(value) {
+  const number = Number.isFinite(value) ? value : Number(value) || 0;
+  return `${number.toLocaleString("de-CH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} CHF`;
+}
+
+function formatFinanzTyp(typ) {
+  const normalized = String(typ || "").toLowerCase();
+  if (normalized === "bezahlt" || normalized === "zahlung") return "Bezahlt";
+  if (normalized === "offen") return "Offen";
+  return "–";
 }
 
 function generateNextTrainerCode(list = []) {

@@ -1,5 +1,5 @@
 // Finanzen module – list/detail/create/edit/delete flows with mock API
-/* globals document, console, window */
+/* globals document, console, window, HTMLElement */
 import {
   listFinanzen,
   listFinanzenByKundeId,
@@ -7,6 +7,7 @@ import {
   updateFinanz,
   deleteFinanz,
   getFinanz,
+  resolveFinanzenWithRelations,
 } from "../shared/api/finanzen.js";
 import { listKunden } from "../shared/api/kunden.js";
 import {
@@ -62,13 +63,14 @@ export function initModule(container, routeInfo = {}) {
       contentHost.appendChild(loadingNotice);
 
       try {
-        const { finanzen, kundenMap } = await loadData(activeFilters);
+        const { finanzen, kundenMap, relationMap } = await loadData(activeFilters);
         contentHost.innerHTML = "";
         await renderByMode({
           mode: activeMode,
           detailId: activeDetailId,
           finanzen,
           kundenMap,
+          relationMap,
           filters: activeFilters,
           target: contentHost,
           container,
@@ -198,7 +200,7 @@ function formatCurrency(value) {
   return `${number.toLocaleString("de-CH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} CHF`;
 }
 
-function renderListCard(target, finanzen = [], kundenMap = new Map()) {
+function renderListCard(target, finanzen = [], kundenMap = new Map(), relationMap = new Map()) {
   if (!target) return;
 
   const actions = document.createElement("div");
@@ -226,11 +228,13 @@ function renderListCard(target, finanzen = [], kundenMap = new Map()) {
     table.className = "finanzen-table";
     const thead = document.createElement("thead");
     const headerRow = document.createElement("tr");
-    ["ID", "Code", "Kunde", "Typ", "Betrag", "Datum", "Beschreibung", ""].forEach((label) => {
-      const th = document.createElement("th");
-      th.textContent = label;
-      headerRow.appendChild(th);
-    });
+    ["ID", "Code", "Kunde", "Trainer", "Typ", "Betrag", "Datum", "Beschreibung", ""].forEach(
+      (label) => {
+        const th = document.createElement("th");
+        th.textContent = label;
+        headerRow.appendChild(th);
+      }
+    );
     thead.appendChild(headerRow);
     table.appendChild(thead);
 
@@ -239,18 +243,25 @@ function renderListCard(target, finanzen = [], kundenMap = new Map()) {
       const tr = document.createElement("tr");
       tr.className = "finanzen-table__row";
       const kundeLabel = formatKundeLabel(entry.kundeId, kundenMap);
+      const relation = relationMap.get(entry.id) || {};
+      const trainerCell = createTrainerCell(relation, entry.kursId);
       const cells = [
         entry?.id || "–",
         entry?.code || "–",
         kundeLabel,
+        trainerCell,
         formatTyp(entry?.typ),
         formatCurrency(entry?.betrag),
         entry?.datum || "–",
         entry?.beschreibung || "–",
       ];
-      cells.forEach((value) => {
+      cells.forEach((value, index) => {
         const td = document.createElement("td");
-        td.textContent = value;
+        if (index === 3 && value instanceof HTMLElement) {
+          td.appendChild(value);
+        } else {
+          td.textContent = value;
+        }
         tr.appendChild(td);
       });
       const actionTd = document.createElement("td");
@@ -346,7 +357,7 @@ function renderFilterCard(target, kundenMap = new Map(), filters = {}, reloadFn)
   target.appendChild(card || fragment);
 }
 
-function renderDetailCard(target, entry, kundenMap = new Map()) {
+function renderDetailCard(target, entry, kundenMap = new Map(), relation = {}) {
   if (!target || !entry) return;
   const fragment = createCard({
     eyebrow: "",
@@ -408,17 +419,21 @@ function renderDetailCard(target, entry, kundenMap = new Map()) {
         renderDeleteCard(target, entry);
       },
     });
+    const backBtn = createButton({
+      label: "Zur Übersicht",
+      variant: "ghost",
+      onClick: () => {
+        window.location.hash = "#/finanzen";
+      },
+    });
     actions.append(editBtn, deleteBtn);
     footer.appendChild(actions);
-
-    const backLink = document.createElement("a");
-    backLink.href = "#/finanzen";
-    backLink.className = "ui-btn ui-btn--ghost";
-    backLink.textContent = "Zur Übersicht";
-    footer.appendChild(backLink);
+    footer.appendChild(backBtn);
   }
 
   target.appendChild(card || fragment);
+
+  renderTrainerCard(target, entry, relation);
 }
 
 function createDetailRow(label, value) {
@@ -432,6 +447,53 @@ function createDetailRow(label, value) {
   return row;
 }
 
+function renderTrainerCard(target, entry, relation = {}) {
+  if (!entry?.kursId) return;
+  const { kurs, trainer } = relation;
+  const fragment = createCard({
+    eyebrow: "",
+    title: "Trainer (aus Kurs)",
+    body: "",
+    footer: "",
+  });
+  const card = fragment.querySelector(".ui-card") || fragment.firstElementChild;
+  const body = card?.querySelector(".ui-card__body");
+  const footer = card?.querySelector(".ui-card__footer");
+
+  if (body) {
+    body.innerHTML = "";
+    if (!kurs) {
+      body.appendChild(createNotice("Kurs nicht gefunden.", { variant: "warn", role: "status" }));
+    } else if (!trainer) {
+      body.appendChild(
+        createNotice("Kein Trainer zugewiesen.", { variant: "info", role: "status" })
+      );
+    } else {
+      const list = document.createElement("dl");
+      list.className = "finanzen-trainer-detail";
+      list.appendChild(createDetailRow("Trainer-ID", trainer.id || "–"));
+      list.appendChild(createDetailRow("Trainer-Code", trainer.code || "–"));
+      list.appendChild(createDetailRow("Name", trainer.name || "Unbenannter Trainer"));
+      list.appendChild(createDetailRow("Kurs", kurs.title || kurs.code || kurs.id || "–"));
+      body.appendChild(list);
+    }
+  }
+
+  if (footer && trainer) {
+    footer.innerHTML = "";
+    const link = createButton({
+      label: "Zum Trainer",
+      variant: "primary",
+      onClick: () => {
+        window.location.hash = `#/trainer/${trainer.id}`;
+      },
+    });
+    footer.appendChild(link);
+  }
+
+  target.appendChild(card || fragment);
+}
+
 function formatKundeLabel(kundeId, kundenMap = new Map()) {
   if (!kundeId) return "Kein Kunde verknüpft";
   const kunde = kundenMap.get(kundeId);
@@ -441,6 +503,37 @@ function formatKundeLabel(kundeId, kundenMap = new Map()) {
   const code = kunde.code || kunde.id || "–";
   const name = kunde.name || `${kunde.vorname || ""} ${kunde.nachname || ""}`.trim() || "Unbenannt";
   return `${code} – ${name}`;
+}
+
+function formatTrainerLabel(trainer) {
+  if (!trainer) return "Kein Trainer zugewiesen.";
+  const code = trainer.code || trainer.id || "—";
+  const name = trainer.name || "Unbenannter Trainer";
+  return `${code} – ${name}`;
+}
+
+function createTrainerCell(relation = {}, kursId) {
+  if (!kursId) {
+    return "—";
+  }
+  const { kurs, trainer } = relation;
+  if (kursId && !kurs) {
+    return "Kurs nicht gefunden.";
+  }
+  if (kurs && !trainer) {
+    return "Kein Trainer zugewiesen.";
+  }
+  if (trainer) {
+    const wrapper = document.createElement("div");
+    wrapper.className = "finanzen-trainer-meta";
+    const link = document.createElement("a");
+    link.href = `#/trainer/${trainer.id}`;
+    link.textContent = formatTrainerLabel(trainer);
+    link.className = "ui-link";
+    wrapper.appendChild(link);
+    return wrapper;
+  }
+  return "—";
 }
 
 function formatTyp(typ) {
@@ -457,6 +550,7 @@ async function renderByMode({
   detailId,
   finanzen,
   kundenMap,
+  relationMap,
   filters,
   target,
   container,
@@ -528,7 +622,8 @@ async function renderByMode({
     if (!entry) {
       target.appendChild(createEmptyState("Keine Daten vorhanden.", ""));
     } else {
-      renderDetailCard(target, entry, kundenMap);
+      const relation = relationMap?.get(entry.id) || {};
+      renderDetailCard(target, entry, kundenMap, relation);
     }
     scrollToTop(container);
     focusHeading(section);
@@ -545,7 +640,7 @@ async function renderByMode({
     renderFilterCard(target, kundenMap, filters, (nextMode, nextFilters) =>
       reload(nextMode || "list", null, nextFilters)
     );
-    renderListCard(target, finanzen, kundenMap);
+    renderListCard(target, finanzen, kundenMap, relationMap);
   }
   scrollToTop(container);
   focusHeading(section);
@@ -856,7 +951,17 @@ async function loadData(filters = {}) {
     finanzen = finanzen.filter((entry) => (entry?.typ || "").toLowerCase() === typFilter);
   }
 
-  return { finanzen, kundenMap };
+  let relationMap = new Map();
+  try {
+    const relations = await resolveFinanzenWithRelations(finanzen);
+    relationMap = new Map(
+      relations.map(({ finanz, kurs, trainer }) => [finanz.id, { kurs, trainer }])
+    );
+  } catch (error) {
+    console.error("FINANZEN_RELATION_RESOLVE_FAILED", error);
+  }
+
+  return { finanzen, kundenMap, relationMap };
 }
 
 function scrollToTop(node) {
