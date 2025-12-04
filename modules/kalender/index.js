@@ -7,10 +7,11 @@ import {
   createEmptyState,
   createNotice,
 } from "../shared/components/components.js";
-import { listKalenderEvents, getKalenderEvent, getKurs } from "../shared/api/index.js";
+import { listKalenderEvents, getKalenderEvent, getKurs, getTrainer } from "../shared/api/index.js";
 import { buildKalenderHash, parseKalenderRoute } from "./utils/routes.js";
 import { addDays, parseLocalDate, getIsoWeek, getMondayOfIsoWeek } from "./utils/date.js";
 import { computeEventLayout } from "./utils/layout.js";
+import { attachKursAndTrainer } from "./utils/eventContext.js";
 
 const SLOT_HEIGHT_FALLBACK = 24;
 
@@ -220,6 +221,23 @@ function formatTime(date) {
   return `${hours}:${minutes}`;
 }
 
+function normalizeEventsForGrid(events = []) {
+  return (events || []).map((evt) => {
+    const startDate = toDate(evt.start);
+    const endDate = toDate(evt.end);
+    return {
+      id: evt.id,
+      title: evt.title || evt.code || "Ohne Titel",
+      start: startDate,
+      end: endDate,
+      code: evt.code,
+      location: evt.location,
+      kursId: evt.kursId,
+      trainerId: evt.trainerId,
+    };
+  });
+}
+
 function toDate(value) {
   if (value instanceof Date && !Number.isNaN(value.getTime())) return new Date(value.getTime());
   const parsed = new Date(value);
@@ -278,20 +296,29 @@ function renderEventBlocks(canvas, positioned, { includeExtras = true } = {}) {
     metaEl.className = "kalender-event-block__meta";
     const timeRange = formatTimeRange(evt.start, evt.end);
     let metaText = timeRange;
+    const trainerLabel = evt?.trainer?.name || evt?.trainer?.code || evt?.trainer?.id || "";
     if (includeExtras) {
       const codePart = evt.code ? ` · ${evt.code}` : "";
       const locationPart = evt.location ? ` · ${evt.location}` : "";
-      metaText = `${timeRange}${codePart}${locationPart}`;
+      const trainerPart = trainerLabel ? ` · Trainer: ${trainerLabel}` : "";
+      metaText = `${timeRange}${codePart}${locationPart}${trainerPart}`;
+    } else if (trainerLabel) {
+      metaText = `${timeRange} · ${trainerLabel}`;
     }
     metaEl.textContent = metaText;
 
     block.append(titleEl, metaEl);
     block.tabIndex = 0;
-    block.setAttribute("aria-label", `${evt.title}, ${timeRange}`);
+    const labelParts = [evt.title, timeRange];
+    if (trainerLabel) {
+      labelParts.push(`Trainer ${trainerLabel}`);
+    }
+    block.setAttribute("aria-label", labelParts.filter(Boolean).join(", "));
     const targetHash = evt.kursId
       ? `#/kurse/${encodeURIComponent(evt.kursId)}`
       : buildKalenderHash({ mode: "event", eventId: evt.id });
     block.dataset.kursId = evt.kursId || "";
+    block.dataset.trainerId = evt?.trainer?.id || evt?.trainerId || "";
     const navigateToTarget = () => {
       window.location.hash = targetHash;
     };
@@ -308,29 +335,15 @@ function renderEventBlocks(canvas, positioned, { includeExtras = true } = {}) {
 }
 
 async function getEventsForRange(startDate, endDate) {
-  const allEvents = await listKalenderEvents();
   const rangeStart = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
   const rangeEnd = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate() + 1);
 
-  const matches = allEvents
-    .map((evt) => ({
-      ...evt,
-      startDate: toDate(evt.start),
-      endDate: toDate(evt.end),
-    }))
-    .filter((evt) => evt.startDate < rangeEnd && evt.endDate > rangeStart)
-    .map((evt) => ({
-      id: evt.id,
-      title: evt.title || evt.code || "Ohne Titel",
-      start: evt.startDate,
-      end: evt.endDate,
-      code: evt.code,
-      location: evt.location,
-      kursId: evt.kursId,
-      trainerId: evt.trainerId,
-    }));
+  const allEvents = await listKalenderEvents();
+  const normalized = normalizeEventsForGrid(allEvents);
+  const matches = normalized.filter((evt) => evt.start < rangeEnd && evt.end > rangeStart);
+  const { events: enriched } = await attachKursAndTrainer(matches);
 
-  return computeEventLayout(matches, rangeStart, rangeEnd);
+  return computeEventLayout(enriched, rangeStart, rangeEnd);
 }
 
 function buildWeekRangeLabel(mondayDate) {
@@ -395,28 +408,14 @@ async function renderWeekView(section, mondayDate) {
 
   try {
     const allEvents = await listKalenderEvents();
+    const normalized = normalizeEventsForGrid(allEvents);
+    const { events: enriched } = await attachKursAndTrainer(normalized);
     const positionedByDay = [];
 
     for (let offset = 0; offset < 7; offset += 1) {
       const dayDate = addDays(mondayDate, offset);
       const { gridStart, gridEnd } = dayBounds(dayDate);
-      const dayEvents = allEvents
-        .map((evt) => ({
-          ...evt,
-          startDate: toDate(evt.start),
-          endDate: toDate(evt.end),
-        }))
-        .filter((evt) => evt.startDate < gridEnd && evt.endDate > gridStart)
-        .map((evt) => ({
-          id: evt.id,
-          title: evt.title || evt.code || "Ohne Titel",
-          start: evt.startDate,
-          end: evt.endDate,
-          code: evt.code,
-          location: evt.location,
-          kursId: evt.kursId,
-          trainerId: evt.trainerId,
-        }));
+      const dayEvents = enriched.filter((evt) => evt.start < gridEnd && evt.end > gridStart);
       const positioned = computeEventLayout(dayEvents, gridStart, gridEnd);
       positionedByDay.push({ date: dayDate, positioned });
 
@@ -734,6 +733,29 @@ function formatDuration(start, end) {
   return `${minutes}m`;
 }
 
+function buildTrainerMeta(trainer) {
+  const wrapper = document.createElement("div");
+  wrapper.className = "kalender-trainer-meta";
+
+  const nameRow = document.createElement("div");
+  const mainLabel = trainer?.name || trainer?.code || trainer?.id || "Trainer";
+  const codePart = trainer?.code && trainer?.code !== mainLabel ? ` (${trainer.code})` : "";
+  const idPart = trainer?.id ? ` · ID: ${trainer.id}` : "";
+  nameRow.textContent = `${mainLabel}${codePart}${idPart}`;
+
+  const contact = trainer?.telefon || trainer?.email;
+  if (contact) {
+    const contactRow = document.createElement("div");
+    contactRow.className = "kalender-trainer-meta__contact";
+    contactRow.textContent = contact;
+    wrapper.append(nameRow, contactRow);
+  } else {
+    wrapper.append(nameRow);
+  }
+
+  return wrapper;
+}
+
 async function renderEventDetail(section, eventId) {
   section.innerHTML = "";
   const toolbar = buildEventToolbar();
@@ -762,11 +784,22 @@ async function renderEventDetail(section, eventId) {
     const durationLabel = formatDuration(start, end);
     const kursId = event.kursId ? String(event.kursId) : "";
     let kurs = null;
+    let trainer = null;
+    let trainerLoadFailed = false;
     if (kursId) {
       try {
         kurs = await getKurs(kursId);
       } catch (error) {
         console.error("[KALENDER_ERR_KURS_FETCH]", error);
+      }
+    }
+    const trainerId = kurs?.trainerId ? String(kurs.trainerId) : "";
+    if (trainerId) {
+      try {
+        trainer = await getTrainer(trainerId);
+      } catch (error) {
+        trainerLoadFailed = true;
+        console.error("[KALENDER_ERR_TRAINER_FETCH]", error);
       }
     }
 
@@ -810,12 +843,37 @@ async function renderEventDetail(section, eventId) {
       });
       addRow("Kurs", warn);
     }
+
+    if (trainer) {
+      addRow("Trainer", buildTrainerMeta(trainer));
+      addRow("Trainer-ID", trainer.id);
+    } else if (trainerId && trainerLoadFailed) {
+      addRow(
+        "Trainer",
+        createNotice("Trainer konnte nicht geladen werden.", { variant: "warn", role: "alert" })
+      );
+    } else if (trainerId) {
+      addRow("Trainer", "Trainer nicht gefunden.");
+    } else {
+      addRow("Trainer", "Kein Trainer zugewiesen.");
+    }
     body.appendChild(dl);
 
     const footer = card.querySelector(".ui-card__footer");
     if (footer) {
       footer.innerHTML = "";
       const actions = [];
+      if (trainer?.id) {
+        actions.push(
+          createButton({
+            label: "Zum Trainer",
+            variant: "secondary",
+            onClick: () => {
+              window.location.hash = `#/trainer/${encodeURIComponent(trainer.id)}`;
+            },
+          })
+        );
+      }
       if (kursId) {
         actions.push(
           createButton({
