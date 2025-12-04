@@ -529,8 +529,8 @@
 
 ## Branch and Commit Lock
 
-- Branch: feature/station35-trainer-finanzen
-- Commit: d41cd5a
+- Branch: feature/station38-alpha-test-script
+- Commit: 621e849
 - Action: Verify testing happens on this ref; do not mix with newer commits unless instructed.
 - Expected: Deterministic baseline.
 - Console: No errors.
