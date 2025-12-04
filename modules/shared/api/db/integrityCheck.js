@@ -50,6 +50,9 @@ function ensureForeignKeys() {
     if (!exists("kunden", entry.kundenId)) {
       throw new Error(`[INTEGRITY] Zahlung ${entry.id} references missing Kunde ${entry.kundenId}`);
     }
+    if (entry.kursId && !exists("kurse", entry.kursId)) {
+      throw new Error(`[INTEGRITY] Zahlung ${entry.id} references missing Kurs ${entry.kursId}`);
+    }
   });
 
   db.waren?.forEach((verkauf) => {
