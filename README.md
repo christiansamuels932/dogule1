@@ -24,6 +24,15 @@ pnpm dev     # startet den offiziellen Vite Dev Server (apps/web)
 pnpm build   # erzeugt den Vite-Build (dist/)
 ```
 
+### Local Alpha (V0.1)
+
+- Voraussetzungen: Node 18+, pnpm installiert. Branch aktuell (`feature/station35-trainer-finanzen` Stand), `status.md` kann lokal angepasst sein.
+- Entwicklung: `pnpm dev` starten, Hash-Routen wie `#/dashboard`, `#/kunden`, `#/hunde`, `#/kurse`, `#/trainer`, `#/kalender`, `#/finanzen`, `#/waren`, `#/kommunikation` im Browser ansteuern.
+- Build: `pnpm build` erzeugt `dist/` mit `index.html` + `assets/` (relative Pfade, hash-basiertes Routing).
+- Tests/Checks: `pnpm lint`, `pnpm vitest run`, `node --input-type=module -e "import('./modules/shared/api/db/integrityCheck.js').then(m=>m.runIntegrityCheck())"` (bekannte Warnung wegen fehlendem `"type": "module"` in `package.json` ist erlaubt).
+- Implementierte Verknüpfungen: Kunden↔Hunde, Kunden↔Kurse (über Hunde), Hunde↔Kurse, Kurse↔Trainer, Kurse↔Kalender, Trainer↔Kalender. Waren ist bewusst **nicht** mit Finanzen verknüpft; Kommunikation bleibt ein Platzhalter; Finanzen erzeugt keine automatischen Einnahmen aus Kursen/Waren.
+- Empfohlener Alpha-Walkthrough: Kunde anlegen → Hund anlegen und Kunde zuordnen → Kurs anlegen (Trainer wählen, Hund(e) hinzufügen) → Kursdetail/Trainerdetail prüfen → Kalender-Event prüfen → optional Waren-CRUD → bestehende Finanzen-CRUD/Filter/Detail nutzen.
+
 ### Quick-Fix Notes
 
 - Nutze `pnpm dev` zum Testen einzelner Module; der Hash-Router lädt `modules/<name>/index.js`.
