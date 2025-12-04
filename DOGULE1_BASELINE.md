@@ -68,7 +68,7 @@ dogule1/
     <moduleName>/         ← Dashboard, kunden, hunde, ...
     shared/               ← gemeinsame Assets (layout, components, api)
   DOGULE1_MASTER.md       ← Blueprint & Station Plan
-  DOGULE1_STATUS.md       ← Fortschritts-Log (Aktueller Stand)
+  status.md               ← Fortschritts-Log (Aktueller Stand)
   DOGULE1_PROTOCOL.md     ← Planner-Regeln
   agents.md               ← Rollen & Arbeitsablauf
 ```

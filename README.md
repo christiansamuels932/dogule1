@@ -60,9 +60,9 @@ dogule1/
     <moduleName>/   # Dashboard, kunden, hunde, kurse, ...
     shared/         # Gemeinsame Komponenten, Layout, API
   DOGULE1_MASTER.md
-  DOGULE1_STATUS.md
+  status.md
   DOGULE1_PROTOCOL.md
   agents.md
 ```
 
-Weitere Details zu Stationen, Regeln und Migrationen stehen in `DOGULE1_MASTER.md`, `DOGULE1_STATUS.md`, `DOGULE1_PROTOCOL.md` und `agents.md`.
+Weitere Details zu Stationen, Regeln und Migrationen stehen in `DOGULE1_MASTER.md`, `status.md`, `DOGULE1_PROTOCOL.md` und `agents.md`.

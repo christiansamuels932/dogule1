@@ -48,7 +48,7 @@ dogule1/
     <moduleName>/
     shared/
   DOGULE1_MASTER.md
-  DOGULE1_STATUS.md
+  status.md
   DOGULE1_PROTOCOL.md
   agents.md
   RISKS.md

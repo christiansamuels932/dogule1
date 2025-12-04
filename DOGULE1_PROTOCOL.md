@@ -12,7 +12,7 @@ Guarantee full continuity of project context between chats, ensuring development
 
 ## 1 — STATUS FILE (Single Source of Truth)
 
-**File:** `DOGULE1_STATUS.md`
+**File:** `status.md`
 **Location:** Repository root (`dogule1/`)
 **Maintained by:** Codex (after every completed station)
 
@@ -26,7 +26,7 @@ This file must always contain:
 - Relevant PR references
 - Warnings or notes for the next station
 
-`DOGULE1_STATUS.md` is the _sole authoritative source_ that restores all project context when a chat begins.
+`status.md` is the _sole authoritative source_ that restores all project context when a chat begins.
 
 ---
 
@@ -44,9 +44,9 @@ Migration ensures clean state, fast performance, and perfect continuity.
 
 ## 3 — MIGRATION STEPS (Exact Procedure)
 
-1. Copy the **latest** `DOGULE1_STATUS.md`.
+1. Copy the **latest** `status.md`.
 2. Open a **new chat** named after the next station (e.g., “Chat 13 – Station 13”).
-3. Paste `DOGULE1_STATUS.md` as **the very first message**.
+3. Paste `status.md` as **the very first message**.
 4. Paste the **Opening Instruction Block**, which includes:
    - “You are Chat X.”
    - “Your task is Station X.”
@@ -78,7 +78,7 @@ The new chat then becomes the official execution environment for the next statio
 2. Explain every step like to a child.
 3. Pass these rules to the next chat.
 4. Use English for instructions; German for UI.
-5. Codex writes all code, commits, pushes, and updates DOGULE1_STATUS.md.
+5. Codex writes all code, commits, pushes, and updates status.md.
 6. **Codex instructions must be plain text only**
    - No bullets
    - No numbering
@@ -101,7 +101,7 @@ Roles never change between chats and must be assumed in every new session.
 
 ## 6 — REDUNDANCY & SAFETY
 
-- `DOGULE1_STATUS.md` is version-controlled via Git.
+- `status.md` is version-controlled via Git.
 - All commits and PRs ensure a traceable development history.
 - Optional NAS mirror: `/projects/dogule1/logs/`
 - Chat migration blocks form a human-readable fallback copy.
