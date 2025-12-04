@@ -7,7 +7,7 @@ import {
   updateKunde,
   deleteKunde,
 } from "../shared/api/kunden.js";
-import { listHunde } from "../shared/api/hunde.js";
+import { listHunde, createHund } from "../shared/api/hunde.js";
 import { listKurse } from "../shared/api/kurse.js";
 import { listFinanzen } from "../shared/api/finanzen.js";
 import { listWarenByKundeId } from "../shared/api/waren.js";
@@ -560,6 +560,15 @@ async function renderForm(root, view, id) {
   form.className = "kunden-form";
   formBody.appendChild(form);
 
+  let hundeListe = [];
+  if (mode === "create") {
+    try {
+      hundeListe = await listHunde();
+    } catch (error) {
+      console.error("[KUNDEN_ERR_HUNDE_FOR_FORM]", error);
+    }
+  }
+
   const kundenCodeValue = mode === "edit" ? (existing?.kundenCode ?? existing?.code ?? "") : "";
   const defaultKundenCode = mode === "edit" ? kundenCodeValue : generateNextKundenCode(kundenCache);
   let isCodeOverrideEnabled = false;
@@ -665,6 +674,35 @@ async function renderForm(root, view, id) {
     form.appendChild(row);
   });
 
+  const hundeDrafts = [];
+  if (mode === "create") {
+    const hundeBlock = document.createElement("div");
+    hundeBlock.className = "kunden-hunde-drafts-block";
+    const hundeTitle = document.createElement("h2");
+    hundeTitle.textContent = "Hunde hinzufügen (optional)";
+    hundeBlock.appendChild(hundeTitle);
+    const hundeIntro = document.createElement("p");
+    hundeIntro.textContent =
+      "Du kannst direkt beim Anlegen Hunde erfassen. Mindestens der Name ist nötig; Codes werden automatisch vergeben.";
+    hundeBlock.appendChild(hundeIntro);
+
+    const hundeList = document.createElement("div");
+    hundeList.className = "kunden-hunde-drafts";
+    hundeBlock.appendChild(hundeList);
+
+    const addHundButton = createButton({
+      label: "Hund hinzufügen",
+      variant: "secondary",
+    });
+    addHundButton.type = "button";
+    addHundButton.addEventListener("click", () => {
+      const draft = appendHundDraftRow(hundeList, hundeListe, hundeDrafts);
+      hundeDrafts.push(draft);
+    });
+    hundeBlock.appendChild(addHundButton);
+    form.appendChild(hundeBlock);
+  }
+
   const actions = document.createElement("div");
   actions.className = "kunden-actions";
   const submit = createButton({
@@ -695,6 +733,8 @@ async function renderForm(root, view, id) {
     refs,
     submit,
     formStatusSlot,
+    hundeDrafts,
+    hundeListe,
   };
   form.addEventListener("submit", (event) => handleKundeFormSubmit(event, submitContext));
 
@@ -726,7 +766,7 @@ function injectToast(section) {
 
 async function handleKundeFormSubmit(event, context = {}) {
   if (event) event.preventDefault();
-  const { mode, id, refs, submit, formStatusSlot } = context;
+  const { mode, id, refs, submit, formStatusSlot, hundeDrafts = [], hundeListe = [] } = context;
   if (!refs || !submit) return;
 
   if (formStatusSlot) {
@@ -775,9 +815,46 @@ async function handleKundeFormSubmit(event, context = {}) {
     if (!result || !result.id) {
       throw new Error("Save failed");
     }
+
+    let createdDogs = 0;
+    let failedDogs = 0;
+    if (mode === "create" && Array.isArray(hundeDrafts) && hundeDrafts.length) {
+      const hundDraftValues = collectHundDraftValues(hundeDrafts).map((hund) => ({
+        ...hund,
+        kundenId: result.id,
+      }));
+      let nextHundNumber = generateNextHundCodeFromLists(hundeListe, hundDraftValues);
+      for (const hund of hundDraftValues) {
+        const payload = {
+          name: hund.name,
+          rufname: hund.rufname || "",
+          code: hund.code || buildHundCode(nextHundNumber++),
+          kundenId: hund.kundenId,
+        };
+        try {
+          await createHund(payload);
+          createdDogs += 1;
+        } catch (dogError) {
+          console.error("[KUNDEN_ERR_CREATE_HUND]", dogError);
+          failedDogs += 1;
+        }
+      }
+    }
+
     await fetchKunden();
     if (mode === "create") {
-      setToast("Kunde erstellt.", "success");
+      if (failedDogs > 0 && createdDogs === 0) {
+        setToast("Kunde erstellt. Hunde konnten nicht angelegt werden.", "warn");
+      } else if (failedDogs > 0) {
+        setToast(
+          `Kunde erstellt. ${createdDogs} Hund(e) angelegt, ${failedDogs} fehlgeschlagen.`,
+          "warn"
+        );
+      } else if (createdDogs > 0) {
+        setToast(`Kunde erstellt. ${createdDogs} Hund(e) hinzugefügt.`, "success");
+      } else {
+        setToast("Kunde erstellt.", "success");
+      }
       window.location.hash = "#/kunden";
     } else {
       setToast("Änderungen gespeichert.", "success");
@@ -830,6 +907,125 @@ function applyErrors(refs, errors) {
       ref.input.setAttribute("aria-invalid", "false");
     }
   });
+}
+
+function appendHundDraftRow(container, existingHunde = [], drafts = []) {
+  if (!container) return null;
+  const draftIndex = drafts.length + 1;
+  const wrapper = document.createElement("div");
+  wrapper.className = "kunden-hunde-draft";
+
+  const currentDraftValues = collectHundDraftValues(drafts, { includeEmpty: true });
+  const nextNumber = generateNextHundCodeFromLists(existingHunde, currentDraftValues);
+  const suggestedCode = buildHundCode(nextNumber);
+
+  const codeRow = createFormRow({
+    id: `kunden-hund-code-${draftIndex}`,
+    label: "Hundecode",
+    placeholder: "Wird automatisch vergeben",
+    describedByText: "Read-only, wird automatisch vorgeschlagen.",
+  });
+  const codeInput = codeRow.querySelector("input");
+  codeInput.name = `hund-code-${draftIndex}`;
+  codeInput.value = suggestedCode;
+  codeInput.readOnly = true;
+  codeInput.setAttribute("aria-readonly", "true");
+
+  const nameRow = createFormRow({
+    id: `kunden-hund-name-${draftIndex}`,
+    label: "Name*",
+    placeholder: "z. B. Bello",
+    required: true,
+  });
+  const nameInput = nameRow.querySelector("input");
+  nameInput.name = `hund-name-${draftIndex}`;
+  const nameHint = nameRow.querySelector(".ui-form-row__hint");
+  nameHint.classList.add("sr-only");
+
+  const rufRow = createFormRow({
+    id: `kunden-hund-rufname-${draftIndex}`,
+    label: "Rufname",
+    placeholder: "Optional",
+  });
+  const rufInput = rufRow.querySelector("input");
+  rufInput.name = `hund-rufname-${draftIndex}`;
+  const rufHint = rufRow.querySelector(".ui-form-row__hint");
+  rufHint.classList.add("sr-only");
+
+  const removeButton = createButton({
+    label: "Entfernen",
+    variant: "quiet",
+  });
+  removeButton.type = "button";
+
+  const header = document.createElement("div");
+  header.className = "kunden-hunde-draft__header";
+  const draftLabel = document.createElement("p");
+  draftLabel.textContent = `Hund ${draftIndex}`;
+  header.append(draftLabel, removeButton);
+
+  wrapper.append(header, codeRow, nameRow, rufRow);
+  container.appendChild(wrapper);
+
+  const draftRef = {
+    code: codeInput,
+    name: nameInput,
+    rufname: rufInput,
+    wrapper,
+  };
+
+  removeButton.addEventListener("click", () => {
+    wrapper.remove();
+    const idx = drafts.indexOf(draftRef);
+    if (idx >= 0) {
+      drafts.splice(idx, 1);
+    }
+  });
+
+  return draftRef;
+}
+
+function collectHundDraftValues(drafts = [], { includeEmpty = false } = {}) {
+  return drafts
+    .map((draft) => ({
+      code: draft?.code?.value?.trim() || "",
+      name: draft?.name?.value?.trim() || "",
+      rufname: draft?.rufname?.value?.trim() || "",
+    }))
+    .filter((draft) => includeEmpty || draft.name);
+}
+
+function generateNextHundCodeFromLists(existingHunde = [], drafts = []) {
+  const codes = [];
+  existingHunde.forEach((hund) => {
+    const code = (hund.code || hund.hundeId || "").trim();
+    if (code) codes.push(code);
+  });
+  drafts.forEach((draft) => {
+    if (draft?.code) {
+      codes.push(draft.code);
+    }
+  });
+  let max = 0;
+  codes.forEach((code) => {
+    const num = extractHundCodeNumber(code);
+    if (Number.isFinite(num) && num > max) {
+      max = num;
+    }
+  });
+  return max + 1;
+}
+
+function extractHundCodeNumber(code = "") {
+  const match = (code || "").match(/(\d+)/);
+  if (!match) return 0;
+  const num = Number.parseInt(match[1], 10);
+  return Number.isFinite(num) ? num : 0;
+}
+
+function buildHundCode(num) {
+  const safe = Number.isFinite(num) ? num : 1;
+  return `H-${String(safe).padStart(3, "0")}`;
 }
 
 function renderKundenHundeSection(hunde = [], kunde = null, hasError = false) {

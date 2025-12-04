@@ -6,6 +6,7 @@ import {
   updateWaren,
   deleteWaren,
 } from "../shared/api/waren.js";
+import { listKunden } from "../shared/api/kunden.js";
 import {
   createCard,
   createNotice,
@@ -96,7 +97,7 @@ async function renderListView(target) {
   headerRow.className = "waren-actions";
   headerRow.style.display = "flex";
   headerRow.style.alignItems = "center";
-  headerRow.style.justifyContent = "flex-end";
+  headerRow.style.justifyContent = "flex-start";
   headerRow.style.gap = "0.5rem";
   headerRow.style.marginBottom = "1rem";
 
@@ -117,8 +118,11 @@ async function renderListView(target) {
   renderLoadingNotice(listHost);
 
   let waren = [];
+  let kundenMap = new Map();
   try {
-    waren = await listWaren();
+    const [warenData, kundenData] = await Promise.all([listWaren(), listKunden()]);
+    waren = warenData;
+    kundenMap = new Map((kundenData || []).map((kunde) => [kunde.id, kunde]));
   } catch {
     renderErrorNotice(listHost);
     return;
@@ -142,7 +146,7 @@ async function renderListView(target) {
     const body = card?.querySelector(".ui-card__body");
     if (body) {
       body.innerHTML = "";
-      body.appendChild(buildDetailList(verkauf));
+      body.appendChild(buildDetailList(verkauf, kundenMap));
     }
     const footer = card?.querySelector(".ui-card__footer");
     if (footer) {
@@ -181,9 +185,10 @@ function renderEmptyNotice(target) {
   target.appendChild(createEmptyState("Keine Daten vorhanden.", ""));
 }
 
-function buildDetailList(entry = {}) {
+function buildDetailList(entry = {}, kundenMap = new Map()) {
   const list = document.createElement("dl");
   list.className = "waren-details";
+  list.appendChild(createRow("Kunde", formatKundeFromMap(entry.kundenId, kundenMap)));
   list.appendChild(createRow("Code", entry.code || entry.id || "–"));
   list.appendChild(createRow("Produkt", entry.produktName || "Unbenannt"));
   list.appendChild(createRow("Menge", formatNumber(entry.menge)));
@@ -215,14 +220,42 @@ function formatCurrency(value) {
   return `CHF ${safe.toFixed(2)}`;
 }
 
+function formatKundeLabel(kunde = {}) {
+  const nameParts = [kunde.vorname, kunde.nachname].filter(Boolean).join(" ").trim();
+  const code = kunde.kundenCode || kunde.code || "";
+  const city = extractCity(kunde.adresse || kunde.address || "");
+  const parts = [nameParts || code || kunde.email || kunde.id || "Kunde"];
+  if (code) parts.push(code);
+  if (city) parts.push(city);
+  return parts.filter(Boolean).join(" · ");
+}
+
+function formatKundeFromMap(kundenId, kundenMap = new Map()) {
+  if (!kundenId) return "–";
+  const kunde = kundenMap.get(kundenId);
+  if (!kunde) return kundenId;
+  return formatKundeLabel(kunde);
+}
+
+function extractCity(address = "") {
+  const segments = (address || "").split(",");
+  if (!segments.length) return "";
+  const tail = segments[segments.length - 1].trim();
+  const pieces = tail.split(" ");
+  return pieces.length ? pieces.slice(1).join(" ").trim() : tail;
+}
+
 async function renderDetailView(target, id) {
   if (!target) return;
   target.innerHTML = "";
   renderLoadingNotice(target);
 
   let record = null;
+  let kundenMap = new Map();
   try {
-    record = id ? await getWarenById(id) : null;
+    const [verkauf, kunden] = await Promise.all([id ? getWarenById(id) : null, listKunden()]);
+    record = verkauf;
+    kundenMap = new Map((kunden || []).map((kunde) => [kunde.id, kunde]));
   } catch {
     renderErrorNotice(target);
     return;
@@ -243,17 +276,7 @@ async function renderDetailView(target, id) {
   const body = card?.querySelector(".ui-card__body");
   if (body) {
     body.innerHTML = "";
-    const list = document.createElement("dl");
-    list.className = "waren-details";
-    list.appendChild(createRow("Code", record.code || record.id || "–"));
-    list.appendChild(createRow("Produkt", record.produktName || "Unbenannt"));
-    list.appendChild(createRow("Menge", formatNumber(record.menge)));
-    list.appendChild(createRow("Preis", formatCurrency(record.preis)));
-    list.appendChild(createRow("Verkaufsdatum", record.datum || "–"));
-    if (record.beschreibung) {
-      list.appendChild(createRow("Beschreibung", record.beschreibung));
-    }
-    body.appendChild(list);
+    body.appendChild(buildDetailList(record, kundenMap));
   }
 
   const footer = card?.querySelector(".ui-card__footer");
@@ -294,8 +317,11 @@ async function renderFormView(target, { mode = "create", id = null } = {}) {
   if (mode === "edit") {
     renderLoadingNotice(target);
     let record = null;
+    let kunden = [];
     try {
-      record = id ? await getWarenById(id) : null;
+      const [verkauf, kundenData] = await Promise.all([id ? getWarenById(id) : null, listKunden()]);
+      record = verkauf;
+      kunden = kundenData || [];
     } catch {
       renderErrorNotice(target);
       return;
@@ -306,19 +332,53 @@ async function renderFormView(target, { mode = "create", id = null } = {}) {
     }
     target.innerHTML = "";
     const form = createFormShell(target);
-    buildFormFields(form, record, mode);
+    buildFormFields(form, record, mode, kunden);
     attachFormHandlers(form, mode, record.id);
     return;
   }
 
+  let kunden = [];
+  try {
+    kunden = await listKunden();
+  } catch {
+    renderErrorNotice(target);
+    return;
+  }
+
   const form = createFormShell(target);
-  buildFormFields(form, {}, mode);
+  buildFormFields(form, {}, mode, kunden || []);
   attachFormHandlers(form, mode, null);
 }
 
-function buildFormFields(form, record = {}, mode = "create") {
+function buildFormFields(form, record = {}, mode = "create", kunden = []) {
   const fieldset = document.createElement("div");
   fieldset.className = "waren-form__fields";
+
+  const kundeRow = createFormRow({
+    id: "waren-kunde",
+    label: "Kunde*",
+    control: "select",
+    required: true,
+  });
+  const kundeSelect = kundeRow.querySelector("select");
+  if (kundeSelect) {
+    const placeholder = document.createElement("option");
+    placeholder.value = "";
+    placeholder.textContent = "Bitte wählen";
+    kundeSelect.appendChild(placeholder);
+    kunden.forEach((kunde) => {
+      const label = formatKundeLabel(kunde);
+      const option = document.createElement("option");
+      option.value = kunde.id;
+      option.textContent = label;
+      option.dataset.code = kunde.kundenCode || kunde.code || "";
+      option.dataset.email = kunde.email || "";
+      kundeSelect.appendChild(option);
+    });
+    if (record.kundenId) {
+      kundeSelect.value = record.kundenId;
+    }
+  }
 
   const codeRow = createFormRow({
     id: "waren-code",
@@ -373,7 +433,7 @@ function buildFormFields(form, record = {}, mode = "create") {
     value: record.beschreibung || "",
   });
 
-  fieldset.append(codeRow, produktRow, mengeRow, preisRow, datumRow, beschreibungRow);
+  fieldset.append(kundeRow, codeRow, produktRow, mengeRow, preisRow, datumRow, beschreibungRow);
   form.appendChild(fieldset);
 
   const actions = document.createElement("div");
@@ -451,6 +511,7 @@ function collectPayload(form) {
     return el ? el.value : "";
   };
   return {
+    kundenId: getValue("#waren-kunde"),
     code: getValue("#waren-code"),
     produktName: getValue("#waren-produkt").trim(),
     menge: sanitizeNumber(getValue("#waren-menge")),
@@ -468,6 +529,9 @@ function sanitizeNumber(value) {
 
 function validatePayload(payload = {}) {
   const errors = [];
+  if (!payload.kundenId) {
+    errors.push("Kunde fehlt.");
+  }
   if (!payload.produktName) {
     errors.push("Produktname fehlt.");
   }

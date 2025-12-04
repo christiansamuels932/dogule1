@@ -419,7 +419,7 @@ Each station block uses this structure (read-only):
 - `pnpm test --run` ✅ (Vitest-Suite inkl. Kalender-Utils/Routes/Layout und Finanzen-Trainer-Tests)
 - `pnpm build` ✅
 - `runIntegrityCheck` ✅ (Node Warnung: package.json ohne `"type": "module"`, unverändert)
-- Manuelle Checks noch offen: Kalender Tag/Woche Trainerzeile bzw. „Kein Trainer zugewiesen.“; Event-Detail zeigt Trainerblock + „Zum Trainer“; Trainer-Detail-Karte listet Events inkl. Links/Empty/Error.
+- Manuelle Checks ✅: Kalender Tag/Woche zeigt Trainerzeile bzw. „Kein Trainer zugewiesen.“; Event-Detail mit Trainerblock + „Zum Trainer“; Trainer-Detail-Karte listet Events inkl. Links/Empty/Error.
 
 ## Lint/Build/CI-Folgen
 
@@ -432,9 +432,42 @@ Each station block uses this structure (read-only):
 - Keine Router/Layout-Anpassungen; nur Moduloberflächen erweitert.
 - Keine neuen Mock-Daten; bestehende Kurs→Kalender-Synchronisation reicht für Trainerableitung.
 
-## Offene Punkte
+## Issues
 
-- Manuelle UI-Prüfung abschließen (s. Tests & Qualität).
-- Nach Freigabe Station 36 in `DOGULE1_STATUS.md` offiziell finalisieren und MRs/PR aktualisieren.
+- Node-Hinweis beim Integrity-Check (fehlendes `"type": "module"` in package.json) bewusst akzeptiert; keine Aktion.
+
+## Notizen
+
+- Station 36 abgeschlossen. PR “Station 36.X – Update Log” offen: https://github.com/christiansamuels932/dogule1/pull/48.
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 37 — Local Alpha Assembly Prep (Phase C)
+
+## Kontext
+
+- Branch: `feature/station35-trainer-finanzen` (weitergeführt für Station 37).
+- Ziel: Alpha-Assembly vorbereiten ohne Scope-Erweiterung; Plan/Doku ergänzen, UX-Konsistenz prüfen, kleine UI-Korrekturen.
+- Grenzen: Kommunikation bleibt Placeholder, Waren ↔ Finanzen nicht verknüpft, keine automatischen Kurs/Waren-Umsätze in Finanzen.
+
+## Ergebnis (kurz)
+
+- Plan/Doku: `STATION37_ALPHA_PLAN.md` hinzugefügt (Scope-Guards, Walkthrough, Gaps); README um Alpha-Abschnitt ergänzt (Runs, Verknüpfungen, bekannte Lücken).
+- Navigation: Hauptmenü-Reihenfolge angepasst auf `Dashboard, Kunden, Hunde, Kurse, Trainer, Kommunikation, Kalender, Finanzen, Waren`.
+- Kunden-Create: Optionaler Hunde-Block im Kundenformular (Mehrfachentwürfe, Name Pflicht, Code auto, Kunde FK gesetzt, Toast mit Erfolg/Fehlschlägen).
+- Waren: Listen/Detail zeigen zugehörigen Kunden; Formular erfordert Kunde-Select; „Neu“-Button links ausgerichtet; Codes weiter optional.
+- Bekannter Gap dokumentiert: Kein automatischer Waren→Finanzen- oder Kurs→Finanzen-Eintrag (bleibt bewusst offen).
+
+## Tests
+
+- `pnpm lint` ✅
+- `pnpm vitest run` ✅ (Vite CJS Node API deprecation notice)
+- `pnpm build` ✅
+- `node --input-type=module -e "import('./modules/shared/api/db/integrityCheck.js').then(m=>m.runIntegrityCheck())"` ✅ (bekannte `"type": "module"` Warnung akzeptiert)
+
+## Notizen
+
+- Manuelle Alpha-Walkthrough-Schritte erfolgreich (Kunde→Hund→Kurs→Trainer→Kalender, Waren-CRUD, Finanzen-CRUD).
+- Station 38 soll bekannte Gaps berücksichtigen (kein Waren/Kurs-Auto-Revenue, Kommunikation weiterhin minimal).
 
 # - - - - - - - - - - - - - - - - - - - -
