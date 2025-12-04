@@ -830,10 +830,6 @@ function sortKurseBySchedule(kurse = []) {
   });
 }
 
-function formatScheduleTimeRange(start, end) {
-  return formatTimeRange(start, end);
-}
-
 function formatTimeRange(start, end) {
   const safeStart = start || "00:00";
   const safeEnd = end || "00:00";
