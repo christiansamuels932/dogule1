@@ -3,7 +3,7 @@
 ## Pre-Run State
 
 - Action: Reset workspace to the ref listed in Branch and Commit Lock; ensure working tree clean.
-- Expected: git status clean on branch `feature/station35-trainer-finanzen` at commit `d41cd5a`.
+- Expected: git status clean on branch `feature/station38-alpha-test-script` at commit `621e849`.
 - Console: No errors.
 - Action: Ensure mock DB is at seed state (no leftover local edits). Delete any persisted localStorage/Application Storage for the app origin.
 - Expected: Fresh seed data only; no prior test entities present.
