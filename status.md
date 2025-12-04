@@ -473,3 +473,29 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 - Station 38 soll bekannte Gaps berücksichtigen (kein Waren/Kurs-Auto-Revenue, Kommunikation weiterhin minimal).
 
 # - - - - - - - - - - - - - - - - - - - -
+
+# Station 38 — Local Alpha Test Script (Phase C)
+
+## Kontext
+
+- Branch: `feature/station38-alpha-test-script` (ab Station-37-Stand fortgeführt).
+- Ziel: Deterministisches, schrittweises Alpha-Testskript erstellen, das alle Module (Phase A) und Verknüpfungen (Phase B) abdeckt und bekannte Nicht-Ziele dokumentiert.
+- Artefakte: `ALPHA_TEST_SCRIPT.md` (vollständiges Skript mit Aktionen/Erwartungen/Konsolen-Checks).
+
+## Ergebnis (kurz)
+
+- Vollständiges Alpha-Testskript mit festen Testdaten (Alpha Kunde/Hund/Kurs/Trainer/Ware/Finanzbuchung), Aktionen→Erwartung→Konsolen-Triplets, Navigation/Back/Forward/Hash-Checks.
+- Deckt Phase-A-Checks je Modul (Focus/Scroll/Shared Components/Empty/Error/Loading) und alle Verknüpfungsketten (Kunden↔Hunde↔Kurse↔Trainer↔Kalender, Trainer↔Finanzen) ab; Kommunikation als Placeholder bestätigt.
+- Negative Tests dokumentiert: Keine automatischen Waren→Finanzen- oder Kurs→Finanzen-Einträge.
+- Data/Cleanup-Policy und Branch/Commit-Lock festgelegt für deterministische Runs.
+
+## Tests
+
+- Keine Builds/Tests notwendig (Dokumentationsstation); Pre-Run-Befehle im Skript vorgegeben (`pnpm install`, Integrity Check, `pnpm lint`, `pnpm vitest run`, `pnpm build`, `pnpm dev`).
+
+## Notizen
+
+- Bekannte Warnung bleibt akzeptiert: Node-Hinweis zu fehlendem `"type": "module"` beim Integrity Check.
+- Branch/Commit-Lock im Skript: `feature/station38-alpha-test-script` @ `621e849`.
+
+# - - - - - - - - - - - - - - - - - - - -
