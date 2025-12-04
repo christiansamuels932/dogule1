@@ -10,6 +10,8 @@ Each station block uses this structure (read-only):
 - `## Notizen` (optional): pending manual checks, warnings, risks, decisions.
   Instructions/notes in English; UI text references remain in German when quoted. Chronological order applies.
 
+Branching rule: each station must be developed on its dedicated branch; if the expected branch does not exist yet, create a new one before starting the station.
+
 # - - - - - - - - - - - - - - - - - - - -
 
 # Station 1–17 — Foundations & Early Linking (Historisch)
