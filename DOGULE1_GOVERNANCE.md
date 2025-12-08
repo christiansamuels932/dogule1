@@ -59,6 +59,7 @@ Validated order: yes — 2025-12-08
 
 - Changes to this file require Planner review and Human approval via PR; record a short changelog line in this section with date and PR link.
 - Record blocker resolutions in `status.md` (Issues/Notizen) and, if governance rules change, append the change note here.
+- Storage/schema source of truth for Stations 50–70: `DOGULE1_SYSTEM_BASELINE_V2.md` (defines IDs, PII/residency, invariants, migration).
 
 Changelog:
 
