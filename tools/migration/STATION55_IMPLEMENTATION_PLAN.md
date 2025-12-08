@@ -16,13 +16,13 @@ Purpose: execution blueprint for Station 55. Offline integrity scanner plus CI w
   - `scan-module --module <name>` (repeatable).
   - `scan-pii` (PII audit only).
   - `scan-drift` (schemaVersion drift only).
-  - `verify-checksums` (recompute entity/Merkle and compare to stored sidecars).
+  - `verify-checksums` (recompute entity/Merkle and compare to stored sidecars; not part of `scan-all`).
 - Flags:
   - `--input-dir <path>` default `storage_candidate/v1`.
   - `--modules <list>` optional, else all modules.
   - `--run-id <string>` optional; default deterministic `scan-local`.
 - Outputs: deterministic report directory `storage_reports/latest-scan/` (overwrite per run), files:
-  - `scan.json` machine-readable: entries `{ module, entityId?, checkType, severity, message, autoFixPossible }`.
+  - `scan.json` machine-readable: entries `{ module, entityId: string|null, checkType, severity, message, autoFixPossible }`; `entityId` is null for module-level checks (e.g., schemaVersion drift).
   - `summary.json` with counts per severity/module + checksum status.
   - Optional `pii.json`, `drift.json` for filtered runs.
 - No timestamps in filenames; use ISO string inside reports if needed.
@@ -36,15 +36,12 @@ Purpose: execution blueprint for Station 55. Offline integrity scanner plus CI w
 - Invariants: from baseline (non-negative betrag/preis, start < end, capacity ≥ bookedCount, required associations like course requires trainer, calendar requires kurs or trainer).
 - PII residency: PII-2 fields must only appear in approved modules/files; no PII in logs/checksum metadata; leak = BLOCKER. PII-1 violations → WARNING unless baseline marks stricter.
 - Schema drift: any entity with `schemaVersion` ≠ 1 → BLOCKER; mixed versions flagged.
-- Checksums: recompute entity hashes (canonical JSON, SHA-256) and Merkle roots (sorted by id). Mismatch = BLOCKER.
+- Checksums: recompute entity hashes (canonical JSON, SHA-256) and Merkle roots (sorted by id). Mismatch = BLOCKER. Empty module root = SHA-256 of empty string.
 
 ## Severity & Exit Codes
 
 - Severity: INFO < WARNING < BLOCKER.
-- Exit codes:
-  - BLOCKER present → non-zero.
-  - WARNING only → zero (printed).
-  - INFO only → zero.
+- Exit rule: if any BLOCKER → exit 1; else exit 0 (warnings printed, non-blocking).
 
 ## CI Integration (Station 55 scope)
 
