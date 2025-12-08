@@ -36,6 +36,59 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 # - - - - - - - - - - - - - - - - - - - -
 
+# Station 58 — Storage Access Layer Architecture (E3)
+
+## Kontext
+
+- Branch: `feature/station57-authorization-matrix`.
+- Ziel: Architekturplan für die Storage Access Layer (SAL), dual-mode (mock/real), inkl. AuthZ/Audit-Anforderungen, Migrationsreihenfolge, Storage-Layout, Contract-Tests und Ownership-Tabelle. Keine Code-/Storage-Änderungen.
+- Quellen: Governance Station 58, Master-II Path, `SECURITY_AUTHORIZATION_MATRIX.md`, `DOGULE1_SECURITY_BASELINE.md`, Stations 54–57 Outputs.
+
+## Ergebnis (kurz)
+
+- `STATION58_STORAGE_ACCESS_LAYER_ARCHITECTURE.md` hinzugefügt: Dual-Mode-Switch (`DOGULE1_STORAGE_MODE=mock|real`, dev=mock, CI=real wenn Fixtures vorhanden, fehlende Pfade → fail fast), Real-Mode nutzt Station-54/56 Atomic Write + Integrity-Scan bei jedem Write; Candidate-Storage bleibt read-only.
+- SAL-Konfiguration definiert für `modules/shared/storage/config.js` (Single Source): Mode-Auflösung, absolute Pfade (`/storage/v1`, `/storage_candidate/v1`), AuthZ/Audit-Hooks.
+- AuthZ/Audit-Grenze: SAL verlangt `actionId/actorId/actorRole`, deny-by-default, jede Write-Operation (success/denied/error) erzeugt Audit-Eintrag mit Chain-Feldern (`hashPrev`, `hashIndex`, optional Merkle).
+- Migrationsreihenfolge mit Begründung (Kunden → Hunde → Trainer → Kurse → Kalender → Finanzen → Waren → Kommunikation) zur FK-Sicherheit; Storage-Layout für Real vs. Candidate + Backup-Triggers (Stations 61/63).
+- Contract-Tests gefordert (vor SAL-Implementation): CRUD + Parität (Mock vs Real, Hash-Vergleich), Error-Fidelity (`NotFound`, `InvalidData`, `InvariantViolation`, `Denied`, `StorageError`), Audit-Hook-Pflicht, Performance-Baseline (<5k rows).
+- Ownership-Tabelle inkl. System-Actor (Imports/Backups/Config Jobs) mit Pflicht zu `actionId` + jobId im Audit-Kontext.
+
+## Tests
+
+- Keine (Dokumentationsstation).
+
+## Notizen
+
+- `STATION58_STORAGE_ACCESS_LAYER_ARCHITECTURE.md` ist Vorgabe für zukünftige SAL-Implementationen (Stations 59–63); CI-Gate folgt in Station 60. Keine Runtime-/Storage-/NAS-Änderungen; `storage_candidate/`, `storage_reports/`, `dist-station40.tar.gz`, `dogule1-alpha/` unverändert.
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 57 — Authorization Matrix & Audit Plan (F2, F4)
+
+## Kontext
+
+- Branch: `feature/station57-authorization-matrix`.
+- Ziel: Station-57 Planung/Dokumentation für Rollen×Aktionen, Audit-/Alert-Konzept, tamper-evidente Logs; erfüllt gleichzeitig die ausstehende Station-52 Security-Baseline-Anforderung.
+- Scope: Rollen `admin`, `staff`, `trainer`, plus Pseudo-Rollen `system`, `unauthenticated`; Module: Kommunikation (Chats/Infochannel/Emails/System), Kalender, Imports, Finanzen, Backups, Config. Keine Code-/Storage-Änderungen.
+
+## Ergebnis (kurz)
+
+- `DOGULE1_SECURITY_BASELINE.md` erstellt (Version 0, Station-52+57): Prinzipien (deny-by-default), Rollen, Audit/Alert-Baseline, tamper-evidente Logging-Kette (SHA-256 Chain + optionale Merkle-Roots), CI-Gate-Erwartung für spätere Umsetzung.
+- `SECURITY_AUTHORIZATION_MATRIX.md` hinzugefügt: machine-readable YAML für CI (Aktion-IDs wie `module.action` mit allowed/denied/conditional je Rolle), Tabellen-Hinweise, Preconditions, sensitive Domains markiert; System-/Unauthenticated-Rollen abgedeckt.
+- Audit-Plan verankert: Pflichtfelder (ts/actor/action/target/result/before-after/requestId/hashPrev/hashIndex/context), keine Secrets/Tokens im Log, PII-Referenz zu Station 51, Pflicht-Audits für Finanzen/Imports/Backups/Config/Kommunikation-Writes.
+- Alert-Plan definiert: Schwellen für failed_login, denied_action, finanzen_mutation, imports_failure, backup_failure, config_change; Station 62 muss diese Regeln implementieren.
+- Tamper-Evidence aus Station 54–56 wiederverwendet (SHA-256, Chain, Rotation, Verifikationsprozedur); CI-Gate beschrieben (Station 60 muss Enforcement implementieren).
+
+## Tests
+
+- Keine (Dokumentationsstation).
+
+## Notizen
+
+- `DOGULE1_SECURITY_BASELINE.md` schließt die offene Station-52-Baseline-Anforderung und bildet die Grundlage für Station 57–62 (Auth/Authz/Logging/Alerts).
+- Keine Runtime-/App-/Storage-Änderungen; `storage_candidate/`, `storage_reports/`, NAS-Artefakte, `dist-station40.tar.gz`, `dogule1-alpha/` unverändert.
+- CI-Gate ist als Anforderung für spätere Stationen formuliert; derzeit keine Pipeline-Anpassung erfolgt.
+
 # - - - - - - - - - - - - - - - - - - - -
 
 # Station 18 — Status Quo Cleanup & Router/Layout/Build/Mock DB Konsolidierung
@@ -843,5 +896,39 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 - Guardrail: Ausführung + Status-Log sind Pflicht vor Abschluss eines Stationslogs.
 - Bei Eintreffen echter Daten: neue Mappings generieren, `migrate` + `scan-all` erneut laufen lassen und Hashes protokollieren.
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 56 — Migration Rehearsal & Cutover Prep (E2d)
+
+## Kontext
+
+- Branch: `53-55-Code`.
+- Ziel: End-to-end Rehearsal der Station-53–55 Toolchain (dry-run → migrate → scan, Checksums/Merkle, FK/Invariant/PII), Determinismusbeweis, Rollback-Drill, Playbook-Aktualisierung.
+- Inputs: Mock-DB (`modules/shared/api/db/index.js`) + Registries (`migration/mapping/*.json`) fixiert; Candidate-Root `storage_candidate/v1/`; `MIGRATE_RUN_ID=run-local`.
+
+## Ergebnis (kurz)
+
+- Rehearsal auf sauberem Workspace ausgeführt: `dry-run` → `migrate` → `scan-all` → 0 BLOCKER/WARNING; Candidate + Reports unter `storage_candidate/v1` und `storage_reports/latest-*`.
+- Determinismus bestätigt: Candidate gelöscht, erneut `dry-run`/`migrate`/`scan-all`, `diff -r storage_candidate/v1-run1 storage_candidate/v1` leer (byte-identisch).
+- Rollback-Drill: `MIGRATE_FAIL_AFTER_MODULE=kurse node tools/migration/cli.js migrate` bricht wie erwartet ab, Temp-Root entfernt, kein `storage_candidate/v1` hinterlassen; anschließender Clean-Run wieder grün.
+- Hashes dokumentiert (`run.json`): kunden `e4237d40…317d`, hunde `66740e0d…511`, kurse `85c4ff57…8dd`, trainer `5a797283…437`, kalender `40035969…ef2`, finanzen `b2797674…1aa`, waren `297c6599…7b0`, kommunikation `e3b0c442…b855`.
+- `CUTOVER_PLAYBOOK.md` und `STATION56_REHEARSAL_REPORT.md` auf Station-56-Rehearsal-Stand aktualisiert (Determinismus- und Rollback-Schritte aufgenommen).
+
+## Tests
+
+- `node tools/migration/cli.js dry-run` ✅
+- `node tools/migration/cli.js migrate` ✅ (run-local)
+- `node tools/migration/cli.js scan-all` ✅
+- `diff -r storage_candidate/v1-run1 storage_candidate/v1` ✅ (Determinismus)
+- `MIGRATE_FAIL_AFTER_MODULE=kurse node tools/migration/cli.js migrate` ❌ erwartet (Rollback-Drill; hinterließ kein `storage_candidate/v1`)
+
+## Notizen
+
+- Artefakte gitignored: `storage_candidate/v1/`, `storage_reports/latest-*`.
+- Bekannte Warnung unverändert akzeptiert: Node-Hinweis zu fehlendem `"type": "module"` in package.json.
+- Registries weiter Platzhalter aus Mock-IDs; echte UUID-Freigabe vor realem Cutover notwendig.
 
 # - - - - - - - - - - - - - - - - - - - -
