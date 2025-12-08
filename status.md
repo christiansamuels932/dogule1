@@ -622,3 +622,30 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 - Untracked Artefakte (`dist-station40.tar.gz`, `dogule1-alpha/`) bewusst unverändert belassen.
 
 # - - - - - - - - - - - - - - - - - - - -
+
+# Station 42 — NAS Smoke Test
+
+## Kontext
+
+- Branch: `feature/station42-nas-smoketest`.
+- Ziel: Formale NAS-Smoketest-Abnahme des statischen Builds (HTTP, keine Codeänderungen), Protokollierung in `NAS_SMOKE_TEST_REPORT.md` und `status.md`.
+
+## Ergebnis (kurz)
+
+- NAS-App über HTTP geladen; alle Module (Dashboard, Kunden, Hunde, Kurse, Trainer, Kommunikation/Placeholder, Kalender, Finanzen, Waren) gerendert ohne Fehler (nur erwartetes `favicon.ico` 404).
+- CRUD für Kunden/Hunde/Kurse/Trainer/Finanzen/Waren erfolgreich (Create/Edit/Delete). Kalender Tag/Woche + Event-Linking funktionieren; Back/Forward/Hash stabil.
+
+## Tests
+
+- Manuelle NAS-Smoketests per Browser (HTTP auf NAS-Pfad) ✅
+- Keine Build/Lint/Test-Läufe (Validierungsstation, kein Code geändert).
+
+## Issues
+
+- Erwartetes `favicon.ico` 404 im NAS-Serving (als bekannt/benign dokumentiert).
+
+## Notizen
+
+- `NAS_SMOKE_TEST_REPORT.md` ergänzt mit Metadaten/Ergebnissen. Untracked Artefakte (`dist-station40.tar.gz`, `dogule1-alpha/`) unverändert belassen.
+
+# - - - - - - - - - - - - - - - - - - - -
