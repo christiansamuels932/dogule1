@@ -716,5 +716,6 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 ## Notizen
 
 - Untracked Artefakte (`dist-station40.tar.gz`, `dogule1-alpha/`) unverändert belassen. Governance-Update erforderlich, bevor technische Schritte 53–56 umgesetzt werden.
+- Governance wurde nach Station 52 angepasst: Stationen 53–56 sind jetzt Migration/Integrity (siehe PR `feature/station52-migration-tooling-plan`); nachgelagerte Stationen wurden entsprechend renummeriert.
 
 # - - - - - - - - - - - - - - - - - - - -

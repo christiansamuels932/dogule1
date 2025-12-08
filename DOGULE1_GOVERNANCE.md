@@ -1,6 +1,6 @@
-# DOGULE1 Governance — Stations 50–70
+# DOGULE1 Governance — Stations 50–74
 
-Purpose: single source for roadmap control, gating, owners, and station readiness rules for Stations 50–70.
+Purpose: single source for roadmap control, gating, owners, and station readiness rules for Stations 50–74.
 
 ## Station List and Validation
 
@@ -11,31 +11,36 @@ Validated order: yes — 2025-12-08
 | 50      | Roadmap Governance & Definitions of Ready            | Planning/docs only                                      |
 | 51      | Storage Contract Finalization (E1)                   | Storage schema/versioning/PII/consistency               |
 | 52      | Security Baseline Finalization (F1–F3 summary)       | Authn/authz/TLS/secret rules                            |
-| 53      | Authorization Matrix & Audit Plan (F2, F4)           | Role×action, audit, alerts                              |
-| 54      | Storage Access Layer Architecture (E2)               | Access pattern, migration order                         |
-| 55      | Authentication & Sessions MVP Implementation         | Login/session/lockout/2FA toggle                        |
-| 56      | Authorization Enforcement Layer                      | Middleware/enforcement/unauthorized UX                  |
-| 57      | Transport, Secrets, and Config Hardening             | TLS/HSTS/CSRF/secret storage/rotation cadence           |
-| 58      | Logging, Rate Limits, and Alerts Foundation          | Limits/audit hooks/alerts/health                        |
-| 59      | Storage Layer Implementation (Core Entities)         | Real storage + migration + backup/restore dry run       |
-| 60      | Kommunikation Module Skeleton (Read-Only)            | Nav/state machine/access controls                       |
-| 61      | Groupchat Core                                       | Send/read markers/notifications/retry                   |
-| 62      | Infochannel with Confirmation Flow                   | Admin-only posts/confirmations/escalations              |
-| 63      | Email Integration MVP (Send-Only)                    | Compose→send/status/audit/abuse guardrails              |
-| 64      | Outlook Auth & Contact Mapping                       | Token lifecycle/mapping/conflicts/shutdown              |
-| 65      | Outlook → Kalender Import (Preview-First)            | Mapping/duplicate detection/preview/limits/SSRF defense |
-| 66      | Storage & Security Hardening Pass                    | Drills/failure injection/rate-limit review              |
-| 67      | UI Design Tokens & Layout Application (Core Screens) | Tokens/layout/a11y/perf/localization                    |
-| 68      | Mobile Readiness (Kommunikation + Dashboard)         | Breakpoints/bottom-nav/offline-read                     |
-| 69      | Rollout Prep & Playbooks                             | Incident/playbooks/kill switches/risk review            |
-| 70      | Public Rollout (V1)                                  | Staged launch/telemetry/support/rollback                |
+| 53      | Migration Engine Skeleton & Dry-Run (E2a)            | CLI skeleton, mapper stubs, registry, dry-run only      |
+| 54      | Storage Adapters & Checksums (E2b)                   | Atomic write path, checksum tooling, migration writes   |
+| 55      | Integrity Scanner & CI Integration (E2c)             | Schema/FK/invariant/PII scanner wired to CI             |
+| 56      | Migration Rehearsal & Cutover Prep (E2d)             | Full mock→real rehearsal, rollback drills, playbook     |
+| 57      | Authorization Matrix & Audit Plan (F2, F4)           | Role×action, audit, alerts                              |
+| 58      | Storage Access Layer Architecture (E3)               | Access pattern, migration order                         |
+| 59      | Authentication & Sessions MVP Implementation         | Login/session/lockout/2FA toggle                        |
+| 60      | Authorization Enforcement Layer                      | Middleware/enforcement/unauthorized UX                  |
+| 61      | Transport, Secrets, and Config Hardening             | TLS/HSTS/CSRF/secret storage/rotation cadence           |
+| 62      | Logging, Rate Limits, and Alerts Foundation          | Limits/audit hooks/alerts/health                        |
+| 63      | Storage Layer Implementation (Core Entities)         | Real storage + migration + backup/restore dry run       |
+| 64      | Kommunikation Module Skeleton (Read-Only)            | Nav/state machine/access controls                       |
+| 65      | Groupchat Core                                       | Send/read markers/notifications/retry                   |
+| 66      | Infochannel with Confirmation Flow                   | Admin-only posts/confirmations/escalations              |
+| 67      | Email Integration MVP (Send-Only)                    | Compose→send/status/audit/abuse guardrails              |
+| 68      | Outlook Auth & Contact Mapping                       | Token lifecycle/mapping/conflicts/shutdown              |
+| 69      | Outlook → Kalender Import (Preview-First)            | Mapping/duplicate detection/preview/limits/SSRF defense |
+| 70      | Storage & Security Hardening Pass                    | Drills/failure injection/rate-limit review              |
+| 71      | UI Design Tokens & Layout Application (Core Screens) | Tokens/layout/a11y/perf/localization                    |
+| 72      | Mobile Readiness (Kommunikation + Dashboard)         | Breakpoints/bottom-nav/offline-read                     |
+| 73      | Rollout Prep & Playbooks                             | Incident/playbooks/kill switches/risk review            |
+| 74      | Public Rollout (V1)                                  | Staged launch/telemetry/support/rollback                |
 
 ## Gating Rules
 
-- Station 52 precedes 53; 53 precedes 56.
-- Storage (51, 54) and Security (52, 53, 57, 58) must be green before integrations (60–65) begin.
-- Integrations (60–65) must be green before UI/Mobile (67–68) begin.
-- Hardening (66) precedes rollout (69–70).
+- Storage contract (51) precedes migration start (53); migration chain is sequential 53 → 54 → 55 → 56.
+- Security baseline (52) must be green before migration cutover (56) and before downstream auth/security stations (57–62).
+- Auth/Security (57–62) and migration (53–56) must be green before integrations (64–69) begin.
+- Integrations (64–69) must be green before UI/Mobile (71–72) begin.
+- Hardening (70) precedes rollout (73–74).
 - Any blocker triggers either reopening the station or adding a follow-up station before proceeding.
 
 ## Branch Naming and PR Governance
@@ -64,3 +69,4 @@ Validated order: yes — 2025-12-08
 Changelog:
 
 - 2025-12-08: Initial governance for Stations 50–70.
+- 2026-01-XX: Renumbered Stations 53–56 to Migration & Integrity (E2a–E2d) per Station 52 plan; downstream stations shifted accordingly.
