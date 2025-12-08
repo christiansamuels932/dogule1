@@ -1,0 +1,32 @@
+[
+  {
+    "legacyId": "course-001",
+    "targetUuid": "d1adcf5e-dcfe-7945-b5f5-78b05332d560",
+    "version": 1
+  },
+  {
+    "legacyId": "course-002",
+    "targetUuid": "6e861c03-3855-74d3-8fdc-45f451c9d389",
+    "version": 1
+  },
+  {
+    "legacyId": "course-003",
+    "targetUuid": "02ea432b-3d11-7cce-8aa4-9ad02b4b5243",
+    "version": 1
+  },
+  {
+    "legacyId": "course-004",
+    "targetUuid": "84c6de12-5c18-793c-a6d2-0e259eb24d88",
+    "version": 1
+  },
+  {
+    "legacyId": "course-005",
+    "targetUuid": "ab1becb8-f5e9-7104-aa57-834cb7cd1429",
+    "version": 1
+  },
+  {
+    "legacyId": "course-006",
+    "targetUuid": "2c556daf-dc6a-70c5-9fdb-64654ec1df05",
+    "version": 1
+  }
+]

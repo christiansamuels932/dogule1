@@ -2,11 +2,19 @@ import js from "@eslint/js";
 
 export default [
   {
-    ignores: ["dist/**"],
+    ignores: ["dist/**", "dogule1-alpha/**", "storage_candidate/**", "storage_reports/**"],
   },
   js.configs.recommended,
   {
-    ignores: ["node_modules/**", "dist/**", ".husky/**", "pnpm-lock.yaml"],
+    ignores: [
+      "node_modules/**",
+      "dist/**",
+      ".husky/**",
+      "pnpm-lock.yaml",
+      "dogule1-alpha/**",
+      "storage_candidate/**",
+      "storage_reports/**",
+    ],
     languageOptions: {
       ecmaVersion: 2021,
       sourceType: "module",

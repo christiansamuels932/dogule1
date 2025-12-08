@@ -1,0 +1,17 @@
+[
+  {
+    "legacyId": "t1",
+    "targetUuid": "a724abee-4cac-7199-974c-f8585f4a29f5",
+    "version": 1
+  },
+  {
+    "legacyId": "t2",
+    "targetUuid": "85e5cae0-e6f7-75f8-a39c-79be8367c3fd",
+    "version": 1
+  },
+  {
+    "legacyId": "t3",
+    "targetUuid": "ba6d8277-45a8-72d0-9dd2-19d376055cef",
+    "version": 1
+  }
+]

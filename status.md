@@ -768,4 +768,80 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 # - - - - - - - - - - - - - - - - - - - -
 
+# Station 53–55 — Migration Tooling Execution (Dry-Run, Migrate, Scan)
+
+## Kontext
+
+- Branch: `53-55-Code`
+- Ziel: Station-53–55 Tooling tatsächlich ausführen/härten (Dry-Run + Migrate + Scan) mit deterministischen Outputs, Atomik via Temp-Root→Rename, Checksum/Merkle, Registry-gestützte FK-Rewrites.
+- Registry: synthetische Platzhalter (`migration/mapping/*.json`) erstellt für alle Module; finale UUID-Zuweisungen müssen noch planerisch bestätigt/ersetzt werden.
+
+## Ergebnis (kurz)
+
+- `migrate.js` implementiert: liest Mock-DB, wendet Registry auf IDs/FKs an, erzwingt `schemaVersion=1`/`version=0`, schreibt Kandidat nur unter `storage_candidate/v1` via temp-root + atomic rename, erzeugt Entity-Checksums + Merkle (`checksums/entities.jsonl`, `merkle.json`) und deterministisches `checksums/run.json` (`runId`, `generatedAt` fix).
+- CLI erweitert (`node tools/migration/cli.js migrate`), Dry-Run/Scan bleiben bestehen; Scan toleriert leere Registry nur bei leeren Modulen.
+- Determinismus belegt: zwei `migrate` Läufe mit identischem `MIGRATE_RUN_ID=run-1` erzeugen byte-identische Trees (`diff -r` leer).
+- Rollback-Drill: `MIGRATE_FAIL_AFTER_MODULE=kurse` → erwarteter Abbruch, Temp-Root wird entfernt, bestehender Kandidat bleibt unverändert.
+- Kandidat + Checksums aktuell unter `storage_candidate/v1`; `run.json` nutzt `generatedAt: "00000000T000000Z"`.
+- Mappings abgeleitet aus Mock-DB (Option A = Mock als Legacy): `migration/mapping/*.json` jetzt deterministisch aus Mock-IDs → uuidv7 (per Hash-Seeding).
+
+## Tests
+
+- `node tools/migration/cli.js dry-run` ✅ (0 BLOCKER)
+- `node tools/migration/cli.js migrate` ✅ (kandidat geschrieben, checksums/merkle)
+- `node tools/migration/cli.js scan-all` ✅ (0 BLOCKER/WARNING)
+- Determinismus: zwei Läufe (`MIGRATE_RUN_ID=run-1`) + `diff -r storage_candidate/v1_run1 storage_candidate/v1_run2` → keine Unterschiede
+- Rollback-Injection: `MIGRATE_FAIL_AFTER_MODULE=kurse MIGRATE_RUN_ID=fail-test node tools/migration/cli.js migrate` ❌ erwartet; Temp-Verzeichnis bereinigt
+- `pnpm lint` ✅ (nach Ignore-Erweiterung für build/output/reports)
+
+## Issues
+
+- UUID-Mappings leiten sich deterministisch aus Mock-IDs ab; falls echte Legacy-Daten auftauchen, müssen sie ersetzt werden.
+- Fsync-Pfad (temp→fsync→rename) fehlt noch; aktuell rename-atomik ohne fsync.
+- Vitest nicht erneut ausgeführt (vorbekanntes Worker-Exit-Problem bleibt offen).
+- Node-Warnung zu fehlendem `"type": "module"` weiter vorhanden (bewusst unverändert).
+
+## Notizen
+
+- Kandidat-/Report-Pfade gitignored (`storage_candidate/`, `storage_reports/`).
+- CUTOVER-Playbook/Station-56-Report noch zu schreiben; wird in Station 56 erwartet.
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# 53-55-Code — Migration Tooling Execution & Remediation (Guardrail)
+
+## Kontext
+
+- Branch: `53-55-Code`.
+- Hintergrund: Stationen 53–55 waren zuvor nur geplant, nicht ausgeführt; dieser Eintrag dokumentiert die nachgeholte Ausführung/Härtung. Guardrail: Keine künftige Station darf als erledigt gelten, ohne tatsächliche Ausführung + Status-Log.
+- Legacy-Quelle: Option A (Mock-DB als Legacy). Mappings deterministisch aus Mock-IDs abgeleitet.
+
+## Ergebnis (kurz)
+
+- Mappings generiert via `tools/migration/generateMappings.js`: Mock-ID → uuidv7 (hash-seeded), abgelegt unter `migration/mapping/*.json`.
+- `migrate` gehärtet: Temp-Root + fsync auf Dateien/Verzeichnisse vor Rename; schreibt Kandidat nur nach `storage_candidate/v1`, erzeugt Checksums/Merkle + deterministisches `run.json` (`generatedAt` fixiert).
+- Pipeline ausgeführt: `dry-run` → `migrate` → `scan-all` mit 0 BLOCKER/WARNING; Kandidat + Checksums aktuell unter `storage_candidate/v1`.
+- Determinismus bereits validiert (identische Outputs bei gleichem `MIGRATE_RUN_ID`); Rollback-Drill via `MIGRATE_FAIL_AFTER_MODULE` bereinigt Temp-Root wie erwartet.
+- Docs/Templates ergänzt: `CUTOVER_PLAYBOOK.md`, `STATION56_REHEARSAL_REPORT.md`.
+- Qualität: `pnpm lint` ✅, `pnpm vitest run` ✅.
+
+## Tests
+
+- `node tools/migration/cli.js dry-run` ✅
+- `node tools/migration/cli.js migrate` ✅
+- `node tools/migration/cli.js scan-all` ✅
+- `pnpm vitest run` ✅
+- `pnpm lint` ✅
+
+## Issues
+
+- Mappings basieren auf Mock-IDs; bei echter Legacy-Datenquelle müssen sie ersetzt + Pipeline erneut ausgeführt werden.
+- Bekannte Warnung beibehalten: Node-Hinweis zu fehlendem `"type": "module"` in package.json.
+- Untracked Artefakte unverändert: `dist-station40.tar.gz`, `dogule1-alpha/`.
+
+## Notizen
+
+- Guardrail: Ausführung + Status-Log sind Pflicht vor Abschluss eines Stationslogs.
+- Bei Eintreffen echter Daten: neue Mappings generieren, `migrate` + `scan-all` erneut laufen lassen und Hashes protokollieren.
+
 # - - - - - - - - - - - - - - - - - - - -

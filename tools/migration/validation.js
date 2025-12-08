@@ -12,10 +12,14 @@ const moduleRequired = {
 };
 
 export function validateSchema(moduleName, record) {
+  const normalized =
+    moduleName === "finanzen" && record.kundeId === undefined && record.kundenId !== undefined
+      ? { ...record, kundeId: record.kundenId }
+      : record;
   const issues = [];
   const required = moduleRequired[moduleName] || [];
   for (const field of [...REQUIRED_BASE, ...required]) {
-    if (record[field] === undefined || record[field] === null) {
+    if (normalized[field] === undefined || normalized[field] === null) {
       issues.push({
         severity: "BLOCKER",
         message: `Missing required field ${field}`,

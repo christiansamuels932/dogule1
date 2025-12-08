@@ -1,0 +1,17 @@
+[
+  {
+    "legacyId": "hund-001",
+    "targetUuid": "1b4a6982-2c77-7870-b49e-7a21fcca1033",
+    "version": 1
+  },
+  {
+    "legacyId": "hund-002",
+    "targetUuid": "56393af1-609d-72ed-9cb5-569488e82981",
+    "version": 1
+  },
+  {
+    "legacyId": "hund-003",
+    "targetUuid": "516252b1-0cd6-755e-a278-69452b52263e",
+    "version": 1
+  }
+]

@@ -4,6 +4,7 @@
 import { runDryRun } from "./batchRunner.js";
 import { writeReport } from "./reporter.js";
 import { runScan } from "./scan.js";
+import { runMigrate } from "./migrate.js";
 
 async function main() {
   const cmd = process.argv[2] || "dry-run";
@@ -39,6 +40,11 @@ async function main() {
     if (cmd === "verify-checksums") {
       const result = await runScan({ mode: "verify-checksums" });
       process.exit(result.exitCode);
+    }
+    if (cmd === "migrate") {
+      const result = await runMigrate();
+      console.log(`Migration candidate written to ${result.outputDir} (runId=${result.runId})`);
+      process.exit(0);
     }
     console.error(`Unknown command ${cmd}`);
     process.exit(1);
