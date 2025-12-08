@@ -13,5 +13,8 @@ module.exports = defineConfig({
     root: __dirname,
     include: ["apps/web/**/*.{test,spec}.{js,ts}", "modules/**/*.{test,spec}.{js,ts}"],
     environment: "happy-dom",
+    pool: "threads",
+    maxThreads: 1,
+    minThreads: 1,
   },
 });

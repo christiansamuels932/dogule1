@@ -79,12 +79,13 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 ## Tests
 
-- `pnpm vitest run modules/shared/auth/authService.test.js` ❌ — Vitest bricht mit „Worker forks emitted error / no tests“ ab (bestehendes Vitest-Runner-Problem; reproduzierbar auch bei `apps/web/routerUtils.test.js`). Manuelle Sanity: `node -e "import('./modules/shared/auth/authService.js').then(m=>m.createAuthService({config:{enabled:true,accessSecret:'x',refreshSecret:'y'}}).login('admin','adminpass').then(r=>console.log(r.user.role)))"` ✅
+- `pnpm vitest run modules/shared/auth/authService.test.js` ✅ (nach Vitest-Konfig-Anpassung auf Single-Thread)
+- `pnpm vitest run` ✅ (alle 7 Suites: kalender utils, router utils, finanzen.trainer, authService)
 
 ## Notizen
 
 - Keine Runtime-/Storage-Änderungen; `storage_candidate/`, `storage_reports/`, NAS/`dist-station40.tar.gz`, `dogule1-alpha/` unverändert.
-- Vitest-Runner-Fehler muss vor Station-60/62 behoben werden, da Authz/Rate-Limit-Tests darauf aufbauen; aktuell bekannte Suite funktioniert nur per manueller Node-Prüfung.
+- Vitest-Konfig auf Single-Thread (`pool: "threads", maxThreads=1`) gesetzt, um den vorherigen Worker-Crash zu beheben; Tests laufen stabil.
 
 # - - - - - - - - - - - - - - - - - - - -
 
