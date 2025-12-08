@@ -307,7 +307,7 @@ async function runScan({ mode, modules = [] }) {
   for (const moduleName of activeModules) {
     const records = Array.from(index[moduleName]?.values() || []);
     const registry = await loadRegistry(moduleName);
-    if (registry.length === 0) {
+    if (registry.length === 0 && records.length > 0) {
       report.push(issue(moduleName, null, "registry", "WARNING", "Registry missing or empty"));
     }
     if (mode === "verify-checksums" || mode === "all") {

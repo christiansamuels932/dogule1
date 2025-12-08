@@ -1,0 +1,27 @@
+[
+  {
+    "legacyId": "pay-001",
+    "targetUuid": "3297a2ca-86bc-7085-a0f7-c6e5158da3aa",
+    "version": 1
+  },
+  {
+    "legacyId": "pay-002",
+    "targetUuid": "a6eb1a00-d8c2-797c-8165-0eaf3386d151",
+    "version": 1
+  },
+  {
+    "legacyId": "pay-003",
+    "targetUuid": "e5b8204c-f858-7e65-9fa0-3aefd9d9fa03",
+    "version": 1
+  },
+  {
+    "legacyId": "pay-004",
+    "targetUuid": "70ba1865-6c59-7f91-a1e3-0e7992e48373",
+    "version": 1
+  },
+  {
+    "legacyId": "pay-005",
+    "targetUuid": "1178ec28-5972-798b-99c2-bcfed5d4bb2a",
+    "version": 1
+  }
+]
