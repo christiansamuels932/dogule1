@@ -743,4 +743,29 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 # - - - - - - - - - - - - - - - - - - - -
 
+# Station 55 — Integrity Scanner & CI Integration (Phase E2c)
+
+## Kontext
+
+- Branch: `feature/station55-integrity-scanner-plan`.
+- PR: https://github.com/christiansamuels932/dogule1/pull/61
+- Ziel: Read-only Integrity-Scanner + CLI-Befehle (scan-all/module/pii/drift/verify-checksums) für Candidate-Storage, CI-ready; keine Migration-Writes oder Registry-Mutationen.
+
+## Ergebnis (kurz)
+
+- CLI erweitert um Scan-Kommandos (schema/FK/invariants/PII/drift + separate verify-checksums) mit deterministischen Reports (`storage_reports/latest-scan/`); Exit-Regel: BLOCKER → exit 1, sonst 0.
+- Validatoren implementiert: Schema (schemaVersion=1, version vorhanden), FK-Auflösung gegen Candidate-Daten, Invarianten (Zeitspanne, capacity>=bookedCount, non-negative price/betrag, Kurs/Trainer-Erfordernisse), Checksums (SHA-256 + Merkle, empty-root = SHA-256("")), Schema-Drift, PII-Leak-Check (kein PII in Checksums/Reports).
+- Registry bleibt read-only; keine Runtime-/Mock-DB-Schreibzugriffe; Reports gitignored.
+
+## Tests
+
+- `pnpm exec eslint tools/migration` ✅
+- Scan-Läufe nicht ausgeführt (Tooling-Implementierung ohne Ausführung).
+
+## Notizen
+
+- Läufe sollen auf `storage_candidate/v1` erfolgen; CI-Jobs folgen in dieser Station. Untracked Artefakte (`dist-station40.tar.gz`, `dogule1-alpha/`) unverändert.
+
+# - - - - - - - - - - - - - - - - - - - -
+
 # - - - - - - - - - - - - - - - - - - - -
