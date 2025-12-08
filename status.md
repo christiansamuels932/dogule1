@@ -671,3 +671,26 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 - Keine Codeänderungen. Untracked Artefakte (`dist-station40.tar.gz`, `dogule1-alpha/`) unverändert belassen.
 
 # - - - - - - - - - - - - - - - - - - - -
+
+# Station 51 — Storage Baseline V2 Formalization
+
+## Kontext
+
+- Branch: `feature/station51-storage-baseline`.
+- Ziel: Speicher-Baseline V2 dokumentieren (Schemas, IDs, PII/Residency, Integrität, Migration).
+
+## Ergebnis (kurz)
+
+- `DOGULE1_SYSTEM_BASELINE_V2.md` angelegt (Schema-Tabellen für alle Module inkl. Kommunikation-Shell, PII/Residency, ID/Version-Policy, Invarianten, Checksums, Concurrency/Atomicity, Failure-Injection, Mock→Real-Mapping, Backup/Scan-Cadence).
+- Governance verweist nun auf die Baseline; `modules/shared/api/README.md` hinzugefügt als Pointer für Mock-Daten/Storage-Arbeiten.
+- Keine Codeänderungen an Runtime; Migration/Tooling noch ausstehend.
+
+## Tests
+
+- Keine (Dokumentationsstation).
+
+## Notizen
+
+- Migration-/Integrity-Tooling folgt in späteren Schritten; PII/Prefix/Version Defaults sind im Dokument fixiert.
+
+# - - - - - - - - - - - - - - - - - - - -
