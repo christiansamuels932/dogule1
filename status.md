@@ -649,3 +649,25 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 - `NAS_SMOKE_TEST_REPORT.md` ergänzt mit Metadaten/Ergebnissen. Untracked Artefakte (`dist-station40.tar.gz`, `dogule1-alpha/`) unverändert belassen.
 
 # - - - - - - - - - - - - - - - - - - - -
+
+# Station 50 — Roadmap Governance & Definitions of Ready
+
+## Kontext
+
+- Branch: `feature/station50-governance`.
+- Ziel: Governance und DoR-Artefakte für Stationen 50–70 erstellen (nur Dokumentation, keine Builds/Tests).
+
+## Ergebnis (kurz)
+
+- `DOGULE1_GOVERNANCE.md` angelegt: Stationen 50–70 restated mit Validierung (2025-12-08, gültig), Gating-Regeln, Branch/PR-Governance, Rollen, Änderungsregeln, Blocker-Protokollierung.
+- `DOR_PHASES_E_TO_I.md` angelegt: DoR-Templates für Phasen E–I mit Pflichtfeldern (Scope, Dependencies, Risiken/Annahmen, Artefakte, Testbarkeit, Reviewer, Timebox, Boundaries, Exit-Kriterien) und Vorgabe, Risiken/Annahmen in PR + `status.md` zu loggen.
+
+## Tests
+
+- Keine (Dokumentationsstation).
+
+## Notizen
+
+- Keine Codeänderungen. Untracked Artefakte (`dist-station40.tar.gz`, `dogule1-alpha/`) unverändert belassen.
+
+# - - - - - - - - - - - - - - - - - - - -
