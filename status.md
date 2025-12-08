@@ -719,3 +719,28 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 - Governance wurde nach Station 52 angepasst: Stationen 53–56 sind jetzt Migration/Integrity (siehe PR `feature/station52-migration-tooling-plan`); nachgelagerte Stationen wurden entsprechend renummeriert.
 
 # - - - - - - - - - - - - - - - - - - - -
+
+# Station 54 — Storage Adapters & Checksums (Plan, Phase E2b)
+
+## Kontext
+
+- Branch: `feature/station54-storage-adapters-checksums`.
+- PR: https://github.com/christiansamuels932/dogule1/pull/60
+- Ziel: Implementierungs-Layout für Storage-Adapter und Checksumms festlegen (Candidate-Only), keine Runtime-/Storage-Schreiboperationen.
+
+## Ergebnis (kurz)
+
+- `tools/migration/STATION54_IMPLEMENTATION_PLAN.md` ergänzt: Ziel-Layout `storage_candidate/v1/<module>/data.jsonl` + Checksums, TargetAdapter-API (temp→fsync→rename, abort cleanup), SHA-256-Hashes mit kanonischem JSON, Merkle-Regeln (id-sortiert, Empty-Root = SHA-256("")), CLI-Migrate-Flags/Defaults, read-only Registry-Nutzung (Proposals nur in registry_candidate), Report-Pfade deterministisch, Validierungs-Scope = Schema-only (FK/Invariant/PII in 55), Safety-Guidelines (nur Candidate-Root).
+- `.gitignore` erweitert um `storage_candidate/` (Candidate-Ausgaben werden nicht eingecheckt).
+
+## Tests
+
+- Keine (Dokumentationsstation, keine Codeänderungen).
+
+## Notizen
+
+- Station 53 (dry-run) muss landen, bevor 54 Schreibpfade nutzt; 54 bleibt candidate-only/offline. Untracked Artefakte (`dist-station40.tar.gz`, `dogule1-alpha/`) unverändert.
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - -
