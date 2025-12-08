@@ -694,3 +694,27 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 - Migration-/Integrity-Tooling folgt in späteren Schritten; PII/Prefix/Version Defaults sind im Dokument fixiert.
 
 # - - - - - - - - - - - - - - - - - - - -
+
+# Station 52 — Migration & Integrity Tooling Plan (Phase E2)
+
+## Kontext
+
+- Branch: `feature/station52-migration-tooling-plan`.
+- PR: https://github.com/christiansamuels932/dogule1/pull/58
+- Ziel: Plan für Migration/Integrity-Tooling auf Basis der Storage-Baseline erstellen (keine Implementierung/Storage-Manipulation).
+
+## Ergebnis (kurz)
+
+- `MIGRATION_TOOLING_PLAN.md` angelegt: Scope/Out-of-scope, Engine-Architektur (CLI, Source/Target-Adapter, Mapper, Legacy-ID-Registry, Validation, BatchRunner), ID/Version/Prefix-Regeln, Mapping/Checksum/Integrity-Scanner/Fallback-Strategien, Staging/Cutover/Rollback, Test- und Failure-Injection-Protokoll, Runbook/Reports.
+- Plan bindet strikt an `DOGULE1_SYSTEM_BASELINE_V2.md` (Baseline gewinnt bei Konflikt) und nennt Governance-Namenskonflikt (Stations 53–56) als vorgelagerte Governance-Aktion.
+- Keine Runtime-Codeänderungen; reine Dokumentation/Planung.
+
+## Tests
+
+- Keine (Dokumentationsstation, keine Codeänderungen).
+
+## Notizen
+
+- Untracked Artefakte (`dist-station40.tar.gz`, `dogule1-alpha/`) unverändert belassen. Governance-Update erforderlich, bevor technische Schritte 53–56 umgesetzt werden.
+
+# - - - - - - - - - - - - - - - - - - - -
