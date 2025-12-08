@@ -13,6 +13,76 @@ roles:
   - staff
   - trainer
 actions:
+  - id: auth.login
+    module: auth
+    description: Interactive login
+    roles:
+      admin: allowed
+      staff: allowed
+      trainer: allowed
+      system: denied
+      unauthenticated: allowed
+    preconditions:
+      - Account must be active; lockout blocks login.
+    audit: always
+    alerts: failed_login
+
+  - id: auth.refresh
+    module: auth
+    description: Refresh access token
+    roles:
+      admin: allowed
+      staff: allowed
+      trainer: allowed
+      system: denied
+      unauthenticated: denied
+    preconditions:
+      - Valid refresh token, not revoked, not expired.
+    audit: always
+    alerts: denied_action
+
+  - id: auth.logout
+    module: auth
+    description: Logout/revoke session
+    roles:
+      admin: allowed
+      staff: allowed
+      trainer: allowed
+      system: conditional
+      unauthenticated: denied
+    preconditions:
+      - System may revoke sessions it owns (job cleanup).
+    audit: always
+    alerts: denied_action
+
+  - id: auth.lockout
+    module: auth
+    description: Account lockout triggered after failed attempts
+    roles:
+      admin: denied
+      staff: denied
+      trainer: denied
+      system: allowed
+      unauthenticated: denied
+    preconditions:
+      - Triggered automatically by auth service after threshold.
+    audit: always
+    alerts: failed_login
+
+  - id: auth.denied
+    module: auth
+    description: Denied auth attempt (invalid/expired token, lockout)
+    roles:
+      admin: allowed
+      staff: allowed
+      trainer: allowed
+      system: allowed
+      unauthenticated: allowed
+    preconditions:
+      - N/A (represents failure events).
+    audit: always
+    alerts: denied_action
+
   - id: kommunikation.chat.view_thread
     module: kommunikation
     description: View chat threads/messages

@@ -63,6 +63,31 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 # - - - - - - - - - - - - - - - - - - - -
 
+# Station 59 — Authentication & Sessions MVP Implementation
+
+## Kontext
+
+- Branch: `feature/station59-auth-sessions`.
+- Ziel: Auth-/Session-MVP mit lokalem Login (`admin|staff|trainer`), PBKDF2-Hashing, Access/Refresh-Tokens, Lockout, Logout/Revoke, Admin-2FA-Flag (stub), Feature-Flagging; Audit-/AuthZ-Aktions-IDs fest verdrahtet in Baseline/Matrix.
+
+## Ergebnis (kurz)
+
+- `DOGULE1_SECURITY_BASELINE.md` ergänzt um Auth-Parameter: PBKDF2-HMAC-SHA256 (120k, 16B Salt, 32B Key), Access=15m, Refresh=7d, Lockout 5/5m → 15m, Secrets `DOGULE1_AUTH_SECRET`/`DOGULE1_REFRESH_SECRET`, Flags `DOGULE1_AUTH_ENABLED`, `DOGULE1_SESSION_COOKIE_NAME` (HttpOnly/SameSite=Strict/Secure), Admin-2FA-Toggle, Audit-ActionIDs `auth.*`.
+- `SECURITY_AUTHORIZATION_MATRIX.md` erweitert um `auth.login|refresh|logout|lockout|denied` Rollenregeln (deny-by-default bleibt).
+- Neue Auth-Implementierung (Mock/MVP): `modules/shared/auth/` mit Hashing, HMAC-signed Tokens, Lockout-Tracking, Refresh-Rotation/Revoke, Audit-Hooks (actionId/actor/target/result + Chain-Felder), Feature-Flag `DOGULE1_AUTH_ENABLED` (default off), Admin-2FA-Flag (stub: verweigert, wenn gefordert aber nicht gesetzt). Seed-User mit PBKDF2-Hashes (`admin`, `staff`, `trainer`).
+- Config-Resolver (`modules/shared/auth/config.js`) für Secrets/TTLs/Lockout/2FA; Error-Codes gekapselt; ownership bleibt rein in-memory (kein Storage-Write).
+
+## Tests
+
+- `pnpm vitest run modules/shared/auth/authService.test.js` ❌ — Vitest bricht mit „Worker forks emitted error / no tests“ ab (bestehendes Vitest-Runner-Problem; reproduzierbar auch bei `apps/web/routerUtils.test.js`). Manuelle Sanity: `node -e "import('./modules/shared/auth/authService.js').then(m=>m.createAuthService({config:{enabled:true,accessSecret:'x',refreshSecret:'y'}}).login('admin','adminpass').then(r=>console.log(r.user.role)))"` ✅
+
+## Notizen
+
+- Keine Runtime-/Storage-Änderungen; `storage_candidate/`, `storage_reports/`, NAS/`dist-station40.tar.gz`, `dogule1-alpha/` unverändert.
+- Vitest-Runner-Fehler muss vor Station-60/62 behoben werden, da Authz/Rate-Limit-Tests darauf aufbauen; aktuell bekannte Suite funktioniert nur per manueller Node-Prüfung.
+
+# - - - - - - - - - - - - - - - - - - - -
+
 # Station 57 — Authorization Matrix & Audit Plan (F2, F4)
 
 ## Kontext
