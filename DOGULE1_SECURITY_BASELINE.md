@@ -9,6 +9,19 @@ Version 0 – first baseline; created in Station 57, covering the Station-52 sec
 - Deny-by-default: any route/action without an explicit rule is denied. All sensitive actions require audit logging.
 - Stable action IDs (`module.action_verb`) are mandatory; see `SECURITY_AUTHORIZATION_MATRIX.md` for the source-of-truth matrix (machine-readable block governs CI coverage).
 
+## Authentication & Session Parameters (anchored)
+
+- Hashing: PBKDF2-HMAC-SHA256, iterations=120000, salt=16 bytes, key length=32 bytes. Stored format: `pbkdf2$sha256$<iterations>$<salt_b64>$<hash_b64>`.
+- Token lifetimes: access=15m, refresh=7d.
+- Lockout: 5 failed logins within 5 minutes → lockout for 15 minutes.
+- Secrets/envs:
+  - `DOGULE1_AUTH_ENABLED` (default false; feature flag for auth).
+  - `DOGULE1_AUTH_SECRET` (HMAC for access tokens, required in real deployments).
+  - `DOGULE1_REFRESH_SECRET` (HMAC for refresh tokens).
+  - `DOGULE1_SESSION_COOKIE_NAME` (default `dogule1.sid`), cookies must be `HttpOnly`, `SameSite=Strict`, `Secure` when over TLS.
+- Admin-only 2FA toggle: config flag (default off); if enabled, admin login must require 2FA assertion (implementation in later stations).
+- Audit action IDs (stable): `auth.login`, `auth.refresh`, `auth.logout`, `auth.lockout`, `auth.denied`.
+
 ## Authorization Matrix (summary)
 
 - Full matrix lives in `SECURITY_AUTHORIZATION_MATRIX.md` (machine-readable YAML + human tables).
