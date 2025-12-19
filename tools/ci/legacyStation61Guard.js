@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* eslint-env node */
 const { spawnSync } = require("child_process");
 
 function runGit(args) {
@@ -77,7 +78,7 @@ function parseChangeLine(rawLine) {
     };
   }
 
-  const match = line.match(/^([A-Z\?][0-9]*)\s+(.*)$/);
+  const match = line.match(/^([A-Z?][0-9]*)\s+(.*)$/);
   if (!match) return null;
 
   const statusToken = match[1];
