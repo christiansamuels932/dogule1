@@ -11,7 +11,8 @@
     "test": "vitest",
     "audit": "echo \"DLX-AUDIT-001: running pnpm audit\" && pnpm audit",
     "prepare": "echo \"DLX-HUSKY-000: installing husky hooks\" && husky install",
-    "lint-staged": "echo \"DLX-LS-001: running lint-staged\" && lint-staged"
+    "lint-staged": "echo \"DLX-LS-001: running lint-staged\" && lint-staged",
+    "legacy:station61:guard": "node tools/ci/legacyStation61Guard.js"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.0.0",
