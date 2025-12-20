@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 /* eslint-env node */
+/* global require, process, console */
 const { spawnSync } = require("child_process");
 
 function runGit(args) {
