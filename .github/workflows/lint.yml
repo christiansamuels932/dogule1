@@ -12,6 +12,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Install pnpm
         uses: pnpm/action-setup@v3
@@ -24,6 +26,9 @@ jobs:
           cache: 'pnpm'
 
       - run: pnpm install
+
+      - name: Station 61 immutability guard
+        run: pnpm run legacy:station61:guard
 
       - name: Enable corepack
         run: corepack enable
