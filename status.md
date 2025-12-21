@@ -15,6 +15,29 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 # - - - - - - - - - - - - - - - - - - - -
 
+# Station 62 — Logging, Rate Limits, Alerts (Step 2C — Alert Signals)
+
+## Kontext
+
+- Branch: `feature/station62-logging-rate-alerts`.
+- Scope: alert wrapper over central logger with throttling; no new dependencies or schema changes.
+
+## Ergebnis (kurz)
+
+- Added `modules/shared/logging/alerts.js` with `alertEvent(event)`: requires `alertCode` and `throttleKey`, forces `level=alert`/`severity=ALERT`, reuses the canonical schema via `logEvent`, and throttles per (`alertCode`, `throttleKey`) to max 1 emit per 5 minutes (drops silently).
+- Dev/Test: throws on missing required fields or schema violations; Prod: never throws, drops invalid/throttled alerts after emitting via logger when valid.
+
+## Tests
+
+- `npm run lint` — ✅
+- `npm test` — ✅
+
+## Notizen
+
+- No new dependencies; schema is reused (no additional schema files).
+
+# - - - - - - - - - - - - - - - - - - - -
+
 # Station 62 — Logging, Rate Limits, Alerts (Step 2B — Core Logger)
 
 ## Kontext
