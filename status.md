@@ -15,6 +15,29 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 # - - - - - - - - - - - - - - - - - - - -
 
+# Station 62 — Logging, Rate Limits, Alerts (Step 2B — Core Logger)
+
+## Kontext
+
+- Branch: `feature/station62-logging-rate-alerts`.
+- Scope: central JSONL logger with schema validation + fail-fast/dev-test vs drop-once-in-prod behavior; no new dependencies.
+
+## Ergebnis (kurz)
+
+- Implemented `modules/shared/logging/logger.js` exporting `logEvent(event)` only: applies defaults (ts, level→severity mapping), validates via Station 62 subset schema, enforces meta whitelist/size (<=1024B), and writes exactly one JSON line to stdout on success.
+- Environment behavior: dev/test throw immediately on schema violation; prod emits a single `critical` event (`message=LOG-SCHEMA-INVALID`) on first invalid log, then drops subsequent invalid events silently.
+
+## Tests
+
+- `npm run lint` — ✅
+- `npm test` — ✅
+
+## Notizen
+
+- No new dependencies added; console usage limited to the controlled stdout write.
+
+# - - - - - - - - - - - - - - - - - - - -
+
 # Station 62 — Logging, Rate Limits, Alerts (Step 2A — Schema Validation Loader)
 
 ## Kontext
