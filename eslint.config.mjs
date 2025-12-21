@@ -2,7 +2,13 @@ import js from "@eslint/js";
 
 export default [
   {
-    ignores: ["dist/**", "dogule1-alpha/**", "storage_candidate/**", "storage_reports/**"],
+    ignores: [
+      "dist/**",
+      "dogule1-alpha/**",
+      "storage_candidate/**",
+      "storage_reports/**",
+      "worktrees/**",
+    ],
   },
   js.configs.recommended,
   {
@@ -14,6 +20,7 @@ export default [
       "dogule1-alpha/**",
       "storage_candidate/**",
       "storage_reports/**",
+      "worktrees/**",
     ],
     languageOptions: {
       ecmaVersion: 2021,

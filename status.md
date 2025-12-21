@@ -15,6 +15,144 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 # - - - - - - - - - - - - - - - - - - - -
 
+# Station 62 — Logging, Rate Limits, Alerts (Abgeschlossen)
+
+## Kontext
+
+- Branch: `feature/station62-logging-rate-alerts`.
+- Scope: Closing summary after Steps 1–2E delivered (schema, logger, alerts, rate limits, health endpoints).
+
+## Ergebnis (kurz)
+
+- Station 62 implemented canonical logging/alert schema, core logger (fail-fast dev/test, single-drop notice in prod), alert wrapper with throttling, in-memory rate-limit primitive with logging, and `/healthz`/`/readyz` endpoints with internal readiness checks only.
+
+## Tests
+
+- `npm run lint` — ✅
+- `npm test` — ✅
+
+## Notizen
+
+- Limitations: (1) logger schema-violation notice is log-only (no alert signal); (2) alert `result` defaults to `"error"` unless caller sets an explicit outcome; (3) rate-limit buckets are in-memory without TTL cleanup (long-lived keys may accumulate).
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 62 — Logging, Rate Limits, Alerts (Step 2E — Health Endpoints)
+
+## Kontext
+
+- Branch: `feature/station62-logging-rate-alerts`.
+- Scope: add `/healthz` (always 200 ok) and `/readyz` (200 ok vs 503 not_ready) handlers with internal readiness checks; no external deps.
+
+## Ergebnis (kurz)
+
+- Implemented `modules/shared/server/health.js` with `handleHealthz` (always 200, `{status:"ok"}`) and `handleReadyz` (200 ok only when config/logger/rate-limit checks pass; else 503 `{status:"not_ready"}`).
+- Readiness failures log a warning via canonical logger (`actionId=system.health.readiness`, `result=error`, `message=READINESS-NOT-READY`); successful checks are not logged. No stack traces or config leakage in responses.
+
+## Tests
+
+- `npm run lint` — ✅
+- `npm test` — ✅
+
+## Notizen
+
+- Readiness scope limited to internal availability (config loaded, logger initialized, rate limiter available); no external service checks.
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 62 — Logging, Rate Limits, Alerts (Step 2D — Rate Limit Primitive)
+
+## Kontext
+
+- Branch: `feature/station62-logging-rate-alerts`.
+- Scope: in-memory fixed-window rate limit primitive + rate-limit hit logging helper; no concrete limits yet.
+
+## Ergebnis (kurz)
+
+- Added `modules/shared/ratelimit/limiter.js` with `rateLimit({ actionId, key, limit, windowMs })` returning `{ allowed, remaining, resetAt }` without throwing; fixed window with deterministic resetAt; buckets are per key in-memory.
+- Added `logRateLimitHit({ actionId, actor, requestId, key })` emitting warning-level `RATE-LIMIT-HIT` via canonical logger (result=rate_limited, target=ratelimit/key, no new schema).
+
+## Tests
+
+- `npm run lint` — ✅
+- `npm test` — ✅
+
+## Notizen
+
+- No hardcoded limits; consumers resolve identity keys and call the primitive.
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 62 — Logging, Rate Limits, Alerts (Step 2C — Alert Signals)
+
+## Kontext
+
+- Branch: `feature/station62-logging-rate-alerts`.
+- Scope: alert wrapper over central logger with throttling; no new dependencies or schema changes.
+
+## Ergebnis (kurz)
+
+- Added `modules/shared/logging/alerts.js` with `alertEvent(event)`: requires `alertCode` and `throttleKey`, forces `level=alert`/`severity=ALERT`, reuses the canonical schema via `logEvent`, and throttles per (`alertCode`, `throttleKey`) to max 1 emit per 5 minutes (drops silently).
+- Dev/Test: throws on missing required fields or schema violations; Prod: never throws, drops invalid/throttled alerts after emitting via logger when valid.
+
+## Tests
+
+- `npm run lint` — ✅
+- `npm test` — ✅
+
+## Notizen
+
+- No new dependencies; schema is reused (no additional schema files).
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 62 — Logging, Rate Limits, Alerts (Step 2B — Core Logger)
+
+## Kontext
+
+- Branch: `feature/station62-logging-rate-alerts`.
+- Scope: central JSONL logger with schema validation + fail-fast/dev-test vs drop-once-in-prod behavior; no new dependencies.
+
+## Ergebnis (kurz)
+
+- Implemented `modules/shared/logging/logger.js` exporting `logEvent(event)` only: applies defaults (ts, level→severity mapping), validates via Station 62 subset schema, enforces meta whitelist/size (<=1024B), and writes exactly one JSON line to stdout on success.
+- Environment behavior: dev/test throw immediately on schema violation; prod emits a single `critical` event (`message=LOG-SCHEMA-INVALID`) on first invalid log, then drops subsequent invalid events silently.
+
+## Tests
+
+- `npm run lint` — ✅
+- `npm test` — ✅
+
+## Notizen
+
+- No new dependencies added; console usage limited to the controlled stdout write.
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 62 — Logging, Rate Limits, Alerts (Step 2A — Schema Validation Loader)
+
+## Kontext
+
+- Branch: `feature/station62-logging-rate-alerts`.
+- Scope: runtime loader + validator for log/alert schema (no UI/storage changes); no new dependencies added; ajv absent, so minimal in-repo validator used.
+
+## Ergebnis (kurz)
+
+- Added `modules/shared/logging/schema.js` to load `tools/ops/log_event.schema.json` at runtime and validate events via a Station-62-aligned subset validator (required fields, enums, lengths/types, meta whitelist).
+- Added `modules/shared/logging/schema.test.js` with happy-path and invalid-case coverage (required missing, enum mismatch, type mismatch, meta overage/disallowed key).
+
+## Tests
+
+- `npm run lint` — ✅ (worktrees/** excluded to avoid frozen Station 61 config noise).
+- `npm test` — ✅ (vitest suites pass, including `modules/shared/logging/schema.test.js`).
+
+## Notizen
+
+- Minimal validator is a strict subset aligned to Station 62 until an in-repo JSON Schema validator (e.g., ajv) is available.
+- No new dependencies added.
+
+# - - - - - - - - - - - - - - - - - - - -
+
 # Station 62 — Logging, Rate Limits, Alerts (Design Step 1)
 
 ## Kontext
