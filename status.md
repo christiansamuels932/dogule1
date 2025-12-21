@@ -8,10 +8,35 @@ Each station block uses this structure (read-only):
 - `## Tests`: commands run with outcomes (e.g., `pnpm lint`, `pnpm test`/`vitest`, `pnpm build`, `runIntegrityCheck`), note any warnings.
 - `## Issues` (optional): failed tests/pushes/tooling, lint/build hiccups, and how resolved. Omit if none.
 - `## Notizen` (optional): pending manual checks, warnings, risks, decisions.
-  Instructions/notes in English; UI text references remain in German when quoted. Chronological order applies.
+Instructions/notes in English; UI text references remain in German when quoted. Chronological order applies.
 - READ-ONLY INSTRUCTIONS: All stations (including historical ones) must stay logged in this file; never replace or truncate existing entries when adding new stations. If a truncation occurs, restore the full history before adding new content (the Station 39–41 overwrite was fixed by restoring Stations 1–38 and reappending 39–41).
 
 Branching rule: each station must be developed on its dedicated branch; if the expected branch does not exist yet, create a new one before starting the station.
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 63 — Real Storage Core Entities (Abgeschlossen)
+
+## Kontext
+
+- Branch: `feature/station63-storage-layer`.
+- Scope: implement real-mode storage + audit chain for Kunden/Hunde/Trainer/Kurse with schemaVersion=1 validation, checksum-wrapped JSON files, FK checks (Hund→Kunde, Kurs→Trainer), fail-fast storage root, and contract-first logging/alerts.
+
+## Ergebnis (kurz)
+
+- Real adapter now supports CRUD for all four core entities using canonical JSON + sha256 checksums, tamper-evident audit JSONL with hashPrev/hashIndex/recordHash, and manifest updates; read path verifies checksum and wrapper metadata.
+- Validators enforce schemaVersion=1, required fields, UUID ids; FK enforcement for Hund→Kunde and Kurs→Trainer runs inside the write contract; missing storage root raises STORAGE_ROOT_MISSING.
+- Logging/alerts now cover all write failures (schema/FK/manifest/IO) via `executeWriteContract`; mock adapter parity preserved.
+
+## Tests
+
+- `npm run lint` — ✅ (pnpm unavailable on host; corepack/pnpm commands missing)
+- `npm run test` — ✅
+- `npm run build` — ✅
+
+## Notizen
+
+- Audit/manifest writes assume single-process access (no cross-process locking yet); storage root must pre-exist (no auto-create). Station 61 legacy capture remains untouched.
 
 # - - - - - - - - - - - - - - - - - - - -
 

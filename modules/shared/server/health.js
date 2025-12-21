@@ -24,8 +24,6 @@ function defaultReadinessCheck() {
 }
 
 function logNotReady(checks, options = {}) {
-  const env = process.env.NODE_ENV || "development";
-  if (env === "test") return; // avoid noise in tests
   const logger = options.logger || logEvent;
   logger({
     level: "warning",
