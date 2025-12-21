@@ -15,6 +15,28 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 # - - - - - - - - - - - - - - - - - - - -
 
+# Station 62 — Logging, Rate Limits, Alerts (Design Step 1)
+
+## Kontext
+
+- Branch: `feature/station62-logging-rate-alerts`.
+- Scope: define canonical logging/alert event schema and JSON Schema; boundaries: no UI, no migrations, no storage writes beyond logs.
+
+## Ergebnis (kurz)
+
+- Created `tools/ops/STATION62_LOGGING_ALERTS_EVENT_SCHEMA.md` with canonical event shape (logs + alerts), severity mapping, required/optional fields, privacy rules, and overload/drop policy.
+- Added machine-readable schema `tools/ops/log_event.schema.json` (schemaVersion 1.0.0) enforcing required fields, enums, meta whitelist/size caps, and alert extras.
+
+## Tests
+
+- None (design-only step).
+
+## Notizen
+
+- Step 1 complete. Next: implement logger, schema validation, rate limits, alert throttling, health endpoints per plan. Boundaries reaffirmed: no UI changes, no migrations, no storage writes beyond logs.
+
+# - - - - - - - - - - - - - - - - - - - -
+
 # Station 1–17 — Foundations & Early Linking (Historisch)
 
 ## Kontext
@@ -1200,4 +1222,3 @@ raw/dogtaps_90_Datenbank/dogtaps_Signet_Anwendung.ico | 4122 bytes | 9a83ded8046
 - Repo-doc gap: `agents.md` remains missing; Station 61 directory is input-only/immutable after commit.
 
 # - - - - - - - - - - - - - - - - - - - -
-

@@ -1,0 +1,146 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://dogule1.example.com/schemas/log_event.schema.json",
+  "title": "Dogule1 Log and Alert Event",
+  "description": "Canonical event shape for logs and alert signals (Station 62).",
+  "schemaVersion": "1.0.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "ts",
+    "level",
+    "severity",
+    "actionId",
+    "actor",
+    "target",
+    "result",
+    "requestId",
+    "message"
+  ],
+  "properties": {
+    "ts": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO-8601 UTC timestamp"
+    },
+    "level": {
+      "type": "string",
+      "enum": ["debug", "info", "warning", "alert", "critical"]
+    },
+    "severity": {
+      "type": "string",
+      "enum": ["INFO", "WARNING", "ALERT", "CRITICAL"]
+    },
+    "actionId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "description": "Exact action id from authorization matrix"
+    },
+    "actor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "id", "role"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["user", "system", "anonymous"]
+        },
+        "id": {
+          "type": ["string", "null"],
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "role": {
+          "type": ["string", "null"],
+          "minLength": 1,
+          "maxLength": 64
+        }
+      }
+    },
+    "target": {
+      "description": "Domain target; may be null",
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "id"],
+          "properties": {
+            "type": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            "id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            }
+          }
+        }
+      ]
+    },
+    "result": {
+      "type": "string",
+      "enum": ["success", "denied", "rate_limited", "error"]
+    },
+    "requestId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "message": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "description": "Short, stable string key"
+    },
+    "meta": {
+      "type": "object",
+      "additionalProperties": false,
+      "maxProperties": 5,
+      "properties": {
+        "requestPath": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "ipHash": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "windowSeconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 86400
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100000
+        },
+        "code": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        }
+      }
+    },
+    "alertCode": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "description": "Stable identifier required for alert signals"
+    },
+    "throttleKey": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "description": "Throttling key for alert signals"
+    }
+  }
+}
