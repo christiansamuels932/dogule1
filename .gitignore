@@ -5,3 +5,4 @@ storage_candidate/
 DogTabs Data/
 Dogtabs Data/
 *.accdr
+.pnpm-home/
