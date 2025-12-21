@@ -15,6 +15,32 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 # - - - - - - - - - - - - - - - - - - - -
 
+# Station 62 — Logging, Rate Limits, Alerts (Step 2A — Schema Validation Loader)
+
+## Kontext
+
+- Branch: `feature/station62-logging-rate-alerts`.
+- Scope: runtime loader + validator for log/alert schema (no UI/storage changes); no new dependencies added; ajv absent, so minimal in-repo validator used.
+
+## Ergebnis (kurz)
+
+- Added `modules/shared/logging/schema.js` to load `tools/ops/log_event.schema.json` at runtime and validate events via a Station-62-aligned subset validator (required fields, enums, lengths/types, meta whitelist).
+- Added `modules/shared/logging/schema.test.js` with happy-path and invalid-case coverage (required missing, enum mismatch, type mismatch, meta overage/disallowed key).
+
+## Tests
+
+- `pnpm lint` — failed: `pnpm: command not found` in environment.
+- `npm run lint` — failed: eslint flags `require`/`module`/`__dirname` as undefined in `worktrees/station61/vite.config.js` and `worktrees/station61/vitest.config.js`.
+- `pnpm test` — failed: `pnpm: command not found` in environment.
+- `npm test` — ✅ (vitest suites pass, including `modules/shared/logging/schema.test.js`).
+
+## Notizen
+
+- Minimal validator is a strict subset aligned to Station 62 until an in-repo JSON Schema validator (e.g., ajv) is available.
+- No new dependencies added.
+
+# - - - - - - - - - - - - - - - - - - - -
+
 # Station 62 — Logging, Rate Limits, Alerts (Design Step 1)
 
 ## Kontext
