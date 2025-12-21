@@ -29,9 +29,7 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 ## Tests
 
-- `pnpm lint` — failed: `pnpm: command not found` in environment.
-- `npm run lint` — failed: eslint flags `require`/`module`/`__dirname` as undefined in `worktrees/station61/vite.config.js` and `worktrees/station61/vitest.config.js`.
-- `pnpm test` — failed: `pnpm: command not found` in environment.
+- `npm run lint` — ✅ (worktrees/** excluded to avoid frozen Station 61 config noise).
 - `npm test` — ✅ (vitest suites pass, including `modules/shared/logging/schema.test.js`).
 
 ## Notizen
