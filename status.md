@@ -15,6 +15,29 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 # - - - - - - - - - - - - - - - - - - - -
 
+# Station 62 — Logging, Rate Limits, Alerts (Step 2D — Rate Limit Primitive)
+
+## Kontext
+
+- Branch: `feature/station62-logging-rate-alerts`.
+- Scope: in-memory fixed-window rate limit primitive + rate-limit hit logging helper; no concrete limits yet.
+
+## Ergebnis (kurz)
+
+- Added `modules/shared/ratelimit/limiter.js` with `rateLimit({ actionId, key, limit, windowMs })` returning `{ allowed, remaining, resetAt }` without throwing; fixed window with deterministic resetAt; buckets are per key in-memory.
+- Added `logRateLimitHit({ actionId, actor, requestId, key })` emitting warning-level `RATE-LIMIT-HIT` via canonical logger (result=rate_limited, target=ratelimit/key, no new schema).
+
+## Tests
+
+- `npm run lint` — ✅
+- `npm test` — ✅
+
+## Notizen
+
+- No hardcoded limits; consumers resolve identity keys and call the primitive.
+
+# - - - - - - - - - - - - - - - - - - - -
+
 # Station 62 — Logging, Rate Limits, Alerts (Step 2C — Alert Signals)
 
 ## Kontext

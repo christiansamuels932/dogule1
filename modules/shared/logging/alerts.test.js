@@ -38,8 +38,8 @@ describe("alertEvent", () => {
   it("emits once and then throttles subsequent events for 5 minutes", async () => {
     const alertEvent = await loadAlerts("production");
     const writeSpy = vi.spyOn(process.stdout, "write").mockReturnValue(true);
-    alertEvent({ ...baseAlert });
-    alertEvent({ ...baseAlert });
+    alertEvent({ ...baseAlert, result: "error" });
+    alertEvent({ ...baseAlert, result: "error" });
     expect(writeSpy).toHaveBeenCalledTimes(1);
     const payload = JSON.parse(writeSpy.mock.calls[0][0]);
     expect(payload.level).toBe("alert");
@@ -50,7 +50,7 @@ describe("alertEvent", () => {
   it("emits once when requirements are met", async () => {
     const alertEvent = await loadAlerts("test");
     const writeSpy = vi.spyOn(process.stdout, "write").mockReturnValue(true);
-    alertEvent({ ...baseAlert });
+    alertEvent({ ...baseAlert, result: "error" });
     expect(writeSpy).toHaveBeenCalledTimes(1);
     const payload = JSON.parse(writeSpy.mock.calls[0][0]);
     expect(payload.alertCode).toBe(baseAlert.alertCode);

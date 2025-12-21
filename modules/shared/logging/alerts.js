@@ -17,6 +17,7 @@ export function alertEvent(event) {
   const env = process.env.NODE_ENV || "development";
   const alertCode = event?.alertCode;
   const throttleKey = event?.throttleKey;
+  const result = event?.result || "error";
   if (!alertCode || !throttleKey) {
     const err = new Error("alertCode and throttleKey are required for alerts");
     if (env === "production") return;
@@ -35,6 +36,7 @@ export function alertEvent(event) {
     ...event,
     level: "alert",
     severity: "ALERT",
+    result,
   };
 
   logEvent(payload);
