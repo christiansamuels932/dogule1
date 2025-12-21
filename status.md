@@ -15,6 +15,29 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 # - - - - - - - - - - - - - - - - - - - -
 
+# Station 62 — Logging, Rate Limits, Alerts (Step 2E — Health Endpoints)
+
+## Kontext
+
+- Branch: `feature/station62-logging-rate-alerts`.
+- Scope: add `/healthz` (always 200 ok) and `/readyz` (200 ok vs 503 not_ready) handlers with internal readiness checks; no external deps.
+
+## Ergebnis (kurz)
+
+- Implemented `modules/shared/server/health.js` with `handleHealthz` (always 200, `{status:"ok"}`) and `handleReadyz` (200 ok only when config/logger/rate-limit checks pass; else 503 `{status:"not_ready"}`).
+- Readiness failures log a warning via canonical logger (`actionId=system.health.readiness`, `result=error`, `message=READINESS-NOT-READY`); successful checks are not logged. No stack traces or config leakage in responses.
+
+## Tests
+
+- `npm run lint` — ✅
+- `npm test` — ✅
+
+## Notizen
+
+- Readiness scope limited to internal availability (config loaded, logger initialized, rate limiter available); no external service checks.
+
+# - - - - - - - - - - - - - - - - - - - -
+
 # Station 62 — Logging, Rate Limits, Alerts (Step 2D — Rate Limit Primitive)
 
 ## Kontext

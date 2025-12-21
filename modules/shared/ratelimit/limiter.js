@@ -1,5 +1,4 @@
 /* eslint-env node */
-/* global setTimeout */
 import { logEvent } from "../logging/logger.js";
 
 const buckets = new Map(); // key -> { count, resetAt }
@@ -13,6 +12,7 @@ function toResetAt(startMs, windowMs) {
 }
 
 export function rateLimit({ actionId, key, limit, windowMs }) {
+  void actionId; // reserved for future audit/log coupling
   const now = nowMs();
   const bucket = buckets.get(key);
   if (!bucket || now >= bucket.resetAt) {
