@@ -8,12 +8,36 @@ Each station block uses this structure (read-only):
 - `## Tests`: commands run with outcomes (e.g., `pnpm lint`, `pnpm test`/`vitest`, `pnpm build`, `runIntegrityCheck`), note any warnings.
 - `## Issues` (optional): failed tests/pushes/tooling, lint/build hiccups, and how resolved. Omit if none.
 - `## Notizen` (optional): pending manual checks, warnings, risks, decisions.
-Instructions/notes in English; UI text references remain in German when quoted. Chronological order applies.
+  Instructions/notes in English; UI text references remain in German when quoted. Chronological order applies.
 - READ-ONLY INSTRUCTIONS: All stations (including historical ones) must stay logged in this file; never replace or truncate existing entries when adding new stations. If a truncation occurs, restore the full history before adding new content (the Station 39–41 overwrite was fixed by restoring Stations 1–38 and reappending 39–41).
 
 Branching rule: each station must be developed on its dedicated branch; if the expected branch does not exist yet, create a new one before starting the station.
 
 # - - - - - - - - - - - - - - - - - - - -
+
+# Station 64 — Kommunikation Skeleton (Abgeschlossen)
+
+## Kontext
+
+- Branch: `feature/station64-kommunikation-skeleton`.
+- Scope: read-only Kommunikation shell with hash-based tabs (Chats, Infochannel, Emails, System), deterministic state machine (loading/empty/error/offline), deny-by-default authz on view actions, SAL-based offline detection only, navigation/view logging without sensitive payloads. No send/notifications/migrations.
+
+## Ergebnis (kurz)
+
+- Kommunikation module now parses deep-link routes (`#/kommunikation/<tab>[/<id>]`), renders tab nav + list/detail placeholders, and drives loading/empty/error/offline states deterministically.
+- Authz enforced in-module: default denied; admin shortcut allowed; otherwise requires `allowedActions` to include the tab’s view action (`kommunikation.chat.view|infochannel.view|email.view|system.view`). Blocked state shown when unauthorized.
+- Offline handled solely via SAL probe hook (`window.__DOGULE_STORAGE_PROBE__`); lacking a probe yields offline. Client-side logging emits schema-shaped navigation/view events to `window.__DOGULE_LOGGER__`/console (no sensitive payloads).
+- Shared styles updated for Kommunikation tabs/cards/detail; no business logic or writes added.
+
+## Tests
+
+- `npm run lint` — ✅ (pnpm/corepack unavailable on host)
+- `npm run test` — ✅
+- `npm run build` — ✅
+
+## Notizen
+
+- Manual viewing of shells requires providing authz + SAL probe in the runtime context (e.g., `window.__DOGULE_ACTOR__`, `window.__DOGULE_AUTHZ__.allowedActions`, `window.__DOGULE_STORAGE_PROBE__`). Otherwise UI shows blocked/offline by design. No PR yet.
 
 # Station 63 — Real Storage Core Entities (Abgeschlossen)
 
@@ -168,7 +192,7 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 ## Tests
 
-- `npm run lint` — ✅ (worktrees/** excluded to avoid frozen Station 61 config noise).
+- `npm run lint` — ✅ (worktrees/\*\* excluded to avoid frozen Station 61 config noise).
 - `npm test` — ✅ (vitest suites pass, including `modules/shared/logging/schema.test.js`).
 
 ## Notizen
@@ -1167,6 +1191,7 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 ## Notizen
 
 - Captured files (name | bytes | sha256):
+
 ```text
 raw/.directory | 34 bytes | 1ea26f5c88c67a94ae3c512502c9150a1c8a198fc92219fba0d8f65ce18d98df
 raw/Kursbestätigung.pdf | 316649 bytes | a508ece676238d8829cbb0e33d5d7d14447bd8a5efba41dc43bbaa2908dabebc
@@ -1382,6 +1407,7 @@ raw/dogtaps_90_Datenbank/dogtaps_Datenbank.accdr | 21401600 bytes | ac7f42faec50
 raw/dogtaps_90_Datenbank/dogtaps_Datenbank.laccdb | 128 bytes | c667e8f314fae4f9635cc81bfaed3d8827a4b5ab39ef103ac900ae9bfcbc6756
 raw/dogtaps_90_Datenbank/dogtaps_Signet_Anwendung.ico | 4122 bytes | 9a83ded80465c760cd286f8571f12ca01c44cd0e1469ae566104458fc3597143
 ```
+
 - Repo-doc gap: `agents.md` remains missing; Station 61 directory is input-only/immutable after commit.
 
 # - - - - - - - - - - - - - - - - - - - -
