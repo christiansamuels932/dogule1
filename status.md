@@ -15,6 +15,28 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 # - - - - - - - - - - - - - - - - - - - -
 
+# Station 62 — Logging, Rate Limits, Alerts (Abgeschlossen)
+
+## Kontext
+
+- Branch: `feature/station62-logging-rate-alerts`.
+- Scope: Closing summary after Steps 1–2E delivered (schema, logger, alerts, rate limits, health endpoints).
+
+## Ergebnis (kurz)
+
+- Station 62 implemented canonical logging/alert schema, core logger (fail-fast dev/test, single-drop notice in prod), alert wrapper with throttling, in-memory rate-limit primitive with logging, and `/healthz`/`/readyz` endpoints with internal readiness checks only.
+
+## Tests
+
+- `npm run lint` — ✅
+- `npm test` — ✅
+
+## Notizen
+
+- Limitations: (1) logger schema-violation notice is log-only (no alert signal); (2) alert `result` defaults to `"error"` unless caller sets an explicit outcome; (3) rate-limit buckets are in-memory without TTL cleanup (long-lived keys may accumulate).
+
+# - - - - - - - - - - - - - - - - - - - -
+
 # Station 62 — Logging, Rate Limits, Alerts (Step 2E — Health Endpoints)
 
 ## Kontext
