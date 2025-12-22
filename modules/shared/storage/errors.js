@@ -1,0 +1,28 @@
+export const STORAGE_ERROR_CODES = {
+  NOT_FOUND: "NOT_FOUND",
+  INVALID_DATA: "INVALID_DATA",
+  INVARIANT_VIOLATION: "INVARIANT_VIOLATION",
+  DENIED: "DENIED",
+  STORAGE_ERROR: "STORAGE_ERROR",
+  INVALID_MODE: "INVALID_MODE",
+  REAL_NOT_IMPLEMENTED_YET: "REAL_NOT_IMPLEMENTED_YET",
+  ATOMIC_WRITE_FAILED: "ATOMIC_WRITE_FAILED",
+  AUDIT_APPEND_FAILED: "AUDIT_APPEND_FAILED",
+  MANIFEST_UPDATE_FAILED: "MANIFEST_UPDATE_FAILED",
+  MANIFEST_CHAIN_MISMATCH: "MANIFEST_CHAIN_MISMATCH",
+  SCHEMA_VALIDATION_FAILED: "SCHEMA_VALIDATION_FAILED",
+  INVARIANT_FAILED: "INVARIANT_FAILED",
+  FK_NOT_FOUND: "FK_NOT_FOUND",
+  CHECKSUM_MISMATCH: "CHECKSUM_MISMATCH",
+  STORAGE_ROOT_MISSING: "STORAGE_ROOT_MISSING",
+};
+
+export class StorageError extends Error {
+  constructor(code, message, options = {}) {
+    super(message);
+    this.name = "StorageError";
+    this.code = code;
+    if (options.cause) this.cause = options.cause;
+    if (options.details !== undefined) this.details = options.details;
+  }
+}
