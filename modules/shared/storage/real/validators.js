@@ -35,13 +35,15 @@ function assertOptionalNumber(value, field) {
   }
 }
 
+function assertNullOrNumber(value, field) {
+  if (value === null) return;
+  assertOptionalNumber(value, field);
+}
+
 function assertUuid(value, field) {
   assertString(value, field);
   if (!UUID_REGEX.test(value)) {
-    throw new StorageError(
-      STORAGE_ERROR_CODES.SCHEMA_VALIDATION_FAILED,
-      `${field} must be a uuid`
-    );
+    throw new StorageError(STORAGE_ERROR_CODES.SCHEMA_VALIDATION_FAILED, `${field} must be a uuid`);
   }
 }
 
@@ -232,5 +234,107 @@ export function validateKurs(record) {
   });
   assertString(record.createdAt, "kurse.createdAt");
   assertString(record.updatedAt, "kurse.updatedAt");
+  return record;
+}
+
+export function validateGroupchatRoom(record) {
+  const required = ["id", "title", "retentionDays", "createdAt", "updatedAt", "schemaVersion"];
+  required.forEach((field) => {
+    if (record[field] === undefined) {
+      throw new StorageError(
+        STORAGE_ERROR_CODES.SCHEMA_VALIDATION_FAILED,
+        `kommunikation_groupchat_room.${field} is required`
+      );
+    }
+  });
+  requireSchemaVersion(record, "kommunikation_groupchat_room");
+  assertString(record.id, "kommunikation_groupchat_room.id");
+  assertString(record.title, "kommunikation_groupchat_room.title");
+  assertNullOrNumber(record.retentionDays, "kommunikation_groupchat_room.retentionDays");
+  assertString(record.createdAt, "kommunikation_groupchat_room.createdAt");
+  assertString(record.updatedAt, "kommunikation_groupchat_room.updatedAt");
+  return record;
+}
+
+export function validateGroupchatMessage(record) {
+  const required = [
+    "id",
+    "roomId",
+    "createdAt",
+    "authorActorId",
+    "authorRole",
+    "body",
+    "clientNonce",
+    "status",
+    "schemaVersion",
+  ];
+  required.forEach((field) => {
+    if (record[field] === undefined) {
+      throw new StorageError(
+        STORAGE_ERROR_CODES.SCHEMA_VALIDATION_FAILED,
+        `kommunikation_groupchat_message.${field} is required`
+      );
+    }
+  });
+  requireSchemaVersion(record, "kommunikation_groupchat_message");
+  assertUuid(record.id, "kommunikation_groupchat_message.id");
+  assertString(record.roomId, "kommunikation_groupchat_message.roomId");
+  assertString(record.createdAt, "kommunikation_groupchat_message.createdAt");
+  assertString(record.authorActorId, "kommunikation_groupchat_message.authorActorId");
+  assertString(record.authorRole, "kommunikation_groupchat_message.authorRole");
+  assertString(record.body, "kommunikation_groupchat_message.body");
+  assertString(record.clientNonce, "kommunikation_groupchat_message.clientNonce");
+  assertString(record.status, "kommunikation_groupchat_message.status");
+  return record;
+}
+
+export function validateGroupchatReadMarker(record) {
+  const required = ["id", "roomId", "actorId", "lastReadMessageId", "lastReadAt", "schemaVersion"];
+  required.forEach((field) => {
+    if (record[field] === undefined) {
+      throw new StorageError(
+        STORAGE_ERROR_CODES.SCHEMA_VALIDATION_FAILED,
+        `kommunikation_groupchat_read_marker.${field} is required`
+      );
+    }
+  });
+  requireSchemaVersion(record, "kommunikation_groupchat_read_marker");
+  assertString(record.id, "kommunikation_groupchat_read_marker.id");
+  assertString(record.roomId, "kommunikation_groupchat_read_marker.roomId");
+  assertString(record.actorId, "kommunikation_groupchat_read_marker.actorId");
+  assertUuid(record.lastReadMessageId, "kommunikation_groupchat_read_marker.lastReadMessageId");
+  assertString(record.lastReadAt, "kommunikation_groupchat_read_marker.lastReadAt");
+  return record;
+}
+
+export function validateGroupchatSendDedupe(record) {
+  const required = [
+    "id",
+    "key",
+    "roomId",
+    "actorId",
+    "clientNonceHash",
+    "messageId",
+    "createdAt",
+    "expiresAt",
+    "schemaVersion",
+  ];
+  required.forEach((field) => {
+    if (record[field] === undefined) {
+      throw new StorageError(
+        STORAGE_ERROR_CODES.SCHEMA_VALIDATION_FAILED,
+        `kommunikation_groupchat_send_dedupe.${field} is required`
+      );
+    }
+  });
+  requireSchemaVersion(record, "kommunikation_groupchat_send_dedupe");
+  assertString(record.id, "kommunikation_groupchat_send_dedupe.id");
+  assertString(record.key, "kommunikation_groupchat_send_dedupe.key");
+  assertString(record.roomId, "kommunikation_groupchat_send_dedupe.roomId");
+  assertString(record.actorId, "kommunikation_groupchat_send_dedupe.actorId");
+  assertString(record.clientNonceHash, "kommunikation_groupchat_send_dedupe.clientNonceHash");
+  assertUuid(record.messageId, "kommunikation_groupchat_send_dedupe.messageId");
+  assertString(record.createdAt, "kommunikation_groupchat_send_dedupe.createdAt");
+  assertString(record.expiresAt, "kommunikation_groupchat_send_dedupe.expiresAt");
   return record;
 }

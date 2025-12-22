@@ -15,6 +15,54 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 # - - - - - - - - - - - - - - - - - - - -
 
+# Station 65 — Groupchat Core (Step 2 — API & UI Wiring)
+
+## Kontext
+
+- Branch: `feature/station65-groupchat-core`.
+- Scope: Expose SAL-backed global groupchat via HTTP-style handlers and wire Kommunikation → Chats UI (list badge/preview, detail view, composer with optimistic send/retry, read marker update, offline handling). No polling/push.
+
+## Ergebnis (kurz)
+
+- Added groupchat API handlers (`/api/kommunikation/groupchat/messages`, `/read-marker`) with authz/rate-limit mapping, idempotent sends (clientNonce), cursor pagination, and 429/Retry-After propagation without logging bodies.
+- UI now loads real chat summary (preview + unread badge), renders detail with ordered messages, optimistic pending/failed states, retry, and read marker updates on open/send; offline banner surfaces via storage probe.
+- Client fetch wrapper and UI tests exercise send→refresh persistence with SAL-backed storage.
+
+## Tests
+
+- `npm run lint` — ✅
+- `npm test` — ✅
+- `npm run build` — ✅
+
+## Notizen
+
+- Rate limits rely on in-memory limiter; retention still null/no-op. API handlers are framework-agnostic; wire into actual HTTP server in later steps if needed.
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 65 — Groupchat Core (Step 1 — Storage & SAL)
+
+## Kontext
+
+- Branch: `feature/station65-groupchat-core`.
+- Scope: Storage + SAL for global group chat (room/message/read marker/dedupe entities, authz, rate limits, audit hooks, ordering/pagination). UI remains untouched.
+
+## Ergebnis (kurz)
+
+- Implemented schemaVersion=1 storage for `kommunikation_groupchat_room`, messages, read markers, and send dedupe with deterministic ordering and base64url cursor pagination (createdAt ASC + id ASC).
+- `sendMessage` is idempotent on `(actorId, clientNonce)` for 24h via hashed dedupe table; enforces trimmed/max-length body, authz, rate limits, audit events (no body logged), and atomic message+dedupe writes through `executeWriteContract`.
+- Read markers enforce same-room existence and monotonic advance; `listMessages` returns optional readMarker/unreadCount; default room auto-created with retentionDays=null.
+
+## Tests
+
+- `npm test -- modules/kommunikation/groupchat/sal.test.js` — ✅
+
+## Notizen
+
+- Retention enforcement still null/no-op; UI wiring and polling remain out of scope for Step 1. Rate limits use in-memory buckets.
+
+# - - - - - - - - - - - - - - - - - - - -
+
 # Station 64 — Kommunikation Skeleton (Abgeschlossen)
 
 ## Kontext
@@ -1190,223 +1238,7 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 ## Notizen
 
-- Captured files (name | bytes | sha256):
-
-```text
-raw/.directory | 34 bytes | 1ea26f5c88c67a94ae3c512502c9150a1c8a198fc92219fba0d8f65ce18d98df
-raw/Kursbestätigung.pdf | 316649 bytes | a508ece676238d8829cbb0e33d5d7d14447bd8a5efba41dc43bbaa2908dabebc
-raw/dogtaps_00a_Export_Dateien/Fontanas DogWorld_Praxis_2011-08-10_15-16.xls | 10752 bytes | a009f2a1f439326e94f8c2a2ea9e213e869c513e40907ae0abd01af0ac86dfd8
-raw/dogtaps_00a_Export_Dateien/Kundenliste_2017-01-23 21-47.xls | 108544 bytes | 13fc533aa0c4f32e85e46912665ed2577eb53cb4a094ccee7ee19bd02a12cc8c
-raw/dogtaps_00a_Export_Dateien/Kundenliste_2017-01-31 22-45.xls | 185344 bytes | 94c00e1e6e45a1be938313b5734b1e081f2186235b52860d3dbbe5775c6d57ce
-raw/dogtaps_00a_Export_Dateien/Natel 092.JPG | 104158 bytes | 94eda64b680b336e6d31c562960a39ec5e88f89619be122380737210adb15a1a
-raw/dogtaps_00a_Export_Dateien/ReadMe.txt | 57 bytes | e6279f95fa71ec0be96ef69217f6e07410d799dc494f04e3197c4a075394974e
-raw/dogtaps_00a_Export_Dateien/dogtaps_Kundenselektion_Email_2011-12-16_16-08.xls | 44544 bytes | 3c65f87cffcb4a8054e7e4a3cd351646868e2d4dbb3e721fe1f3bb0215067742
-raw/dogtaps_00a_Export_Dateien/dogtaps_Kundenselektion_Email_2024-02-09_17-14.xls | 16384 bytes | b365ec1cfc3352303e4e19182a019d8867b16f280319ecf3dc27b738a8f26baa
-raw/dogtaps_80_Datenbank_Save/ReadMe.txt | 264 bytes | 81fa9d0ef75769072f90803fcf0ab62c97b9c2b9b99e166fb05fd89df0753023
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Hunde_2025-11-09_09-15.xlsx | 118362 bytes | 19cd4dc281d49208df75d3d91013e22e7203129a5ae308b723c952cd5496f8b7
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Hunde_2025-11-10_09-51.xlsx | 118361 bytes | da97ac6b2618043e1773d5c62ca96feccd993f3a1c4443758aa2e0476deb88fa
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Hunde_2025-11-11_07-53.xlsx | 118361 bytes | 631ce8d1080602f9760469d62c0b25f5bd7c6d2b43d29563f078864df10dfb97
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Hunde_2025-11-12_08-08.xlsx | 118364 bytes | ea8d9984cf664ec60b1cb10871be68fc9fd2a55c535967aa17d82daae2b13e9e
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Hunde_2025-11-13_07-30.xlsx | 118361 bytes | 866f92538e75b3f8328f038a185f0c7ad90aa365e858d6be4b89e15b66978ba1
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Hunde_2025-11-14_08-23.xlsx | 118362 bytes | adca3da4bcc6cd532534a4ee71574f376097e80fb3d978d1a6affd2416b20751
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Hunde_2025-11-15_07-42.xlsx | 118362 bytes | a5afbca029dfa9d286ab0f1afd509d1bc4c476f25ee736d5faa10ab921cad4f0
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Hunde_2025-11-16_12-43.xlsx | 118360 bytes | 4cee3cc1ea419d967d231a2cb43945daa6a9c0305a911bbe1e54f67db70c518e
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Hunde_2025-11-17_08-57.xlsx | 118427 bytes | ee04506f8104dee4caf4ea04b8e673d156b2b4ef2027fef5686e88a4de00a9ee
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Hunde_2025-11-18_07-30.xlsx | 118426 bytes | 7aaf02525cb2bafad8179d3c7dc31e9733e1dd3095b0f59d5e61ea4496537f28
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Hunde_2025-11-19_08-23.xlsx | 118426 bytes | 6cc0f56e02a2db900993e58aeeaa303097f39c2a4db304fc1ffc1569603b6b17
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Hunde_2025-11-20_07-47.xlsx | 118426 bytes | 3c15fcf6891f990a38ad6fc2c795e16dc46c7d18c58ab190a86bc15fa815fe33
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Hunde_2025-11-21_17-24.xlsx | 118426 bytes | 4f96534577bdbedde2fed2ecbeadeaf773dff78d418678a5c204975c592183c3
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Hunde_2025-11-22_07-16.xlsx | 118426 bytes | 560e23965e9fcaaf4fec4259254d09d09a8840002125004e6a3ae279fd5a7c89
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Hunde_2025-11-23_09-00.xlsx | 118426 bytes | 27efc29bdf6fa2a9aaccb32931fe012a069aeb9bc4f8b8178d09537a10dd9733
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Hunde_2025-11-24_11-50.xlsx | 118426 bytes | 228d8e616d023a94b6241df417c05cb757fd8a3f615774b0ba598c62c4c56aa3
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Hunde_2025-11-25_07-27.xlsx | 118427 bytes | 39c16c5bb383131888e889889a8a8ab70fb3ff3b56502fc9abc7fe53e2fc8e4c
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Hunde_2025-11-26_08-50.xlsx | 118426 bytes | fd88dd40fcd2bff3a4daf8635bfef262b183caae031e86e8f3c1a1acd3da1b33
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Hunde_2025-11-27_07-38.xlsx | 118427 bytes | f06e0e3da343b57a726a75ffaed4ffd50d86b71990184e16cf69e06c76f96956
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Hunde_2025-11-28_09-19.xlsx | 118426 bytes | c743d26b5cd04ebef7f21304c8b80ee98e372f0a4db93d92ef2a3ff097d3b24a
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Hunde_2025-11-29_07-25.xlsx | 118426 bytes | bfff5ddeffce6dcef0d16126659089ab429f6cfed48bcf1bf74275c7655844af
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Hunde_2025-11-30_12-54.xlsx | 118426 bytes | 27bd7e1fd4b5e84a02d96da9dbdcc81615bd29ac272ef8092c15340982988442
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Hunde_2025-12-02_07-25.xlsx | 118426 bytes | b7b688ecfb9c168b8f1f5a04646a499a1f8120cc9a5917c144ad44fb4d920f38
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Hunde_2025-12-03_07-58.xlsx | 118426 bytes | 0d31c73a35d3df7b37d2e7996b614c68ea2b448447f8fc418abc5b51f75e6c6d
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Hunde_2025-12-04_07-26.xlsx | 118426 bytes | a162d25764bed9c4e2db447e1e77f48409152a809f9e5a3637024c5742e145be
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Hunde_2025-12-05_09-20.xlsx | 118426 bytes | 4846031aed9aa89405bc8b8df3956e7dff36a852ba5e5061fff7781fa8bfb353
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Hunde_2025-12-06_07-36.xlsx | 118427 bytes | 13165d6a35b34f66edc510570ae45f4ef0f1da084bf1b9d5062009b330db494f
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Hunde_2025-12-07_09-16.xlsx | 118426 bytes | c5d84ed17739b92204720de6ba8e4efe737e7f84e483e7b0033450b1868b5be3
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Hunde_2025-12-08_09-23.xlsx | 118426 bytes | ff9ecd26b8e621db5e5c21260186d4701e0c90a776b206de604b69acfc1e40b4
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Hunde_2025-12-09_07-26.xlsx | 118426 bytes | 51823261fcb98b446d55bad9c3642bacc5e68d209ad60edaa10b52946c06659f
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Kunden_2025-11-09_09-15.xlsx | 196552 bytes | 83a372a420947d3f40a5282fa8c1f5e9e86e5eacb2d17428b092fc390cd8fdc8
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Kunden_2025-11-10_09-51.xlsx | 196551 bytes | 38c918093ea7641d41e4558119d61c5aef46953a69831604e991146931ff0234
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Kunden_2025-11-11_07-53.xlsx | 196546 bytes | af9531f7c42ba790ec1fbde908eaa8cbf48555970bd138441bcec426e05f063b
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Kunden_2025-11-12_08-08.xlsx | 196547 bytes | 7693c796734a1aa4bb3fd294b63e148ecb976c14958366de42034a85b1288702
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Kunden_2025-11-13_07-30.xlsx | 196546 bytes | d28d3cc422c24a4fff3991deb5cc1af7b1305e9b5bfd6c91303e7c2b3117ae40
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Kunden_2025-11-14_08-23.xlsx | 196547 bytes | d9c97785092d62f358c1c4c63a0a7738b49de7d5e23787fc7d30f1141a76dcf2
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Kunden_2025-11-15_07-42.xlsx | 196547 bytes | 86a1c7292b1302ed86af9c33ceca4bc7088dbaa43c0d43cd10eadd87350318de
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Kunden_2025-11-16_12-43.xlsx | 196545 bytes | 1472a7b46f1471b2a75cab25cd24a5fe5d5ea0c7584df7897072459dad1f9fa4
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Kunden_2025-11-17_08-57.xlsx | 196682 bytes | 4255d2d96594f55fd55ee2c09b3c2fe34e56a90d9f20861c5c1c1f2a2f971667
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Kunden_2025-11-18_07-30.xlsx | 196681 bytes | 655ab9898c2afbeaf12829aa457cb8dd476b11692ebcd90a827ecb830583fabd
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Kunden_2025-11-19_08-23.xlsx | 196681 bytes | 77a731bc6c6b3dc020484b200c76a3961d4601af69d3df1c81e784c4e8013015
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Kunden_2025-11-20_07-47.xlsx | 196681 bytes | c7f75bfa02d34ba191912848f9f70e6bc9b63d8d15187df4fbc21d6fff153437
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Kunden_2025-11-21_17-24.xlsx | 196681 bytes | a653e3df685fe9ba4c5c7a51d2938c718678208e0af03139992166d58634fca9
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Kunden_2025-11-22_07-16.xlsx | 196681 bytes | b29b4973786d6b7fd57d285da82a6bf5acc0f87a8d7893a5f9a24db884d06093
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Kunden_2025-11-23_09-00.xlsx | 196681 bytes | 42e8bc39b7824f84afdefca0d8eeccfb32858ce101ec6d13c4fa95facd6d9b3f
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Kunden_2025-11-24_11-50.xlsx | 196681 bytes | 6233b41403b65458f031fbc5682cfc79e6b15092dcb0fb75eaac1850dcd29a69
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Kunden_2025-11-25_07-27.xlsx | 196684 bytes | 8bd98c01621d81c6a21ea4fa7cf9e0098365d0d7a3f8bb5026baed0d0dab591c
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Kunden_2025-11-26_08-50.xlsx | 196681 bytes | a33a4df7b80cfec4c2986e57e684553bd0951b18e29b0659d999ba11cee6aed6
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Kunden_2025-11-27_07-38.xlsx | 196682 bytes | 4de7fd251f5970907724a1492f1e4d55bfe3546126142379f413ece95e839b8c
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Kunden_2025-11-28_09-19.xlsx | 196681 bytes | 3c5f68a930479523f1fee2b39d10ddb169cea1bb5aac08332265a05d83c4c492
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Kunden_2025-11-29_07-25.xlsx | 196681 bytes | 4005833a70d53ccc53010040b35eff8728b7af0e7459ab2bf4124567c885d8b5
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Kunden_2025-11-30_12-54.xlsx | 196681 bytes | 26c08d127b4056f0c995ce8016337320cbcfcddf144df30c3a0d5a995663042f
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Kunden_2025-12-02_07-25.xlsx | 196681 bytes | acadd4be0d77dd864eb54a5637b857ad6c6a0122d44729e9d4184505c8abf216
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Kunden_2025-12-03_07-58.xlsx | 196681 bytes | 45de19c9a838c9b5956d343416802137c2ebc81c681ea1913c8a5343f6e968b0
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Kunden_2025-12-04_07-26.xlsx | 196681 bytes | 6f716cd75b1e61333a80476ba396d6833dd58cc17ede693b39cdedfcca5ee8e2
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Kunden_2025-12-05_09-20.xlsx | 196681 bytes | db6c835465142ca54a62eec85661b8448bd2caf1b6ce50459c69db306f986e4e
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Kunden_2025-12-06_07-36.xlsx | 196684 bytes | 2657e5da4ab3e9282733605ca5e10740facd4c89fde05c0d22ca4cbd27dd46ce
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Kunden_2025-12-07_09-16.xlsx | 196684 bytes | 6d4606cf049f9442c30ba87dbab6c441d5da700387645791e34d77be837132ba
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Kunden_2025-12-08_09-23.xlsx | 196681 bytes | 2bd0cf4c849f0861c4e26ed1dc47ec4fd412601197b654595eb98a2e68f9c187
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Kunden_2025-12-09_07-26.xlsx | 196681 bytes | cd869b0259a0b04c0dff6cbc190074df0a6dcf7a0184ba3d036cae9e7a99e71e
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Pension_2025-11-09_09-15.xlsx | 9066 bytes | 21163f7b57aba309734879722a8daeb1567c0b6b5d27d9e28c2427d6a1089a89
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Pension_2025-11-10_09-51.xlsx | 9065 bytes | b0d316e22b7cc87cb463598a64284e130a28a7beb288a39511ae549e9fed07a0
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Pension_2025-11-11_07-53.xlsx | 9065 bytes | aa4f44fb87f16baa2052672d3f910d06bf3094ed3e1a004885a1fd104a231dba
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Pension_2025-11-12_08-08.xlsx | 9065 bytes | 177070d4c067b18b04679873d1798ec12012e2567590f040fddfc2950dd50ba1
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Pension_2025-11-13_07-30.xlsx | 9068 bytes | 07955afc5160cc63d0cdc8a527e45670bae3c39bc49e92f25318c8d07a493cba
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Pension_2025-11-14_08-23.xlsx | 9068 bytes | d4beab1b3addf220cfd43338178a84a50f597dc6f2667216e1284e9753dc006c
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Pension_2025-11-15_07-42.xlsx | 9066 bytes | 91491daca1101a7d95236e174a892cb06f187e6c8aae64b400267995a0cf38eb
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Pension_2025-11-16_12-43.xlsx | 9064 bytes | e6f62461b6e8e1b144abbe2ac9a717f6427bbf08fdfd47400d4c4a851460886d
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Pension_2025-11-17_08-57.xlsx | 9065 bytes | 7b272a093a020bee65149b16ed461d346e55406002a43612dbe5044a765ec6c7
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Pension_2025-11-18_07-30.xlsx | 9064 bytes | 92d6681d770f38e3be00f1fdd820db17effa4b96e623c366e3943cbaa65fd718
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Pension_2025-11-19_08-23.xlsx | 9064 bytes | 7efeedfbd3e6d36bef5f17727faa2d9c25bed4729d5ce4bc95281cbda603c257
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Pension_2025-11-20_07-47.xlsx | 9064 bytes | e21d708ff1dc668930440910f3e90c8bd6620ef894482117987a0467dbbb96f5
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Pension_2025-11-21_17-24.xlsx | 9064 bytes | 4dcb21e348330c5fb47997bd4ed66ed9623dd91700ac7f9ef9f15a0e582fc609
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Pension_2025-11-22_07-16.xlsx | 9064 bytes | 4370341637254d51615d8ded545e2877d5079dea5e6ef06e9820431f16ae0e35
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Pension_2025-11-23_09-00.xlsx | 9064 bytes | a50f4d8ec3a085f9b6a6303665df3ae658e76bdd2a4107953e5af21c0e346a09
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Pension_2025-11-24_11-50.xlsx | 9064 bytes | fa964ccb8f6d05e811508c377bb5b87ce263f115e1be6311a5a25f22ca6ada2c
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Pension_2025-11-25_07-27.xlsx | 9065 bytes | 74bdb347aa7c2a33e61cd1509a6ca9e54b5de35d82c02c051c0953a2ba45b4df
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Pension_2025-11-26_08-50.xlsx | 9064 bytes | f44f9ba9c4aa13be61ce9f1c626ec4e07808f39afba1edc3aab748e96406b33c
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Pension_2025-11-27_07-38.xlsx | 9065 bytes | 6f2f828ec3b3c5d72cee4120c4c63df0ded8dfbdf4efc947b3c28b010ae347b8
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Pension_2025-11-28_09-19.xlsx | 9064 bytes | 6408cde29bb4eaba8d57fd54d109ad30165949a9eb421a5ef08998f005b993d7
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Pension_2025-11-29_07-25.xlsx | 9064 bytes | 71984b52e5e4c59ab9ce4ee618f06831cf6dad82fe3280bd3edfacc5b5a26c58
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Pension_2025-11-30_12-54.xlsx | 9064 bytes | 6ef30b86fcfe84c3dfd9acfaa239baca942695216e29a43cf595e38b17a2e2cc
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Pension_2025-12-02_07-25.xlsx | 9064 bytes | bce4ad5b49ce9cbf6ad1c50933c564b9fd444e772a164edaea6181ae8e5952ea
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Pension_2025-12-03_07-58.xlsx | 9064 bytes | 3b5b66766f34885934006980c425f1528f52d750214f170c5eab1db381e58a48
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Pension_2025-12-04_07-26.xlsx | 9064 bytes | a144ad057bffcbde5bc4dfc6c8ba68b63dfcf29fb265fc5e010a2f5bbf9c27cd
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Pension_2025-12-05_09-20.xlsx | 9064 bytes | 6ca4f1a943af57a1694af0b6a76cc32beaaaa163bb6677f2937fa521608ce083
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Pension_2025-12-06_07-36.xlsx | 9065 bytes | be050d244c964064d05ba4f47ae883374bc0574827f8589079850092391de0fe
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Pension_2025-12-07_09-16.xlsx | 9064 bytes | 4464d4c8b7e8e79d3c674ec83837fb1800ff27e2f410753a89145e49dd1ac161
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Pension_2025-12-08_09-23.xlsx | 9064 bytes | aca265f63cc111f05dc218454a6c3b7c2a99223ae27f7a64bfcaf5edca3ca72f
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Pension_2025-12-09_07-26.xlsx | 9064 bytes | b40e26efaf6b4d7ea2d32965c4be2a9848e74c3a9c61efcae652d89ea1dfa66a
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Rechnungen_2025-11-09_09-15.xlsx | 10383 bytes | 4d6714e0255062e2906aa6da6c2618eb4b15be2cbc03094d0bac80d5f63773cf
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Rechnungen_2025-11-10_09-51.xlsx | 10382 bytes | d0b39d2c2122f35d324a36b9513cfe4a7a8e6085cce01c0a32438e985856f611
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Rechnungen_2025-11-11_07-53.xlsx | 10382 bytes | 6cc45986b96d40babd0b37e2914281e498fbdabd62224ac86705cf10ad5103a2
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Rechnungen_2025-11-12_08-08.xlsx | 10382 bytes | cedace3bb3edff9af5cb3e74b4149816a6e42da0fcfacc8e89abca848c081f6d
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Rechnungen_2025-11-13_07-30.xlsx | 10382 bytes | 60e913e432bb35f1a5a76c2a0d6e129c481b0ed299b88849c1051181dac5911c
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Rechnungen_2025-11-14_08-23.xlsx | 10383 bytes | 13a41c01dd7719422256c27ab85c25337020bab925079042f8e0984ac641ffa3
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Rechnungen_2025-11-15_07-42.xlsx | 10383 bytes | 72af0757e16a8add4fa07a4fee2c516b94346cd47b82bb41e3816f7e363c91b4
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Rechnungen_2025-11-16_12-43.xlsx | 10381 bytes | 4f3a38ebcde34782f5e58e0f16440b079a17f21240d5a5358b40ad9072142989
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Rechnungen_2025-11-17_08-57.xlsx | 10534 bytes | a3e087659c9ed5b56b2124dc9da8a7146432a915006a6cc9ba09254cb6fbe51c
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Rechnungen_2025-11-18_07-30.xlsx | 10533 bytes | a739dfe215baa395ace2ae1b4cea12ca2b59dc6801d223b06f5cc7dea126ca6b
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Rechnungen_2025-11-19_08-23.xlsx | 10533 bytes | d75086d31f05ebe2736f408f2a8f1a802764496992bd1a647a012fd8a20033fa
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Rechnungen_2025-11-20_07-47.xlsx | 10533 bytes | 8af3a2972d8be9fdff08fbff6bfcb73548ce5c508bf56f9ba49866c65a64bb5a
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Rechnungen_2025-11-21_17-24.xlsx | 10533 bytes | c45eb2c47c84b5131cd56ec98e225e72d58d7010de549363d2f2dd079e494099
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Rechnungen_2025-11-22_07-16.xlsx | 10533 bytes | 1822b93177c56b40edb6fb8335e64b81a93bcd337577654cb0131489f7792a64
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Rechnungen_2025-11-23_09-00.xlsx | 10533 bytes | 10908fb1b4de9c2e4d8a6281b0c35b02b8748a9a549d5781079b883b810806aa
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Rechnungen_2025-11-24_11-50.xlsx | 10533 bytes | 79f2d8e736c63e33d01255cf438229b4bc979edf40a677759b5c0a4d15d5aa7a
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Rechnungen_2025-11-25_07-27.xlsx | 10534 bytes | f5b4beb3ff22c37b9daa4b47dc1a4a69b45f5819ac33b2869562fbae4963b477
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Rechnungen_2025-11-26_08-50.xlsx | 10533 bytes | 4a67c821a54c2dc93185317a851848b1689009b9855e194627af3e700801d686
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Rechnungen_2025-11-27_07-38.xlsx | 10534 bytes | 0b9cae73569074d0619b62ba97eb4f5726a42571ec82f7511af8d5d1450232e0
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Rechnungen_2025-11-28_09-19.xlsx | 10533 bytes | 5bd47174694ee409b2f93cf78cb5178aa73e5b299d97eab3572ed9f1bbfe394c
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Rechnungen_2025-11-29_07-25.xlsx | 10533 bytes | 31182ea0eea083dbac765c2a5f9d8572708a70bf50edb1b01cc8035611ea00ca
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Rechnungen_2025-11-30_12-54.xlsx | 10533 bytes | 63ac65ab9b480d288a07105ff4e5bc36d238f7897aa28aab3906c0128940a9be
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Rechnungen_2025-12-02_07-25.xlsx | 10533 bytes | b2a7bbd44ba92e283ccd02ce5392aa81f0df272a66f256b7a6983c9edf48f348
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Rechnungen_2025-12-03_07-58.xlsx | 10533 bytes | 73dc41c7cb6252020e694f59b7af867ff97a3f3fb3e2bfc081c8f455d494101d
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Rechnungen_2025-12-04_07-26.xlsx | 10533 bytes | b952d876087df75a954ae14b7fc07465a2f504c917cfb37244a077dc9149283a
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Rechnungen_2025-12-05_09-20.xlsx | 10533 bytes | cbb5c2a03d04bd861f9ab32d3b94e297ae79ec0e6837ad1ba7c2c0d4ba2a5353
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Rechnungen_2025-12-06_07-36.xlsx | 10534 bytes | 44ba58540bf075e53d785a2cb092b92585a872e772407a98a77d5c8fd720da4f
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Rechnungen_2025-12-07_09-16.xlsx | 10533 bytes | cb79d3519b9a9cf3e92b48580b5963baf916c3fdd959ef40236c56e9f805bbe0
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Rechnungen_2025-12-08_09-23.xlsx | 10533 bytes | 32669e9f0589e917543bc8b86474033237cdff32c448b31538cfaf640abfe9d2
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Rechnungen_2025-12-09_07-26.xlsx | 10533 bytes | 18ade7acf979369b0cdeabf54b0a5bc352841b1dcf835b308d5ee205a24ffb7f
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Seminare_2025-11-09_09-15.xlsx | 89505 bytes | 78d4e12cbe6e27ca7bd4de29796a477fb8a13f9bbdbe1a570463b6afbd1a60e0
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Seminare_2025-11-10_09-51.xlsx | 89504 bytes | 62aec9fb4716031a8a693f1d81f467c613389a458e2e9c6ac85216f6e502a90d
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Seminare_2025-11-11_07-53.xlsx | 89504 bytes | 29c7536e3f32574ac8849683ac021de5614708c89789f0b88f3f367ea6b487ef
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Seminare_2025-11-12_08-08.xlsx | 89504 bytes | e40c099dd96b658910c39d49bc6ba47a15722808f60e4232bb53e1803bb096ff
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Seminare_2025-11-13_07-30.xlsx | 89504 bytes | f9073423c91146a970221a9a8a4ecfc5dcace83d6d67b6e3155cba27a7507180
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Seminare_2025-11-14_08-23.xlsx | 89505 bytes | a9daa6a5d972bfd06b152b72bd22e9d9e8af323cbf67054b5bb9a7fb7a865f49
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Seminare_2025-11-15_07-42.xlsx | 89505 bytes | 74e2f266977b5efdf1f81e3b7af44fe6cf41eada2b4b8c5d9b3b1bc8adb6a7cb
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Seminare_2025-11-16_12-43.xlsx | 89503 bytes | 73d1b5a07e5b358525e98cd39e4e8fb84ab83676b17f58839359720c1aa6156c
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Seminare_2025-11-17_08-57.xlsx | 89574 bytes | 8239d1faad566713d134abf3efd4889e70695a33ad5f6c23e4eb4de5c58ea9ab
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Seminare_2025-11-18_07-30.xlsx | 89573 bytes | cc348f8c9151e5e6e1c7194e7fa8d544bc4bde01b5ab8aae483c45e21e0af643
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Seminare_2025-11-19_08-23.xlsx | 89573 bytes | dd62beb1e1296a350bd6f0ecde52bc0cb9e34fd672b298fe35f05838c7a04784
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Seminare_2025-11-20_07-47.xlsx | 89573 bytes | b0609ba3d32ddfeb870e686851b884312d6ac771bd360c91b9c0d9462e63d77e
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Seminare_2025-11-21_17-24.xlsx | 89573 bytes | 49f69238e94816a59245836a20e36d33ed86caf303e44bb3941294238932ee0d
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Seminare_2025-11-22_07-16.xlsx | 89573 bytes | 7b61fe75cedc89c218c09201e9ccd3321d5a35278012e85fb64c82a2b720f59d
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Seminare_2025-11-23_09-00.xlsx | 89573 bytes | 979110c0810dcd17f1dfbf67c9d54660953426778540d5d720cab7008e20c497
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Seminare_2025-11-24_11-50.xlsx | 89573 bytes | 1c0f0a90921fa86d270f208d619e4da3180af4172edb562edc76adb10101a8e0
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Seminare_2025-11-25_07-27.xlsx | 89574 bytes | 18fc5aa6babb41638a540ffe0eb405cca6ac8c05a7e1967ad09be3a5ac6733d3
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Seminare_2025-11-26_08-50.xlsx | 89573 bytes | f6c33e466afd126de11b214807ee6b193ccc753fe81cba7179586b3570839991
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Seminare_2025-11-27_07-38.xlsx | 89574 bytes | 4bce4bf6f2d9e87bb0f93a8caa38e4efc8ff49d27a9435342c5dee0cf5e56430
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Seminare_2025-11-28_09-19.xlsx | 89573 bytes | bf74b4ccee0c2b826fae19a2b91d43fc9ce6ee681d5a12bb0ad0d707eac47f79
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Seminare_2025-11-29_07-25.xlsx | 89573 bytes | e31821007c695a515dd4d5149147837ca047f64916ee2b1ae207048d0f0ba452
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Seminare_2025-11-30_12-54.xlsx | 89573 bytes | bf5a7a28319bff621a3df4e03a69529aaf1672177fa30f0a76c3ddfba7eb4efe
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Seminare_2025-12-02_07-25.xlsx | 89573 bytes | e578786b4616be0f7fa981716d786c9b2ea99cbc0c905756a91a1837145f172c
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Seminare_2025-12-03_07-58.xlsx | 89573 bytes | c77473a9510a99af476fb3fa96860b3b9f0368d52136a24774aced8171b6ee83
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Seminare_2025-12-04_07-26.xlsx | 89573 bytes | 0a43d74ba29344823db2535c4e7844dd18b0e85b64a9d11066a44a0236070105
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Seminare_2025-12-05_09-20.xlsx | 89573 bytes | f0ad92ac04f76e7944c3c2591ce85deb19e1f63e90db320371c00c8b0de80ffc
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Seminare_2025-12-06_07-36.xlsx | 89574 bytes | fc7ba588338f42b956130d883452a039d4b03b81a7a2bbea442728a73bc0b656
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Seminare_2025-12-07_09-16.xlsx | 89573 bytes | 6b59aec96021cd02074d7b1598b09b8ea15b64de30723070ef7c9e0264deaaf9
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Seminare_2025-12-08_09-23.xlsx | 89573 bytes | 01df7d3c13fb6cdb0cf1133a8853b013318b31fdbd920ba4ba4c041d82e1199c
-raw/dogtaps_80_Datenbank_Save/Save_Daten_Seminare_2025-12-09_07-26.xlsx | 89573 bytes | 6cb50979ba4968df6f3b3978eb8a90dd34973dd2e7052a8b999614b13a995ce4
-raw/dogtaps_80_Datenbank_Save/Save_dogtaps_Datenbank_2025-09-18_07-30.accdr | 21401600 bytes | 16cba42823d65b420dfd266f7696d8b61a3a0d9a8b626275458aee530d492950
-raw/dogtaps_80_Datenbank_Save/Save_dogtaps_Datenbank_2025-10-18_08-08.accdr | 21401600 bytes | 89349cc7669f6514f03127e5ba3ecba1fc646c8b0b50e53e994e0e6d54f1e43d
-raw/dogtaps_80_Datenbank_Save/Save_dogtaps_Datenbank_2025-10-27_15-53.accdr | 21401600 bytes | 223049552677a1cd807a144f8d44891c3efeeb3a2d583b1b546e3c8a75d14474
-raw/dogtaps_80_Datenbank_Save/Save_dogtaps_Datenbank_2025-10-28_07-34.accdr | 21401600 bytes | ad34157b0b859c9104b5735038fe5e85882cfae54365976242452f60484ddf72
-raw/dogtaps_80_Datenbank_Save/Save_dogtaps_Datenbank_2025-10-29_10-20.accdr | 21401600 bytes | 303386948d8b9592c5643fb9a916f47c666b93644209f494f950f6733dbfdc99
-raw/dogtaps_80_Datenbank_Save/Save_dogtaps_Datenbank_2025-10-30_07-47.accdr | 21401600 bytes | c32b59b53cecb7e2e0ad20513f55a52917c237ba5662e67a295ba7a1f717ea94
-raw/dogtaps_80_Datenbank_Save/Save_dogtaps_Datenbank_2025-10-31_08-21.accdr | 21401600 bytes | 109af6be513dd314ed90454af2755861d8d4a24321cf56e2169c76e8bd1f029e
-raw/dogtaps_80_Datenbank_Save/Save_dogtaps_Datenbank_2025-11-01_10-12.accdr | 21401600 bytes | c98c50fd064546b99c551a4e326392b244e3ab561a901651008305be5509ba5c
-raw/dogtaps_80_Datenbank_Save/Save_dogtaps_Datenbank_2025-11-03_08-45.accdr | 21401600 bytes | 851d9075f33a13d872936713e8c0ec311a9e7ce74a75492aa532463ee06f53e5
-raw/dogtaps_80_Datenbank_Save/Save_dogtaps_Datenbank_2025-11-04_07-32.accdr | 21401600 bytes | 0bb1cb146629bcb73fd9e83a9a01ca3f6a05ac5eeeead56783a86c57bc4e8daf
-raw/dogtaps_80_Datenbank_Save/Save_dogtaps_Datenbank_2025-11-05_07-52.accdr | 21401600 bytes | 12904b405dd323be05e514c6bf92edf9deaf6485f57e23250a487bc22e2ac218
-raw/dogtaps_80_Datenbank_Save/Save_dogtaps_Datenbank_2025-11-06_08-38.accdr | 21401600 bytes | 1029dfc5e91b5619255100f8f8b6def2cc303f75f51a298940509eeb04722357
-raw/dogtaps_80_Datenbank_Save/Save_dogtaps_Datenbank_2025-11-07_08-24.accdr | 21401600 bytes | 84c3980d19fc56f9883c7867b14d8c8ad6da169c5094a3d9ee1feea85afeeaf7
-raw/dogtaps_80_Datenbank_Save/Save_dogtaps_Datenbank_2025-11-08_10-34.accdr | 21401600 bytes | 73ab4950b176a25a75a9dd6d5f66e68da8fff8666b74665c9a970215b13c69bb
-raw/dogtaps_80_Datenbank_Save/Save_dogtaps_Datenbank_2025-11-09_09-15.accdr | 21401600 bytes | 998cf18ed34f0d1a66e77cbc1ceb249f376e13bedb927d950151f1c2ee74cdf8
-raw/dogtaps_80_Datenbank_Save/Save_dogtaps_Datenbank_2025-11-10_09-51.accdr | 21401600 bytes | 78399be58f2f97f13ebff3c7d3590e6c7e6049506827794d888ff96cbee48f40
-raw/dogtaps_80_Datenbank_Save/Save_dogtaps_Datenbank_2025-11-11_07-53.accdr | 21401600 bytes | e8f8a18bc9beba6ae18ca4239d628678470cf2ff55b9b98ada486af5afab2f16
-raw/dogtaps_80_Datenbank_Save/Save_dogtaps_Datenbank_2025-11-12_08-08.accdr | 21401600 bytes | 92a585a6dda9c6f6cfb5c20565a307e5f9b36f4cdf4c2ea7b55f54102f8d9956
-raw/dogtaps_80_Datenbank_Save/Save_dogtaps_Datenbank_2025-11-13_07-30.accdr | 21401600 bytes | b741567a31fc35f54dfa731ecec3e7c625dcf75656bc406e45bc3153297f06a7
-raw/dogtaps_80_Datenbank_Save/Save_dogtaps_Datenbank_2025-11-14_08-23.accdr | 21401600 bytes | 108046cab4e7a43ee9fecceb3d9fcdac1a41e9b019ba2d43487b82e2fe34c67f
-raw/dogtaps_80_Datenbank_Save/Save_dogtaps_Datenbank_2025-11-15_07-42.accdr | 21401600 bytes | 01a1c1212d2acee56c3eda20b26a9a1f1a8a2aae1c1427305bdfc63a6b5f594e
-raw/dogtaps_80_Datenbank_Save/Save_dogtaps_Datenbank_2025-11-16_12-43.accdr | 21401600 bytes | 51455a11b8a8dd4adbee3318fa6c1135cce573f966bf374408cf5655ce173a21
-raw/dogtaps_80_Datenbank_Save/Save_dogtaps_Datenbank_2025-11-17_08-57.accdr | 21401600 bytes | 7a2fa026d9d43fbdb89c0b520449448b859c05cf28c983aa76087427f0a834a1
-raw/dogtaps_80_Datenbank_Save/Save_dogtaps_Datenbank_2025-11-18_07-30.accdr | 21401600 bytes | db5e156a392d22436824e7f9734efd04e680e46e07100c4d174ea869fb07731c
-raw/dogtaps_80_Datenbank_Save/Save_dogtaps_Datenbank_2025-11-19_08-23.accdr | 21401600 bytes | 7a141e833f7ffc7e389e891794475dfd9b1e03df721eefb223442f89c39c7934
-raw/dogtaps_80_Datenbank_Save/Save_dogtaps_Datenbank_2025-11-20_07-47.accdr | 21401600 bytes | f7f4cda131839bb2427193ee1301f8bc1c95ae9b33b1e09d44d9f6275204ea43
-raw/dogtaps_80_Datenbank_Save/Save_dogtaps_Datenbank_2025-11-21_17-24.accdr | 21401600 bytes | 2c019588e911cda5cae2fe24f5ba9bdadc962ce642511b84589ed17af8c0dd1b
-raw/dogtaps_80_Datenbank_Save/Save_dogtaps_Datenbank_2025-11-22_07-16.accdr | 21401600 bytes | b4695f74e65ab131bf0e040be4c4424aab43fc17a8f6d4887ef67f8f89453e3f
-raw/dogtaps_80_Datenbank_Save/Save_dogtaps_Datenbank_2025-11-23_09-00.accdr | 21401600 bytes | 21615e863930883c2785c43c18de38218b02bfcfaaa0248db77a492721d835d4
-raw/dogtaps_80_Datenbank_Save/Save_dogtaps_Datenbank_2025-11-24_11-50.accdr | 21401600 bytes | 25baae04315a66515abe22cf65c83170df3e8cec84a985578e6c943e04218ebf
-raw/dogtaps_80_Datenbank_Save/Save_dogtaps_Datenbank_2025-11-25_07-27.accdr | 21401600 bytes | 15a327579fffe4e8d94d6766e10341e4f15eaae2a2750824f6c96bcefa33ac09
-raw/dogtaps_80_Datenbank_Save/Save_dogtaps_Datenbank_2025-11-26_08-50.accdr | 21401600 bytes | d810b81a50bd67ac24ea6ac481b42929979f491780885aec7658f188b3d4a1ca
-raw/dogtaps_80_Datenbank_Save/Save_dogtaps_Datenbank_2025-11-27_07-38.accdr | 21401600 bytes | 7c489bc00ee7ba50b3cc767cb21731cd3c3a16b86023ca036517d0b6f0ac955c
-raw/dogtaps_80_Datenbank_Save/Save_dogtaps_Datenbank_2025-11-28_09-19.accdr | 21401600 bytes | d58ea7b4d0c8e35fb9dc1f3308a33afe84b7fb0040d54bb15b8d06859f5118d1
-raw/dogtaps_80_Datenbank_Save/Save_dogtaps_Datenbank_2025-11-29_07-25.accdr | 21401600 bytes | f014667e7d07a9dc89723fe180dd872085fdf1a15e63fae3cb5e29e2cc78de06
-raw/dogtaps_80_Datenbank_Save/Save_dogtaps_Datenbank_2025-11-30_12-54.accdr | 21401600 bytes | 27dc33d4c997dbef658d047bc8eaf5f94a33d557a0ae5934ee5314c8acfff456
-raw/dogtaps_80_Datenbank_Save/Save_dogtaps_Datenbank_2025-12-02_07-25.accdr | 21401600 bytes | 9469f40ee7cba139af3c04212e673deecc592ed0a46eca0f25af703dfdf4188e
-raw/dogtaps_80_Datenbank_Save/Save_dogtaps_Datenbank_2025-12-03_07-58.accdr | 21401600 bytes | e74092668f5044b8e9c26fd5e775c9e650044220ce0e9c7797fc3cb47ad1edfa
-raw/dogtaps_80_Datenbank_Save/Save_dogtaps_Datenbank_2025-12-04_07-26.accdr | 21401600 bytes | a918e2204a400cfce7c7293a19fa03d5a73f9bece8f9fa3359739a4d5b4a3b2b
-raw/dogtaps_80_Datenbank_Save/Save_dogtaps_Datenbank_2025-12-05_09-20.accdr | 21401600 bytes | 1ede028dce014280fbb329e2db9beb40dc171561dc8ca2a57bf5fd598753da1a
-raw/dogtaps_80_Datenbank_Save/Save_dogtaps_Datenbank_2025-12-06_07-36.accdr | 21401600 bytes | 92daa32d8b18b75f3823e2805adc5ccdc4813c6a1b95d7bbc0324746f90dcb4e
-raw/dogtaps_80_Datenbank_Save/Save_dogtaps_Datenbank_2025-12-07_09-16.accdr | 21401600 bytes | 28800003d0d4928bf7e70b6e9881e9fbadc9e2f1f2b5fe18881486a603ad7a08
-raw/dogtaps_80_Datenbank_Save/Save_dogtaps_Datenbank_2025-12-08_09-23.accdr | 21401600 bytes | f252462e95d8cb9aeeb2724da0bdca6ad322085771293224f0551b39d764649d
-raw/dogtaps_80_Datenbank_Save/Save_dogtaps_Datenbank_2025-12-09_07-26.accdr | 21401600 bytes | c6b4825c8f0a1039415cb2b7478f2d49270c4233629dc4efab53c8e9a66d6f35
-raw/dogtaps_90_Datenbank/ReadMe.txt | 75 bytes | 7beb4806fdc787fc6c84e7809632339f716db30d056a066455fdfa0e5fbe6b7a
-raw/dogtaps_90_Datenbank/Save_dogtaps_Datenbank_2014-06-19_15-14.accdr | 10858496 bytes | 27a17076eaad99cecb239e954615a70da27685e763eba1a012b887652c65d504
-raw/dogtaps_90_Datenbank/delete Christen dogtaps_Datenbank.accdr | 10063872 bytes | 7d53973471fb130d0e45dbb3d451c7cd81b6f892e94bcd80dc78e8d43772d149
-raw/dogtaps_90_Datenbank/delete dogtaps_Datenbank.accdr | 11837440 bytes | 9d7cbd66573aec5f5320c9f341ac337b387da8aeaf47c2e675a10cd1151a9a2d
-raw/dogtaps_90_Datenbank/delete dogtaps_Datenbank.accdr.ORG | 10522624 bytes | 1eb29bcc90c967b8da5903ad7ae4a78130f29a884d735bbdc6f564e8fc60f42e
-raw/dogtaps_90_Datenbank/delete dogtaps_Datenbank.bak | 10657792 bytes | 799dda6f293dadf7e94695ed8026348de115105d2baba60fff19baf64492a9e4
-raw/dogtaps_90_Datenbank/dogtaps_Datenbank.accdr | 21401600 bytes | ac7f42faec503cf72c20b526aec748353eaea1492f1a8c5c7503b20575687de1
-raw/dogtaps_90_Datenbank/dogtaps_Datenbank.laccdb | 128 bytes | c667e8f314fae4f9635cc81bfaed3d8827a4b5ab39ef103ac900ae9bfcbc6756
-raw/dogtaps_90_Datenbank/dogtaps_Signet_Anwendung.ico | 4122 bytes | 9a83ded80465c760cd286f8571f12ca01c44cd0e1469ae566104458fc3597143
-```
+- Dogtaps raw payload parked in `migration/legacy/station61/capture_20251219_185854Z/raw/`; folder is gitignored and only stored for reference (no processing / no per-file listing here).
 
 - Repo-doc gap: `agents.md` remains missing; Station 61 directory is input-only/immutable after commit.
 
