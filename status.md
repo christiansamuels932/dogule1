@@ -15,6 +15,43 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 # - - - - - - - - - - - - - - - - - - - -
 
+# Station 70 — Storage & Security Hardening Pass
+
+## Kontext
+
+- Branch: `70`.
+- Scope: storage failure-injection + restore drill, audit/log integrity check, secret rotation drill, and permission/rate-limit review after integrations.
+
+## Ergebnis (kurz)
+
+- Ran migration dry-run, failure injection, migrate + scan/verify-checksums; completed a restore drill on `storage_candidate/v1` and re-verified checksums.
+- Verified audit/log integrity via test suite (logging schema + audit chain) and ran the mock DB integrity check; reviewed auth matrix and rate-limit config for Kommunikation.
+- Performed a secret-rotation drill by reloading auth config with updated env secrets.
+
+## Tests
+
+- `npm run lint` — ✅
+- `npm test` — ✅
+- `npm run build` — ✅
+- `node --input-type=module -e "import('./modules/shared/api/db/integrityCheck.js').then(m=>m.runIntegrityCheck())"` — ✅ (MODULE_TYPELESS warning)
+- `node tools/migration/cli.js dry-run` — ✅ (MODULE_TYPELESS warning)
+- `MIGRATE_FAIL_AFTER_MODULE=kurse MIGRATE_RUN_ID=station70-fail node tools/migration/cli.js migrate` — ❌ expected (rollback drill)
+- `MIGRATE_RUN_ID=station70 node tools/migration/cli.js migrate` — ✅
+- `node tools/migration/cli.js scan-all` — ✅
+- `node tools/migration/cli.js scan-pii` — ✅
+- `node tools/migration/cli.js scan-drift` — ✅
+- `node tools/migration/cli.js verify-checksums` — ✅ (pre-restore)
+- `node tools/migration/cli.js verify-checksums` — ✅ (post-restore)
+- `node --input-type=module -e "import('./modules/shared/auth/config.js').then(m=>{process.env.DOGULE1_AUTH_SECRET='rotate-a'; process.env.DOGULE1_REFRESH_SECRET='rotate-b'; const a=m.resolveAuthConfig({}); process.env.DOGULE1_AUTH_SECRET='rotate-c'; process.env.DOGULE1_REFRESH_SECRET='rotate-d'; const b=m.resolveAuthConfig({}); console.log(a.secrets.access, a.secrets.refresh, b.secrets.access, b.secrets.refresh);})"` — ✅ (MODULE_TYPELESS warning)
+
+## Notizen
+
+- storage reports: `storage_reports/latest-dry-run/`, `storage_reports/latest-scan/` (gitignored).
+- storage candidate: `storage_candidate/v1` (gitignored).
+- cleanup: removed `storage_reports/` and `storage_candidate/` after drills.
+
+# - - - - - - - - - - - - - - - - - - - -
+
 # Station 67X — Email Feature Removal
 
 ## Kontext
