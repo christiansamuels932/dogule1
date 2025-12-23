@@ -15,6 +15,53 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 # - - - - - - - - - - - - - - - - - - - -
 
+# Station 67K — Infochannel with Confirmation Flow
+
+## Kontext
+
+- Branch: `feature/station67k-infochannel-confirmation`.
+- Scope: admin-only Infochannel publish, trainer confirmation flow, SLA clock + reminders/escalations, full audit trail, rate limits, and UI wiring; no comments/attachments/edits after send.
+
+## Ergebnis (kurz)
+
+- Added Infochannel storage/SAL (notices, confirmations, SLA reminder/escalation events) with audit chain writes, rate limits, and admin-only publish; confirmations are immutable with late/overdue calculations.
+- Implemented Infochannel API handlers + client and wired Kommunikation UI list/detail with confirm UX and SLA status indicators; shared styles extended for Infochannel surfaces.
+- Mounted Kommunikation API routes (groupchat/infochannel/email) in the dev HTTP router and added actor/authz header propagation from clients.
+- Updated auth matrix with Infochannel view/confirm/SLA actions; added validators for new entities.
+
+## Tests
+
+- `npm test -- modules/kommunikation/infochannel/sal.test.js modules/kommunikation/infochannel/apiRoutes.test.js modules/kommunikation/email/sal.test.js modules/kommunikation/email/apiRoutes.test.js` — ✅
+
+## Notizen
+
+- Manual check: Infochannel publish + trainer confirmation validated in dev; admin view shows confirmation list and SLA metadata.
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 67E — Email Integration MVP (Send-Only)
+
+## Kontext
+
+- Branch: `feature/station67e-email-send-mvp`.
+- Scope: compose→send flow in Kommunikation → Emails, Outlook send connector (send-only), status surfaced, abuse thresholds + rate limits, audit logging, kill switch + SPF/DKIM/DMARC alignment plan docs.
+
+## Ergebnis (kurz)
+
+- Added email send storage + SAL with queued→sent/failed status updates, Outlook connector stub (token-aware), rate limits/recipient caps, and audit chain writes; CC/BCC gated to admin.
+- Implemented email API handlers + client and wired Kommunikation UI compose/list/detail with status/error messaging.
+- Documented kill switch + SPF/DKIM/DMARC alignment plan in security baseline; extended auth matrix with email view action and tightened admin-only send policy.
+
+## Tests
+
+- `npm test -- modules/kommunikation/infochannel/sal.test.js modules/kommunikation/infochannel/apiRoutes.test.js modules/kommunikation/email/sal.test.js modules/kommunikation/email/apiRoutes.test.js` — ✅
+
+## Notizen
+
+- Manual check: Email send attempt without Outlook token shows `Fehlgeschlagen` with `missing_token` error as expected.
+
+# - - - - - - - - - - - - - - - - - - - -
+
 # Station 66R — Groupchat Retention Enforcement
 
 ## Kontext

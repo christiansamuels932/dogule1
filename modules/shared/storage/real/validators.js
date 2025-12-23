@@ -346,3 +346,185 @@ export function validateGroupchatSendDedupe(record) {
   assertString(record.expiresAt, "kommunikation_groupchat_send_dedupe.expiresAt");
   return record;
 }
+
+export function validateInfochannelNotice(record) {
+  const required = [
+    "id",
+    "title",
+    "body",
+    "status",
+    "createdAt",
+    "createdByActorId",
+    "createdByRole",
+    "targetRole",
+    "targetIds",
+    "slaHours",
+    "slaDueAt",
+    "schemaVersion",
+  ];
+  required.forEach((field) => {
+    if (record[field] === undefined) {
+      throw new StorageError(
+        STORAGE_ERROR_CODES.SCHEMA_VALIDATION_FAILED,
+        `kommunikation_infochannel_notice.${field} is required`
+      );
+    }
+  });
+  requireSchemaVersion(record, "kommunikation_infochannel_notice");
+  assertUuid(record.id, "kommunikation_infochannel_notice.id");
+  assertString(record.title, "kommunikation_infochannel_notice.title");
+  assertString(record.body, "kommunikation_infochannel_notice.body");
+  assertString(record.status, "kommunikation_infochannel_notice.status");
+  assertString(record.createdAt, "kommunikation_infochannel_notice.createdAt");
+  assertString(record.createdByActorId, "kommunikation_infochannel_notice.createdByActorId");
+  assertString(record.createdByRole, "kommunikation_infochannel_notice.createdByRole");
+  assertString(record.targetRole, "kommunikation_infochannel_notice.targetRole");
+  if (!Array.isArray(record.targetIds)) {
+    throw new StorageError(
+      STORAGE_ERROR_CODES.SCHEMA_VALIDATION_FAILED,
+      "kommunikation_infochannel_notice.targetIds must be an array"
+    );
+  }
+  record.targetIds.forEach((id, idx) => {
+    assertUuid(id, `kommunikation_infochannel_notice.targetIds[${idx}]`);
+  });
+  assertOptionalNumber(record.slaHours, "kommunikation_infochannel_notice.slaHours");
+  assertString(record.slaDueAt, "kommunikation_infochannel_notice.slaDueAt");
+  return record;
+}
+
+export function validateInfochannelConfirmation(record) {
+  const required = [
+    "id",
+    "noticeId",
+    "trainerId",
+    "confirmedAt",
+    "actorId",
+    "actorRole",
+    "schemaVersion",
+  ];
+  required.forEach((field) => {
+    if (record[field] === undefined) {
+      throw new StorageError(
+        STORAGE_ERROR_CODES.SCHEMA_VALIDATION_FAILED,
+        `kommunikation_infochannel_confirmation.${field} is required`
+      );
+    }
+  });
+  requireSchemaVersion(record, "kommunikation_infochannel_confirmation");
+  assertString(record.id, "kommunikation_infochannel_confirmation.id");
+  assertString(record.noticeId, "kommunikation_infochannel_confirmation.noticeId");
+  assertString(record.trainerId, "kommunikation_infochannel_confirmation.trainerId");
+  assertString(record.confirmedAt, "kommunikation_infochannel_confirmation.confirmedAt");
+  assertString(record.actorId, "kommunikation_infochannel_confirmation.actorId");
+  assertString(record.actorRole, "kommunikation_infochannel_confirmation.actorRole");
+  return record;
+}
+
+export function validateInfochannelEvent(record) {
+  const required = [
+    "id",
+    "noticeId",
+    "trainerId",
+    "eventType",
+    "createdAt",
+    "actorId",
+    "actorRole",
+    "slaDueAt",
+    "schemaVersion",
+  ];
+  required.forEach((field) => {
+    if (record[field] === undefined) {
+      throw new StorageError(
+        STORAGE_ERROR_CODES.SCHEMA_VALIDATION_FAILED,
+        `kommunikation_infochannel_notice_event.${field} is required`
+      );
+    }
+  });
+  requireSchemaVersion(record, "kommunikation_infochannel_notice_event");
+  assertString(record.id, "kommunikation_infochannel_notice_event.id");
+  assertString(record.noticeId, "kommunikation_infochannel_notice_event.noticeId");
+  assertString(record.trainerId, "kommunikation_infochannel_notice_event.trainerId");
+  assertString(record.eventType, "kommunikation_infochannel_notice_event.eventType");
+  if (!["reminder", "escalation"].includes(record.eventType)) {
+    throw new StorageError(
+      STORAGE_ERROR_CODES.SCHEMA_VALIDATION_FAILED,
+      "kommunikation_infochannel_notice_event.eventType must be reminder or escalation"
+    );
+  }
+  assertString(record.createdAt, "kommunikation_infochannel_notice_event.createdAt");
+  assertString(record.actorId, "kommunikation_infochannel_notice_event.actorId");
+  assertString(record.actorRole, "kommunikation_infochannel_notice_event.actorRole");
+  assertString(record.slaDueAt, "kommunikation_infochannel_notice_event.slaDueAt");
+  return record;
+}
+
+export function validateEmailSend(record) {
+  const required = [
+    "id",
+    "to",
+    "cc",
+    "bcc",
+    "subject",
+    "body",
+    "status",
+    "provider",
+    "queuedAt",
+    "createdAt",
+    "updatedAt",
+    "createdByActorId",
+    "createdByRole",
+    "schemaVersion",
+  ];
+  required.forEach((field) => {
+    if (record[field] === undefined) {
+      throw new StorageError(
+        STORAGE_ERROR_CODES.SCHEMA_VALIDATION_FAILED,
+        `kommunikation_email_send.${field} is required`
+      );
+    }
+  });
+  requireSchemaVersion(record, "kommunikation_email_send");
+  assertUuid(record.id, "kommunikation_email_send.id");
+  if (!Array.isArray(record.to)) {
+    throw new StorageError(
+      STORAGE_ERROR_CODES.SCHEMA_VALIDATION_FAILED,
+      "kommunikation_email_send.to must be an array"
+    );
+  }
+  if (!Array.isArray(record.cc)) {
+    throw new StorageError(
+      STORAGE_ERROR_CODES.SCHEMA_VALIDATION_FAILED,
+      "kommunikation_email_send.cc must be an array"
+    );
+  }
+  if (!Array.isArray(record.bcc)) {
+    throw new StorageError(
+      STORAGE_ERROR_CODES.SCHEMA_VALIDATION_FAILED,
+      "kommunikation_email_send.bcc must be an array"
+    );
+  }
+  record.to.forEach((entry, idx) => {
+    assertString(entry, `kommunikation_email_send.to[${idx}]`);
+  });
+  record.cc.forEach((entry, idx) => {
+    assertString(entry, `kommunikation_email_send.cc[${idx}]`);
+  });
+  record.bcc.forEach((entry, idx) => {
+    assertString(entry, `kommunikation_email_send.bcc[${idx}]`);
+  });
+  assertString(record.subject, "kommunikation_email_send.subject");
+  assertString(record.body, "kommunikation_email_send.body");
+  assertString(record.status, "kommunikation_email_send.status");
+  assertString(record.provider, "kommunikation_email_send.provider");
+  assertOptionalString(record.providerMessageId, "kommunikation_email_send.providerMessageId");
+  assertOptionalString(record.errorMessage, "kommunikation_email_send.errorMessage");
+  assertString(record.queuedAt, "kommunikation_email_send.queuedAt");
+  assertOptionalString(record.sentAt, "kommunikation_email_send.sentAt");
+  assertOptionalString(record.failedAt, "kommunikation_email_send.failedAt");
+  assertString(record.createdAt, "kommunikation_email_send.createdAt");
+  assertString(record.updatedAt, "kommunikation_email_send.updatedAt");
+  assertString(record.createdByActorId, "kommunikation_email_send.createdByActorId");
+  assertString(record.createdByRole, "kommunikation_email_send.createdByRole");
+  return record;
+}

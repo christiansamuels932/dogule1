@@ -1,5 +1,5 @@
 /* global fetch, URLSearchParams, window */
-const BASE = "/api/kommunikation/groupchat";
+const BASE = "/api/kommunikation/infochannel";
 
 function buildError(code, message, details) {
   const err = new Error(message || code);
@@ -43,32 +43,33 @@ async function doFetch(path, options = {}) {
     });
   }
   if (res.status === 403) throw buildError("DENIED", "denied");
+  if (res.status === 404) throw buildError("NOT_FOUND", "not_found");
   if (res.status === 400) throw buildError("INVALID_INPUT", json?.message || "invalid_input");
   throw buildError("SERVER_ERROR", json?.message || "server_error");
 }
 
-function pickBody(body) {
-  if (!body) return null;
-  return typeof body === "string" ? body : body.body || null;
-}
-
-export async function listMessages({ limit, cursor } = {}) {
+export async function listNotices({ limit, cursor } = {}) {
   const query = new URLSearchParams();
   if (limit) query.set("limit", String(limit));
   if (cursor) query.set("cursor", cursor);
-  const data = await doFetch(`/messages?${query.toString()}`, { method: "GET" });
-  return data;
+  const path = query.toString() ? `/notices?${query.toString()}` : "/notices";
+  return doFetch(path, { method: "GET" });
 }
 
-export async function sendMessage({ body, clientNonce }) {
-  const trimmed = pickBody(body);
-  return doFetch("/messages", { method: "POST", body: { body: trimmed, clientNonce } });
+export async function createNotice({ title, body, slaHours } = {}) {
+  return doFetch("/notices", { method: "POST", body: { title, body, slaHours } });
 }
 
-export async function getReadMarker() {
-  return doFetch("/read-marker", { method: "GET" });
+export async function getNotice({ id }) {
+  if (!id) throw buildError("INVALID_INPUT", "notice id required");
+  return doFetch(`/notices/${id}`, { method: "GET" });
 }
 
-export async function setReadMarker({ messageId }) {
-  return doFetch("/read-marker", { method: "POST", body: { messageId } });
+export async function confirmNotice({ id }) {
+  if (!id) throw buildError("INVALID_INPUT", "notice id required");
+  return doFetch(`/notices/${id}/confirm`, { method: "POST" });
+}
+
+export async function runSlaJob() {
+  return doFetch("/jobs/sla", { method: "POST" });
 }

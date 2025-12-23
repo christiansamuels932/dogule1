@@ -184,17 +184,101 @@ actions:
     audit: always
     alerts: denied_action
 
-  - id: kommunikation.infochannel.publish_notice
+  - id: kommunikation.infochannel.publish
     module: kommunikation
-    description: Publish infochannel/system notice
+    description: Publish infochannel notice
+    roles:
+      admin: allowed
+      staff: denied
+      trainer: denied
+      system: denied
+      unauthenticated: denied
+    preconditions:
+      - Admin-only in MVP.
+    audit: always
+    alerts: denied_action
+
+  - id: kommunikation.infochannel.view
+    module: kommunikation
+    description: View infochannel notices
     roles:
       admin: allowed
       staff: conditional
+      trainer: allowed
+      system: conditional
+      unauthenticated: denied
+    preconditions:
+      - Trainers see only notices targeted to them.
+    audit: always
+    alerts: denied_action
+
+  - id: kommunikation.infochannel.confirm
+    module: kommunikation
+    description: Confirm infochannel notice
+    roles:
+      admin: denied
+      staff: denied
+      trainer: allowed
+      system: denied
+      unauthenticated: denied
+    preconditions:
+      - Trainer must be targeted by the notice.
+    audit: always
+    alerts: denied_action
+
+  - id: kommunikation.infochannel.sla.run
+    module: kommunikation
+    description: Run SLA reminder/escalation job for infochannel
+    roles:
+      admin: denied
+      staff: denied
       trainer: denied
       system: allowed
       unauthenticated: denied
     preconditions:
-      - Staff needs channel-level approval; system for scheduled notices only.
+      - System job only with service credentials.
+    audit: always
+    alerts: denied_action
+
+  - id: kommunikation.infochannel.reminder
+    module: kommunikation
+    description: Emit reminder events for pending infochannel confirmations
+    roles:
+      admin: denied
+      staff: denied
+      trainer: denied
+      system: allowed
+      unauthenticated: denied
+    preconditions:
+      - System job only.
+    audit: always
+    alerts: denied_action
+
+  - id: kommunikation.infochannel.escalation
+    module: kommunikation
+    description: Emit escalation events for overdue infochannel confirmations
+    roles:
+      admin: denied
+      staff: denied
+      trainer: denied
+      system: allowed
+      unauthenticated: denied
+    preconditions:
+      - System job only.
+    audit: always
+    alerts: denied_action
+
+  - id: kommunikation.email.view
+    module: kommunikation
+    description: View email send logs
+    roles:
+      admin: allowed
+      staff: denied
+      trainer: denied
+      system: conditional
+      unauthenticated: denied
+    preconditions:
+      - System only for delivery monitoring jobs.
     audit: always
     alerts: denied_action
 
@@ -203,12 +287,12 @@ actions:
     description: Send single email to customer
     roles:
       admin: allowed
-      staff: conditional
+      staff: denied
       trainer: denied
       system: allowed
       unauthenticated: denied
     preconditions:
-      - Staff limited to templates/allow-listed recipients; system uses service credentials.
+      - Admin-only compose; system uses service credentials.
     audit: always
     alerts: denied_action
 

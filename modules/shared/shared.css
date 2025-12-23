@@ -239,6 +239,28 @@ a:focus-visible {
   font-size: 0.95rem;
 }
 
+.kommunikation-card__meta {
+  margin-top: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  color: #6b7280;
+  font-size: 0.85rem;
+}
+
+.kommunikation-card__status {
+  color: #111827;
+  font-weight: 500;
+}
+
+.kommunikation-card__status--warn {
+  color: #b45309;
+}
+
+.kommunikation-card__status--late {
+  color: #92400e;
+}
+
 .kommunikation-detail {
   border: 1px solid #e5e7eb;
   border-radius: 0.75rem;
@@ -250,4 +272,132 @@ a:focus-visible {
 .kommunikation-detail__meta {
   color: #4b5563;
   margin: 0.5rem 0 1rem;
+}
+
+.infochannel-compose {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+  padding: 0.9rem;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+}
+
+.infochannel-compose__actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.infochannel-compose__status {
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+.infochannel-detail__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  color: #6b7280;
+  font-size: 0.9rem;
+  margin: 0.5rem 0 0.75rem;
+}
+
+.infochannel-detail__summary {
+  margin-bottom: 1rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.infochannel-confirm {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border-radius: 0.6rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  margin-bottom: 1rem;
+}
+
+.infochannel-confirm__status {
+  color: #1f2937;
+}
+
+.infochannel-targets {
+  margin-top: 1rem;
+}
+
+.infochannel-targets__list {
+  list-style: none;
+  padding: 0;
+  margin: 0.5rem 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.infochannel-targets__item {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+  padding: 0.35rem 0.5rem;
+  border-radius: 0.5rem;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+}
+
+.infochannel-targets__status {
+  font-size: 0.85rem;
+  color: #374151;
+}
+
+.infochannel-targets__status--warn {
+  color: #b45309;
+}
+
+.email-compose {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+  padding: 0.9rem;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+}
+
+.email-compose__actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.email-compose__status {
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+.email-detail__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  color: #4b5563;
+  font-size: 0.9rem;
+  margin: 0.5rem 0 1rem;
+}
+
+.email-detail__body {
+  white-space: pre-wrap;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.6rem;
+  padding: 0.75rem;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.92rem;
 }

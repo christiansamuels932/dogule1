@@ -74,6 +74,21 @@ Version 0 – first baseline; created in Station 57, covering the Station-52 sec
 - Deny-by-default must be enforced in code: missing entries treated as deny until explicitly added to the matrix.
 - Any station introducing new routes/actions must update the matrix block; otherwise CI (introduced by Station 60) will fail.
 
+## Email Integration Guardrails (Station 67E)
+
+- **Kill switch:** `DOGULE1_EMAIL_SEND_ENABLED=false` disables all outbound email sends. Must be checked before any send attempt; log result as `send_disabled`.
+- **Dry-run option:** `DOGULE1_EMAIL_SEND_DRY_RUN=true` allows staging/test to exercise the send flow without contacting Outlook.
+- **Token handling:** `DOGULE1_OUTLOOK_ACCESS_TOKEN` supplied via secret store; never logged; rotate/refresh per security ops cadence.
+- **Abuse controls:** rate limits + recipient caps enforced before send; audit every attempt (success/denied/fail).
+
+### SPF/DKIM/DMARC Alignment Plan (no DNS changes in MVP)
+
+1. **SPF:** When DNS changes are permitted, publish `v=spf1 include:spf.protection.outlook.com -all` for the outbound domain (or dedicated subdomain).
+2. **DKIM:** Enable DKIM in the Microsoft 365 tenant for the same domain; publish selector CNAMEs provided by Microsoft.
+3. **DMARC:** Start with `p=none` and aggregate reports, then move to `quarantine` or `reject` after verifying alignment and monitoring.
+4. **From alignment:** Set `From:` to the verified domain/subdomain used in SPF/DKIM; avoid mixing sender domains.
+5. **Monitoring:** Track bounce/complaint rates; tighten policies only after clean delivery results.
+
 ## References
 
 - Authorization matrix and alert thresholds: `SECURITY_AUTHORIZATION_MATRIX.md`
