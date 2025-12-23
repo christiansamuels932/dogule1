@@ -132,4 +132,45 @@ describe("Kommunikation Chats UI", () => {
     await new Promise((resolve) => setTimeout(resolve, 10));
     expect(container.textContent).toContain("Testnachricht");
   });
+
+  it("shows retention notices when enabled", async () => {
+    let nowValue = "2025-01-01T00:00:00.000Z";
+    const sal = createGroupchatSal({
+      mode: "real",
+      paths: { root },
+      rateLimiter: () => ({ allowed: true, remaining: 1, resetAt: Date.now() + 1000 }),
+      now: () => nowValue,
+      retentionConfig: { defaultRetentionDays: 1 },
+    });
+    const api = createGroupchatApiHandlers({ sal });
+    setupFetch(api);
+
+    const ctx = {
+      actorId: "test-user",
+      actorRole: "admin",
+      authz: {
+        allowedActions: [
+          "kommunikation.chat.send",
+          "kommunikation.chat.read",
+          "kommunikation.chat.readMarker.set",
+        ],
+      },
+    };
+
+    await sal.sendMessage("global", { body: "Alt", clientNonce: "old-1" }, ctx);
+    nowValue = "2025-01-03T00:00:00.000Z";
+    await sal.sendMessage("global", { body: "Neu", clientNonce: "new-1" }, ctx);
+    nowValue = "2025-01-04T00:00:00.000Z";
+
+    const container = document.createElement("div");
+    await initModule(container, { segments: ["chats", "global"] });
+    await new Promise((resolve) => setTimeout(resolve, 10));
+
+    expect(container.textContent).toContain(
+      "Aufbewahrung: Nachrichten werden nach 1 Tagen automatisch gelöscht."
+    );
+    expect(container.textContent).toContain(
+      "Ältere Nachrichten sind aufgrund der Aufbewahrungsfrist nicht mehr verfügbar."
+    );
+  });
 });

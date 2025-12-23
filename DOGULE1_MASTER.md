@@ -1,19 +1,22 @@
 # Dogule1 — Master Blueprint
 
+## Normative Scope
+
+Dieses Dokument definiert Phasen, Stationen und deren Akzeptanzkriterien. Governance/Invarianten stehen in `DOGULE1_GOVERNANCE.md`. Agenten-Verhalten steht in `DOGULE1_PROTOCOL.md` und `agents.md`. `status.md` ist das Fortschritts-Ledger.
+
 ## Purpose
 
 Dogule1 ist eine modulare Verwaltungs-App für Hundeschulen. Die Anwendung liefert ein konsistentes Dashboard mit eigenständigen Modulen für Kommunikation, Kunden, Hunde, Kurse, Trainer, Kalender, Finanzen und Waren. Ziel ist eine lokale Alpha-Version (V0.1), die später auf einen NAS-Server ausgerollt wird und schließlich in einen produktiven Kundentest übergeht.
 
 ## Core Principles
 
-1. Planner/Builder communication and documentation stay in English, while all in-app UI copy remains in German.
-2. Keine ideologischen Inhalte – Fokus auf sachliche Verwaltungsfunktionen.
-3. Module bleiben klar getrennt, nutzen aber gemeinsame Layout-, Router- und Komponenten-Stacks.
-4. Jede Entität besitzt eine sichtbare `id` (intern, unveränderbar) und einen editierbaren `code`; das Override-Toggle wirkt nur auf `code`.
-5. Mock-Daten bilden die Realität ab, bis eine echte Persistenz folgt.
-6. Das Modul-Layout folgt der „Core Module Map – Phase 0“ (Dashboard als Rahmen, farbcodierte Kacheln, definierte Pfeile zwischen Modulen).
-7. Ein Modul darf erst als **abgeschlossen** markiert werden, wenn sein vollständiges GUI steht und es sich als eigenständige Einzweck-App bedienen und testen lässt (Navigation, Datenflüsse, Fehlermeldungen, Fokus/Scroll); Abschluss und Status-Update erfolgen erst nach manueller Prüfung und Freigabe durch den Nutzer.
-8. Pre-Alpha Validierung: Formulare blockieren nur zwingend notwendige Pflichtfelder; weiche/optionale Checks dürfen Eingaben nicht stoppen (harte Validierung wird in späteren Stationen nachgezogen).
+1. Keine ideologischen Inhalte – Fokus auf sachliche Verwaltungsfunktionen.
+2. Module bleiben klar getrennt, nutzen aber gemeinsame Layout-, Router- und Komponenten-Stacks.
+3. Jede Entität besitzt eine sichtbare `id` (intern, unveränderbar) und einen editierbaren `code`; das Override-Toggle wirkt nur auf `code`.
+4. Mock-Daten bilden die Realität ab, bis eine echte Persistenz folgt.
+5. Das Modul-Layout folgt der „Core Module Map – Phase 0“ (Dashboard als Rahmen, farbcodierte Kacheln, definierte Pfeile zwischen Modulen).
+6. Ein Modul darf erst als **abgeschlossen** markiert werden, wenn sein vollständiges GUI steht und es sich als eigenständige Einzweck-App bedienen und testen lässt (Navigation, Datenflüsse, Fehlermeldungen, Fokus/Scroll); Abschluss und Status-Update erfolgen erst nach manueller Prüfung und Freigabe durch den Nutzer.
+7. Pre-Alpha Validierung: Formulare blockieren nur zwingend notwendige Pflichtfelder; weiche/optionale Checks dürfen Eingaben nicht stoppen (harte Validierung wird in späteren Stationen nachgezogen).
 
 ## Modules & Colors
 
@@ -51,12 +54,10 @@ dogule1/
   status.md
   DOGULE1_PROTOCOL.md
   agents.md
-  RISKS.md
-  MIGRATION_CHECKLIST.md
   UI_GUIDE.md
 ```
 
-Alle weiteren Dateien (README, BASELINE etc.) ergänzen diese Grundstruktur, ändern sie aber nicht.
+Alle weiteren Dateien (README, BASELINE etc.) ergänzen diese Grundstruktur, ändern sie aber nicht. Optionale Dokumente (z. B. RISKS.md, MIGRATION_CHECKLIST.md) dürfen ergänzt werden, wenn sie benötigt werden.
 
 ### Module Interface
 

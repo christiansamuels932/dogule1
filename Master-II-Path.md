@@ -1,6 +1,6 @@
 # Master-II Path — First Public Rollout (Stations 50+)
 
-Purpose: concrete path from current state to first public rollout, starting at Station 50. Each station includes clear outcomes and exit criteria. Security and storage are first-class; no module ships without them.
+Purpose: concrete path from current state to first public rollout, starting at Station 50. Each station includes clear outcomes and exit criteria. Security and storage are first-class; no module ships without them. Suffix legend: `R` = lifecycle/retention, `K` = Kommunikation, `E` = Email/Outlook line.
 
 ## Station 50 — Roadmap Governance & Definitions of Ready
 
@@ -82,27 +82,32 @@ Purpose: concrete path from current state to first public rollout, starting at S
 - Outcomes: single groupchat room backed by storage; ordering/retention rules; per-user read markers; send/retry/backoff behavior; notifications inside Kommunikation; rate limits enforced.
 - Exit: end-to-end send/read in test; audit on sends; unread counts accurate after refresh.
 
-## Station 66 — Infochannel with Confirmation Flow
+## Station 66R — Groupchat Retention Enforcement
+
+- Outcomes: enforce retention/purge for global groupchat according to policy; prune TTL-violating messages deterministically; audit deletions with hash chain; SLA alerts for retention job failures; read markers stay consistent post-prune.
+- Exit: retention job runs/dry-run tested; audit entries emitted; unread counts stable after prune; alerts fire on failures/missed runs.
+
+## Station 67K — Infochannel with Confirmation Flow
 
 - Outcomes: admin-only posting, targeting rules, confirmation UX for trainers, escalation/reminders, audit trail, rate limits; optional comments policy enforced (default: none).
 - Exit: admin can post; trainers confirm; late confirmations visible; alerts for missing confirms after SLA.
 
-## Station 67 — Email Integration MVP (Send-Only)
+## Station 67E — Email Integration MVP (Send-Only)
 
 - Outcomes: compose→send flow; allowed fields defined; Outlook send connector with token handling; send status surfaced; spam/abuse thresholds; audit logging.
 - Exit: send-only works in test/stage; failure UX; kill switch documented; SPF/DKIM/DMARC alignment plan.
 
-## Station 68 — Outlook Auth & Contact Mapping
+## Station 68E — Outlook Auth & Contact Mapping
 
 - Outcomes: chosen auth method (delegated/service); token lifecycle; contact matching rules; conflict handling; scoped permissions; shutdown switch.
 - Exit: mapping table/logic implemented; tests for conflicts; tokens stored/rotated per baseline.
 
-## Station 69 — Outlook → Kalender Import (Preview-First)
+## Station 69E — Outlook → Kalender Import (Preview-First)
 
 - Outcomes: entry point (ICS upload or API pull); field mapping; duplicate detection; preview/diff UI; recurrence policy (flatten/ignore MVP); rate limits; SSRF/zip-bomb defenses.
 - Exit: controlled import with logs; alert on failures; undo/cleanup path defined.
 
-## Station 70 — Storage & Security Hardening Pass
+## Station 70E — Storage & Security Hardening Pass
 
 - Outcomes: failure-injection run on storage; restore drill; secret rotation drill; audit/log integrity check; permission and rate-limit review after integrations.
 - Exit: drills documented; issues fixed; sign-off for public exposure candidate.
@@ -110,7 +115,7 @@ Purpose: concrete path from current state to first public rollout, starting at S
 ## Station 71 — UI Design Tokens & Layout Application (Core Screens)
 
 - Outcomes: apply design tokens/layout primitives to Dashboard + Kommunikation; accessibility pass (keyboard/contrast); performance budgets; localization-ready formatting.
-- Exit: UI conforms to `UI_GUIDE_V2`; empty/error states consistent; lint/CI checks for a11y.
+- Exit: UI conforms to `UI_GUIDE.md`; empty/error states consistent; lint/CI checks for a11y.
 
 ## Station 72 — Mobile Readiness (Kommunikation + Dashboard)
 

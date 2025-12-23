@@ -1,4 +1,4 @@
-This document is the authoritative status log for Dogule1 (replaces dogule1_status.md).
+This document is the authoritative status log for Dogule1 (replaces dogule1_status.md). Station suffix legend: `R` = lifecycle/retention, `K` = Kommunikation, `E` = Email/Outlook line.
 Every station block is wrapped by a visual bracket line: `# - - - - - - - - - - - - - - - - - - - -` before and after.
 Each station block uses this structure (read-only):
 
@@ -12,6 +12,29 @@ Each station block uses this structure (read-only):
 - READ-ONLY INSTRUCTIONS: All stations (including historical ones) must stay logged in this file; never replace or truncate existing entries when adding new stations. If a truncation occurs, restore the full history before adding new content (the Station 39–41 overwrite was fixed by restoring Stations 1–38 and reappending 39–41).
 
 Branching rule: each station must be developed on its dedicated branch; if the expected branch does not exist yet, create a new one before starting the station.
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 66R — Groupchat Retention Enforcement
+
+## Kontext
+
+- Branch: `feature/station66r-groupchat-retention`.
+- Scope: enforce deterministic retention for the global groupchat with pinned cutoff pagination, logical read-marker clamping, gated server-side pruning, and minimal UI notices; no polling/push, no moderation UI, no migrations.
+
+## Ergebnis (kurz)
+
+- Added retention config + validation, pinned cutoff in cursors, query-time filtering, retention-aware unread counts, and optional prune job with caps/time budget and audit events; retention is disabled by default and Station 65 behavior remains unchanged.
+- Exposed retention/truncation metadata on list responses and added minimal German UI notices when enabled/truncated.
+- Added auth matrix entries for retention prune events; added UI guide placeholder, agents/protocol docs, and archived legacy status/step notes from the planning tidy-up.
+
+## Tests
+
+- `pnpm test -- modules/kommunikation/groupchat/sal.test.js modules/kommunikation/groupchat/ui.test.js` — ✅
+
+## Notizen
+
+- Pruning is gated by `DOGULE1_GROUPCHAT_RETENTION_PRUNE_ENABLED` and rate-limited; async pruning emits start/complete/noop/error audit events with jobId.
 
 # - - - - - - - - - - - - - - - - - - - -
 

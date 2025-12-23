@@ -37,7 +37,7 @@ Common usage rules
 - Scope clarity: integration feature(s) and surfaces.
 - Dependencies cleared: storage/security green; gating honored.
 - Risks & assumptions logged: PR + `status.md`.
-- Artifacts required: updates to MASTER/STATUS, INTEGRATION_GUIDE, relevant baselines, diagrams/flows.
+- Artifacts required: updates to MASTER/STATUS, Master-II-Path, relevant baselines, diagrams/flows.
 - Testability: evidence such as preview/diff flows, rate-limit/audit coverage, failure/rollback paths.
 - Reviewer roles: Planner review → Builder execution → Human merge.
 - Timebox / target date.
@@ -49,7 +49,7 @@ Common usage rules
 - Scope clarity: design tokens, layout patterns, accessibility/localization/performance expectations.
 - Dependencies cleared: integration decisions stable; gating rules satisfied.
 - Risks & assumptions logged: PR + `status.md`.
-- Artifacts required: UI_GUIDE_V2, MASTER/STATUS updates, component/layout references.
+- Artifacts required: UI_GUIDE.md, MASTER/STATUS updates, component/layout references.
 - Testability: evidence via screenshots/specs, a11y checks, performance budgets, responsive behavior definitions.
 - Reviewer roles: Planner review → Builder execution → Human merge.
 - Timebox / target date.

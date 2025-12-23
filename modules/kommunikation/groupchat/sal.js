@@ -11,6 +11,7 @@ import { resolvePaths } from "../../shared/storage/real/paths.js";
 import { writeEntityFile } from "../../shared/storage/real/dataFile.js";
 import { loadEntity } from "../../shared/storage/real/read.js";
 import { loadAuditChainState, appendAuditRecord } from "../../shared/storage/real/audit.js";
+import { resolveGroupchatRetentionConfig } from "./config.js";
 import {
   validateGroupchatRoom,
   validateGroupchatMessage,
@@ -25,6 +26,9 @@ const MAX_MESSAGE_LENGTH = 2000;
 const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 50;
 const DEDUPE_WINDOW_MS = 24 * 60 * 60 * 1000;
+const RETENTION_ACTOR_ID = "system:retention";
+const RETENTION_ACTOR_ROLE = "system";
+const lastPruneAt = new Map();
 
 class GroupchatError extends Error {
   constructor(code, message, details) {
@@ -53,8 +57,10 @@ function uuidv7() {
   )}-${hex.slice(20)}`;
 }
 
-function encodeCursor(createdAt, id) {
-  return Buffer.from(JSON.stringify({ createdAt, id }), "utf8").toString("base64url");
+function encodeCursor(createdAt, id, cutoffTs) {
+  const payload = { createdAt, id };
+  if (cutoffTs) payload.cutoffTs = cutoffTs;
+  return Buffer.from(JSON.stringify(payload), "utf8").toString("base64url");
 }
 
 function decodeCursor(cursor) {
@@ -64,6 +70,7 @@ function decodeCursor(cursor) {
     if (!parsed || typeof parsed.createdAt !== "string" || typeof parsed.id !== "string") {
       return null;
     }
+    if (parsed.cutoffTs && typeof parsed.cutoffTs !== "string") return null;
     return parsed;
   } catch {
     return null;
@@ -213,6 +220,51 @@ function validateLimit(limit) {
   return Math.min(parsed, MAX_LIMIT);
 }
 
+function parseRetentionDaysValue(value, label) {
+  if (value === undefined || value === null) return null;
+  if (!Number.isInteger(value) || value < 1) {
+    throw new GroupchatError("INVALID_CONFIG", `${label} must be an integer >= 1`);
+  }
+  return value;
+}
+
+function resolveRetentionDays(roomRetention, defaultRetention) {
+  if (roomRetention !== null && roomRetention !== undefined) {
+    return {
+      retentionDays: parseRetentionDaysValue(roomRetention, "room.retentionDays"),
+      source: "room",
+    };
+  }
+  if (defaultRetention !== null && defaultRetention !== undefined) {
+    return {
+      retentionDays: parseRetentionDaysValue(defaultRetention, "defaultRetentionDays"),
+      source: "default",
+    };
+  }
+  return { retentionDays: null, source: null };
+}
+
+function computeCutoffTs(nowIso, retentionDays) {
+  if (!retentionDays) return null;
+  const nowMs = Date.parse(nowIso);
+  const baseMs = Number.isNaN(nowMs) ? Date.now() : nowMs;
+  return new Date(baseMs - retentionDays * 86400_000).toISOString();
+}
+
+function clampReadMarkerTs(markerTs, cutoffTs) {
+  if (!markerTs && !cutoffTs) return null;
+  if (!markerTs) return cutoffTs;
+  if (!cutoffTs) return markerTs;
+  return Date.parse(markerTs) >= Date.parse(cutoffTs) ? markerTs : cutoffTs;
+}
+
+function shouldPruneNow(roomId, nowMs, intervalMs) {
+  const last = lastPruneAt.get(roomId) || 0;
+  if (nowMs - last < intervalMs) return false;
+  lastPruneAt.set(roomId, nowMs);
+  return true;
+}
+
 function ensureActor(context) {
   if (!context?.actorId || !context?.actorRole) {
     throw new GroupchatError("INVALID_CONTEXT", "actorId and actorRole are required");
@@ -270,6 +322,11 @@ export function createGroupchatSal(options = {}) {
   const auditEvent = options.auditEvent || audit;
   const limiter = options.rateLimiter || rateLimit;
   const now = options.now || (() => new Date().toISOString());
+  const nowMs = options.nowMs || (() => Date.now());
+  const retentionConfig = resolveGroupchatRetentionConfig(
+    options.retentionConfig || options.retention || {}
+  );
+  const pruneMode = options.pruneMode || "async";
 
   async function ensureRoomExists(context) {
     try {
@@ -351,6 +408,175 @@ export function createGroupchatSal(options = {}) {
     }
   }
 
+  async function deleteMessageRecord(messageRecord, requestId) {
+    const messagePath = paths.dataFile("kommunikation_groupchat_message", messageRecord.id);
+    try {
+      await fs.stat(messagePath);
+    } catch (error) {
+      if (error.code === "ENOENT") return false;
+      throw error;
+    }
+    const auditContext = { hashPrev: 0, hashIndex: 0, before: messageRecord, after: null };
+    await executeWriteContract({
+      mode,
+      entity: "kommunikation_groupchat_message",
+      operation: "delete",
+      actionId: "kommunikation.groupchat.retention.prune",
+      actorId: RETENTION_ACTOR_ID,
+      actorRole: RETENTION_ACTOR_ROLE,
+      targetId: messageRecord.id,
+      requestId,
+      authz: true,
+      audit,
+      auditContext,
+      logger,
+      alerter,
+      perform: async () => {
+        const chain = await loadAuditChainState(paths, "kommunikation_groupchat_message");
+        auditContext.hashPrev = chain.hashPrev;
+        auditContext.hashIndex = chain.hashIndex;
+        await fs.rm(messagePath, { force: true });
+        await appendAuditRecord(
+          paths,
+          "kommunikation_groupchat_message",
+          {
+            actionId: "kommunikation.groupchat.retention.prune",
+            actor: buildActor(RETENTION_ACTOR_ID, RETENTION_ACTOR_ROLE),
+            target: { type: "kommunikation_groupchat_message", id: messageRecord.id },
+            requestId: requestId || "groupchat-retention",
+            result: "success",
+            before: messageRecord,
+            after: null,
+          },
+          chain
+        );
+        return { id: messageRecord.id };
+      },
+    });
+    return true;
+  }
+
+  async function runRetentionPrune({ roomId, retentionDays, cutoffTs, requestId }) {
+    const pruneConfig = retentionConfig.prune;
+    const jobId = crypto.randomUUID ? crypto.randomUUID() : uuidv7();
+    emitAudit(auditEvent, "kommunikation.groupchat.retention.prune", {
+      actorId: RETENTION_ACTOR_ID,
+      actorRole: RETENTION_ACTOR_ROLE,
+      roomId,
+      retentionDays,
+      cutoffTs,
+      deletedCount: 0,
+      stopReason: "complete",
+      jobId,
+      phase: "start",
+      requestId: requestId || "groupchat-retention",
+    });
+
+    let deletedCount = 0;
+    let stopReason = "complete";
+    try {
+      const allMessages = await listAllMessages(paths, roomId, logger, alerter);
+      const expired = allMessages.filter((msg) => msg.createdAt < cutoffTs);
+      if (!expired.length) {
+        emitAudit(auditEvent, "kommunikation.groupchat.retention.prune.noop", {
+          actorId: RETENTION_ACTOR_ID,
+          actorRole: RETENTION_ACTOR_ROLE,
+          roomId,
+          retentionDays,
+          cutoffTs,
+          deletedCount: 0,
+          stopReason: "noop",
+          jobId,
+          requestId: requestId || "groupchat-retention",
+        });
+        return { deletedCount: 0, stopReason: "noop" };
+      }
+
+      const startedAt = nowMs();
+      for (const message of expired) {
+        if (deletedCount >= pruneConfig.maxDeletes) {
+          stopReason = "limit_reached";
+          break;
+        }
+        if (nowMs() - startedAt >= pruneConfig.timeBudgetMs) {
+          stopReason = "time_budget_exceeded";
+          break;
+        }
+        const deleted = await deleteMessageRecord(message, requestId);
+        if (deleted) deletedCount += 1;
+      }
+      if (deletedCount === 0 && stopReason === "complete") {
+        stopReason = "noop";
+      }
+      emitAudit(auditEvent, "kommunikation.groupchat.retention.prune", {
+        actorId: RETENTION_ACTOR_ID,
+        actorRole: RETENTION_ACTOR_ROLE,
+        roomId,
+        retentionDays,
+        cutoffTs,
+        deletedCount,
+        stopReason,
+        jobId,
+        requestId: requestId || "groupchat-retention",
+      });
+      return { deletedCount, stopReason };
+    } catch (error) {
+      emitAudit(auditEvent, "kommunikation.groupchat.retention.prune", {
+        actorId: RETENTION_ACTOR_ID,
+        actorRole: RETENTION_ACTOR_ROLE,
+        roomId,
+        retentionDays,
+        cutoffTs,
+        deletedCount,
+        stopReason: "error",
+        jobId,
+        requestId: requestId || "groupchat-retention",
+        errorCode: error?.code || error?.message,
+      });
+      throw error;
+    }
+  }
+
+  function maybePrune(roomId, retentionDays, cutoffTs, context) {
+    if (!retentionDays || !cutoffTs) return null;
+    const pruneConfig = retentionConfig.prune;
+    if (!pruneConfig?.enabled) {
+      emitAudit(auditEvent, "kommunikation.groupchat.retention.prune.noop", {
+        actorId: RETENTION_ACTOR_ID,
+        actorRole: RETENTION_ACTOR_ROLE,
+        roomId,
+        retentionDays,
+        cutoffTs,
+        deletedCount: 0,
+        stopReason: "disabled",
+        requestId: context?.requestId || "groupchat-retention",
+      });
+      return null;
+    }
+    if (!shouldPruneNow(roomId, nowMs(), pruneConfig.intervalMs)) {
+      return null;
+    }
+    const runner = () =>
+      runRetentionPrune({
+        roomId,
+        retentionDays,
+        cutoffTs,
+        requestId: context?.requestId,
+      });
+
+    if (pruneMode === "sync") {
+      return runner();
+    }
+    if (typeof globalThis.queueMicrotask === "function") {
+      globalThis.queueMicrotask(() => runner().catch(() => {}));
+    } else if (typeof globalThis.setTimeout === "function") {
+      globalThis.setTimeout(() => runner().catch(() => {}), 0);
+    } else {
+      runner().catch(() => {});
+    }
+    return null;
+  }
+
   async function sendMessage(roomId = ROOM_ID, payload = {}, context = {}) {
     if (roomId !== ROOM_ID) {
       throw new GroupchatError("INVALID_INPUT", "Only the global room is supported");
@@ -391,7 +617,11 @@ export function createGroupchatSal(options = {}) {
       throw new GroupchatError("INVALID_INPUT", "clientNonce is required");
     }
     const nowIso = now();
-    await ensureRoomExists(context);
+    const room = await ensureRoomExists(context);
+    const { retentionDays } = resolveRetentionDays(
+      room?.retentionDays ?? null,
+      retentionConfig.defaultRetentionDays ?? null
+    );
 
     const dedupeKey = `${roomId}:${actorId}:${clientNonce}`;
     const dedupeExisting = await loadDedupe(paths, dedupeKey, logger, alerter);
@@ -528,6 +758,13 @@ export function createGroupchatSal(options = {}) {
         bodyLength: trimmedBody.length,
         clientNonceHash: clientNonceHash(clientNonce),
       });
+      if (retentionDays !== null) {
+        const cutoffTs = computeCutoffTs(nowIso, retentionDays);
+        const pruneTask = maybePrune(roomId, retentionDays, cutoffTs, context);
+        if (pruneTask) {
+          await pruneTask;
+        }
+      }
       return result;
     } catch (error) {
       const isRateLimited = error instanceof GroupchatError && error.code === "RATE_LIMITED";
@@ -567,17 +804,30 @@ export function createGroupchatSal(options = {}) {
       logger,
     });
 
-    await ensureRoomExists(context);
+    const room = await ensureRoomExists(context);
     const cursorData = decodeCursor(params.cursor);
     const limit = validateLimit(params.limit);
     const allMessages = await listAllMessages(paths, roomId, logger, alerter);
-    const startIndex = compareByCursor(allMessages, cursorData);
-    const messages = allMessages.slice(startIndex, startIndex + limit);
+    const { retentionDays, source } = resolveRetentionDays(
+      room?.retentionDays ?? null,
+      retentionConfig.defaultRetentionDays ?? null
+    );
+    const retentionEnabled = retentionDays !== null;
+    const cutoffTs = retentionEnabled
+      ? cursorData?.cutoffTs || computeCutoffTs(now(), retentionDays)
+      : null;
+    const visibleMessages = retentionEnabled
+      ? allMessages.filter((msg) => msg.createdAt >= cutoffTs)
+      : allMessages;
+    const truncatedDueToRetention = retentionEnabled && visibleMessages.length < allMessages.length;
+    const startIndex = compareByCursor(visibleMessages, cursorData);
+    const messages = visibleMessages.slice(startIndex, startIndex + limit);
     const nextCursor =
-      startIndex + limit < allMessages.length
+      startIndex + limit < visibleMessages.length
         ? encodeCursor(
-            allMessages[startIndex + limit - 1].createdAt,
-            allMessages[startIndex + limit - 1].id
+            visibleMessages[startIndex + limit - 1].createdAt,
+            visibleMessages[startIndex + limit - 1].id,
+            retentionEnabled ? cutoffTs : null
           )
         : undefined;
 
@@ -586,12 +836,41 @@ export function createGroupchatSal(options = {}) {
     if (context.actorId) {
       readMarker = await loadReadMarker(paths, roomId, context.actorId, logger, alerter);
       if (readMarker) {
-        const markerIndex = allMessages.findIndex((msg) => msg.id === readMarker.lastReadMessageId);
-        unreadCount =
-          markerIndex === -1 ? allMessages.length : allMessages.length - (markerIndex + 1);
+        if (retentionEnabled) {
+          const markerMessage = await loadMessageById(
+            paths,
+            readMarker.lastReadMessageId,
+            logger,
+            alerter
+          );
+          const markerTs = markerMessage?.createdAt || null;
+          const effectiveMarkerTs = clampReadMarkerTs(markerTs, cutoffTs);
+          unreadCount = visibleMessages.filter((msg) => msg.createdAt > effectiveMarkerTs).length;
+        } else {
+          const markerIndex = allMessages.findIndex(
+            (msg) => msg.id === readMarker.lastReadMessageId
+          );
+          unreadCount =
+            markerIndex === -1 ? allMessages.length : allMessages.length - (markerIndex + 1);
+        }
       } else {
-        unreadCount = allMessages.length;
+        unreadCount = visibleMessages.length;
       }
+    }
+
+    const retention = {
+      enabled: retentionEnabled,
+      retentionDays: retentionEnabled ? retentionDays : null,
+      cutoffTs: retentionEnabled ? cutoffTs : null,
+      source: retentionEnabled ? source : null,
+    };
+    const truncated = { dueToRetention: Boolean(truncatedDueToRetention) };
+
+    const pruneTask = retentionEnabled
+      ? maybePrune(roomId, retentionDays, cutoffTs, context)
+      : null;
+    if (pruneTask) {
+      await pruneTask;
     }
 
     return {
@@ -601,6 +880,8 @@ export function createGroupchatSal(options = {}) {
         ? { lastReadMessageId: readMarker.lastReadMessageId, lastReadAt: readMarker.lastReadAt }
         : undefined,
       unreadCount,
+      retention,
+      truncated,
     };
   }
 

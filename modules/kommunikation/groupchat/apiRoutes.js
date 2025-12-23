@@ -107,6 +107,8 @@ export function createGroupchatApiHandlers(options = {}) {
         messages: result.messages,
         nextCursor: result.nextCursor,
         unreadCount: result.unreadCount,
+        retention: result.retention,
+        truncated: result.truncated,
       });
     } catch (error) {
       const mapped = mapError(error);
