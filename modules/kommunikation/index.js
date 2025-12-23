@@ -349,6 +349,22 @@ async function renderChatDetail(host, actor) {
   banner.hidden = true;
   host.appendChild(banner);
 
+  const retentionNoticeFragment = createNotice("", { variant: "info", role: "status" });
+  const retentionNotice = retentionNoticeFragment.firstElementChild;
+  if (retentionNotice) {
+    retentionNotice.classList.add("kommunikation-chat-retention");
+    retentionNotice.hidden = true;
+    host.appendChild(retentionNoticeFragment);
+  }
+
+  const truncationNoticeFragment = createNotice("", { variant: "warn", role: "status" });
+  const truncationNotice = truncationNoticeFragment.firstElementChild;
+  if (truncationNotice) {
+    truncationNotice.classList.add("kommunikation-chat-retention");
+    truncationNotice.hidden = true;
+    host.appendChild(truncationNoticeFragment);
+  }
+
   const list = document.createElement("div");
   list.className = "kommunikation-chat-messages";
   host.appendChild(list);
@@ -366,6 +382,8 @@ async function renderChatDetail(host, actor) {
 
   async function loadMessages() {
     banner.hidden = true;
+    if (retentionNotice) retentionNotice.hidden = true;
+    if (truncationNotice) truncationNotice.hidden = true;
     list.innerHTML = "";
     chatState.isLoading = true;
     try {
@@ -373,6 +391,21 @@ async function renderChatDetail(host, actor) {
       chatState.messages = data.messages || [];
       chatState.nextCursor = data.nextCursor || null;
       chatState.unreadCount = data.unreadCount || 0;
+      if (
+        retentionNotice &&
+        data.retention?.enabled &&
+        Number.isInteger(data.retention.retentionDays)
+      ) {
+        const days = data.retention.retentionDays;
+        retentionNotice.querySelector(".ui-notice__content").textContent =
+          `Aufbewahrung: Nachrichten werden nach ${days} Tagen automatisch gelöscht.`;
+        retentionNotice.hidden = false;
+      }
+      if (truncationNotice && data.truncated?.dueToRetention) {
+        truncationNotice.querySelector(".ui-notice__content").textContent =
+          "Ältere Nachrichten sind aufgrund der Aufbewahrungsfrist nicht mehr verfügbar.";
+        truncationNotice.hidden = false;
+      }
       renderMessages(list, chatState.messages, handleRetry);
       await markRead(chatState.messages);
     } catch (error) {

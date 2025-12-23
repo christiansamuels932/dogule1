@@ -1,15 +1,15 @@
-# Migration & Integrity Tooling Plan (Station 52)
+# Migration & Integrity Tooling Plan (Stations 53–56)
 
 ## 1. Purpose & Scope
 
-Canonical contract for mock→real migration (v0→v1) and integrity tooling. This plan cannot override `DOGULE1_SYSTEM_BASELINE_V2.md`; on conflict, baseline wins. Governs implementation for Stations 53–56 (technical sequence), while governance currently assigns those numbers to auth/alert work — a governance update is required before execution. Planning only; no live storage manipulation.
+Canonical contract for mock→real migration (v0→v1) and integrity tooling. This plan cannot override `DOGULE1_SYSTEM_BASELINE_V2.md`; on conflict, baseline wins. Governs implementation for Stations 53–56 (technical sequence). Planning only; no live storage manipulation.
 
 ## 2. Sources of Truth & Inputs
 
 - `DOGULE1_SYSTEM_BASELINE_V2.md` — schemas, invariants, ID rules, PII classification, atomicity, checksums, mock→real mapping.
 - `status.md` — current station context, environment caveats, logging conventions.
-- `DOGULE1_GOVERNANCE.md` — gating, conflicts, station naming; must be updated before implementing this sequence.
-- `DOGULE1_MIGRATION_PROTOCOL.md` — (external input if present) chat/project migration protocol; keep separate from storage migration. If missing, treat as TBD reference.
+- `DOGULE1_GOVERNANCE.md` — gating, conflicts, station naming.
+- `DOGULE1_PROTOCOL.md` + `agents.md` — agent behavior and role contract (execution rules only).
 - `Master-II-Path.md` — E/F roadmap context.
 - Rule: this plan adds operational detail only; baseline remains the source of truth.
 

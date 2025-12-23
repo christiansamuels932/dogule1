@@ -156,6 +156,34 @@ actions:
     audit: always
     alerts: denied_action
 
+  - id: kommunikation.groupchat.retention.prune
+    module: kommunikation
+    description: Retention pruning for groupchat messages
+    roles:
+      admin: denied
+      staff: denied
+      trainer: denied
+      system: allowed
+      unauthenticated: denied
+    preconditions:
+      - System job only (system:retention) with retention enabled.
+    audit: always
+    alerts: denied_action
+
+  - id: kommunikation.groupchat.retention.prune.noop
+    module: kommunikation
+    description: Retention pruning noop event
+    roles:
+      admin: denied
+      staff: denied
+      trainer: denied
+      system: allowed
+      unauthenticated: denied
+    preconditions:
+      - System job only (system:retention) with retention enabled or prune disabled.
+    audit: always
+    alerts: denied_action
+
   - id: kommunikation.infochannel.publish_notice
     module: kommunikation
     description: Publish infochannel/system notice

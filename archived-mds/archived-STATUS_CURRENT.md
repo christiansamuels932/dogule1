@@ -1,4 +1,6 @@
-# STATUS — Dogule1 (Canonical)
+# STATUS — Dogule1 (Historical Snapshot)
+
+NOTE: This file is historical reference only. The authoritative status log is `status.md`.
 
 ## Current State
 
@@ -7,6 +9,7 @@
 - Legacy data is unfiltered/unsorted and will be used later for cleanup/mapping. Repo-doc gap: `agents.md` is still missing.
 
 ### Captured Files (name | bytes | sha256)
+
 ```text
 raw/.directory | 34 bytes | 1ea26f5c88c67a94ae3c512502c9150a1c8a198fc92219fba0d8f65ce18d98df
 raw/Kursbestätigung.pdf | 316649 bytes | a508ece676238d8829cbb0e33d5d7d14447bd8a5efba41dc43bbaa2908dabebc

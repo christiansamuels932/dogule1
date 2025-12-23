@@ -2,7 +2,11 @@
 
 Purpose: single source for roadmap control, gating, owners, and station readiness rules for Stations 50–74.
 
+Normative scope: this file defines authority, invariants, and roadmap control. PROTOCOL carries agent behavior; MASTER carries station definitions; STATUS logs progress. Hierarchy: GOVERNANCE > PROTOCOL > MASTER > STATUS.
+
 ## Station List and Validation
+
+Suffix legend: `R` = lifecycle/retention, `K` = Kommunikation, `E` = Email/Outlook line.
 
 Validated order: yes — 2025-12-08
 
@@ -24,15 +28,18 @@ Validated order: yes — 2025-12-08
 | 63      | Storage Layer Implementation (Core Entities)         | Real storage + migration + backup/restore dry run       |
 | 64      | Kommunikation Module Skeleton (Read-Only)            | Nav/state machine/access controls                       |
 | 65      | Groupchat Core                                       | Send/read markers/notifications/retry                   |
-| 66      | Infochannel with Confirmation Flow                   | Admin-only posts/confirmations/escalations              |
-| 67      | Email Integration MVP (Send-Only)                    | Compose→send/status/audit/abuse guardrails              |
-| 68      | Outlook Auth & Contact Mapping                       | Token lifecycle/mapping/conflicts/shutdown              |
-| 69      | Outlook → Kalender Import (Preview-First)            | Mapping/duplicate detection/preview/limits/SSRF defense |
-| 70      | Storage & Security Hardening Pass                    | Drills/failure injection/rate-limit review              |
+| 66R     | Groupchat Retention Enforcement                      | Retention/TTL/prune/audit/alerts                        |
+| 67K     | Infochannel with Confirmation Flow                   | Admin-only posts/confirmations/escalations              |
+| 67E     | Email Integration MVP (Send-Only)                    | Compose→send/status/audit/abuse guardrails              |
+| 68E     | Outlook Auth & Contact Mapping                       | Token lifecycle/mapping/conflicts/shutdown              |
+| 69E     | Outlook → Kalender Import (Preview-First)            | Mapping/duplicate detection/preview/limits/SSRF defense |
+| 70E     | Storage & Security Hardening Pass                    | Drills/failure injection/rate-limit review              |
 | 71      | UI Design Tokens & Layout Application (Core Screens) | Tokens/layout/a11y/perf/localization                    |
 | 72      | Mobile Readiness (Kommunikation + Dashboard)         | Breakpoints/bottom-nav/offline-read                     |
 | 73      | Rollout Prep & Playbooks                             | Incident/playbooks/kill switches/risk review            |
 | 74      | Public Rollout (V1)                                  | Staged launch/telemetry/support/rollback                |
+
+Stations 61–63 are foundational and closed; downstream stations depend on them but must not redefine their rules.
 
 ## Gating Rules
 
@@ -57,8 +64,8 @@ Validated order: yes — 2025-12-08
 
 ## STATUS.md Entry Standard
 
-- Fields: Date; Owner (Planner); Branch; PR link; Summary; Notes/Issues; Exit confirmation.
-- Tests: list commands run or `Tests: none` if N/A.
+- Follow the template defined at the top of `status.md` (Title, Kontext, Ergebnis, Tests, Issues, Notizen).
+- Tests must list commands and outcomes; use `Tests: none` only if no tests exist.
 
 ## How to Update Governance
 

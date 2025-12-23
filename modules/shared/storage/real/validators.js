@@ -251,6 +251,14 @@ export function validateGroupchatRoom(record) {
   assertString(record.id, "kommunikation_groupchat_room.id");
   assertString(record.title, "kommunikation_groupchat_room.title");
   assertNullOrNumber(record.retentionDays, "kommunikation_groupchat_room.retentionDays");
+  if (record.retentionDays !== null) {
+    if (!Number.isInteger(record.retentionDays) || record.retentionDays < 1) {
+      throw new StorageError(
+        STORAGE_ERROR_CODES.SCHEMA_VALIDATION_FAILED,
+        "kommunikation_groupchat_room.retentionDays must be an integer >= 1 or null"
+      );
+    }
+  }
   assertString(record.createdAt, "kommunikation_groupchat_room.createdAt");
   assertString(record.updatedAt, "kommunikation_groupchat_room.updatedAt");
   return record;
