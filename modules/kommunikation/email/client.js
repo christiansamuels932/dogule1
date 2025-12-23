@@ -1,5 +1,5 @@
 /* global fetch, URLSearchParams, window */
-const BASE = "/api/kommunikation/groupchat";
+const BASE = "/api/kommunikation/email";
 
 function buildError(code, message, details) {
   const err = new Error(message || code);
@@ -42,33 +42,26 @@ async function doFetch(path, options = {}) {
         Number(res.headers.get("retry-after") || json?.retryAfterSeconds || 0) || 1,
     });
   }
+  if (res.status === 503) throw buildError("SEND_DISABLED", "send_disabled");
   if (res.status === 403) throw buildError("DENIED", "denied");
+  if (res.status === 404) throw buildError("NOT_FOUND", "not_found");
   if (res.status === 400) throw buildError("INVALID_INPUT", json?.message || "invalid_input");
   throw buildError("SERVER_ERROR", json?.message || "server_error");
 }
 
-function pickBody(body) {
-  if (!body) return null;
-  return typeof body === "string" ? body : body.body || null;
-}
-
-export async function listMessages({ limit, cursor } = {}) {
+export async function listEmails({ limit, cursor } = {}) {
   const query = new URLSearchParams();
   if (limit) query.set("limit", String(limit));
   if (cursor) query.set("cursor", cursor);
-  const data = await doFetch(`/messages?${query.toString()}`, { method: "GET" });
-  return data;
+  const path = query.toString() ? `/emails?${query.toString()}` : "/emails";
+  return doFetch(path, { method: "GET" });
 }
 
-export async function sendMessage({ body, clientNonce }) {
-  const trimmed = pickBody(body);
-  return doFetch("/messages", { method: "POST", body: { body: trimmed, clientNonce } });
+export async function sendEmail({ to, cc, bcc, subject, body } = {}) {
+  return doFetch("/emails", { method: "POST", body: { to, cc, bcc, subject, body } });
 }
 
-export async function getReadMarker() {
-  return doFetch("/read-marker", { method: "GET" });
-}
-
-export async function setReadMarker({ messageId }) {
-  return doFetch("/read-marker", { method: "POST", body: { messageId } });
+export async function getEmail({ id }) {
+  if (!id) throw buildError("INVALID_INPUT", "email id required");
+  return doFetch(`/emails/${id}`, { method: "GET" });
 }

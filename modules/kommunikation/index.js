@@ -1,7 +1,9 @@
 /* globals document, window, console, crypto */
 import { STORAGE_ERROR_CODES, StorageError } from "../shared/storage/errors.js";
-import { createNotice, createEmptyState } from "../shared/components/components.js";
+import { createNotice, createEmptyState, createFormRow } from "../shared/components/components.js";
 import * as groupchatClient from "./groupchat/client.js";
+import * as infochannelClient from "./infochannel/client.js";
+import * as emailClient from "./email/client.js";
 
 const TAB_CONFIG = [
   { id: "chats", label: "Chats", actionId: "kommunikation.chat.view" },
@@ -114,6 +116,10 @@ async function renderTabContent({ host, tab, detailId, actor }) {
   try {
     if (tab === "chats") {
       await renderChats(host, detailId, actor);
+    } else if (tab === "infochannel") {
+      await renderInfochannel(host, detailId, actor);
+    } else if (tab === "emails") {
+      await renderEmails(host, detailId, actor);
     } else {
       const items = await loadTabData(tab);
       if (!items || items.length === 0) {
@@ -268,6 +274,563 @@ async function renderChats(host, detailId, actor) {
     return;
   }
   await renderChatDetail(host, actor);
+}
+
+async function renderInfochannel(host, detailId, actor) {
+  try {
+    await probeStorageAvailability("infochannel");
+  } catch (error) {
+    renderOffline(host);
+    throw error;
+  }
+
+  if (!detailId) {
+    await renderInfochannelList(host, actor);
+    return;
+  }
+  await renderInfochannelDetail(host, detailId, actor);
+}
+
+async function renderInfochannelList(host, actor) {
+  host.innerHTML = "";
+  const wrapper = document.createElement("div");
+  wrapper.className = "kommunikation-infochannel";
+
+  const list = document.createElement("div");
+  list.className = "kommunikation-list";
+
+  if (isAuthorized("kommunikation.infochannel.publish", actor)) {
+    const compose = document.createElement("form");
+    compose.className = "infochannel-compose";
+    const titleRow = createFormRow({
+      id: "infochannel-title",
+      label: "Titel",
+      required: true,
+      placeholder: "Kurze Zusammenfassung",
+    });
+    const bodyRow = createFormRow({
+      id: "infochannel-body",
+      label: "Nachricht",
+      control: "textarea",
+      required: true,
+      placeholder: "Nachricht an alle Trainerinnen und Trainer",
+    });
+    const slaRow = createFormRow({
+      id: "infochannel-sla",
+      label: "SLA (Stunden)",
+      type: "number",
+      value: "48",
+      describedByText: "Frist für Bestätigung der Meldung.",
+    });
+    const bodyControl = bodyRow.querySelector("textarea");
+    if (bodyControl) bodyControl.rows = 5;
+    const slaControl = slaRow.querySelector("input");
+    if (slaControl) {
+      slaControl.min = "1";
+      slaControl.step = "1";
+    }
+    const actions = document.createElement("div");
+    actions.className = "infochannel-compose__actions";
+    const status = document.createElement("span");
+    status.className = "infochannel-compose__status";
+    const submit = document.createElement("button");
+    submit.type = "submit";
+    submit.className = "ui-btn";
+    submit.textContent = "Meldung veröffentlichen";
+    actions.appendChild(status);
+    actions.appendChild(submit);
+    compose.appendChild(titleRow);
+    compose.appendChild(bodyRow);
+    compose.appendChild(slaRow);
+    compose.appendChild(actions);
+    compose.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      status.textContent = "Veröffentlichen...";
+      submit.disabled = true;
+      const title = compose.querySelector("#infochannel-title")?.value || "";
+      const body = compose.querySelector("#infochannel-body")?.value || "";
+      const slaHours = compose.querySelector("#infochannel-sla")?.value || "";
+      try {
+        await infochannelClient.createNotice({ title, body, slaHours });
+        status.textContent = "Meldung veröffentlicht.";
+        compose.reset();
+        const slaInput = compose.querySelector("#infochannel-sla");
+        if (slaInput) slaInput.value = "48";
+        await renderInfochannelList(host, actor);
+      } catch (error) {
+        if (error.code === "RATE_LIMITED") {
+          status.textContent = "Zu viele Meldungen – bitte warten.";
+        } else if (error.code === "INVALID_INPUT") {
+          status.textContent = "Bitte Titel und Nachricht prüfen.";
+        } else if (isOffline(error)) {
+          status.textContent = "Offline. Veröffentlichung fehlgeschlagen.";
+        } else {
+          status.textContent = "Veröffentlichen fehlgeschlagen.";
+        }
+      } finally {
+        submit.disabled = false;
+      }
+    });
+    wrapper.appendChild(compose);
+  }
+
+  list.appendChild(createNotice("Infochannel wird geladen...", { variant: "info" }));
+  wrapper.appendChild(list);
+  host.appendChild(wrapper);
+
+  try {
+    const data = await infochannelClient.listNotices();
+    list.innerHTML = "";
+    const notices = data?.notices || [];
+    if (!notices.length) {
+      list.appendChild(createEmptyState("Leer", "Keine Infochannel-Meldungen vorhanden."));
+      return;
+    }
+    notices.forEach((notice) => {
+      const card = document.createElement("article");
+      card.className = "kommunikation-card";
+      const title = document.createElement("h3");
+      title.className = "kommunikation-card__title";
+      title.textContent = notice.title || "Infochannel";
+      const snippet = document.createElement("p");
+      snippet.className = "kommunikation-card__snippet";
+      snippet.textContent = buildSnippet(notice.body);
+      const meta = document.createElement("div");
+      meta.className = "kommunikation-card__meta";
+      const published = document.createElement("time");
+      published.dateTime = notice.createdAt || "";
+      published.textContent = notice.createdAt ? formatTime(notice.createdAt) : "";
+      const status = document.createElement("span");
+      status.className = "kommunikation-card__status";
+      status.textContent = buildInfochannelStatusText(notice, actor);
+      if (notice.viewerOverdue || notice.overdueCount > 0) {
+        status.classList.add("kommunikation-card__status--warn");
+      } else if (notice.viewerConfirmation?.late || notice.lateCount > 0) {
+        status.classList.add("kommunikation-card__status--late");
+      }
+      meta.appendChild(published);
+      meta.appendChild(status);
+      card.appendChild(title);
+      card.appendChild(snippet);
+      card.appendChild(meta);
+      card.setAttribute("tabindex", "0");
+      card.addEventListener("click", () => {
+        window.location.hash = `#/kommunikation/infochannel/${notice.id}`;
+      });
+      card.addEventListener("keypress", (evt) => {
+        if (evt.key === "Enter" || evt.key === " ") {
+          evt.preventDefault();
+          window.location.hash = `#/kommunikation/infochannel/${notice.id}`;
+        }
+      });
+      list.appendChild(card);
+    });
+  } catch (error) {
+    list.innerHTML = "";
+    list.appendChild(
+      createNotice(isOffline(error) ? "Offline. Laden fehlgeschlagen." : "Fehler beim Laden.", {
+        variant: "warn",
+        role: "alert",
+      })
+    );
+  }
+}
+
+async function renderInfochannelDetail(host, noticeId, actor) {
+  host.innerHTML = "";
+  const header = document.createElement("div");
+  header.className = "kommunikation-chat-header";
+  const back = document.createElement("button");
+  back.type = "button";
+  back.className = "kommunikation-back";
+  back.textContent = "Zurück";
+  back.addEventListener("click", () => {
+    window.location.hash = "#/kommunikation/infochannel";
+  });
+  const title = document.createElement("h2");
+  title.textContent = "Infochannel";
+  header.appendChild(back);
+  header.appendChild(title);
+  host.appendChild(header);
+
+  const content = document.createElement("div");
+  content.className = "kommunikation-detail infochannel-detail";
+  content.appendChild(createNotice("Meldung wird geladen...", { variant: "info" }));
+  host.appendChild(content);
+
+  try {
+    const detail = await infochannelClient.getNotice({ id: noticeId });
+    const notice = detail.notice || {};
+    content.innerHTML = "";
+
+    const headline = document.createElement("h3");
+    headline.textContent = notice.title || "Infochannel";
+    const body = document.createElement("p");
+    body.className = "infochannel-detail__body";
+    body.textContent = notice.body || "";
+    const meta = document.createElement("div");
+    meta.className = "infochannel-detail__meta";
+    const published = document.createElement("span");
+    published.textContent = notice.createdAt
+      ? `Veröffentlicht: ${formatTime(notice.createdAt)}`
+      : "Veröffentlicht";
+    const due = document.createElement("span");
+    due.textContent = notice.slaDueAt ? `SLA bis: ${formatTime(notice.slaDueAt)}` : "SLA";
+    meta.appendChild(published);
+    meta.appendChild(due);
+
+    const summary = document.createElement("div");
+    summary.className = "infochannel-detail__summary";
+    summary.textContent = `Bestätigt ${notice.confirmedCount || 0}/${notice.targetCount || 0}`;
+
+    content.appendChild(headline);
+    content.appendChild(body);
+    content.appendChild(meta);
+    content.appendChild(summary);
+
+    if (actor.role === "trainer") {
+      const confirmWrap = document.createElement("div");
+      confirmWrap.className = "infochannel-confirm";
+      const status = document.createElement("span");
+      status.className = "infochannel-confirm__status";
+      const confirmation = detail.confirmation;
+      if (confirmation) {
+        status.textContent = confirmation.late
+          ? `Bestätigt (verspätet) · ${formatTime(confirmation.confirmedAt)}`
+          : `Bestätigt · ${formatTime(confirmation.confirmedAt)}`;
+      } else if (detail.overdue) {
+        status.textContent = "SLA überschritten – Bestätigung ausstehend.";
+      } else {
+        status.textContent = "Bestätigung ausstehend.";
+      }
+      confirmWrap.appendChild(status);
+
+      if (!confirmation) {
+        const confirmBtn = document.createElement("button");
+        confirmBtn.type = "button";
+        confirmBtn.className = "ui-btn";
+        confirmBtn.textContent = "Jetzt bestätigen";
+        confirmBtn.addEventListener("click", async () => {
+          confirmBtn.disabled = true;
+          status.textContent = "Bestätige...";
+          try {
+            const result = await infochannelClient.confirmNotice({ id: noticeId });
+            const confirmedAt = result?.confirmation?.confirmedAt || new Date().toISOString();
+            const late =
+              notice.slaDueAt &&
+              new Date(confirmedAt).getTime() > new Date(notice.slaDueAt).getTime();
+            status.textContent = late
+              ? `Bestätigt (verspätet) · ${formatTime(confirmedAt)}`
+              : `Bestätigt · ${formatTime(confirmedAt)}`;
+            confirmBtn.remove();
+          } catch (error) {
+            if (error.code === "RATE_LIMITED") {
+              status.textContent = "Zu viele Bestätigungen – bitte warten.";
+            } else if (error.code === "DENIED") {
+              status.textContent = "Keine Berechtigung zum Bestätigen.";
+            } else if (isOffline(error)) {
+              status.textContent = "Offline. Bestätigung fehlgeschlagen.";
+            } else {
+              status.textContent = "Bestätigung fehlgeschlagen.";
+            }
+            confirmBtn.disabled = false;
+          }
+        });
+        confirmWrap.appendChild(confirmBtn);
+      }
+
+      content.appendChild(confirmWrap);
+    }
+
+    if (actor.role === "admin" && Array.isArray(detail.targets)) {
+      const targetsWrap = document.createElement("div");
+      targetsWrap.className = "infochannel-targets";
+      const heading = document.createElement("h4");
+      heading.textContent = "Bestätigungen";
+      const list = document.createElement("ul");
+      list.className = "infochannel-targets__list";
+      detail.targets.forEach((entry) => {
+        const item = document.createElement("li");
+        item.className = "infochannel-targets__item";
+        const name = document.createElement("span");
+        name.textContent = entry.trainerName || entry.trainerId;
+        const status = document.createElement("span");
+        status.className = "infochannel-targets__status";
+        if (entry.status === "confirmed") {
+          status.textContent = entry.late
+            ? `Bestätigt (verspätet) · ${formatTime(entry.confirmedAt)}`
+            : `Bestätigt · ${formatTime(entry.confirmedAt)}`;
+        } else if (entry.status === "overdue") {
+          status.textContent = "SLA überschritten";
+          status.classList.add("infochannel-targets__status--warn");
+        } else {
+          status.textContent = "Ausstehend";
+        }
+        item.appendChild(name);
+        item.appendChild(status);
+        list.appendChild(item);
+      });
+      targetsWrap.appendChild(heading);
+      targetsWrap.appendChild(list);
+      content.appendChild(targetsWrap);
+    }
+  } catch (error) {
+    content.innerHTML = "";
+    content.appendChild(
+      createNotice(
+        error.code === "NOT_FOUND"
+          ? "Meldung nicht gefunden."
+          : isOffline(error)
+            ? "Offline. Laden fehlgeschlagen."
+            : "Fehler beim Laden der Meldung.",
+        { variant: "warn", role: "alert" }
+      )
+    );
+  }
+}
+
+async function renderEmails(host, detailId, actor) {
+  try {
+    await probeStorageAvailability("emails");
+  } catch (error) {
+    renderOffline(host);
+    throw error;
+  }
+
+  if (!detailId) {
+    await renderEmailList(host, actor);
+    return;
+  }
+  await renderEmailDetail(host, detailId, actor);
+}
+
+async function renderEmailList(host, actor) {
+  host.innerHTML = "";
+  const wrapper = document.createElement("div");
+  wrapper.className = "kommunikation-emails";
+
+  const list = document.createElement("div");
+  list.className = "kommunikation-list";
+
+  if (isAuthorized("kommunikation.email.send_customer", actor)) {
+    const compose = document.createElement("form");
+    compose.className = "email-compose";
+    const toRow = createFormRow({
+      id: "email-to",
+      label: "An",
+      required: true,
+      placeholder: "kunde@example.com",
+    });
+    const ccRow = createFormRow({
+      id: "email-cc",
+      label: "CC (optional)",
+      placeholder: "cc@example.com",
+    });
+    const bccRow = createFormRow({
+      id: "email-bcc",
+      label: "BCC (optional)",
+      placeholder: "bcc@example.com",
+    });
+    const subjectRow = createFormRow({
+      id: "email-subject",
+      label: "Betreff",
+      required: true,
+      placeholder: "Betreff der E-Mail",
+    });
+    const bodyRow = createFormRow({
+      id: "email-body",
+      label: "Nachricht",
+      control: "textarea",
+      required: true,
+      placeholder: "Nachricht (Plain Text)",
+    });
+    const bodyControl = bodyRow.querySelector("textarea");
+    if (bodyControl) bodyControl.rows = 6;
+
+    const actions = document.createElement("div");
+    actions.className = "email-compose__actions";
+    const status = document.createElement("span");
+    status.className = "email-compose__status";
+    const submit = document.createElement("button");
+    submit.type = "submit";
+    submit.className = "ui-btn";
+    submit.textContent = "E-Mail senden";
+    actions.appendChild(status);
+    actions.appendChild(submit);
+
+    compose.appendChild(toRow);
+    if (actor.role === "admin") {
+      compose.appendChild(ccRow);
+      compose.appendChild(bccRow);
+    }
+    compose.appendChild(subjectRow);
+    compose.appendChild(bodyRow);
+    compose.appendChild(actions);
+    compose.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      status.textContent = "Sende...";
+      submit.disabled = true;
+      const to = compose.querySelector("#email-to")?.value || "";
+      const cc = actor.role === "admin" ? compose.querySelector("#email-cc")?.value || "" : "";
+      const bcc = actor.role === "admin" ? compose.querySelector("#email-bcc")?.value || "" : "";
+      const subject = compose.querySelector("#email-subject")?.value || "";
+      const body = compose.querySelector("#email-body")?.value || "";
+      try {
+        await emailClient.sendEmail({ to, cc, bcc, subject, body });
+        status.textContent = "E-Mail gesendet.";
+        compose.reset();
+        await renderEmailList(host, actor);
+      } catch (error) {
+        if (error.code === "RATE_LIMITED") {
+          status.textContent = "Zu viele E-Mails – bitte warten.";
+        } else if (error.code === "SEND_DISABLED") {
+          status.textContent = "Versand ist deaktiviert.";
+        } else if (error.code === "INVALID_INPUT") {
+          status.textContent = "Bitte Eingaben prüfen.";
+        } else if (error.code === "DENIED") {
+          status.textContent = "Keine Berechtigung zum Senden.";
+        } else if (isOffline(error)) {
+          status.textContent = "Offline. Versand fehlgeschlagen.";
+        } else {
+          status.textContent = "Versand fehlgeschlagen.";
+        }
+      } finally {
+        submit.disabled = false;
+      }
+    });
+
+    wrapper.appendChild(compose);
+  }
+
+  list.appendChild(createNotice("E-Mails werden geladen...", { variant: "info" }));
+  wrapper.appendChild(list);
+  host.appendChild(wrapper);
+
+  try {
+    const data = await emailClient.listEmails();
+    list.innerHTML = "";
+    const emails = data?.emails || [];
+    if (!emails.length) {
+      list.appendChild(createEmptyState("Leer", "Keine E-Mails vorhanden."));
+      return;
+    }
+    emails.forEach((email) => {
+      const card = document.createElement("article");
+      card.className = "kommunikation-card";
+      const title = document.createElement("h3");
+      title.className = "kommunikation-card__title";
+      title.textContent = email.subject || "E-Mail";
+      const snippet = document.createElement("p");
+      snippet.className = "kommunikation-card__snippet";
+      snippet.textContent = (email.to || []).join(", ") || "Empfänger unbekannt";
+      const meta = document.createElement("div");
+      meta.className = "kommunikation-card__meta";
+      const sentAt = document.createElement("time");
+      sentAt.dateTime = email.createdAt || "";
+      sentAt.textContent = email.createdAt ? formatTime(email.createdAt) : "";
+      const status = document.createElement("span");
+      status.className = "kommunikation-card__status";
+      status.textContent = formatEmailStatus(email.status);
+      if (email.status === "failed") {
+        status.classList.add("kommunikation-card__status--warn");
+      }
+      meta.appendChild(sentAt);
+      meta.appendChild(status);
+      card.appendChild(title);
+      card.appendChild(snippet);
+      card.appendChild(meta);
+      card.setAttribute("tabindex", "0");
+      card.addEventListener("click", () => {
+        window.location.hash = `#/kommunikation/emails/${email.id}`;
+      });
+      card.addEventListener("keypress", (evt) => {
+        if (evt.key === "Enter" || evt.key === " ") {
+          evt.preventDefault();
+          window.location.hash = `#/kommunikation/emails/${email.id}`;
+        }
+      });
+      list.appendChild(card);
+    });
+  } catch (error) {
+    list.innerHTML = "";
+    list.appendChild(
+      createNotice(isOffline(error) ? "Offline. Laden fehlgeschlagen." : "Fehler beim Laden.", {
+        variant: "warn",
+        role: "alert",
+      })
+    );
+  }
+}
+
+async function renderEmailDetail(host, emailId) {
+  host.innerHTML = "";
+  const header = document.createElement("div");
+  header.className = "kommunikation-chat-header";
+  const back = document.createElement("button");
+  back.type = "button";
+  back.className = "kommunikation-back";
+  back.textContent = "Zurück";
+  back.addEventListener("click", () => {
+    window.location.hash = "#/kommunikation/emails";
+  });
+  const title = document.createElement("h2");
+  title.textContent = "E-Mail";
+  header.appendChild(back);
+  header.appendChild(title);
+  host.appendChild(header);
+
+  const content = document.createElement("div");
+  content.className = "kommunikation-detail email-detail";
+  content.appendChild(createNotice("E-Mail wird geladen...", { variant: "info" }));
+  host.appendChild(content);
+
+  try {
+    const result = await emailClient.getEmail({ id: emailId });
+    const email = result.email || {};
+    content.innerHTML = "";
+    const subject = document.createElement("h3");
+    subject.textContent = email.subject || "E-Mail";
+    const meta = document.createElement("div");
+    meta.className = "email-detail__meta";
+    const to = document.createElement("div");
+    to.textContent = `An: ${(email.to || []).join(", ") || "-"}`;
+    const cc = document.createElement("div");
+    cc.textContent = `CC: ${(email.cc || []).join(", ") || "-"}`;
+    const bcc = document.createElement("div");
+    bcc.textContent = `BCC: ${(email.bcc || []).join(", ") || "-"}`;
+    const status = document.createElement("div");
+    status.textContent = `Status: ${formatEmailStatus(email.status)}`;
+    const timestamps = document.createElement("div");
+    timestamps.textContent = email.createdAt ? `Erstellt: ${formatTime(email.createdAt)}` : "";
+    const error = document.createElement("div");
+    error.textContent = email.errorMessage ? `Fehler: ${email.errorMessage}` : "";
+    meta.appendChild(to);
+    meta.appendChild(cc);
+    meta.appendChild(bcc);
+    meta.appendChild(status);
+    if (timestamps.textContent) meta.appendChild(timestamps);
+    if (error.textContent) meta.appendChild(error);
+
+    const body = document.createElement("pre");
+    body.className = "email-detail__body";
+    body.textContent = email.body || "";
+
+    content.appendChild(subject);
+    content.appendChild(meta);
+    content.appendChild(body);
+  } catch (error) {
+    content.innerHTML = "";
+    content.appendChild(
+      createNotice(
+        error.code === "NOT_FOUND"
+          ? "E-Mail nicht gefunden."
+          : isOffline(error)
+            ? "Offline. Laden fehlgeschlagen."
+            : "Fehler beim Laden der E-Mail.",
+        { variant: "warn", role: "alert" }
+      )
+    );
+  }
 }
 
 async function renderChatList(host) {
@@ -588,6 +1151,39 @@ function formatTime(value) {
   const date = new Date(value);
   if (isNaN(date.getTime())) return "";
   return date.toLocaleString("de-DE");
+}
+
+function buildSnippet(text, maxLength = 120) {
+  const raw = (text || "").trim();
+  if (raw.length <= maxLength) return raw;
+  return `${raw.slice(0, maxLength).trim()}...`;
+}
+
+function buildInfochannelStatusText(notice, actor) {
+  if (actor?.role === "trainer") {
+    if (notice.viewerConfirmation) {
+      return notice.viewerConfirmation.late ? "Bestätigt (verspätet)" : "Bestätigt";
+    }
+    return notice.viewerOverdue ? "SLA überschritten" : "Bestätigung ausstehend";
+  }
+  const target = Number(notice.targetCount || 0);
+  const confirmed = Number(notice.confirmedCount || 0);
+  const pending = Number(notice.pendingCount || Math.max(0, target - confirmed));
+  const parts = [`Bestätigt ${confirmed}/${target}`];
+  if (notice.lateCount > 0) {
+    parts.push(`${notice.lateCount} verspätet`);
+  }
+  if (notice.overdueCount > 0 || pending > 0) {
+    parts.push(notice.overdueCount > 0 ? `${notice.overdueCount} überfällig` : `${pending} offen`);
+  }
+  return parts.join(" · ");
+}
+
+function formatEmailStatus(status) {
+  if (status === "sent") return "Gesendet";
+  if (status === "failed") return "Fehlgeschlagen";
+  if (status === "queued") return "In Warteschlange";
+  return status || "Unbekannt";
 }
 
 function compareMessageOrder(a, b) {
