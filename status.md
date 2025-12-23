@@ -15,6 +15,24 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 # - - - - - - - - - - - - - - - - - - - -
 
+# Station 67X — Email Feature Removal
+
+## Kontext
+
+- Branch: `67x`.
+- Scope: remove email feature across Kommunikation (UI, API, storage validators, tests) and delete email/Outlook planning from governance/baseline/DoR documents; retain historical logs.
+
+## Ergebnis (kurz)
+
+- Removed the email module and API wiring, dropped the Kommunikation emails tab, and stripped email storage validation/code paths.
+- Updated governance, master path, DoR, and security baseline to remove email/Outlook stations and rules while keeping logs intact.
+
+## Tests
+
+- Tests not run (not requested).
+
+# - - - - - - - - - - - - - - - - - - - -
+
 # Station 67K — Infochannel with Confirmation Flow
 
 ## Kontext
