@@ -3,12 +3,10 @@ import { STORAGE_ERROR_CODES, StorageError } from "../shared/storage/errors.js";
 import { createNotice, createEmptyState, createFormRow } from "../shared/components/components.js";
 import * as groupchatClient from "./groupchat/client.js";
 import * as infochannelClient from "./infochannel/client.js";
-import * as emailClient from "./email/client.js";
 
 const TAB_CONFIG = [
   { id: "chats", label: "Chats", actionId: "kommunikation.chat.view" },
   { id: "infochannel", label: "Infochannel", actionId: "kommunikation.infochannel.view" },
-  { id: "emails", label: "Emails", actionId: "kommunikation.email.view" },
   { id: "system", label: "System", actionId: "kommunikation.system.view" },
 ];
 
@@ -19,7 +17,6 @@ const PLACEHOLDER_DATA = {
   infochannel: [
     { id: "info-1", title: "Info: Feiertage", snippet: "Betriebsferien nächste Woche." },
   ],
-  emails: [{ id: "mail-1", title: "E-Mail an Kunde", snippet: "Betreff: Terminbestätigung" }],
   system: [{ id: "sys-1", title: "Systemhinweis", snippet: "Kein neuer Versand geplant." }],
 };
 
@@ -118,8 +115,6 @@ async function renderTabContent({ host, tab, detailId, actor }) {
       await renderChats(host, detailId, actor);
     } else if (tab === "infochannel") {
       await renderInfochannel(host, detailId, actor);
-    } else if (tab === "emails") {
-      await renderEmails(host, detailId, actor);
     } else {
       const items = await loadTabData(tab);
       if (!items || items.length === 0) {
@@ -191,9 +186,7 @@ function renderEmpty(host, tab) {
       ? "Keine Chats vorhanden."
       : tab === "infochannel"
         ? "Keine Infochannel-Meldungen vorhanden."
-        : tab === "emails"
-          ? "Keine Emails vorhanden."
-          : "Keine Systemmeldungen vorhanden.";
+        : "Keine Systemmeldungen vorhanden.";
   host.appendChild(createEmptyState("Leer", hint));
 }
 
@@ -589,250 +582,6 @@ async function renderInfochannelDetail(host, noticeId, actor) {
   }
 }
 
-async function renderEmails(host, detailId, actor) {
-  try {
-    await probeStorageAvailability("emails");
-  } catch (error) {
-    renderOffline(host);
-    throw error;
-  }
-
-  if (!detailId) {
-    await renderEmailList(host, actor);
-    return;
-  }
-  await renderEmailDetail(host, detailId, actor);
-}
-
-async function renderEmailList(host, actor) {
-  host.innerHTML = "";
-  const wrapper = document.createElement("div");
-  wrapper.className = "kommunikation-emails";
-
-  const list = document.createElement("div");
-  list.className = "kommunikation-list";
-
-  if (isAuthorized("kommunikation.email.send_customer", actor)) {
-    const compose = document.createElement("form");
-    compose.className = "email-compose";
-    const toRow = createFormRow({
-      id: "email-to",
-      label: "An",
-      required: true,
-      placeholder: "kunde@example.com",
-    });
-    const ccRow = createFormRow({
-      id: "email-cc",
-      label: "CC (optional)",
-      placeholder: "cc@example.com",
-    });
-    const bccRow = createFormRow({
-      id: "email-bcc",
-      label: "BCC (optional)",
-      placeholder: "bcc@example.com",
-    });
-    const subjectRow = createFormRow({
-      id: "email-subject",
-      label: "Betreff",
-      required: true,
-      placeholder: "Betreff der E-Mail",
-    });
-    const bodyRow = createFormRow({
-      id: "email-body",
-      label: "Nachricht",
-      control: "textarea",
-      required: true,
-      placeholder: "Nachricht (Plain Text)",
-    });
-    const bodyControl = bodyRow.querySelector("textarea");
-    if (bodyControl) bodyControl.rows = 6;
-
-    const actions = document.createElement("div");
-    actions.className = "email-compose__actions";
-    const status = document.createElement("span");
-    status.className = "email-compose__status";
-    const submit = document.createElement("button");
-    submit.type = "submit";
-    submit.className = "ui-btn";
-    submit.textContent = "E-Mail senden";
-    actions.appendChild(status);
-    actions.appendChild(submit);
-
-    compose.appendChild(toRow);
-    if (actor.role === "admin") {
-      compose.appendChild(ccRow);
-      compose.appendChild(bccRow);
-    }
-    compose.appendChild(subjectRow);
-    compose.appendChild(bodyRow);
-    compose.appendChild(actions);
-    compose.addEventListener("submit", async (event) => {
-      event.preventDefault();
-      status.textContent = "Sende...";
-      submit.disabled = true;
-      const to = compose.querySelector("#email-to")?.value || "";
-      const cc = actor.role === "admin" ? compose.querySelector("#email-cc")?.value || "" : "";
-      const bcc = actor.role === "admin" ? compose.querySelector("#email-bcc")?.value || "" : "";
-      const subject = compose.querySelector("#email-subject")?.value || "";
-      const body = compose.querySelector("#email-body")?.value || "";
-      try {
-        await emailClient.sendEmail({ to, cc, bcc, subject, body });
-        status.textContent = "E-Mail gesendet.";
-        compose.reset();
-        await renderEmailList(host, actor);
-      } catch (error) {
-        if (error.code === "RATE_LIMITED") {
-          status.textContent = "Zu viele E-Mails – bitte warten.";
-        } else if (error.code === "SEND_DISABLED") {
-          status.textContent = "Versand ist deaktiviert.";
-        } else if (error.code === "INVALID_INPUT") {
-          status.textContent = "Bitte Eingaben prüfen.";
-        } else if (error.code === "DENIED") {
-          status.textContent = "Keine Berechtigung zum Senden.";
-        } else if (isOffline(error)) {
-          status.textContent = "Offline. Versand fehlgeschlagen.";
-        } else {
-          status.textContent = "Versand fehlgeschlagen.";
-        }
-      } finally {
-        submit.disabled = false;
-      }
-    });
-
-    wrapper.appendChild(compose);
-  }
-
-  list.appendChild(createNotice("E-Mails werden geladen...", { variant: "info" }));
-  wrapper.appendChild(list);
-  host.appendChild(wrapper);
-
-  try {
-    const data = await emailClient.listEmails();
-    list.innerHTML = "";
-    const emails = data?.emails || [];
-    if (!emails.length) {
-      list.appendChild(createEmptyState("Leer", "Keine E-Mails vorhanden."));
-      return;
-    }
-    emails.forEach((email) => {
-      const card = document.createElement("article");
-      card.className = "kommunikation-card";
-      const title = document.createElement("h3");
-      title.className = "kommunikation-card__title";
-      title.textContent = email.subject || "E-Mail";
-      const snippet = document.createElement("p");
-      snippet.className = "kommunikation-card__snippet";
-      snippet.textContent = (email.to || []).join(", ") || "Empfänger unbekannt";
-      const meta = document.createElement("div");
-      meta.className = "kommunikation-card__meta";
-      const sentAt = document.createElement("time");
-      sentAt.dateTime = email.createdAt || "";
-      sentAt.textContent = email.createdAt ? formatTime(email.createdAt) : "";
-      const status = document.createElement("span");
-      status.className = "kommunikation-card__status";
-      status.textContent = formatEmailStatus(email.status);
-      if (email.status === "failed") {
-        status.classList.add("kommunikation-card__status--warn");
-      }
-      meta.appendChild(sentAt);
-      meta.appendChild(status);
-      card.appendChild(title);
-      card.appendChild(snippet);
-      card.appendChild(meta);
-      card.setAttribute("tabindex", "0");
-      card.addEventListener("click", () => {
-        window.location.hash = `#/kommunikation/emails/${email.id}`;
-      });
-      card.addEventListener("keypress", (evt) => {
-        if (evt.key === "Enter" || evt.key === " ") {
-          evt.preventDefault();
-          window.location.hash = `#/kommunikation/emails/${email.id}`;
-        }
-      });
-      list.appendChild(card);
-    });
-  } catch (error) {
-    list.innerHTML = "";
-    list.appendChild(
-      createNotice(isOffline(error) ? "Offline. Laden fehlgeschlagen." : "Fehler beim Laden.", {
-        variant: "warn",
-        role: "alert",
-      })
-    );
-  }
-}
-
-async function renderEmailDetail(host, emailId) {
-  host.innerHTML = "";
-  const header = document.createElement("div");
-  header.className = "kommunikation-chat-header";
-  const back = document.createElement("button");
-  back.type = "button";
-  back.className = "kommunikation-back";
-  back.textContent = "Zurück";
-  back.addEventListener("click", () => {
-    window.location.hash = "#/kommunikation/emails";
-  });
-  const title = document.createElement("h2");
-  title.textContent = "E-Mail";
-  header.appendChild(back);
-  header.appendChild(title);
-  host.appendChild(header);
-
-  const content = document.createElement("div");
-  content.className = "kommunikation-detail email-detail";
-  content.appendChild(createNotice("E-Mail wird geladen...", { variant: "info" }));
-  host.appendChild(content);
-
-  try {
-    const result = await emailClient.getEmail({ id: emailId });
-    const email = result.email || {};
-    content.innerHTML = "";
-    const subject = document.createElement("h3");
-    subject.textContent = email.subject || "E-Mail";
-    const meta = document.createElement("div");
-    meta.className = "email-detail__meta";
-    const to = document.createElement("div");
-    to.textContent = `An: ${(email.to || []).join(", ") || "-"}`;
-    const cc = document.createElement("div");
-    cc.textContent = `CC: ${(email.cc || []).join(", ") || "-"}`;
-    const bcc = document.createElement("div");
-    bcc.textContent = `BCC: ${(email.bcc || []).join(", ") || "-"}`;
-    const status = document.createElement("div");
-    status.textContent = `Status: ${formatEmailStatus(email.status)}`;
-    const timestamps = document.createElement("div");
-    timestamps.textContent = email.createdAt ? `Erstellt: ${formatTime(email.createdAt)}` : "";
-    const error = document.createElement("div");
-    error.textContent = email.errorMessage ? `Fehler: ${email.errorMessage}` : "";
-    meta.appendChild(to);
-    meta.appendChild(cc);
-    meta.appendChild(bcc);
-    meta.appendChild(status);
-    if (timestamps.textContent) meta.appendChild(timestamps);
-    if (error.textContent) meta.appendChild(error);
-
-    const body = document.createElement("pre");
-    body.className = "email-detail__body";
-    body.textContent = email.body || "";
-
-    content.appendChild(subject);
-    content.appendChild(meta);
-    content.appendChild(body);
-  } catch (error) {
-    content.innerHTML = "";
-    content.appendChild(
-      createNotice(
-        error.code === "NOT_FOUND"
-          ? "E-Mail nicht gefunden."
-          : isOffline(error)
-            ? "Offline. Laden fehlgeschlagen."
-            : "Fehler beim Laden der E-Mail.",
-        { variant: "warn", role: "alert" }
-      )
-    );
-  }
-}
-
 async function renderChatList(host) {
   host.innerHTML = "";
   const list = document.createElement("div");
@@ -1177,13 +926,6 @@ function buildInfochannelStatusText(notice, actor) {
     parts.push(notice.overdueCount > 0 ? `${notice.overdueCount} überfällig` : `${pending} offen`);
   }
   return parts.join(" · ");
-}
-
-function formatEmailStatus(status) {
-  if (status === "sent") return "Gesendet";
-  if (status === "failed") return "Fehlgeschlagen";
-  if (status === "queued") return "In Warteschlange";
-  return status || "Unbekannt";
 }
 
 function compareMessageOrder(a, b) {

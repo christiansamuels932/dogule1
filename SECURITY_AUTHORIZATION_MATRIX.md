@@ -268,48 +268,6 @@ actions:
     audit: always
     alerts: denied_action
 
-  - id: kommunikation.email.view
-    module: kommunikation
-    description: View email send logs
-    roles:
-      admin: allowed
-      staff: denied
-      trainer: denied
-      system: conditional
-      unauthenticated: denied
-    preconditions:
-      - System only for delivery monitoring jobs.
-    audit: always
-    alerts: denied_action
-
-  - id: kommunikation.email.send_customer
-    module: kommunikation
-    description: Send single email to customer
-    roles:
-      admin: allowed
-      staff: denied
-      trainer: denied
-      system: allowed
-      unauthenticated: denied
-    preconditions:
-      - Admin-only compose; system uses service credentials.
-    audit: always
-    alerts: denied_action
-
-  - id: kommunikation.email.send_bulk
-    module: kommunikation
-    description: Send bulk/broadcast email
-    roles:
-      admin: allowed
-      staff: denied
-      trainer: denied
-      system: conditional
-      unauthenticated: denied
-    preconditions:
-      - System only for approved campaigns with opt-in list; rate limits apply.
-    audit: always
-    alerts: denied_action
-
   - id: kalender.view_day
     module: kalender
     description: View day schedule
@@ -575,9 +533,9 @@ actions:
 
 - **Deny-by-default**: any action not listed above is denied.
 - **Unauthenticated**: no access to app data; may only reach login/static assets (not shown in matrix).
-- **System role**: allowed only for defined jobs (imports, backups, calendar sync, email sender); must carry job id for audit.
+- **System role**: allowed only for defined jobs (imports, backups, calendar sync); must carry job id for audit.
 - **Finanzen**: admin-only for destructive operations; staff limited to scoped create/update; trainer read-only for own revenue.
-- **Kommunikation**: admin/staff moderate; trainers limited to participant channels; bulk email restricted to admin/system.
+- **Kommunikation**: admin/staff moderate; trainers limited to participant channels.
 - **Kalender**: trainer scoped to own events; staff scoped to assignments; deletes restricted.
 - **Imports/Backups/Config**: admin/system only; cancellations/restores are audited and alert-worthy.
 

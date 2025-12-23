@@ -1,6 +1,6 @@
 # Master-II Path — First Public Rollout (Stations 50+)
 
-Purpose: concrete path from current state to first public rollout, starting at Station 50. Each station includes clear outcomes and exit criteria. Security and storage are first-class; no module ships without them. Suffix legend: `R` = lifecycle/retention, `K` = Kommunikation, `E` = Email/Outlook line.
+Purpose: concrete path from current state to first public rollout, starting at Station 50. Each station includes clear outcomes and exit criteria. Security and storage are first-class; no module ships without them. Suffix legend: `R` = lifecycle/retention, `K` = Kommunikation.
 
 ## Station 50 — Roadmap Governance & Definitions of Ready
 
@@ -64,7 +64,7 @@ Purpose: concrete path from current state to first public rollout, starting at S
 
 ## Station 62 — Logging, Rate Limits, and Alerts Foundation
 
-- Outcomes: rate limits for login, chat send, infochannel post, email send, import; audit logging for authn/authz, config changes; alerting hooks for failures/suspicious activity; health checks.
+- Outcomes: rate limits for login, chat send, infochannel post, import; audit logging for authn/authz, config changes; alerting hooks for failures/suspicious activity; health checks.
 - Exit: limits enforced; alert destinations configured; dashboards or log review plan documented.
 
 ## Station 63 — Storage Layer Implementation (Core Entities)
@@ -74,7 +74,7 @@ Purpose: concrete path from current state to first public rollout, starting at S
 
 ## Station 64 — Kommunikation Module Skeleton (Read-Only)
 
-- Outcomes: navigation/tabs (Chats, Infochannel, Emails, System); state machine (loading/empty/error/offline); list/detail shells consuming mock+real adapter; access controls applied.
+- Outcomes: navigation/tabs (Chats, Infochannel, System); state machine (loading/empty/error/offline); list/detail shells consuming mock+real adapter; access controls applied.
 - Exit: UI skeleton merged; authz enforced; logging for navigation/filter actions.
 
 ## Station 65 — Groupchat Core
@@ -92,22 +92,7 @@ Purpose: concrete path from current state to first public rollout, starting at S
 - Outcomes: admin-only posting, targeting rules, confirmation UX for trainers, escalation/reminders, audit trail, rate limits; optional comments policy enforced (default: none).
 - Exit: admin can post; trainers confirm; late confirmations visible; alerts for missing confirms after SLA.
 
-## Station 67E — Email Integration MVP (Send-Only)
-
-- Outcomes: compose→send flow; allowed fields defined; Outlook send connector with token handling; send status surfaced; spam/abuse thresholds; audit logging.
-- Exit: send-only works in test/stage; failure UX; kill switch documented; SPF/DKIM/DMARC alignment plan.
-
-## Station 68E — Outlook Auth & Contact Mapping
-
-- Outcomes: chosen auth method (delegated/service); token lifecycle; contact matching rules; conflict handling; scoped permissions; shutdown switch.
-- Exit: mapping table/logic implemented; tests for conflicts; tokens stored/rotated per baseline.
-
-## Station 69E — Outlook → Kalender Import (Preview-First)
-
-- Outcomes: entry point (ICS upload or API pull); field mapping; duplicate detection; preview/diff UI; recurrence policy (flatten/ignore MVP); rate limits; SSRF/zip-bomb defenses.
-- Exit: controlled import with logs; alert on failures; undo/cleanup path defined.
-
-## Station 70E — Storage & Security Hardening Pass
+## Station 70 — Storage & Security Hardening Pass
 
 - Outcomes: failure-injection run on storage; restore drill; secret rotation drill; audit/log integrity check; permission and rate-limit review after integrations.
 - Exit: drills documented; issues fixed; sign-off for public exposure candidate.
@@ -124,10 +109,10 @@ Purpose: concrete path from current state to first public rollout, starting at S
 
 ## Station 73 — Rollout Prep & Playbooks
 
-- Outcomes: incident playbook validated; monitoring/alert runbook; kill switches tested (email/import); rate-limit tuning; final risk review.
+- Outcomes: incident playbook validated; monitoring/alert runbook; kill switches tested (imports); rate-limit tuning; final risk review.
 - Exit: go/no-go checklist green; owners on-call assigned; rollback plan written.
 
 ## Station 74 — Public Rollout (V1)
 
 - Outcomes: staged rollout to initial users; telemetry verification; support channel live; rapid patch path defined.
-- Exit: rollout completed or halted with documented reasons; status logged in `status.md`.
+- Exit: rollout completed or halted with documented reasons; status logged in `status.md`. 

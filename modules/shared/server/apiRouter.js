@@ -5,7 +5,6 @@ import crypto from "node:crypto";
 import { Buffer } from "node:buffer";
 import { createGroupchatApiHandlers } from "../../kommunikation/groupchat/apiRoutes.js";
 import { createInfochannelApiHandlers } from "../../kommunikation/infochannel/apiRoutes.js";
-import { createEmailApiHandlers } from "../../kommunikation/email/apiRoutes.js";
 
 async function readJsonBody(req) {
   if (!req || req.method === "GET" || req.method === "HEAD") return {};
@@ -86,10 +85,6 @@ export function createKommunikationApiRouter(options = {}) {
     ...(options.infochannel || {}),
     salOptions: { ...salOptions, ...(options.infochannel?.salOptions || {}) },
   });
-  const email = createEmailApiHandlers({
-    ...(options.email || {}),
-    salOptions: { ...salOptions, ...(options.email?.salOptions || {}) },
-  });
 
   async function handle(req, res) {
     const reqUrl = req?.url || "";
@@ -137,20 +132,6 @@ export function createKommunikationApiRouter(options = {}) {
     if (confirmMatch && method === "POST") {
       await infochannel.handleConfirmNotice(
         buildReq(req, { body, params: { id: confirmMatch[1] }, query }),
-        res
-      );
-      return true;
-    }
-
-    if (path === "/api/kommunikation/email/emails") {
-      const handler = method === "POST" ? email.handleSendEmail : email.handleListEmails;
-      await handler(buildReq(req, { body, params: {}, query }), res);
-      return true;
-    }
-    const emailMatch = path.match(/^\/api\/kommunikation\/email\/emails\/([^/]+)$/);
-    if (emailMatch) {
-      await email.handleGetEmail(
-        buildReq(req, { body, params: { id: emailMatch[1] }, query }),
         res
       );
       return true;
