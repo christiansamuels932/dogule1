@@ -48,6 +48,7 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 - storage reports: `storage_reports/latest-dry-run/`, `storage_reports/latest-scan/` (gitignored).
 - storage candidate: `storage_candidate/v1` (gitignored).
+- cleanup: removed `storage_reports/` and `storage_candidate/` after drills.
 
 # - - - - - - - - - - - - - - - - - - - -
 
