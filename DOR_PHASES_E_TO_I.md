@@ -32,7 +32,7 @@ Common usage rules
 - Acceptance boundaries: exclusions (e.g., no code for certain stations, or MVP-only scope).
 - Exit criteria: checklist of outputs, approvals, and logging/audit hooks defined.
 
-## Phase G — Integrations (Chats, Infochannel, Outlook, Imports)
+## Phase G — Integrations (Chats, Infochannel, Imports)
 
 - Scope clarity: integration feature(s) and surfaces.
 - Dependencies cleared: storage/security green; gating honored.
@@ -66,4 +66,4 @@ Common usage rules
 - Reviewer roles: Planner review → Builder execution → Human merge.
 - Timebox / target date.
 - Acceptance boundaries: what is excluded from the rollout slice.
-- Exit criteria: checklist confirming playbooks, owners, on-call, rollback, and telemetry verification steps.
+- Exit criteria: checklist confirming playbooks, owners, on-call, rollback, and telemetry verification steps. 
