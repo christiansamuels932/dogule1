@@ -6,30 +6,44 @@
 
 .dogule-header,
 .dogule-footer {
-  background-color: #222;
-  color: #fff;
-  padding: 1rem;
+  background-color: var(--color-brand-900);
+  color: var(--color-paper);
+  padding: 1.1rem 1.5rem;
 }
 
 .dogule-header-title {
-  font-size: 1.2rem;
+  font-size: 1.35rem;
   font-weight: 600;
 }
 
 .dogule-nav a {
-  margin-right: 1rem;
-  color: #fff;
+  margin-right: 0.75rem;
+  color: var(--color-paper);
   text-decoration: none;
+  padding: 0.3rem 0.6rem;
+  border-radius: 999px;
+  transition:
+    background 150ms ease,
+    color 150ms ease;
 }
 
-.dogule-nav a.active {
-  text-decoration: underline;
+.dogule-nav a.active,
+.dogule-nav .nav__link--active {
+  background: rgba(255, 253, 246, 0.2);
+}
+
+.dogule-nav a:hover,
+.dogule-nav a:focus-visible {
+  background: rgba(255, 253, 246, 0.32);
 }
 
 .dogule-main {
   flex: 1;
-  padding: 1rem;
-  background-color: #f9f9f9;
+  padding: 2rem 1.5rem 2.5rem;
+  background-color: transparent;
+  max-width: 1100px;
+  width: min(1100px, 100%);
+  margin: 0 auto;
 }
 
 .dogule-footer {

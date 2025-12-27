@@ -103,7 +103,7 @@ export async function createHundeFormView(container, options = {}) {
   const footer = cardElement.querySelector(".ui-card__footer");
   footer.innerHTML = "";
   const actions = document.createElement("div");
-  actions.className = "hunde-form-actions";
+  actions.className = "module-actions hunde-form-actions";
   const submit = createButton({
     label: mode === "create" ? "Erstellen" : "Speichern",
     variant: "primary",

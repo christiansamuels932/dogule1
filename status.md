@@ -15,6 +15,32 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 # - - - - - - - - - - - - - - - - - - - -
 
+# Station 71 — UI Visual Pass & Entity List/Detail Cleanup
+
+## Kontext
+
+- Branch: `station71`.
+- Scope: visual cohesion pass, standardized button spacing, and list/detail refinements for Kunden/Hunde/Kurse/Trainer; no backend changes.
+
+## Ergebnis (kurz)
+
+- Applied new visual palette and typography across shared styles; unified button styling and spacing in module action areas.
+- Rebuilt Kunden/Hunde/Trainer list views into sortable, scrollable table overviews; aligned detail views with cleaner definition-list layouts.
+- Updated Kunden detail/form to include Status select (Aktiv/Deaktiviert), Ausweis-ID, Foto upload (Verfügbar/Keines link), and Begleitpersonen; Hunde detail extended with required fields (Felltyp, Kastriert, Fellfarbe, Größe-Typ, Herkunft, Chip-Nummer).
+- Adjusted Kurse list/detail to display created date and Outlook-mirror status in place of direct scheduling; added Kunde/Hund summaries in Kurs overview; normalized trainer availability labels to weekdays.
+- Fixed vertical spacing for “Hund hinzufügen” and “Auswahl leeren” buttons; standardized form footer button layout across Kunde/Hund/Kurs/Trainer.
+- Updated battleplan to include certificate station and UI requirements for status/photo upload.
+
+## Tests
+
+- Not run (UI/documentation changes only).
+
+## Notizen
+
+- Photo upload is stored as data URL for now (mock storage), surfaced as “Verfügbar” link in details.
+
+# - - - - - - - - - - - - - - - - - - - -
+
 # Station 71 — From Alpha to Beta Planning & Doc Consolidation
 
 ## Kontext
