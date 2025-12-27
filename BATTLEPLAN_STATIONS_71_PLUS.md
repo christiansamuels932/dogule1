@@ -176,6 +176,37 @@ Exit criteria
 - No N+1 query patterns.
 - No baseline violations beyond thresholds defined in Station 72.
 
+Station 76.5 — NAS Deployment (Staging for Manual Test)
+
+Branch: `feature/station76.5-nas-deployment`
+
+Scope
+
+- Deploy the MariaDB-backed app to NAS as a staging environment for manual testing.
+- Record environment configuration and deployment path.
+
+NAS profile
+
+- Device: Synology DS218play
+- Server name: SAN
+- DSM: 7.3.2-86009
+- QuickConnect ID: A4c31
+- CPU: Realtek RTD1296 (4 cores @ 1.4 GHz)
+- RAM: 1 GB
+
+Deliverables
+
+- NAS deployment report with target path, build version, and access URL.
+- `status.md` entry confirming staging availability for manual tests.
+
+Validation
+
+- Smoke test on NAS (load app, navigate core modules, check MariaDB connectivity).
+
+Exit criteria
+
+- NAS staging environment is live and stable for Station 77 manual tests.
+
 Station 77 — Manual Test Round 1 (Baseline)
 
 Branch: `feature/station77-manual-test-1`

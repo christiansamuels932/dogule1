@@ -41,6 +41,24 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 # - - - - - - - - - - - - - - - - - - - -
 
+# Station 72 — Alpha Closeout & Beta Readiness Gate
+
+## Kontext
+
+- Branch: `feature/station72-alpha-closeout`.
+- Scope: freeze Alpha scope, define Beta entry/exit criteria, and standardize manual test issue logging. Documentation only.
+
+## Ergebnis (kurz)
+
+- Added `BETA_READINESS.md` with Alpha freeze list, Beta entry/exit criteria, and manual test issue log template.
+- Captured deferred-to-Beta scope (DogTabs ingestion, MariaDB-only backend, expanded entity fields, performance validation, manual test cycles).
+
+## Tests
+
+- Not run (documentation changes only).
+
+# - - - - - - - - - - - - - - - - - - - -
+
 # Station 71 — From Alpha to Beta Planning & Doc Consolidation
 
 ## Kontext
