@@ -59,6 +59,37 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 # - - - - - - - - - - - - - - - - - - - -
 
+# Station 73 — DogTabs Data Inventory & Mapping Plan
+
+## Kontext
+
+- Branch: `feature/station73-dogtabs-inventory`.
+- Scope: inventory DogTabs legacy capture (read-only), document file formats/counts, and define a mapping plan to Dogule1 schema.
+
+## Ergebnis (kurz)
+
+- Added `DOGTABS_DATA_INVENTORY.md` with file-type counts, directory inventory, snapshot counts, and PII notes for the Station-61 capture.
+- Added `DOGTABS_TO_DOGULE1_MAPPING.md` describing target mappings, ID strategy, FK rules, and open questions; embedded Access DB extraction manual.
+- Extracted Access DB schema and table list from the DogTabs database and mapped core tables (Kunden, Hunde, Seminare, Rechnungen, Pension/Rooms).
+- Captured column headers via `mdb-export` for `$_kundenstamm`, `$_kunden_hunde`, `$_seminardaten`, and `$_rechnung_kopf` and documented them in the mapping plan.
+
+## Tests
+
+- `mdb-tables -1 "migration/legacy/station61/capture_20251219_185854Z/raw/dogtaps_90_Datenbank/delete dogtaps_Datenbank.accdr.ORG"` — ✅
+- `mdb-schema "migration/legacy/station61/capture_20251219_185854Z/raw/dogtaps_90_Datenbank/delete dogtaps_Datenbank.accdr.ORG" mysql` — ✅ (No MSysRelationships)
+- `mdb-export ... "$_kundenstamm"` — ✅ (header capture)
+- `mdb-export ... "$_kunden_hunde"` — ✅ (header capture)
+- `mdb-export ... "$_seminardaten"` — ✅ (header capture)
+- `mdb-export ... "$_rechnung_kopf"` — ✅ (header capture)
+
+## Notizen
+
+- XLSX snapshots appear to have no embedded column headers; Access DB remains the authoritative schema source.
+- `mdb-schema` output saved outside the repo in `/tmp/dogtaps_schema.sql`.
+- Relationships were not emitted by `mdbtools` (`No MSysRelationships`), so FK rules still need manual validation.
+
+# - - - - - - - - - - - - - - - - - - - -
+
 # Station 71 — From Alpha to Beta Planning & Doc Consolidation
 
 ## Kontext
