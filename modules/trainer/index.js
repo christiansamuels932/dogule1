@@ -95,6 +95,8 @@ async function renderList(section) {
   });
   const actionsBody = actionsCard.querySelector(".ui-card__body");
   actionsBody.innerHTML = "";
+  const actionsWrap = document.createElement("div");
+  actionsWrap.className = "module-actions";
   const newBtn = createButton({
     label: "Neuer Trainer",
     variant: "primary",
@@ -102,7 +104,8 @@ async function renderList(section) {
       window.location.hash = "#/trainer/new";
     },
   });
-  actionsBody.appendChild(newBtn);
+  actionsWrap.appendChild(newBtn);
+  actionsBody.appendChild(actionsWrap);
 
   const listCard = createCard({
     eyebrow: "",
@@ -128,31 +131,128 @@ async function renderList(section) {
   if (!trainer.length) {
     listBody.appendChild(createEmptyState("Keine Daten vorhanden.", ""));
   } else {
-    const listWrapper = document.createElement("div");
-    listWrapper.className = "trainer-list";
-    trainer.forEach((entry) => {
-      const fragment = createCard({
-        eyebrow: entry.code || entry.id,
-        title: entry.name || "Unbenannt",
-        body: `
-          <p><strong>ID:</strong> ${entry.id}</p>
-          <p><strong>Code:</strong> ${entry.code || "—"}</p>
-          <p><strong>Telefon:</strong> ${entry.telefon || "keine Telefonangabe"}</p>
-          <p><strong>E-Mail:</strong> ${entry.email || "keine E-Mail"}</p>
-        `,
-        footer: "",
+    const sortState = {
+      key: "name",
+      direction: "asc",
+    };
+    const tableWrapper = document.createElement("div");
+    tableWrapper.className = "trainer-list-scroll";
+    const table = document.createElement("table");
+    table.className = "trainer-list-table";
+    const thead = document.createElement("thead");
+    const headerRow = document.createElement("tr");
+    const tbody = document.createElement("tbody");
+
+    const columns = [
+      {
+        key: "name",
+        label: "Name",
+        value: (entry) => valueOrDash(entry.name),
+        sortValue: (entry) => (entry.name || "").toLowerCase(),
+        isLink: true,
+      },
+      {
+        key: "telefon",
+        label: "Telefon",
+        value: (entry) => valueOrDash(entry.telefon),
+        sortValue: (entry) => (entry.telefon || "").toLowerCase(),
+      },
+      {
+        key: "email",
+        label: "E-Mail",
+        value: (entry) => valueOrDash(entry.email),
+        sortValue: (entry) => (entry.email || "").toLowerCase(),
+      },
+      {
+        key: "code",
+        label: "Code",
+        value: (entry) => valueOrDash(entry.code),
+        sortValue: (entry) => (entry.code || "").toLowerCase(),
+      },
+    ];
+
+    function updateHeaderState() {
+      headerRow.querySelectorAll("th").forEach((th) => {
+        const key = th.dataset.sortKey;
+        if (!key) return;
+        const isActive = key === sortState.key;
+        th.setAttribute(
+          "aria-sort",
+          isActive ? (sortState.direction === "asc" ? "ascending" : "descending") : "none"
+        );
+        const button = th.querySelector("button");
+        if (!button) return;
+        const indicator = isActive ? (sortState.direction === "asc" ? "↑" : "↓") : "";
+        button.textContent = indicator
+          ? `${th.dataset.label} ${indicator}`
+          : th.dataset.label || "";
       });
-      const cardEl = fragment.querySelector(".ui-card") || fragment.firstElementChild;
-      if (!cardEl) return;
-      cardEl.classList.add("trainer-list__item");
-      const link = document.createElement("a");
-      link.href = `#/trainer/${entry.id}`;
-      link.className = "trainer-list__link";
-      link.setAttribute("aria-label", `${entry.name || entry.code || entry.id} öffnen`);
-      link.appendChild(cardEl);
-      listWrapper.appendChild(link);
+    }
+
+    function renderRows() {
+      tbody.innerHTML = "";
+      const rows = trainer
+        .map((entry, index) => ({ entry, index }))
+        .sort((a, b) => {
+          const column = columns.find((col) => col.key === sortState.key);
+          const getValue = column?.sortValue || column?.value;
+          const aValue = (getValue ? getValue(a.entry) : "").toString();
+          const bValue = (getValue ? getValue(b.entry) : "").toString();
+          const compare = aValue.localeCompare(bValue, "de", { sensitivity: "base" });
+          if (compare !== 0) {
+            return sortState.direction === "asc" ? compare : -compare;
+          }
+          return a.index - b.index;
+        });
+
+      rows.forEach(({ entry }) => {
+        const row = document.createElement("tr");
+        row.className = "trainer-list-row";
+        columns.forEach((column) => {
+          const cell = document.createElement("td");
+          if (column.isLink) {
+            const link = document.createElement("a");
+            link.href = `#/trainer/${entry.id}`;
+            link.className = "trainer-list__link";
+            link.textContent = column.value(entry);
+            link.setAttribute("aria-label", `${entry.name || entry.code || entry.id} öffnen`);
+            cell.appendChild(link);
+          } else {
+            cell.textContent = column.value(entry);
+          }
+          row.appendChild(cell);
+        });
+        tbody.appendChild(row);
+      });
+    }
+
+    columns.forEach((column) => {
+      const th = document.createElement("th");
+      th.dataset.sortKey = column.key;
+      th.dataset.label = column.label;
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "trainer-sort-btn";
+      button.addEventListener("click", () => {
+        if (sortState.key === column.key) {
+          sortState.direction = sortState.direction === "asc" ? "desc" : "asc";
+        } else {
+          sortState.key = column.key;
+          sortState.direction = "asc";
+        }
+        updateHeaderState();
+        renderRows();
+      });
+      th.appendChild(button);
+      headerRow.appendChild(th);
     });
-    listBody.appendChild(listWrapper);
+
+    thead.appendChild(headerRow);
+    table.append(thead, tbody);
+    tableWrapper.appendChild(table);
+    listBody.appendChild(tableWrapper);
+    updateHeaderState();
+    renderRows();
   }
 
   section.append(actionsCard, listCard);
@@ -174,7 +274,9 @@ async function renderDetail(section, id) {
   });
   const actionsBody = actionsCard.querySelector(".ui-card__body");
   actionsBody.innerHTML = "";
-  actionsBody.appendChild(
+  const actionsWrap = document.createElement("div");
+  actionsWrap.className = "module-actions";
+  actionsWrap.appendChild(
     createButton({
       label: "Bearbeiten",
       variant: "primary",
@@ -183,7 +285,7 @@ async function renderDetail(section, id) {
       },
     })
   );
-  actionsBody.appendChild(
+  actionsWrap.appendChild(
     createButton({
       label: "Löschen",
       variant: "warn",
@@ -192,6 +294,7 @@ async function renderDetail(section, id) {
       },
     })
   );
+  actionsBody.appendChild(actionsWrap);
 
   const detailCard = createCard({
     eyebrow: "",
@@ -232,6 +335,9 @@ async function renderDetail(section, id) {
     ["Name", trainer.name || "—"],
     ["Telefon", trainer.telefon || "—"],
     ["E-Mail", trainer.email || "—"],
+    ["Ausbildungshistorie", trainer.ausbildungshistorie || trainer.ausbildung || "—"],
+    ["Stundenerfassung", formatBoolean(trainer.stundenerfassung)],
+    ["Lohnabrechnung", formatBoolean(trainer.lohnabrechnung)],
     ["Notizen", trainer.notizen || "—"],
     [
       "Verfügbarkeiten",
@@ -239,7 +345,7 @@ async function renderDetail(section, id) {
         ? trainer.verfuegbarkeiten
             .map(
               (slot) =>
-                `Wochentag ${slot.weekday ?? "?"}, ${slot.startTime || "??:??"}–${
+                `${weekdayLabel(slot.weekday)}, ${slot.startTime || "??:??"}–${
                   slot.endTime || "??:??"
                 }`
             )
@@ -251,7 +357,7 @@ async function renderDetail(section, id) {
   ];
 
   const list = document.createElement("dl");
-  list.className = "trainer-detail__list";
+  list.className = "trainer-details";
   fields.forEach(([label, value]) => {
     const dt = document.createElement("dt");
     dt.textContent = label;
@@ -756,7 +862,7 @@ async function renderCreate(section) {
   const footer = cardEl.querySelector(".ui-card__footer");
   footer.innerHTML = "";
   const actions = document.createElement("div");
-  actions.className = "trainer-form-actions";
+  actions.className = "module-actions trainer-form-actions";
   const submit = createButton({ label: "Erstellen", variant: "primary" });
   submit.type = "submit";
   submit.addEventListener("click", () => form.requestSubmit());
@@ -972,6 +1078,25 @@ function formatFinanzTyp(typ) {
   const normalized = String(typ || "").toLowerCase();
   if (normalized === "bezahlt" || normalized === "zahlung") return "Bezahlt";
   if (normalized === "offen") return "Offen";
+  return "–";
+}
+
+function valueOrDash(value) {
+  if (value === null || value === undefined) return "–";
+  const text = typeof value === "string" ? value.trim() : String(value);
+  return text || "–";
+}
+
+function weekdayLabel(value) {
+  const index = Number(value);
+  const map = ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag"];
+  if (!Number.isFinite(index)) return "Wochentag ?";
+  return map[index] || "Wochentag ?";
+}
+
+function formatBoolean(value) {
+  if (value === true) return "Ja";
+  if (value === false) return "Nein";
   return "–";
 }
 
@@ -1388,7 +1513,7 @@ async function renderEdit(section, id) {
   const footer = cardEl.querySelector(".ui-card__footer");
   footer.innerHTML = "";
   const actions = document.createElement("div");
-  actions.className = "trainer-form-actions";
+  actions.className = "module-actions trainer-form-actions";
   const submit = createButton({ label: "Speichern", variant: "primary" });
   submit.type = "submit";
   submit.addEventListener("click", () => form.requestSubmit());

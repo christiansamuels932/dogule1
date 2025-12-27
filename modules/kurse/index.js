@@ -647,7 +647,7 @@ function createFinanceRow(label, text) {
 }
 
 function formatCustomerName(kunde = {}) {
-  const name = `${kunde.vorname ?? ""} ${kunde.nachname ?? ""}`.trim();
+  const name = `${kunde.nachname ?? ""} ${kunde.vorname ?? ""}`.trim();
   return name || kunde.email || "Unbenannter Kunde";
 }
 
@@ -693,7 +693,7 @@ function renderTrainerInline(kurs = {}) {
   return span;
 }
 
-function createCourseListItem(course = {}) {
+function createCourseListItem(course = {}, { hundeById, kundenById } = {}) {
   if (!course.id) return null;
   const link = document.createElement("a");
   link.href = `#/kurse/${course.id}`;
@@ -709,6 +709,7 @@ function createCourseListItem(course = {}) {
   card.classList.add("kurse-list-item");
   const body = card.querySelector(".ui-card__body");
   const footer = card.querySelector(".ui-card__footer");
+  const participantInfo = buildCourseParticipantSummary(course, { hundeById, kundenById });
   if (body) {
     body.innerHTML = "";
     const metaList = document.createElement("ul");
@@ -717,8 +718,8 @@ function createCourseListItem(course = {}) {
     [
       { label: "ID", value: course.id },
       { label: "Trainer-ID", value: course.trainerId || "–" },
-      { label: "Datum", value: formatDate(course.date) },
-      { label: "Zeit", value: formatTimeRange(course.startTime, course.endTime) },
+      { label: "Erstellt am", value: formatDateTime(course.createdAt) },
+      { label: "Kalender (Outlook)", value: formatOutlookMirror(course) },
       {
         label: "Trainer",
         value: trainerLabel,
@@ -729,7 +730,8 @@ function createCourseListItem(course = {}) {
         value: `${course.bookedCount ?? 0} / ${course.capacity ?? 0}`,
       },
       { label: "Ort", value: course.location || "Noch offen" },
-      { label: "Hunde", value: formatIdList(course.hundIds) },
+      { label: "Hunde", value: participantInfo.hundeLabel },
+      { label: "Kunden", value: participantInfo.kundenLabel },
     ].forEach(({ label, value, link }) => {
       const item = document.createElement("li");
       const strong = document.createElement("strong");
@@ -1028,7 +1030,7 @@ async function renderForm(section, view, id) {
   form.appendChild(hundeRow);
 
   const actions = document.createElement("div");
-  actions.className = "kurse-form-actions";
+  actions.className = "module-actions kurse-form-actions";
   const submit = createButton({
     label: mode === "create" ? "Erstellen" : "Speichern",
     variant: "primary",
@@ -1121,6 +1123,15 @@ async function populateCourses(container) {
   container.appendChild(loading);
   try {
     const courses = await fetchKurse();
+    let hundeById = new Map();
+    let kundenById = new Map();
+    try {
+      const [hunde, kunden] = await Promise.all([listHunde(), listKunden()]);
+      hundeById = new Map((Array.isArray(hunde) ? hunde : []).map((hund) => [hund.id, hund]));
+      kundenById = new Map((Array.isArray(kunden) ? kunden : []).map((kunde) => [kunde.id, kunde]));
+    } catch (error) {
+      console.warn("[KURSE_WARN_LIST_PARTICIPANTS]", error);
+    }
     container.innerHTML = "";
     if (!courses.length) {
       container.appendChild(createEmpty());
@@ -1128,7 +1139,7 @@ async function populateCourses(container) {
     }
 
     courses.forEach((course) => {
-      const listItem = createCourseListItem(course);
+      const listItem = createCourseListItem(course, { hundeById, kundenById });
       if (listItem) container.appendChild(listItem);
     });
   } catch (error) {
@@ -1136,24 +1147,6 @@ async function populateCourses(container) {
     container.innerHTML = "";
     container.appendChild(createErrorNotice());
   }
-}
-
-function formatDate(value) {
-  if (!value) return "Datum folgt";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleDateString("de-CH", {
-    weekday: "short",
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  });
-}
-
-function formatTimeRange(start, end) {
-  const safeStart = start || "00:00";
-  const safeEnd = end || "00:00";
-  return `${safeStart} – ${safeEnd}`;
 }
 
 function formatStatusLabel(status) {
@@ -1192,8 +1185,8 @@ function renderDetailList(kurs) {
     { term: "Code", value: kurs.code || "–" },
     { term: "Trainer-ID", value: kurs.trainerId || "–" },
     { term: "Trainer", render: () => renderTrainerInline(kurs) },
-    { term: "Datum", value: formatDate(kurs.date) },
-    { term: "Zeit", value: formatTimeRange(kurs.startTime, kurs.endTime) },
+    { term: "Erstellt am", value: formatDateTime(kurs.createdAt) },
+    { term: "Kalender (Outlook)", value: formatOutlookMirror(kurs) },
     { term: "Ort", value: kurs.location || "–" },
     { term: "Status", value: formatStatusLabel(kurs.status) },
     {
@@ -1222,6 +1215,50 @@ function createNotesContent(kurs) {
   const text = document.createElement("p");
   text.textContent = kurs.notes || "Keine Notizen vorhanden.";
   return text;
+}
+
+function formatOutlookMirror(kurs = {}) {
+  const value = kurs.outlookStart || kurs.outlookDate || kurs.outlookTermin || "";
+  if (!value) return "Wird aus Outlook gespiegelt.";
+  return formatDateTime(value);
+}
+
+function buildCourseParticipantSummary(course = {}, { hundeById, kundenById } = {}) {
+  const hundIds = Array.isArray(course.hundIds) ? course.hundIds : [];
+  const hundNames = [];
+  const kundenNames = [];
+  const kundenSeen = new Set();
+
+  hundIds.forEach((hundId) => {
+    if (!hundeById || !hundeById.size) return;
+    const hund = hundeById.get(hundId);
+    if (!hund) return;
+    const name = hund.name || hund.code || hund.hundeId || hund.id || "–";
+    hundNames.push(name);
+    if (kundenById && kundenById.size && hund.kundenId) {
+      const kunde = kundenById.get(hund.kundenId);
+      if (kunde) {
+        const label = formatCustomerName(kunde);
+        if (!kundenSeen.has(label)) {
+          kundenSeen.add(label);
+          kundenNames.push(label);
+        }
+      }
+    }
+  });
+
+  return {
+    hundeLabel: formatNameSummary(hundNames) || formatIdList(course.hundIds),
+    kundenLabel: formatNameSummary(kundenNames) || "–",
+  };
+}
+
+function formatNameSummary(list = []) {
+  if (!Array.isArray(list) || !list.length) return "";
+  const unique = Array.from(new Set(list.filter(Boolean)));
+  if (!unique.length) return "";
+  if (unique.length <= 2) return unique.join(", ");
+  return `${unique.slice(0, 2).join(", ")} (+${unique.length - 2})`;
 }
 
 function createMetaContent(kurs) {
@@ -1621,6 +1658,7 @@ function createHundSearchField({
     variant: "secondary",
   });
   clearBtn.type = "button";
+  clearBtn.classList.add("kurse-hunde-search__clear");
   clearBtn.addEventListener("click", () => {
     selectedIds.clear();
     updateSelection();

@@ -103,6 +103,11 @@ Scope
 - Implement MariaDB adapter(s) with CRUD parity to existing storage/SAL paths.
 - Remove or hard-disable mock/file adapters; MariaDB is the only supported backend for Beta.
 - Implement migration hooks needed for DogTabs ingestion.
+- Expand schema for client-required fields:
+  - Kunde: full address, Ausweis-ID, status (aktiv/passiv/deaktiviert), photo reference, notes, and Begleitpersonen (name/vorname + Hund reference).
+  - Hund: rasse (picklist), geburtsdatum, felltyp, kastriert, fellfarbe, größe typ (1/2/3), herkunft, chip-nummer, geschlecht, notizen.
+  - Kurs: createdAt required, Outlook mirror fields (event id/date/time/location), inventory/portfolio flags.
+  - Trainer: ausbildungshistorie, stundenerfassung, lohnabrechnung (optional).
 
 Deliverables
 
@@ -129,6 +134,7 @@ Scope
 - Enforce validation, FK checks, and deterministic mapping rules from Station 72.
 - Provide dry-run mode and a detailed ingestion report.
 - Declare one-way migration: DogTabs is read-only legacy; Dogule1 is authoritative after ingestion.
+- Map DogTabs fields into the expanded Kunde/Hund/Trainer/Kurs schema (including status, picklists, and Outlook mirror fields).
 
 Deliverables
 
@@ -225,6 +231,8 @@ Scope
 
 - Address data-driven UX needs exposed by real datasets: pagination, filters, column visibility, grouping, and density.
 - Ensure large datasets remain usable and navigable without cosmetic polish work.
+- Align list/detail layouts with new fields for Kunde/Hund/Kurs/Trainer (lists: minimal columns; details: full metadata).
+- Kunde UI: status must be selectable (Aktiv/Deaktiviert) and photo upload must be available (displayed as Verfügbar/Keines with link).
 
 Deliverables
 
@@ -238,14 +246,42 @@ Exit criteria
 
 - Data-heavy screens are usable at scale with required controls.
 
-Station 80 — Additional Feature Completion (Straightforward)
+Station 80 — Certificate Generation (Course Completion)
 
-Branch: `feature/station80-feature-fillin`
+Branch: `feature/station80-certificate`
+
+Scope
+
+- Add a certificate flow for completed courses with a query-style input: Kunde, Hund, Kurs, Datum.
+- Generate a printable PDF certificate (single-page) from the selected data.
+- Store certificate metadata (who/what/when) for audit/reference.
+- Certificate must support Bewilligungsnummer and optional additional fields.
+
+Deliverables
+
+- Certificate UI entry in the appropriate module (likely Kurse or Kunden detail) with query form.
+- PDF render/print path (client-side print-to-PDF or server-side PDF generation based on final backend plan).
+- Minimal data validation and confirmation flow.
+
+Validation
+
+- Manual test: generate a certificate for an existing course and print to PDF.
+
+Exit criteria
+
+- Certificate can be generated, printed, and re-generated reliably.
+
+Station 81 — Additional Feature Completion (Straightforward)
+
+Branch: `feature/station81-feature-fillin`
 
 Scope
 
 - Implement the remaining "not difficult" features required for Beta.
 - Confirm each feature has data persistence, basic validation, and minimal tests.
+- Outlook calendar is source of truth: Dogule1 calendar mirrors Outlook entries (read-only).
+- Kurse are created as inventory/portfolio items and then distributed/assigned.
+- Birthday email automation (template + scheduling + opt-in rules).
 
 Deliverables
 
@@ -260,9 +296,9 @@ Exit criteria
 
 - All Beta-required features implemented or explicitly deferred.
 
-Station 81 — Manual Test Round 2 (Regression)
+Station 82 — Manual Test Round 2 (Regression)
 
-Branch: `feature/station81-manual-test-2`
+Branch: `feature/station82-manual-test-2`
 
 Scope
 
@@ -282,9 +318,9 @@ Exit criteria
 
 - No P0/P1 defects; Beta readiness confirmed in `status.md`.
 
-Station 82 — Guidance Docs Archival & Beta Docs
+Station 83 — Guidance Docs Archival & Beta Docs
 
-Branch: `feature/station82-beta-docs`
+Branch: `feature/station83-beta-docs`
 
 Scope
 
@@ -305,9 +341,9 @@ Exit criteria
 
 - Beta docs are in place and referenced; Alpha docs are archived.
 
-Station 83 — Beta Readiness Sign-Off
+Station 84 — Beta Readiness Sign-Off
 
-Branch: `feature/station83-beta-signoff`
+Branch: `feature/station84-beta-signoff`
 
 Scope
 

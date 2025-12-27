@@ -7,7 +7,6 @@ import {
   createButton,
 } from "../shared/components/components.js";
 import { listHunde } from "../shared/api/hunde.js";
-import { listKunden } from "../shared/api/kunden.js";
 import { injectHundToast } from "./formView.js";
 
 export async function createHundeListView(container) {
@@ -91,58 +90,135 @@ async function populateHundeTable(cardElement) {
   body.textContent = "Hunde werden geladen ...";
 
   try {
-    const [hunde, kunden] = await Promise.all([listHunde(), listKunden()]);
+    const hunde = await listHunde();
     body.innerHTML = "";
     if (!hunde.length) {
       body.appendChild(createEmptyState("Keine Daten vorhanden.", ""));
       return;
     }
 
-    const listWrapper = document.createElement("div");
-    listWrapper.className = "hunde-list";
-    hunde.forEach((hund) => {
-      const kunde = kunden.find((k) => k.id === hund.kundenId);
-      const ownerLabel = kunde ? formatOwnerDescriptor(kunde) : "Kein Kunde verknüpft";
-      const hundCardFragment = createCard({
-        eyebrow: hund.code || hund.hundeId || "–",
-        title: hund.name || "Unbenannter Hund",
-        body: "",
-        footer: "",
+    const sortState = {
+      key: "name",
+      direction: "asc",
+    };
+    const tableWrapper = document.createElement("div");
+    tableWrapper.className = "hunde-list-scroll";
+    const table = document.createElement("table");
+    table.className = "hunde-list-table";
+    const thead = document.createElement("thead");
+    const headerRow = document.createElement("tr");
+    const tbody = document.createElement("tbody");
+
+    const columns = [
+      {
+        key: "name",
+        label: "Name",
+        value: (hund) => hund.name || "Unbenannter Hund",
+        sortValue: (hund) => (hund.name || "").toLowerCase(),
+        isLink: true,
+      },
+      {
+        key: "rasse",
+        label: "Rasse",
+        value: (hund) => hund.rasse || "Unbekannt",
+        sortValue: (hund) => (hund.rasse || "").toLowerCase(),
+      },
+      {
+        key: "geschlecht",
+        label: "Geschlecht",
+        value: (hund) => hund.geschlecht || "–",
+        sortValue: (hund) => (hund.geschlecht || "").toLowerCase(),
+      },
+      {
+        key: "geburtsdatum",
+        label: "Geburtsdatum",
+        value: (hund) => formatDate(hund.geburtsdatum),
+        sortValue: (hund) => formatSortDate(hund.geburtsdatum),
+      },
+    ];
+
+    function updateHeaderState() {
+      headerRow.querySelectorAll("th").forEach((th) => {
+        const key = th.dataset.sortKey;
+        if (!key) return;
+        const isActive = key === sortState.key;
+        th.setAttribute(
+          "aria-sort",
+          isActive ? (sortState.direction === "asc" ? "ascending" : "descending") : "none"
+        );
+        const button = th.querySelector("button");
+        if (!button) return;
+        const indicator = isActive ? (sortState.direction === "asc" ? "↑" : "↓") : "";
+        button.textContent = indicator
+          ? `${th.dataset.label} ${indicator}`
+          : th.dataset.label || "";
       });
-      const hundCard =
-        hundCardFragment.querySelector(".ui-card") || hundCardFragment.firstElementChild;
-      if (!hundCard) return;
-      hundCard.classList.add("hunde-list-item");
-      const cardBody = hundCard.querySelector(".ui-card__body");
-      if (cardBody) {
-        cardBody.innerHTML = "";
-        const ownerRow = document.createElement("p");
-        ownerRow.textContent = `ID: ${hund.id || "–"} · Besitzer: `;
-        if (kunde) {
-          const ownerLink = document.createElement("a");
-          ownerLink.href = `#/kunden/${kunde.id}`;
-          ownerLink.textContent = ownerLabel;
-          ownerLink.className = "hunde-list__owner-link";
-          ownerLink.setAttribute("aria-label", `Kunde ${ownerLabel} öffnen`);
-          ownerRow.appendChild(ownerLink);
+    }
+
+    function renderRows() {
+      tbody.innerHTML = "";
+      const rows = hunde
+        .map((hund, index) => ({ hund, index }))
+        .sort((a, b) => {
+          const column = columns.find((col) => col.key === sortState.key);
+          const getValue = column?.sortValue || column?.value;
+          const aValue = (getValue ? getValue(a.hund) : "").toString();
+          const bValue = (getValue ? getValue(b.hund) : "").toString();
+          const compare = aValue.localeCompare(bValue, "de", { sensitivity: "base" });
+          if (compare !== 0) {
+            return sortState.direction === "asc" ? compare : -compare;
+          }
+          return a.index - b.index;
+        });
+
+      rows.forEach(({ hund }) => {
+        const row = document.createElement("tr");
+        row.className = "hunde-list-row";
+        columns.forEach((column) => {
+          const cell = document.createElement("td");
+          if (column.isLink) {
+            const link = document.createElement("a");
+            link.href = `#/hunde/${hund.id}`;
+            link.className = "hunde-list__link";
+            link.textContent = column.value(hund);
+            link.setAttribute("aria-label", `Hund ${hund.name || hund.code || hund.id} öffnen`);
+            cell.appendChild(link);
+          } else {
+            cell.textContent = column.value(hund);
+          }
+          row.appendChild(cell);
+        });
+        tbody.appendChild(row);
+      });
+    }
+
+    columns.forEach((column) => {
+      const th = document.createElement("th");
+      th.dataset.sortKey = column.key;
+      th.dataset.label = column.label;
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "hunde-sort-btn";
+      button.addEventListener("click", () => {
+        if (sortState.key === column.key) {
+          sortState.direction = sortState.direction === "asc" ? "desc" : "asc";
         } else {
-          const ownerText = document.createElement("span");
-          ownerText.textContent = ownerLabel;
-          ownerRow.appendChild(ownerText);
+          sortState.key = column.key;
+          sortState.direction = "asc";
         }
-        const metaRow = document.createElement("p");
-        metaRow.textContent = `${hund.rasse || "Unbekannte Rasse"} · ${formatDate(
-          hund.geburtsdatum
-        )}`;
-        cardBody.append(ownerRow, metaRow);
-      }
-      const link = document.createElement("a");
-      link.href = `#/hunde/${hund.id}`;
-      link.className = "hunde-list__link";
-      link.appendChild(hundCard);
-      listWrapper.appendChild(link);
+        updateHeaderState();
+        renderRows();
+      });
+      th.appendChild(button);
+      headerRow.appendChild(th);
     });
-    body.appendChild(listWrapper);
+
+    thead.appendChild(headerRow);
+    table.append(thead, tbody);
+    tableWrapper.appendChild(table);
+    body.appendChild(tableWrapper);
+    updateHeaderState();
+    renderRows();
   } catch (error) {
     console.error("[HUNDE_ERR_LIST_FETCH]", error);
     body.innerHTML = "";
@@ -166,6 +242,13 @@ function formatDate(value) {
   });
 }
 
+function formatSortDate(value) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return String(value);
+  return date.toISOString();
+}
+
 function focusHeading(container) {
   const heading = container.querySelector("h1, h2");
   if (!heading) return;
@@ -173,29 +256,4 @@ function focusHeading(container) {
   heading.focus();
 }
 
-function formatOwnerName(kunde = {}) {
-  const parts = [kunde.vorname, kunde.nachname].filter((val) => Boolean(val && val.trim()));
-  const name = parts.join(" ").trim();
-  if (name) return name;
-  return kunde.email || kunde.code || kunde.kundenCode || kunde.id || "–";
-}
-
-function extractTown(address = "") {
-  if (typeof address !== "string") return "";
-  const parts = address
-    .split(",")
-    .map((part) => part.trim())
-    .filter(Boolean);
-  if (!parts.length) return "";
-  const townRaw = parts[parts.length - 1];
-  const cleaned = townRaw.replace(/^\d+\s*/, "").trim();
-  return cleaned || townRaw;
-}
-
-function formatOwnerDescriptor(kunde = {}) {
-  const code = kunde.code || kunde.kundenCode || kunde.id || "–";
-  const name = formatOwnerName(kunde);
-  const town = extractTown(kunde.adresse || kunde.address || "");
-  const townPart = town ? ` · ${town}` : "";
-  return `${code} · ${name}${townPart}`;
-}
+// owner helpers removed (list view is now standalone)

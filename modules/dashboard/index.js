@@ -105,6 +105,8 @@ async function buildActionsCard() {
       return cardElement;
     }
 
+    const actionsWrap = document.createElement("div");
+    actionsWrap.className = "module-actions";
     quickActions.forEach((action) => {
       const button = createButton({
         label: action.label,
@@ -115,8 +117,9 @@ async function buildActionsCard() {
           }
         },
       });
-      bodyEl.appendChild(button);
+      actionsWrap.appendChild(button);
     });
+    bodyEl.appendChild(actionsWrap);
   } catch (error) {
     console.error("DASHBOARD_ACTIONS_LOAD_FAILED", error);
     bodyEl.textContent = "Fehler beim Laden der Daten.";

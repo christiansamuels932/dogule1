@@ -1,5 +1,5 @@
 // Kunden module – list/detail/form flows with mock API
-/* globals document, console, window */
+/* globals document, console, window, FileReader */
 import {
   listKunden,
   getKunde,
@@ -220,27 +220,134 @@ async function renderList(root) {
   if (!kunden.length) {
     appendSharedEmptyState(listBody);
   } else {
-    const listWrapper = document.createElement("div");
-    listWrapper.className = "kunden-list";
-    kunden.forEach((kunde) => {
-      const kundCardFragment = createCard({
-        eyebrow: kunde.kundenCode || "–",
-        title: formatFullName(kunde),
-        body: `<p>${kunde.email?.trim() || "keine E-Mail"}</p>`,
-        footer: "",
+    const sortState = {
+      key: "nachname",
+      direction: "asc",
+    };
+    const tableWrapper = document.createElement("div");
+    tableWrapper.className = "kunden-list-scroll";
+    const table = document.createElement("table");
+    table.className = "kunden-list-table";
+    const thead = document.createElement("thead");
+    const headerRow = document.createElement("tr");
+    const tbody = document.createElement("tbody");
+
+    const columns = [
+      {
+        key: "nachname",
+        label: "Name",
+        value: (kunde) => valueOrDash(kunde.nachname),
+        sortValue: (kunde) => (kunde.nachname || "").toLowerCase(),
+        isLink: true,
+      },
+      {
+        key: "vorname",
+        label: "Vorname",
+        value: (kunde) => valueOrDash(kunde.vorname),
+        sortValue: (kunde) => (kunde.vorname || "").toLowerCase(),
+      },
+      {
+        key: "telefon",
+        label: "Telefon",
+        value: (kunde) => valueOrDash(kunde.telefon),
+        sortValue: (kunde) => (kunde.telefon || "").toLowerCase(),
+      },
+      {
+        key: "email",
+        label: "E-Mail",
+        value: (kunde) => valueOrDash(kunde.email),
+        sortValue: (kunde) => (kunde.email || "").toLowerCase(),
+      },
+      {
+        key: "ort",
+        label: "Ort",
+        value: (kunde) => valueOrDash(extractTown(kunde.adresse || kunde.address || "")),
+        sortValue: (kunde) => extractTown(kunde.adresse || kunde.address || "").toLowerCase(),
+      },
+    ];
+
+    function updateHeaderState() {
+      headerRow.querySelectorAll("th").forEach((th) => {
+        const key = th.dataset.sortKey;
+        if (!key) return;
+        const isActive = key === sortState.key;
+        th.setAttribute(
+          "aria-sort",
+          isActive ? (sortState.direction === "asc" ? "ascending" : "descending") : "none"
+        );
+        const button = th.querySelector("button");
+        if (!button) return;
+        const indicator = isActive ? (sortState.direction === "asc" ? "↑" : "↓") : "";
+        button.textContent = indicator
+          ? `${th.dataset.label} ${indicator}`
+          : th.dataset.label || "";
       });
-      const cardElement =
-        kundCardFragment.querySelector(".ui-card") || kundCardFragment.firstElementChild;
-      if (!cardElement) return;
-      cardElement.classList.add("kunden-list-item");
-      const link = document.createElement("a");
-      link.href = `#/kunden/${kunde.id}`;
-      link.className = "kunden-list__link";
-      link.setAttribute("aria-label", `${formatFullName(kunde)} öffnen`);
-      link.appendChild(cardElement);
-      listWrapper.appendChild(link);
+    }
+
+    function renderRows() {
+      tbody.innerHTML = "";
+      const rows = kunden
+        .map((kunde, index) => ({ kunde, index }))
+        .sort((a, b) => {
+          const column = columns.find((col) => col.key === sortState.key);
+          const getValue = column?.sortValue || column?.value;
+          const aValue = (getValue ? getValue(a.kunde) : "").toString();
+          const bValue = (getValue ? getValue(b.kunde) : "").toString();
+          const compare = aValue.localeCompare(bValue, "de", { sensitivity: "base" });
+          if (compare !== 0) {
+            return sortState.direction === "asc" ? compare : -compare;
+          }
+          return a.index - b.index;
+        });
+
+      rows.forEach(({ kunde }) => {
+        const row = document.createElement("tr");
+        row.className = "kunden-list-row";
+        columns.forEach((column) => {
+          const cell = document.createElement("td");
+          if (column.isLink) {
+            const link = document.createElement("a");
+            link.href = `#/kunden/${kunde.id}`;
+            link.className = "kunden-list__link";
+            link.textContent = column.value(kunde);
+            link.setAttribute("aria-label", `${formatFullName(kunde)} öffnen`);
+            cell.appendChild(link);
+          } else {
+            cell.textContent = column.value(kunde);
+          }
+          row.appendChild(cell);
+        });
+        tbody.appendChild(row);
+      });
+    }
+
+    columns.forEach((column) => {
+      const th = document.createElement("th");
+      th.dataset.sortKey = column.key;
+      th.dataset.label = column.label;
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "kunden-sort-btn";
+      button.addEventListener("click", () => {
+        if (sortState.key === column.key) {
+          sortState.direction = sortState.direction === "asc" ? "desc" : "asc";
+        } else {
+          sortState.key = column.key;
+          sortState.direction = "asc";
+        }
+        updateHeaderState();
+        renderRows();
+      });
+      th.appendChild(button);
+      headerRow.appendChild(th);
     });
-    listBody.appendChild(listWrapper);
+
+    thead.appendChild(headerRow);
+    table.append(thead, tbody);
+    tableWrapper.appendChild(table);
+    listBody.appendChild(tableWrapper);
+    updateHeaderState();
+    renderRows();
   }
 
   section.append(actionsCard, listCard);
@@ -314,7 +421,17 @@ async function renderDetail(root, id) {
     { label: "E-Mail", value: kunde.email },
     { label: "Telefon", value: kunde.telefon },
     { label: "Adresse", value: kunde.adresse },
+    { label: "Ausweis-ID", value: kunde.ausweisId || kunde.ausweisID },
+    { label: "Status", value: formatKundenStatus(kunde.status) },
+    {
+      label: "Foto",
+      render: () => renderOptionalLink(kunde.fotoUrl || kunde.foto || ""),
+    },
     { label: "Notizen", value: kunde.notizen },
+    {
+      label: "Begleitpersonen",
+      value: formatBegleitpersonen(kunde.begleitpersonen),
+    },
     { label: "Erstellt am", value: formatDateTime(kunde.createdAt) },
     { label: "Aktualisiert am", value: formatDateTime(kunde.updatedAt) },
   ];
@@ -324,6 +441,8 @@ async function renderDetail(root, id) {
 
   const actionsCard = createStandardCard("Aktionen");
   const actionsBody = actionsCard.querySelector(".ui-card__body");
+  const actionsWrap = document.createElement("div");
+  actionsWrap.className = "module-actions";
   const editBtn = createButton({
     label: "Bearbeiten",
     variant: "primary",
@@ -346,7 +465,8 @@ async function renderDetail(root, id) {
   backBtn.addEventListener("click", () => {
     window.location.hash = "#/kunden";
   });
-  actionsBody.append(editBtn, deleteBtn, backBtn);
+  actionsWrap.append(editBtn, deleteBtn, backBtn);
+  actionsBody.appendChild(actionsWrap);
   const actionStatus = document.createElement("div");
   actionStatus.className = "kunden-card-status";
   actionsBody.appendChild(actionStatus);
@@ -387,7 +507,7 @@ async function renderDetail(root, id) {
     console.error("[KUNDEN_ERR_KURSE_LOAD]", error);
   }
 
-  root.appendChild(renderKundenHundeSection(linkedHunde, kunde, hundeLoadFailed));
+  root.appendChild(renderKundenHundeSection(linkedHunde, hundeLoadFailed));
   root.appendChild(renderKundenKurseSection(linkedKurse, kurseLoadFailed));
   let finanzen = [];
   let finanzenLoadFailed = false;
@@ -596,6 +716,16 @@ async function renderForm(root, view, id) {
       placeholder: "z. B. Keller",
     },
     {
+      name: "status",
+      label: "Status",
+      control: "select",
+      options: [
+        { value: "", label: "Bitte wählen" },
+        { value: "aktiv", label: "Aktiv" },
+        { value: "deaktiviert", label: "Deaktiviert" },
+      ],
+    },
+    {
       name: "email",
       label: "E-Mail*",
       required: true,
@@ -613,6 +743,17 @@ async function renderForm(root, view, id) {
       placeholder: "z. B. Hauptstrasse 10, 8000 Zürich",
     },
     {
+      name: "ausweisId",
+      label: "Ausweis-ID",
+      placeholder: "z. B. ID-123456",
+    },
+    {
+      name: "foto",
+      label: "Foto",
+      type: "file",
+      accept: "image/*",
+    },
+    {
       name: "notizen",
       label: "Notizen",
       textarea: true,
@@ -625,25 +766,41 @@ async function renderForm(root, view, id) {
     const row = createFormRow({
       id: `kunden-${field.name}`,
       label: field.label,
-      control: field.textarea ? "textarea" : "input",
+      control: field.control || (field.textarea ? "textarea" : "input"),
       type: field.type || "text",
       placeholder: field.placeholder || "",
       required: Boolean(field.required),
       describedByText: field.describedByText || "",
+      options: field.options || [],
     });
     const input = row.querySelector("input, textarea");
-    input.name = field.name;
+    const select = row.querySelector("select");
+    const control = input || select;
+    if (!control) return;
+    control.name = field.name;
     const initialValue = field.value !== undefined ? field.value : (existing?.[field.name] ?? "");
-    input.value = initialValue || "";
+    if (select) {
+      const match = Array.from(select.options).find((opt) => opt.value === initialValue);
+      if (match) match.selected = true;
+    } else if (input) {
+      if (input.type === "file") {
+        input.value = "";
+      } else {
+        input.value = initialValue || "";
+      }
+    }
+    if (field.accept && input) {
+      input.setAttribute("accept", field.accept);
+    }
     if (field.readOnly) {
-      input.readOnly = true;
+      if (input) input.readOnly = true;
     }
     const hint = row.querySelector(".ui-form-row__hint");
     if (!field.describedByText) {
       hint.classList.add("sr-only");
     }
     if (field.name === "kundenCode") {
-      input.setAttribute("aria-readonly", "true");
+      if (input) input.setAttribute("aria-readonly", "true");
       const toggleWrap = document.createElement("div");
       toggleWrap.className = "kunden-id-toggle";
       const toggleButton = createButton({
@@ -654,15 +811,19 @@ async function renderForm(root, view, id) {
       toggleButton.addEventListener("click", () => {
         isCodeOverrideEnabled = !isCodeOverrideEnabled;
         if (isCodeOverrideEnabled) {
-          input.readOnly = false;
-          input.removeAttribute("aria-readonly");
+          if (input) {
+            input.readOnly = false;
+            input.removeAttribute("aria-readonly");
+          }
           toggleButton.textContent = "Automatischen Code verwenden";
-          input.focus();
+          if (input) input.focus();
         } else {
-          input.readOnly = true;
-          input.setAttribute("aria-readonly", "true");
+          if (input) {
+            input.readOnly = true;
+            input.setAttribute("aria-readonly", "true");
+          }
           toggleButton.textContent = "Code manuell ändern";
-          if (!input.value.trim()) {
+          if (input && !input.value.trim()) {
             input.value = defaultKundenCode;
           }
         }
@@ -670,7 +831,7 @@ async function renderForm(root, view, id) {
       toggleWrap.appendChild(toggleButton);
       row.appendChild(toggleWrap);
     }
-    refs[field.name] = { input, hint };
+    refs[field.name] = { input: control, hint };
     form.appendChild(row);
   });
 
@@ -695,6 +856,7 @@ async function renderForm(root, view, id) {
       variant: "secondary",
     });
     addHundButton.type = "button";
+    addHundButton.classList.add("kunden-hunde-add");
     addHundButton.addEventListener("click", () => {
       const draft = appendHundDraftRow(hundeList, hundeListe, hundeDrafts);
       hundeDrafts.push(draft);
@@ -704,7 +866,7 @@ async function renderForm(root, view, id) {
   }
 
   const actions = document.createElement("div");
-  actions.className = "kunden-actions";
+  actions.className = "module-actions kunden-actions";
   const submit = createButton({
     label: mode === "create" ? "Erstellen" : "Speichern",
     variant: "primary",
@@ -735,6 +897,7 @@ async function renderForm(root, view, id) {
     formStatusSlot,
     hundeDrafts,
     hundeListe,
+    existing,
   };
   form.addEventListener("submit", (event) => handleKundeFormSubmit(event, submitContext));
 
@@ -766,7 +929,16 @@ function injectToast(section) {
 
 async function handleKundeFormSubmit(event, context = {}) {
   if (event) event.preventDefault();
-  const { mode, id, refs, submit, formStatusSlot, hundeDrafts = [], hundeListe = [] } = context;
+  const {
+    mode,
+    id,
+    refs,
+    submit,
+    formStatusSlot,
+    hundeDrafts = [],
+    hundeListe = [],
+    existing,
+  } = context;
   if (!refs || !submit) return;
 
   if (formStatusSlot) {
@@ -811,6 +983,13 @@ async function handleKundeFormSubmit(event, context = {}) {
   submit.textContent = busyLabel;
 
   try {
+    const photoInput = refs.foto?.input;
+    if (photoInput && photoInput.files && photoInput.files[0]) {
+      values.fotoUrl = await readFileAsDataUrl(photoInput.files[0]);
+    } else if (mode === "edit") {
+      values.fotoUrl = existing?.fotoUrl || existing?.foto || "";
+    }
+    delete values.foto;
     const result = mode === "create" ? await createKunde(values) : await updateKunde(id, values);
     if (!result || !result.id) {
       throw new Error("Save failed");
@@ -873,6 +1052,8 @@ async function handleKundeFormSubmit(event, context = {}) {
 function collectValues(refs) {
   const values = {};
   Object.entries(refs).forEach(([key, ref]) => {
+    if (!ref?.input) return;
+    if (ref.input.type === "file") return;
     values[key] = ref.input.value.trim();
   });
   return values;
@@ -1028,7 +1209,7 @@ function buildHundCode(num) {
   return `H-${String(safe).padStart(3, "0")}`;
 }
 
-function renderKundenHundeSection(hunde = [], kunde = null, hasError = false) {
+function renderKundenHundeSection(hunde = [], hasError = false) {
   const section = createSectionBlock({
     title: "Hunde dieses Kunden",
     subtitle: "",
@@ -1046,12 +1227,6 @@ function renderKundenHundeSection(hunde = [], kunde = null, hasError = false) {
     const list = document.createElement("ul");
     list.className = "kunden-hunde-list";
     hunde.forEach((hund) => {
-      const ownerTown = extractTown(kunde?.adresse || kunde?.address || "");
-      const ownerName = formatFullName(kunde || {});
-      const ownerCode = kunde?.code || kunde?.kundenCode || kunde?.id || "–";
-      const ownerDescriptor = kunde
-        ? `${ownerCode} · ${ownerName}${ownerTown ? ` · ${ownerTown}` : ""}`
-        : "–";
       const item = document.createElement("li");
       const link = document.createElement("a");
       link.href = `#/hunde/${hund.id}`;
@@ -1066,10 +1241,7 @@ function renderKundenHundeSection(hunde = [], kunde = null, hasError = false) {
 
       const meta = document.createElement("p");
       meta.className = "kunden-hunde-meta";
-      const code = hund.code || hund.hundeId || "–";
-      meta.textContent = `ID: ${hund.id || "–"} · Code: ${code} · Besitzer: ${ownerDescriptor} · ${
-        hund.rasse || "unbekannte Rasse"
-      }`;
+      meta.textContent = `Rasse: ${hund.rasse || "unbekannt"}`;
 
       link.append(title, meta);
       item.appendChild(link);
@@ -1333,18 +1505,22 @@ function renderWarenSection(waren = [], hasError = false) {
 function createDefinitionList(rows = []) {
   const list = document.createElement("dl");
   list.className = "kunden-details";
-  rows.forEach(({ label, value }) => {
+  rows.forEach(({ label, value, render }) => {
     const dt = document.createElement("dt");
     dt.textContent = label;
     const dd = document.createElement("dd");
-    dd.textContent = valueOrDash(value);
+    if (typeof render === "function") {
+      dd.appendChild(render());
+    } else {
+      dd.textContent = valueOrDash(value);
+    }
     list.append(dt, dd);
   });
   return list;
 }
 
 function formatFullName(kunde = {}) {
-  const fullName = `${kunde.vorname ?? ""} ${kunde.nachname ?? ""}`.trim();
+  const fullName = `${kunde.nachname ?? ""} ${kunde.vorname ?? ""}`.trim();
   return fullName || "Unbenannt";
 }
 
@@ -1379,5 +1555,48 @@ function formatDateTime(value) {
   return date.toLocaleString("de-CH", {
     dateStyle: "medium",
     timeStyle: "short",
+  });
+}
+
+function formatKundenStatus(status) {
+  const normalized = String(status || "")
+    .trim()
+    .toLowerCase();
+  if (!normalized) return "–";
+  if (normalized === "aktiv") return "Aktiv";
+  if (normalized === "deaktiviert") return "Deaktiviert";
+  if (normalized === "passiv") return "Passiv";
+  return status;
+}
+
+function formatBegleitpersonen(list = []) {
+  if (!Array.isArray(list) || !list.length) return "–";
+  return list
+    .map((person) => {
+      if (!person) return "–";
+      const name = `${person.nachname ?? ""} ${person.vorname ?? ""}`.trim() || "–";
+      const hundLabel = person.hundName || person.hundId || "";
+      return hundLabel ? `${name} (Hund: ${hundLabel})` : name;
+    })
+    .join(", ");
+}
+
+function renderOptionalLink(value) {
+  const text = typeof value === "string" ? value.trim() : "";
+  if (!text) return document.createTextNode("Keines");
+  const link = document.createElement("a");
+  link.href = text;
+  link.textContent = "Verfügbar";
+  link.target = "_blank";
+  link.rel = "noopener noreferrer";
+  return link;
+}
+
+function readFileAsDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(typeof reader.result === "string" ? reader.result : "");
+    reader.onerror = () => reject(reader.error || new Error("File read failed"));
+    reader.readAsDataURL(file);
   });
 }

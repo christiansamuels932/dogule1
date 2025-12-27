@@ -20,30 +20,29 @@ export async function createHundeDetailView(container, hundId) {
   window.scrollTo(0, 0);
 
   const headerFragment = createSectionHeader({
-    title: "Hunde",
+    title: "Hund",
     subtitle: "",
     level: 1,
   });
-  const headerSection =
-    headerFragment.querySelector(".ui-section") || headerFragment.firstElementChild;
-  const headerTitle = headerSection?.querySelector(".ui-section__title");
-  const headerSubtitle = headerSection?.querySelector(".ui-section__subtitle");
-  if (headerTitle) headerTitle.textContent = "Hund";
-  if (headerSubtitle) headerSubtitle.textContent = "";
-  container.appendChild(headerFragment);
+  const detailSection = document.createElement("section");
+  detailSection.className = "dogule-section hunde-section hunde-detail";
+  detailSection.appendChild(headerFragment);
+  container.appendChild(detailSection);
   injectHundToast(container);
 
   const cardFragment = createCard({
     eyebrow: "",
-    title: "Lade Hund ...",
+    title: "Stammdaten",
     body: "<p>Details werden geladen ...</p>",
     footer: "",
   });
   const cardElement = cardFragment.querySelector(".ui-card") || cardFragment.firstElementChild;
   if (!cardElement) return;
-  container.appendChild(cardElement);
+  detailSection.appendChild(cardElement);
   const body = cardElement.querySelector(".ui-card__body");
-  const footer = cardElement.querySelector(".ui-card__footer");
+  const headerSection =
+    headerFragment.querySelector(".ui-section") || headerFragment.firstElementChild;
+  const headerSubtitle = headerSection?.querySelector(".ui-section__subtitle");
 
   try {
     if (!hundId) {
@@ -58,7 +57,10 @@ export async function createHundeDetailView(container, hundId) {
     let finanzenLoadFailed = false;
     const kundeInfo = {
       id: hund.kundenId || "",
-      name: "–",
+      vorname: "",
+      nachname: "",
+      telefon: "",
+      email: "",
       town: "",
     };
     let kundeFinanzen = [];
@@ -66,10 +68,11 @@ export async function createHundeDetailView(container, hundId) {
       try {
         const kunde = await getKunde(hund.kundenId);
         if (kunde) {
-          const fullName = `${kunde.vorname ?? ""} ${kunde.nachname ?? ""}`.trim();
-          kundeInfo.name = fullName || kunde.vorname || kunde.nachname || "–";
+          kundeInfo.vorname = kunde.vorname || "";
+          kundeInfo.nachname = kunde.nachname || "";
+          kundeInfo.telefon = kunde.telefon || "";
+          kundeInfo.email = kunde.email || "";
           kundeInfo.id = kunde.id || hund.kundenId;
-          kundeInfo.code = kunde.code || kunde.kundenCode || kunde.id;
           kundeInfo.town = extractTown(kunde.adresse || kunde.address || "");
           try {
             kundeFinanzen = await listFinanzenByKundeId(kunde.id);
@@ -90,12 +93,9 @@ export async function createHundeDetailView(container, hundId) {
       headerSubtitle.textContent = hundName;
       headerSubtitle.hidden = false;
     }
-    cardElement.querySelector(".ui-card__title").textContent = hundName;
+    const titleEl = cardElement.querySelector(".ui-card__title");
+    if (titleEl) titleEl.textContent = "Stammdaten";
     body.innerHTML = "";
-    if (headerSubtitle) {
-      headerSubtitle.textContent = "";
-      headerSubtitle.hidden = true;
-    }
     if (kundeLoadFailed) {
       body.appendChild(
         createNotice("Fehler beim Laden der Daten.", {
@@ -104,41 +104,62 @@ export async function createHundeDetailView(container, hundId) {
         })
       );
     }
-    body.appendChild(buildOwnerCard(kundeInfo, kundeLoadFailed));
     body.appendChild(buildDetailList(hund));
     body.appendChild(buildMetaBlock(hund));
-    const kurseSection = await buildLinkedKurseSection(hund.id);
-    container.appendChild(kurseSection);
 
-    footer.innerHTML = "";
-    const editBtn = createButton({ label: "Bearbeiten", variant: "primary" });
-    editBtn.type = "button";
-    editBtn.addEventListener("click", () => {
-      window.location.hash = `#/hunde/${hund.id}/edit`;
-    });
-    footer.appendChild(editBtn);
-
-    const deleteBtn = createButton({ label: "Löschen", variant: "secondary" });
-    deleteBtn.addEventListener("click", () =>
-      handleDeleteHund(container, hund.id, kundeInfo.id, deleteBtn)
-    );
-    footer.appendChild(deleteBtn);
-
-    if (kundeInfo.id) {
-      const kundeBtn = createButton({ label: "Zum Kunden", variant: "secondary" });
-      kundeBtn.type = "button";
-      kundeBtn.addEventListener("click", () => {
-        window.location.hash = `#/kunden/${kundeInfo.id}`;
-      });
-      footer.appendChild(kundeBtn);
+    const ownerCard = buildOwnerCard(kundeInfo, kundeLoadFailed);
+    if (ownerCard) {
+      detailSection.appendChild(ownerCard);
     }
 
-    const backBtn = createButton({ label: "Zur Liste", variant: "quiet" });
-    backBtn.type = "button";
-    backBtn.addEventListener("click", () => {
-      window.location.hash = "#/hunde";
+    const actionsCard = createCard({
+      eyebrow: "",
+      title: "Aktionen",
+      body: "",
+      footer: "",
     });
-    footer.appendChild(backBtn);
+    const actionsEl = actionsCard.querySelector(".ui-card") || actionsCard.firstElementChild;
+    if (actionsEl) {
+      const actionsBody = actionsEl.querySelector(".ui-card__body");
+      const actionsWrap = document.createElement("div");
+      actionsWrap.className = "module-actions";
+      const editBtn = createButton({ label: "Bearbeiten", variant: "primary" });
+      editBtn.type = "button";
+      editBtn.addEventListener("click", () => {
+        window.location.hash = `#/hunde/${hund.id}/edit`;
+      });
+      actionsWrap.appendChild(editBtn);
+
+      const deleteBtn = createButton({ label: "Löschen", variant: "secondary" });
+      deleteBtn.addEventListener("click", () =>
+        handleDeleteHund(container, hund.id, kundeInfo.id, deleteBtn)
+      );
+      actionsWrap.appendChild(deleteBtn);
+
+      if (kundeInfo.id) {
+        const kundeBtn = createButton({ label: "Zum Kunden", variant: "secondary" });
+        kundeBtn.type = "button";
+        kundeBtn.addEventListener("click", () => {
+          window.location.hash = `#/kunden/${kundeInfo.id}`;
+        });
+        actionsWrap.appendChild(kundeBtn);
+      }
+
+      const backBtn = createButton({ label: "Zur Liste", variant: "quiet" });
+      backBtn.type = "button";
+      backBtn.addEventListener("click", () => {
+        window.location.hash = "#/hunde";
+      });
+      actionsWrap.appendChild(backBtn);
+
+      if (actionsBody) {
+        actionsBody.innerHTML = "";
+        actionsBody.appendChild(actionsWrap);
+      }
+      detailSection.appendChild(actionsEl);
+    }
+    const kurseSection = await buildLinkedKurseSection(hund.id);
+    container.appendChild(kurseSection);
     container.appendChild(
       buildFinanzUebersichtSection(container.__linkedFinanzen || [], finanzenLoadFailed, {
         hasKunde: Boolean(kundeInfo.id),
@@ -162,8 +183,10 @@ export async function createHundeDetailView(container, hundId) {
       role: "alert",
     });
     body.appendChild(notice);
-    footer.innerHTML = "";
-    footer.appendChild(createNavLink("Zur Liste", "#/hunde", "secondary"));
+    const actionsFallback = document.createElement("div");
+    actionsFallback.className = "module-actions";
+    actionsFallback.appendChild(createNavLink("Zur Liste", "#/hunde", "secondary"));
+    body.appendChild(actionsFallback);
   } finally {
     focusHeading(container);
   }
@@ -467,8 +490,14 @@ function buildDetailList(hund) {
     { label: "Rasse", value: hund.rasse },
     { label: "Geschlecht", value: hund.geschlecht },
     { label: "Geburtsdatum", value: formatDate(hund.geburtsdatum) },
-    { label: "Gewicht (kg)", value: hund.gewichtKg },
+    { label: "Kastriert", value: formatBoolean(hund.kastriert) },
+    { label: "Felltyp", value: hund.felltyp || hund.fellTyp },
+    { label: "Fellfarbe", value: hund.fellfarbe || hund.fellFarbe },
+    { label: "Größe (Typ)", value: hund.groesseTyp || hund.groesseType },
     { label: "Größe (cm)", value: hund.groesseCm },
+    { label: "Gewicht (kg)", value: hund.gewichtKg },
+    { label: "Herkunft", value: hund.herkunft },
+    { label: "Chip Nummer", value: hund.chipNummer || hund.chipnummer },
     { label: "Trainingsziele", value: hund.trainingsziele },
     { label: "Notizen", value: hund.notizen },
   ];
@@ -497,7 +526,7 @@ function buildMetaBlock(hund) {
 
 function buildOwnerCard(kundeInfo = {}, hasError = false) {
   const cardFragment = createCard({
-    eyebrow: kundeInfo.code || kundeInfo.id || "Kunde",
+    eyebrow: "",
     title: "Besitzer",
     body: "",
     footer: "",
@@ -513,17 +542,23 @@ function buildOwnerCard(kundeInfo = {}, hasError = false) {
   } else if (!kundeInfo.id) {
     body.appendChild(createEmptyState("Keine Daten vorhanden.", ""));
   } else {
-    const name = kundeInfo.name || "–";
-    const code = kundeInfo.code || kundeInfo.id;
-    const idEl = document.createElement("p");
-    idEl.textContent = `ID: ${kundeInfo.id}`;
-    const nameEl = document.createElement("p");
-    nameEl.textContent = name;
-    const codeEl = document.createElement("p");
-    codeEl.textContent = `Code: ${code}`;
-    const townEl = document.createElement("p");
-    townEl.textContent = `Ort: ${kundeInfo.town || "–"}`;
-    body.append(idEl, nameEl, codeEl, townEl);
+    const list = document.createElement("dl");
+    list.className = "kunden-details";
+    const rows = [
+      { label: "Name", value: kundeInfo.nachname },
+      { label: "Vorname", value: kundeInfo.vorname },
+      { label: "Telefon", value: kundeInfo.telefon },
+      { label: "E-Mail", value: kundeInfo.email },
+      { label: "Ort", value: kundeInfo.town },
+    ];
+    rows.forEach(({ label, value }) => {
+      const dt = document.createElement("dt");
+      dt.textContent = label;
+      const dd = document.createElement("dd");
+      dd.textContent = valueOrDash(value);
+      list.append(dt, dd);
+    });
+    body.appendChild(list);
     const footer = card.querySelector(".ui-card__footer");
     footer.innerHTML = "";
     const link = document.createElement("a");
@@ -574,6 +609,12 @@ function extractTown(address = "") {
 function valueOrDash(value) {
   if (value === null || value === undefined || value === "") return "–";
   return String(value);
+}
+
+function formatBoolean(value) {
+  if (value === true) return "Ja";
+  if (value === false) return "Nein";
+  return "–";
 }
 
 function focusHeading(container) {
