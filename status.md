@@ -15,6 +15,29 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 # - - - - - - - - - - - - - - - - - - - -
 
+# Station 71 — From Alpha to Beta Planning & Doc Consolidation
+
+## Kontext
+
+- Branch: `from-alpha-to-beta-planning`.
+- Scope: consolidate current docs (excluding `status.md`), archive legacy MDs, and define the Alpha→Beta battleplan with early UI preview pass.
+
+## Ergebnis (kurz)
+
+- Created `DOGULE1_COMBINED.md` as the single consolidated doc and archived existing MDs into `archived-mds/` while preserving relative paths.
+- Added and refined `BATTLEPLAN_STATIONS_71_PLUS.md` with reordered stations, single-backend MariaDB rule, performance validation, UI split (visual early vs structural later), and manual-test freeze rules.
+- Added instruction to always read the battleplan in `DOGULE1_COMBINED.md` and `BATTLEPLAN_STATIONS_71_PLUS.md`.
+
+## Tests
+
+- Not run (documentation/planning changes only).
+
+## Notizen
+
+- `status.md` remains the continuous log and was not consolidated.
+
+# - - - - - - - - - - - - - - - - - - - -
+
 # Station 70 — Storage & Security Hardening Pass
 
 ## Kontext

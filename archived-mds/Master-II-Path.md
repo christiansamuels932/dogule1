@@ -115,4 +115,4 @@ Purpose: concrete path from current state to first public rollout, starting at S
 ## Station 74 — Public Rollout (V1)
 
 - Outcomes: staged rollout to initial users; telemetry verification; support channel live; rapid patch path defined.
-- Exit: rollout completed or halted with documented reasons; status logged in `status.md`. 
+- Exit: rollout completed or halted with documented reasons; status logged in `status.md`.

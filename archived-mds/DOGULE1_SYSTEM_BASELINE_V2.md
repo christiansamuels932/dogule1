@@ -267,4 +267,4 @@ Single source for schemas, IDs, PII/residency, integrity rules, and migration fr
 | Weekly deep checksum      | Weekly                                 | All modules      | Recompute Merkle roots; compare to last baseline             |
 | Orphan scan               | Weekly                                 | FK relationships | Report + auto-clean options                                  |
 | PII exposure scan         | Weekly                                 | All modules      | Ensure residency flags respected; no PII in logs             |
-| Schema version drift scan | Weekly                                 | All modules      | Detect mixed schemaVersion; block writes until reconciled    | 
+| Schema version drift scan | Weekly                                 | All modules      | Detect mixed schemaVersion; block writes until reconciled    |

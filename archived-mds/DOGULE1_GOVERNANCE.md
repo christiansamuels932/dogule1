@@ -73,4 +73,4 @@ Stations 61–63 are foundational and closed; downstream stations depend on them
 Changelog:
 
 - 2025-12-08: Initial governance for Stations 50–70.
-- 2026-01-XX: Renumbered Stations 53–56 to Migration & Integrity (E2a–E2d) per Station 52 plan; downstream stations shifted accordingly. 
+- 2026-01-XX: Renumbered Stations 53–56 to Migration & Integrity (E2a–E2d) per Station 52 plan; downstream stations shifted accordingly.
