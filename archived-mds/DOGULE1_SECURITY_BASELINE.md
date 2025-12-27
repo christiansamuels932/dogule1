@@ -78,4 +78,4 @@ Version 0 – first baseline; created in Station 57, covering the Station-52 sec
 
 - Authorization matrix and alert thresholds: `SECURITY_AUTHORIZATION_MATRIX.md`
 - PII map: Station 51 (existing governance reference; ensure alignment when logging/auditing)
-- Migration tamper-evidence precedent: Stations 54–56 checksums/merkle roots 
+- Migration tamper-evidence precedent: Stations 54–56 checksums/merkle roots

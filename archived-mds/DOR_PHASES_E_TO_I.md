@@ -66,4 +66,4 @@ Common usage rules
 - Reviewer roles: Planner review → Builder execution → Human merge.
 - Timebox / target date.
 - Acceptance boundaries: what is excluded from the rollout slice.
-- Exit criteria: checklist confirming playbooks, owners, on-call, rollback, and telemetry verification steps. 
+- Exit criteria: checklist confirming playbooks, owners, on-call, rollback, and telemetry verification steps.
