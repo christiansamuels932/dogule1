@@ -1,4 +1,5 @@
 import { list, create, update, remove } from "./crud.js";
+import { isHttpMode, httpList, httpGet, httpCreate, httpUpdate, httpDelete } from "./httpClient.js";
 import { db } from "./db/index.js";
 import { getKurseForTrainer } from "./kurse.js";
 
@@ -79,16 +80,25 @@ const nextTrainerId = () => {
 };
 
 export async function listTrainer(options) {
+  if (isHttpMode()) {
+    return httpList("trainer");
+  }
   const trainer = await list(TABLE, options);
   return trainer.map(ensureTrainerShape);
 }
 
 export async function getTrainer(id, options) {
+  if (isHttpMode()) {
+    return httpGet("trainer", id);
+  }
   const trainer = await listTrainer(options);
   return trainer.find((entry) => entry.id === id) || null;
 }
 
 export async function createTrainer(data = {}, options) {
+  if (isHttpMode()) {
+    return httpCreate("trainer", data);
+  }
   const sanitized = ensureEditableDefaults(data);
   if (sanitized.id) {
     delete sanitized.id;
@@ -98,6 +108,9 @@ export async function createTrainer(data = {}, options) {
 }
 
 export async function updateTrainer(id, data = {}, options) {
+  if (isHttpMode()) {
+    return httpUpdate("trainer", id, data);
+  }
   const patch = sanitizeUpdatePayload(data);
   if (!Object.keys(patch).length) {
     return getTrainer(id, options);
@@ -107,6 +120,9 @@ export async function updateTrainer(id, data = {}, options) {
 }
 
 export async function deleteTrainer(id, options) {
+  if (isHttpMode()) {
+    return httpDelete("trainer", id);
+  }
   const kursAssignments = await getKurseForTrainer(id);
   if (kursAssignments.length) {
     const error = new Error(`Trainer ${id} ist Kursen zugeordnet und kann nicht gelöscht werden.`);

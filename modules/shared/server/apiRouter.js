@@ -5,6 +5,7 @@ import crypto from "node:crypto";
 import { Buffer } from "node:buffer";
 import { createGroupchatApiHandlers } from "../../kommunikation/groupchat/apiRoutes.js";
 import { createInfochannelApiHandlers } from "../../kommunikation/infochannel/apiRoutes.js";
+import { createCoreApiRouter } from "./coreApiRouter.js";
 
 async function readJsonBody(req) {
   if (!req || req.method === "GET" || req.method === "HEAD") return {};
@@ -142,3 +143,17 @@ export function createKommunikationApiRouter(options = {}) {
 
   return { handle };
 }
+
+export function createApiRouter(options = {}) {
+  const core = createCoreApiRouter(options.core || {});
+  const kommunikation = createKommunikationApiRouter(options.kommunikation || {});
+
+  async function handle(req, res) {
+    if (await core.handle(req, res)) return true;
+    return kommunikation.handle(req, res);
+  }
+
+  return { handle };
+}
+
+export { createCoreApiRouter };

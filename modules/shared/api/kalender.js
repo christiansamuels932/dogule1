@@ -1,5 +1,6 @@
 import { list, create, update, remove } from "./crud.js";
 import { db } from "./db/index.js";
+import { isHttpMode, httpList, httpGet } from "./httpClient.js";
 
 const TABLE = "kalender";
 
@@ -106,17 +107,26 @@ function isSameEvent(existing = {}, payload = {}) {
 }
 
 export async function listKalenderEvents(options) {
+  if (isHttpMode()) {
+    return httpList("kalender");
+  }
   await syncKalenderWithKurse({ ...options, delay: 0 });
   const events = await list(TABLE, options);
   return events.map(ensureShape);
 }
 
 export async function getKalenderEvent(id, options) {
+  if (isHttpMode()) {
+    return httpGet("kalender", id);
+  }
   const events = await listKalenderEvents(options);
   return events.find((evt) => evt.id === id) || null;
 }
 
 export async function upsertKalenderEventForKurs(kurs, options) {
+  if (isHttpMode()) {
+    return null;
+  }
   const payload = buildEventPayloadFromKurs(kurs);
   const kursId = trim(kurs?.id);
   const existing = findEventByKursId(kursId);
@@ -143,12 +153,18 @@ export async function upsertKalenderEventForKurs(kurs, options) {
 }
 
 export async function removeKalenderEventByKursId(kursId, options) {
+  if (isHttpMode()) {
+    return { ok: false };
+  }
   const existing = findEventByKursId(kursId);
   if (!existing) return { ok: false };
   return remove(TABLE, existing.id, options);
 }
 
 export async function syncKalenderWithKurse(options) {
+  if (isHttpMode()) {
+    return;
+  }
   const kurse = Array.isArray(db.kurse) ? db.kurse : [];
   const kursIdSet = new Set(kurse.map((kurs) => kurs.id).filter(Boolean));
 

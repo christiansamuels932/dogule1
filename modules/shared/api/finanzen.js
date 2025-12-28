@@ -1,4 +1,5 @@
 import { list, create, update, remove } from "./crud.js";
+import { isHttpMode, httpList, httpGet, httpCreate, httpUpdate, httpDelete } from "./httpClient.js";
 import { listKurse } from "./kurse.js";
 import { listTrainer } from "./trainer.js";
 
@@ -28,26 +29,41 @@ const ensureFinanzShape = (entry = {}) => ({
 });
 
 export async function listFinanzen(options) {
+  if (isHttpMode()) {
+    return httpList("finanzen");
+  }
   const finanzen = await list(TABLE, options);
   return finanzen.map(ensureFinanzShape);
 }
 
 export async function getFinanz(id, options) {
+  if (isHttpMode()) {
+    return httpGet("finanzen", id);
+  }
   const finanzen = await listFinanzen(options);
   return finanzen.find((item) => item.id === id) || null;
 }
 
 export async function createFinanz(data = {}, options) {
+  if (isHttpMode()) {
+    return httpCreate("finanzen", data);
+  }
   const record = await create(TABLE, ensureEditableDefaults(data), options);
   return ensureFinanzShape(record);
 }
 
 export async function updateFinanz(id, data = {}, options) {
+  if (isHttpMode()) {
+    return httpUpdate("finanzen", id, data);
+  }
   const updated = await update(TABLE, id, ensureEditableDefaults(data), options);
   return updated ? ensureFinanzShape(updated) : null;
 }
 
 export async function deleteFinanz(id, options) {
+  if (isHttpMode()) {
+    return httpDelete("finanzen", id);
+  }
   return remove(TABLE, id, options);
 }
 

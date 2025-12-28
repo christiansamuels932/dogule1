@@ -9,6 +9,8 @@
     "format": "echo \"DLX-FMT-001: running prettier\" && prettier --write .",
     "build": "vite build",
     "test": "vitest",
+    "server:api": "node tools/server/apiServer.js",
+    "mariadb:smoke": "node tools/mariadb/smokeTest.js",
     "audit": "echo \"DLX-AUDIT-001: running pnpm audit\" && pnpm audit",
     "prepare": "echo \"DLX-HUSKY-000: installing husky hooks\" && husky install",
     "lint-staged": "echo \"DLX-LS-001: running lint-staged\" && lint-staged",
@@ -25,6 +27,9 @@
     "vite": "^6.0.0",
     "vitest": "^4.0.12",
     "happy-dom": "^20.0.2"
+  },
+  "dependencies": {
+    "mariadb": "^3.4.0"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [

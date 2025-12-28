@@ -37,11 +37,8 @@ function validateContext({ mode, entity, operation, actionId, actorId, actorRole
       `Missing required write context: ${missing.join(", ")}`
     );
   }
-  if (mode !== "mock" && mode !== "real") {
-    throw new StorageError(
-      STORAGE_ERROR_CODES.STORAGE_ERROR,
-      `Unsupported storage mode: ${mode}`
-    );
+  if (mode !== "mock" && mode !== "real" && mode !== "mariadb") {
+    throw new StorageError(STORAGE_ERROR_CODES.STORAGE_ERROR, `Unsupported storage mode: ${mode}`);
   }
 }
 
@@ -52,7 +49,11 @@ function requireAudit(audit, auditContext) {
       "Audit hook is required for storage writes"
     );
   }
-  if (!auditContext || auditContext.hashPrev === undefined || auditContext.hashIndex === undefined) {
+  if (
+    !auditContext ||
+    auditContext.hashPrev === undefined ||
+    auditContext.hashIndex === undefined
+  ) {
     throw new StorageError(
       STORAGE_ERROR_CODES.STORAGE_ERROR,
       "Audit context with hashPrev and hashIndex is required for storage writes"

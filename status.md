@@ -90,6 +90,41 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 # - - - - - - - - - - - - - - - - - - - -
 
+# Station 74 — MariaDB Schema & Adapter Implementation
+
+## Kontext
+
+- Branch: `feature/station74-mariadb-schema-adapter`.
+- Scope: implement MariaDB schema + adapter, switch core CRUD to HTTP-backed API, and hard-require MariaDB for Beta usage.
+
+## Ergebnis (kurz)
+
+- Added MariaDB schema + local setup guide (`tools/mariadb/schema.sql`, `tools/mariadb/README.md`) and initialized local data dir under `/home/ran/codex/.local/mariadb` (socket-only).
+- Implemented MariaDB storage adapter (`modules/shared/storage/mariadbAdapter.js`) with CRUD for kunden/hunde/kurse/trainer/kalender/finanzen/waren, uuidv7 defaults, and JSON field handling.
+- Added core HTTP API router (`modules/shared/server/coreApiRouter.js`) and combined router export; Vite dev now wires core + Kommunikation via `createApiRouter`.
+- UI core modules switched to HTTP in browser with `modules/shared/api/httpClient.js`, while tests stay on mock via a test-environment guard.
+- Added Node API server entrypoint (`tools/server/apiServer.js`), MariaDB smoke test (`tools/mariadb/smokeTest.js`), and `.env.example` for local config.
+- Storage config supports `mariadb` mode and can enforce it via `DOGULE1_REQUIRE_MARIADB=1`; `.local/` is gitignored.
+
+## Tests
+
+- `pnpm install` ✅ (esbuild build scripts ignored warning)
+- `pnpm test` ❌ (HTTP mode tried `http://localhost:3000`, fixed by test-env guard)
+- `pnpm test` ✅
+- `mariadb-install-db --datadir /home/ran/codex/.local/mariadb --user=ran` ✅ (auth_pam ownership warnings)
+- `nohup mariadbd --datadir /home/ran/codex/.local/mariadb --socket=/home/ran/codex/.local/mariadb/mariadb.sock --pid-file=/home/ran/codex/.local/mariadb/mariadb.pid --log-error=/home/ran/codex/.local/mariadb/mariadb.err --skip-networking &` ✅
+- `mariadb --protocol=socket --socket /home/ran/codex/.local/mariadb/mariadb.sock --user=ran < tools/mariadb/schema.sql` ✅
+- `mariadb --protocol=socket --socket /home/ran/codex/.local/mariadb/mariadb.sock --user=ran -e "SHOW TABLES IN dogule1;"` ✅
+- `pnpm run mariadb:smoke` ✅ (uses default socket + user)
+
+## Notizen
+
+- MariaDB runs with `--skip-networking` (socket-only) due to sandbox restrictions; set `DOGULE1_MARIADB_SOCKET` to connect.
+- Core UI now expects `/api/*` endpoints in browser; use `createApiRouter` from `modules/shared/server/apiRouter.js` to serve CRUD + Kommunikation.
+- `mariadb:smoke` emits MODULE_TYPELESS warning (repo is not ESM); left as-is.
+
+# - - - - - - - - - - - - - - - - - - - -
+
 # Station 71 — From Alpha to Beta Planning & Doc Consolidation
 
 ## Kontext
