@@ -1,4 +1,5 @@
 import { list, create, update, remove } from "./crud.js";
+import { isHttpMode, httpList, httpGet, httpCreate, httpUpdate, httpDelete } from "./httpClient.js";
 
 const TABLE = "kunden";
 const LEGACY_CODE_KEY = "kundenCode";
@@ -56,25 +57,40 @@ const ensureKundeShape = (kunde = {}) =>
   });
 
 export async function listKunden(options) {
+  if (isHttpMode()) {
+    return httpList("kunden");
+  }
   const kunden = await list(TABLE, options);
   return kunden.map(ensureKundeShape);
 }
 
 export async function getKunde(id, options) {
+  if (isHttpMode()) {
+    return httpGet("kunden", id);
+  }
   const kunden = await listKunden(options);
   return kunden.find((k) => k.id === id) || null;
 }
 
 export async function createKunde(data = {}, options) {
+  if (isHttpMode()) {
+    return httpCreate("kunden", data);
+  }
   const record = await create(TABLE, ensureEditableDefaults(data), options);
   return ensureKundeShape(record);
 }
 
 export async function updateKunde(id, data = {}, options) {
+  if (isHttpMode()) {
+    return httpUpdate("kunden", id, data);
+  }
   const updated = await update(TABLE, id, ensureEditableDefaults(data), options);
   return updated ? ensureKundeShape(updated) : null;
 }
 
 export async function deleteKunde(id, options) {
+  if (isHttpMode()) {
+    return httpDelete("kunden", id);
+  }
   return remove(TABLE, id, options);
 }

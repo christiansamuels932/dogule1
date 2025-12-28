@@ -1,4 +1,5 @@
 import { list, create, update, remove } from "./crud.js";
+import { isHttpMode, httpList, httpGet, httpCreate, httpUpdate, httpDelete } from "./httpClient.js";
 import { db } from "./db.js";
 
 const TABLE = "hunde";
@@ -104,16 +105,25 @@ const ensureHundShape = (hund = {}) =>
   });
 
 export async function listHunde(options) {
+  if (isHttpMode()) {
+    return httpList("hunde");
+  }
   const hunde = await list(TABLE, options);
   return hunde.map(ensureHundShape);
 }
 
 export async function getHund(id, options) {
+  if (isHttpMode()) {
+    return httpGet("hunde", id);
+  }
   const hunde = await listHunde(options);
   return hunde.find((hund) => hund.id === id) || null;
 }
 
 export async function createHund(data = {}, options) {
+  if (isHttpMode()) {
+    return httpCreate("hunde", data);
+  }
   const normalized = ensureEditableDefaults(data);
   normalized.kundenId = assertValidKundenId(normalized.kundenId);
   const record = await create(TABLE, normalized, options);
@@ -121,6 +131,9 @@ export async function createHund(data = {}, options) {
 }
 
 export async function updateHund(id, data = {}, options) {
+  if (isHttpMode()) {
+    return httpUpdate("hunde", id, data);
+  }
   const patch = sanitizeUpdatePayload(normalizeCodePayload(data));
   const existing = await getHund(id, options);
   if (!existing) return null;
@@ -134,5 +147,8 @@ export async function updateHund(id, data = {}, options) {
 }
 
 export async function deleteHund(id, options) {
+  if (isHttpMode()) {
+    return httpDelete("hunde", id);
+  }
   return remove(TABLE, id, options);
 }

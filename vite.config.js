@@ -5,15 +5,15 @@ const { defineConfig } = require("vite");
 
 const projectRoot = __dirname;
 
-function kommunikationApiPlugin() {
+function doguleApiPlugin() {
   return {
-    name: "dogule1-kommunikation-api",
+    name: "dogule1-api",
     async configureServer(server) {
       const routerPath = pathToFileURL(
         path.resolve(projectRoot, "modules/shared/server/apiRouter.js")
       ).href;
-      const { createKommunikationApiRouter } = await import(routerPath);
-      const router = createKommunikationApiRouter();
+      const { createApiRouter } = await import(routerPath);
+      const router = createApiRouter();
       server.middlewares.use(async (req, res, next) => {
         try {
           const handled = await router.handle(req, res);
@@ -33,7 +33,7 @@ module.exports = defineConfig({
     outDir: path.resolve(projectRoot, "dist"),
     emptyOutDir: true,
   },
-  plugins: [kommunikationApiPlugin()],
+  plugins: [doguleApiPlugin()],
   server: {
     fs: {
       allow: [projectRoot],

@@ -1,5 +1,6 @@
 import { list, create, update, remove } from "./crud.js";
 import { db } from "./db/index.js";
+import { isHttpMode, httpList, httpGet, httpCreate, httpUpdate, httpDelete } from "./httpClient.js";
 import { removeKalenderEventByKursId, upsertKalenderEventForKurs } from "./kalender.js";
 
 const TABLE = "kurse";
@@ -143,6 +144,11 @@ const ensureKursShape = (kurs = {}) => ({
 export async function getKurseForHund(hundId) {
   const targetId = (hundId || "").trim();
   if (!targetId) return [];
+  if (isHttpMode()) {
+    const kurse = await listKurse();
+    const matches = kurse.filter((kurs) => normalizeIdArray(kurs.hundIds).includes(targetId));
+    return matches.map(ensureKursShape);
+  }
   const kurse = Array.isArray(db[TABLE]) ? db[TABLE] : [];
   const matches = kurse.filter((kurs) => normalizeIdArray(kurs.hundIds).includes(targetId));
   return matches.map(ensureKursShape);
@@ -150,6 +156,24 @@ export async function getKurseForHund(hundId) {
 
 export async function getHundeForKurs(kursId) {
   if (!kursId) return [];
+  if (isHttpMode()) {
+    const kurs = await getKurs(kursId);
+    if (!kurs) return [];
+    const hundIds = normalizeIdArray(kurs.hundIds);
+    const hundeTable = await import("./hunde.js").then((mod) => mod.listHunde());
+    const kundenTable = await import("./kunden.js").then((mod) => mod.listKunden());
+    return hundIds.map((hundId) => {
+      const hund = hundeTable.find((entry) => entry.id === hundId);
+      if (!hund) {
+        return { id: hundId, _missing: true };
+      }
+      const owner = kundenTable.find((kunde) => kunde.id === hund.kundenId) || null;
+      return {
+        ...hund,
+        owner: owner ? { ...owner } : null,
+      };
+    });
+  }
   const kurs = Array.isArray(db[TABLE]) ? db[TABLE].find((entry) => entry.id === kursId) : null;
   if (!kurs) return [];
   const hundIds = normalizeIdArray(kurs.hundIds);
@@ -169,16 +193,25 @@ export async function getHundeForKurs(kursId) {
 }
 
 export async function listKurse(options) {
+  if (isHttpMode()) {
+    return httpList("kurse");
+  }
   const kurse = await list(TABLE, options);
   return kurse.map(ensureKursShape);
 }
 
 export async function getKurs(id, options) {
+  if (isHttpMode()) {
+    return httpGet("kurse", id);
+  }
   const kurse = await listKurse(options);
   return kurse.find((kurs) => kurs.id === id) || null;
 }
 
 export async function createKurs(data = {}, options) {
+  if (isHttpMode()) {
+    return httpCreate("kurse", data);
+  }
   const record = await create(
     TABLE,
     { id: nextKursId(), ...ensureEditableDefaults(data) },
@@ -190,6 +223,9 @@ export async function createKurs(data = {}, options) {
 }
 
 export async function updateKurs(id, data = {}, options) {
+  if (isHttpMode()) {
+    return httpUpdate("kurse", id, data);
+  }
   const existing = await getKurs(id, options);
   if (!existing) return null;
   const patch = sanitizeUpdatePayload(data);
@@ -209,6 +245,9 @@ export async function updateKurs(id, data = {}, options) {
 }
 
 export async function deleteKurs(id, options) {
+  if (isHttpMode()) {
+    return httpDelete("kurse", id);
+  }
   const result = await remove(TABLE, id, options);
   if (result?.ok) {
     await removeKalenderEventByKursId(id, options);

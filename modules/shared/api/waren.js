@@ -1,4 +1,5 @@
 import { list, create, update, remove } from "./crud.js";
+import { isHttpMode, httpList, httpGet, httpCreate, httpUpdate, httpDelete } from "./httpClient.js";
 
 const TABLE = "waren";
 
@@ -60,21 +61,33 @@ const ensureWarenShape = (entry = {}) => ({
 });
 
 export async function listWaren(options) {
+  if (isHttpMode()) {
+    return httpList("waren");
+  }
   const waren = await list(TABLE, options);
   return waren.map(ensureWarenShape);
 }
 
 export async function getWarenById(id, options) {
+  if (isHttpMode()) {
+    return httpGet("waren", id);
+  }
   const waren = await listWaren(options);
   return waren.find((verkauf) => verkauf.id === id) || null;
 }
 
 export async function createWaren(data = {}, options) {
+  if (isHttpMode()) {
+    return httpCreate("waren", data);
+  }
   const record = await create(TABLE, ensureEditableDefaults(data), options);
   return ensureWarenShape(record);
 }
 
 export async function updateWaren(id, data = {}, options) {
+  if (isHttpMode()) {
+    return httpUpdate("waren", id, data);
+  }
   const patch = sanitizeUpdatePayload(data);
   if (!Object.keys(patch).length) {
     return getWarenById(id, options);
@@ -84,6 +97,9 @@ export async function updateWaren(id, data = {}, options) {
 }
 
 export async function deleteWaren(id, options) {
+  if (isHttpMode()) {
+    return httpDelete("waren", id);
+  }
   return remove(TABLE, id, options);
 }
 
