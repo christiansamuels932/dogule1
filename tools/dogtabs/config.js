@@ -2,6 +2,7 @@ import path from "node:path";
 
 const DEFAULT_CAPTURE = "capture_20251219_185854Z";
 
+/* global process */
 export function resolveDogtabsConfig(options = {}) {
   const cwd = process.cwd();
   const sourceRoot =

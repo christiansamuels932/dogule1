@@ -1,4 +1,4 @@
-/* global process */
+/* global process, console */
 import mariadb from "mariadb";
 import { StorageError, STORAGE_ERROR_CODES } from "./errors.js";
 import { uuidv7 } from "../utils/uuidv7.js";

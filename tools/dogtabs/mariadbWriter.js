@@ -1,3 +1,4 @@
+/* global process */
 import mariadb from "mariadb";
 
 const DEFAULT_POOL_LIMIT = 5;
