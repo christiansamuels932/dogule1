@@ -157,6 +157,7 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 - Current standard: system MariaDB socket (`/run/mysqld/mysqld.sock`) for API + imports; avoid mixing sockets.
 - `kunden.legacy_id` is now the deterministic link for Hunde import (DogTabs `hund_kundennummer` → `kunden.legacy_id`).
 - Unmatched Hunde count: 2 (no matching `kunden.legacy_id`); record in next pass before Kurs import.
+- CI guard: removed `migration/legacy/station61/capture_20251219_185854Z/Dogtabs-Kunden-Export.csv` from git to keep Station 61 capture immutable.
 
 # Station 71 — From Alpha to Beta Planning & Doc Consolidation
 
