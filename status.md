@@ -147,7 +147,12 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 ## Tests
 
-- `pnpm run mariadb:smoke` — ✅ (kunden=1798, local socket at the time).
+- `pnpm run lint` — ❌ `no-undef` for `console/process/Buffer` in new DogTabs + MariaDB adapter files.
+- `pnpm run test` — ❌ `modules/shared/storage/storage.test.js` expects mock default; now throws `MARIADB_REQUIRED`.
+- `pnpm run build` — ✅
+- `pnpm run legacy:station61:guard` — ❌ `spawnSync git EPERM` in sandbox.
+- `pnpm run mariadb:smoke` — ❌ local socket `/home/ran/codex/.local/mariadb/mariadb.sock` missing `hunde.status` column.
+- `pnpm run dogtabs:dry-run` — ❌ pnpm reported missing script (workspaces script lookup issue).
 - `node tools/dogtabs/cli.js customers-csv <Dogtabs-Kunden-Export.csv>` — ✅ (system socket; report shows 1412 inserted).
 - Hunde import via Access DB + MariaDB writer — ✅ (386 inserted/linked, 2 unmatched).
 
@@ -158,6 +163,7 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 - `kunden.legacy_id` is now the deterministic link for Hunde import (DogTabs `hund_kundennummer` → `kunden.legacy_id`).
 - Unmatched Hunde count: 2 (no matching `kunden.legacy_id`); record in next pass before Kurs import.
 - CI guard: removed `migration/legacy/station61/capture_20251219_185854Z/Dogtabs-Kunden-Export.csv` from git to keep Station 61 capture immutable.
+- Lint/test failures are expected after enforcing MariaDB-only mode and adding `hunde.status`; update tests and local schema before re-running.
 
 # Station 71 — From Alpha to Beta Planning & Doc Consolidation
 
