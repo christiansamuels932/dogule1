@@ -226,6 +226,22 @@ function buildFormFields(
       },
     },
     {
+      name: "status",
+      config: {
+        id: "hund-status",
+        label: "Status",
+        control: "select",
+        options: [
+          { value: "", label: "Bitte wählen" },
+          { value: "aktiv", label: "Aktiv" },
+          { value: "verstorben", label: "Verstorben" },
+        ].map((option) => ({
+          ...option,
+          selected: option.value === (existing?.status ?? ""),
+        })),
+      },
+    },
+    {
       name: "geburtsdatum",
       value: existing?.geburtsdatum ?? "",
       config: {

@@ -125,6 +125,39 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 # - - - - - - - - - - - - - - - - - - - -
 
+# Station 75 — DogTabs Data Ingestion Pipeline
+
+## Kontext
+
+- Branch: `feature/station75-dogtabs-ingestion`.
+- Scope: DogTabs ingestion + MariaDB wiring + manual-test preparation (Kunden → Hunde → Kurse).
+- Station focus: resolve MariaDB adapter mismatch, import Kunden/Hunde into the live MariaDB, and align UI with new status/search requirements.
+
+## Ergebnis (kurz)
+
+- Enforced MariaDB-only mode in storage config + API router (fail-fast `MARIADB_REQUIRED`).
+- Aligned MariaDB adapter defaults with smoke test (socket default + OS user), added connection log line.
+- Resolved adapter mismatch: confirmed two MariaDB instances; standardized on system socket `/run/mysqld/mysqld.sock`.
+- Loaded MariaDB schema on the system instance; created `dogule1` database there.
+- Imported DogTabs Kunden CSV into system MariaDB: 1412 inserted.
+- Added `kunden.legacy_id` column, then backfilled via `code=DT-<kundennummer>` mapping (1412 updated, 0 skipped).
+- Imported DogTabs Hunde from Access DB with FK resolution via `kunden.legacy_id` → `kunden.id`: 386 inserted/linked, 2 unmatched.
+- UI updates: Kunden Status added to list (first column) with default sort Aktiv → Passiv → Deaktiviert, and search filter; Hunde list search added; Hunde form now includes Status dropdown.
+- Data model updates: `hunde.status` column added to schema and storage adapters; status shown in Hund detail.
+
+## Tests
+
+- `pnpm run mariadb:smoke` — ✅ (kunden=1798, local socket at the time).
+- `node tools/dogtabs/cli.js customers-csv <Dogtabs-Kunden-Export.csv>` — ✅ (system socket; report shows 1412 inserted).
+- Hunde import via Access DB + MariaDB writer — ✅ (386 inserted/linked, 2 unmatched).
+
+## Notizen
+
+- Two MariaDB instances were in play: local socket `~/.local/mariadb/mariadb.sock` vs system socket `/run/mysqld/mysqld.sock`. API was using system socket; schema/data initially only existed on local socket.
+- Current standard: system MariaDB socket (`/run/mysqld/mysqld.sock`) for API + imports; avoid mixing sockets.
+- `kunden.legacy_id` is now the deterministic link for Hunde import (DogTabs `hund_kundennummer` → `kunden.legacy_id`).
+- Unmatched Hunde count: 2 (no matching `kunden.legacy_id`); record in next pass before Kurs import.
+
 # Station 71 — From Alpha to Beta Planning & Doc Consolidation
 
 ## Kontext

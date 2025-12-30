@@ -1,0 +1,1440 @@
+kundennummer,name,vorname,adr_zusatz1,adr_strasse,adr_plz,adr_ort,geburtsdatum,heimatort,telefon_privat,telefon_geschaeft,telefon_natel,status,kundenkategorie,Notiz,email_news_nein,email
+2052,Nadarajah,Anjali,,Grubstrasse 12,5300,Turgi,29/7/1993,Schweiz,,,+4176 701 07 15,aktiv,,,FALSE,anjali.nadarajah@windowslive.com
+2053,Schawalder,Ruth,gestorben,Hägelerstrasse 38/PF 1559,5401,Baden,12/2/1958,Diepoldsau SG 7 Neftenbach ZH,+41 56 221 22 00,,+41 79 445 23 00,aktiv,,,FALSE,kaktus.ruth@bluewin.ch
+2198,Kaufmann,Susanne,,,,,,,,,,aktiv,,,FALSE,
+2063,Pfyl,Anja,,,,,,,,,,aktiv,FAS,,FALSE,
+2075,Feisel,Rita Marlen,,Rosenweg 9,5314,Kleindöttingen,,Aachen,+41 56 245 70 35,,+41 79 403 65 27,aktiv,,,FALSE,daschyva217fmr@gmail.com
+2082,Hitz,Cornelia,,Unterwiesenstrasse 1,5332,Rekingen AG,28/7/1976,Mellingen,,,+41 76 320 11 88,aktiv,,,FALSE,gissmo1976@gmail.com
+2084,Mettler,Yumiko,,Tromsberg 55a,5416,Kirchdorf AG,10/12/1968,,+41 56 426 12 16,,+41 76 425 10 12,aktiv,,,FALSE,yumi@vtxmail.ch
+2092,Weber,André,,Weidstrasse 4,5420,Ehrendingen,8/4/1979,,,,+41 79 245 93 87,aktiv,,,FALSE,nadine_kalt@hotmail.com
+2095,Riner,Stefanie,,Wildeggerstrasse 4,5106,Veltheim AG,30/12/1899,Herznach  AG,,,+41 79 201 38 69,aktiv,,,FALSE,steffi.riner@gmail.com
+2165,Essig,Peter,,Bäumliweg 620,5325,Leibstadt,6/7/1980,Leibstadt,+41 56 281 37 21,,,aktiv,,,FALSE,p.haile@gmx.ch
+2167,Fahmy,Kathrin,,Haldenstrasse 7,5512,Wohlenschwil,25/4/1982,,,,+41 76 802 25 04,aktiv,,,FALSE,kathrinboye@me.com
+2169,Baumann,Melanie,,Zelglistrasse 11,5417,Untersiggenthal,12/4/1995,Schafisheim,,,+41 78 614 70 05,aktiv,,"Vergisst ständig den Kurs, ist krank oder hat sonst keine Zeit. Hat sich nun mehr oder weniger klar abgemeldet und meinte, sie komme dann in einen neuen Kurs, da sie eh nicht mehr nachkomme....",FALSE,melanie.baumann039@gmail.com
+2173,Pehlic,Dino,,Unterdorfstrasse 19,5212,Hausen AG,18/1/1986,Hausen,+49 160933811944,,,aktiv,,,FALSE,dinopehlic@web.de
+2175,Stettler,Yman,,Wiesenweg 5,8115,Hüttikon,16/2/1978,Zürich,,,+41 76 595 95 95,aktiv,,,FALSE,yman.stettler@gmail.com
+2177,Almeira / Rodrigues,Sara / Alexandre,,Wiesenweg 21,5415,Nussbaumen AG,30/5/1993,,,,+41 76 306 71 50,aktiv,,,FALSE,sara-almeidamorgado@hotmail.com
+2181,Peter,Manuela,,Sandrainstrasse 14A,5432,Neuenhof,2/9/1976,,,,+41 79 416 75 35,aktiv,,,FALSE,manuela.peter@bluemail.ch
+2183,Stofer,Rolf,,Spinnereistrasse 6,5300,Turgi,22/12/1960,Schwarzenberg + Emmen,,,+41 79 252 57 65,aktiv,,,FALSE,rolf.stofer@gmail.com
+2184,Stofer,Corinne,,Spinnereistrasse 6,5300,Turgi,24/10/1961,Schwarzenberg + Emmen,,,+41 79 374 86 01,aktiv,,,FALSE,rolf.stofer@gmail.com
+2194,Maggio,Heike,,,,,,,,,,aktiv,,,FALSE,
+2196,Patriarca,Silvio,,,,,,,,,,aktiv,,,FALSE,
+2199,Vincenco,Sepe,,Dorfstrasse  25,5332,Rekingen AG,19/9/1971,Bülach,,,+4176 584 30 50,aktiv,,,FALSE,immosepe@immosepe.ch
+2200,Hüls,Kai,,Dorfstrasse  27,5332,Rekingen AG,29/1/1989,,,,+4179 531 03 69,aktiv,,,FALSE,kaihuels@gmx.ch
+2205,Beck,Isabel,,Neugrütstrasse 55,5332,Rekingen AG,4/2/1992,,,,+41 78 921 02 92,aktiv,,,FALSE,isabel92@gmx.ch
+2208,Heeb,Lisa,,Rümikerstrasse 80,5463,Wislikofen,24/1/1961,,+41 56 243 16 43,,+41 76 365 60 69,aktiv,,,FALSE,lisa.heeb@schweiz5.ch
+2210,Gürdere,Nilay,,Obere Wallisellerstrasse 30,8152,Opfikon,7/7/1989,Adliswil,,,+41 78 881 91 49,aktiv,,,FALSE,nilayguerdere@gmx.ch
+2213,Schädeli,Sonja,,Steinbruchstrasse 4,5200,Brugg AG,11/11/1951,Zürich,+41 56 442 96 36,,+41 79 383 63 59,aktiv,,,FALSE,sonjaschaedeli@hotmail.com
+2218,Bergman,Mari-Anne,,Aeschstrasse 19,5430,Wettingen,28/5/1964,Wettingen,+56 221 88 02,,+41 79 648 60 49,aktiv,,,FALSE,majsanb@gmx.ch
+2219,Morf,Michel,,Zürcherstr 20,5210,Windisch,14/4/1995,Nürensdorf ZH,+41 56 221 70 25,+41 79 387 30 61,+41 79 487 75 12,aktiv,,,FALSE,michel.morf@gmail.com
+2224,Knecht,Thomas,,Schwändiweg 29,5313,Klingnau,23/4/1969,Döttingen,+41 56 245 73 41,,+41 79 704 88 44,aktiv,,,FALSE,thomas.knecht@sunrise.ch
+1016,Geiger,Brigitte,,Hardtweg 20 A,79790,Küssaberg-Rheinheim,24/10/1947,,+49 7741 809 49 39,,+41 78 601 99 43,aktiv,,,FALSE,bbgeiger@freenet.de
+1018,Trüssel,Beatrice,,Rebhaldenweg 8,5423,Freienwil,30/3/1958,,+41 56 221 70 93,,+41 79 713 60 09,aktiv,,,FALSE,b.truessel@gmx.net
+1019,Schneider,Cornelia,,Waldheimstrasse 2,5301,Siggenthal Station,13/3/1970,Würenlingen,,,+41 79 684 13 03,aktiv,,,FALSE,cornelia13@bluewin.ch
+1031,Stumpf,Helene,,Haldenstrasse 14,5415,Nussbaumen,8/10/1964,Obersiggenthal,+41 56 282 59 94,,+41 79 252 96 43,aktiv,FAS,,FALSE,hestu@hispeed.ch
+1037,Stone,Joanna,,Kohlenweg 23 A,5303,Würenlingen,18/3/1962,,+41 56 281 15 26,,+41 79 479 45 76,aktiv,,,FALSE,joanna.stone@gmx.ch
+1059,Christen,Susann,,Eggstrasse 420,5276,Wil   AG,20/11/1964,Liesberg BL,+4162 875 25 19,,+4179 736 45 36,aktiv,Hundetrainer(in),,FALSE,eidara@bluewin.ch
+1068,Jermann,Mark,,Kirchmoos 17 A,5712,Beinwil a. See,22/8/1979,Dittingen / BL,,,+41 79 758 52 78,aktiv,,,FALSE,tanimura.productions@gmx.net
+1078,Marti,Manuela,,Breitenweg  109,5325,Leibstadt,5/3/1977,Leibstadt,+4156 246 11 44,,+4179 738 84 07,aktiv,FAS,,FALSE,manuela.marti@marti-deko.ch
+1080,Wiederkehr-Völker,Manuela,,Obweg 7,5108,Oberflachs,1/10/1977,Deutschland,+41 56 222 98 02,,+41 79 541 06 64,aktiv,,,FALSE,manufuchs@gmx.ch
+1091,Pieper,Nicola,,Hauptstrasse 39,5234,Villigen,5/9/1972,Deutschland,+41 56 284 09 55,,+41 78 605 05 09,aktiv,,,FALSE,nicola.pieper@gmail.com
+1093,Hoffmann,Ramona,,Winkelstrasse 18,5304,Endingen,25/5/1970,Twann BE,+41 56 245 04 94,,+41 76 545 44 45,aktiv,,,FALSE,hoffmanns@bluewin.ch
+1099,Vogelsang,Ruth,,Aarestrasse 18,5300,Turgi,27/9/1954,,+4178 401 46 77  Jürg,,+4177 221 02 01,aktiv,FAS,,FALSE,juerg.vogelsang@postfinance.ch
+1189,Rauber,Siglinde,,Dr. Ludwig-Bauer-Str.  5,79873,Bernau,20/4/1968,Deutschland,+49 767 57 96,,+49 171 800 43 32,aktiv,,,FALSE,sigi.bernau@t-online.de
+1230,Knecht,Thomas,,Baslerstrasse 46,4310,Bad Zurzach,27/3/1953,Schwaderloch,+41 56 249 39 19,,+41 76 573 39 19,aktiv,SKN P,,FALSE,familieknecht@hotmail.com
+1263,Garcorz-Fischer,Cornelia,,Schulhausstr. 13,5106,Veltheim AG,17/4/1967,Menznau,+41 56 443 06 40,,+41 79 298 93 03,aktiv,SKN Th,,FALSE,c.garcorz@bluewin.ch
+1471,Graf,Jean-Jacques,,Grabenackerstrasse 25,5116,Schinznach Bad,1/1/1950,Pleujouse,+41 56 443 11 05,,+41 79 677 96 46,aktiv,,,FALSE,jean.jacques@sunrise.ch
+1552,Wettstein,Sabrina,,Klausenweg 7a,5103,Möriken AG,5/7/1986,Rüeggisberg / BE,,,+41 79 773 00 08,aktiv,,,FALSE,sabrina@mbw.ch
+1557,Heuberger,Ruth,,Probstbergstrasse 18,5312,Döttingen,9/1/1962,Maisprach BL,+41 56 249 03 01,,+41 79 452 81 44,aktiv,,,FALSE,ruthheuberger@bluewin.ch
+1559,Contaldo,Luigi,,Am Bach 1,5323,Rietheim,8/10/1968,Italien,+41 56 402 09 52,,+41 79 827 14 21,aktiv,,,FALSE,contaldo@bluewin.ch
+1589,Schneider,Grit,,Mühlematt  255,5326,Schwaderloch,6/4/1975,,,,+41 79 770 91 90,aktiv,,,FALSE,kragrsc@bluewin.ch
+1637,Steimer,Angela,,Seminarstrasse  54,5430,Wettingen,24/4/1964,,+41 44 240 40 60,,+41 79 693 19 61,aktiv,,"da Hund Unfall hatte, nun in neuer Welpengruppe",FALSE,angie.steimer@bluewin.ch
+1661,Fontana,Richard,,Vorhard  7,5312,Döttingen,1/2/1959,wetzikon,+41 56 245 03 50,,+41 79 677 90 18,aktiv,,,FALSE,info@fontanas-dogworld.ch
+1673,Leder,Nicole,,Riedweg 2c,5416,Kirchdorf,10/9/1961,Obersiggenthal,+41 56 282 47 69,,+41 79 614 49 36,aktiv,,,FALSE,nleder@gmx.ch
+1684,Weber,Aline,,Liebefelsweg 31,5313,Klingnau,8/10/1992,Zürich,+41 56 245 08 62,,+41 79 606 67 29,aktiv,,,FALSE,aline.weber@hotmail.com
+1693,Schaufler,Monika,,Rottrottenweg 32,5313,Klingnau,21/4/1976,Obersiggenthal,+41 56 210 28 92,,+41 79 798 14 76,aktiv,,,FALSE,sven.schaufler@gmail.com
+1979,Staub,Severine,,Beckenmoosstrasse 86,5330,Bad Zurzach,20/2/1975,Horgen,+41 56 249 03 94,,+41 76 419 41 23,aktiv,,,FALSE,severine@nageltraum.ch
+1717,Kläy,Roger,,Buckstrasse 37,5304,Endingen,14/5/1956,Walkringen  BE,+4156 242 19 89,,+4179 292 22 11,aktiv,,So-Plausch,FALSE,roger.klaey@klaeynet.com
+1749,With,Helen,,Dorfstrasse  12,5332,Rekingen,25/1/1961,Guntershausen,,,+4179 785 96 60,aktiv,,"Privatstunde am Sonntagsplausch
+19.04.2015",FALSE,caessy@hotmail.ch
+1762,Fracchiolla,Caroline,,Wiesenstrasse 3,5200,Brugg,6/1/1976,Unterbözberg,+41 56 442 54 72,,+41 79 464 52 29,aktiv,,,FALSE,fracchiolla@sunrise.ch
+1763,Fracchiolla,Salvatore,,Wiesenstrasse 3,5200,Brugg,3/10/1969,Unterbözberg,+41 56 442 54 72,,+41 79 290 14 71,aktiv,,,FALSE,fracchiolla@sunrise.ch
+1771,Steinacher,Viktor,,Dorfstrasse  17,5275,Etzgen,2/6/1968,Gansingen,+41 79 424 70 08,,+41 79 424 70 08,aktiv,,,FALSE,viktorsteinacher@bluewin.ch
+1805,Gull,Veronika,,Oberfeld 38,5306,Tegerfelden,10/11/1959,Würenlingen,+41 56 245 07 52,,+41 79 872 59 81,aktiv,,,FALSE,veronika.gull@gmx.ch
+1807,Barcella,Sabina,,Homrigstrasse 3b,5304,Endingen,26/3/1972,Romoos LU,,,+41 79 482 88 11,aktiv,,,FALSE,bina.barcella@bluewin.ch
+1816,Colombo,Claude,,Fahrstrasse 14,5314,Kleindöttingen,5/12/1959,Vallorbe VD,+41 56 245 41 06,,+4179 902 20 53,aktiv,,,FALSE,daniela.colombo@bluewin.ch
+2371,Mauerhan,Jessica,,Trottenacker  153,5078,Effingen,9/10/1988,Schweiz,,,+4176 513 61 61,aktiv,,,FALSE,jessicamauerhan918@gmail.com
+2372,Bidzevic,Mirza,,Bahnhofstr.  68,8957,Spreitenbach,14/3/1979,,,,076 442 55 08,aktiv,,,FALSE,m.bidzevic@hotmail.com
+2373,Hutter,Anja,,Tulpenweg  18,5330,Bad Zurzach,30/1/1978,,,,+491727 414312,aktiv,,,FALSE,herzog-anja@web.de
+2374,Martins dos Reis,Livia,,Buchenweg  8,5303,Würenlingen,9/11/1986,Baden,,,079 917 47 86,aktiv,,,FALSE,neliv36@gmail.com
+2376,Rudolf,Marianne,,Feerstrasse  7,5200,Brugg AG,15/11/1971,Gsteig bei Gstaad,+4156 441 02 40,,+4176 302 09 50,aktiv,,,FALSE,marianne.rudolf-kohli@bluewin.ch
+2377,Sidler,Daniela,,unterm Aspalter  72,5106,Veltheim AG,29/6/1970,Zürich / Luzern,+41 56 443 12 30,,+41 78 615 91 06,aktiv,,,FALSE,clauda.sidler@bluewin.ch
+2378,Jenni,Natascha,,Grenzweg  24,5234,Villigen,2/5/1988,,,,+4176 395 22 02,aktiv,,,FALSE,jenninatascha@gmail.com
+2379,Deflorin,Dominik,,Strählgass  10 A,5413,Birmenstorf AG,14/7/1996,Frenkendorf,,,+4179 745 96 46,aktiv,,,FALSE,dominik.k.deflorin@bluewin.ch
+2380,Pfändler,Nathalie,,Strählgass  10 A,5413,Birmenstorf AG,7/8/1996,"Flawil, SG",,,+4176 331 51 90,aktiv,,,FALSE,nathalie.pfaendler@gmx.ch
+2382,Olitzsch,Kevin,,Rosenweg 5,5314,Kleindöttingen,12/6/1993,,,,+4176 385 93 31,aktiv,,,FALSE,Olitzsch@hotmail.de
+2383,Philpott,Harriet,,Lochstrasse 9,5304,Endingen,9/4/1996,Neerach,,,+4178 781 13 62,aktiv,,,FALSE,harrietlouisephilpott@hotmail.com
+2385,Beilhardt,Alessia Xenia,,Schloss 16,5079,Zeihen,12/1/1999,Leuggern,,,+41 76 424 43 18,aktiv,,,FALSE,a.beilhardt@gmail.com
+1980,Meyer,Pascal,,Nuechtalstrasse 24,5415,Nussbaumen AG,,,,,+41 77 400 90 64,aktiv,,,FALSE,simi_widi03@hotmail.com
+1989,Meyer,Simone,,Nuechtalstrasse 24,5415,Nussbaumen AG,24/9/1989,Gebenstorf,,,+41 77 400 90 64,aktiv,,,FALSE,simoneclaudia.meyer@gmail.com
+1997,Elmer,Pascal,,Mülligerstrasse 8,5413,Birmenstorf AG,12/2/1989,Niederurnen,,,+41 79 543 35 24,aktiv,,"machte Beschäftigung, danach trailen. Dann aufgehört",FALSE,pascal-elmer@gmx.ch
+1998,Wingling,Martina,,Mülligerstrasse 8,5413,Birmenstorf AG,26/7/1988,Horgen ZH,,,+41 79 665 18 60,aktiv,,,FALSE,m_wingling@hotmail.com
+2003,Pfeiffer,Simone,,Birkenweg 6a,5316,Leuggern,8/5/1974,Deutschland,+4156 556 26 55,,+4176 541 05 12,aktiv,,,FALSE,simi.pfeiffer@web.de
+2005,Kaczkowski,Aldona,,Scheideggweg  11,5303,Würenlingen,9/9/1976,Würenlingen,+4156 536 94 76,,+4179 862 82 84,aktiv,,,FALSE,aldona@workingbeauty.com
+2006,Stocker,Nadja,,Unterhalden  17,5082,Kaisten,25/8/1976,,+4162 874 03 07,,+4179 341 18 10,aktiv,,,FALSE,nadja.stocker@bluewin.ch
+2406,Stenz,Thomas,,Auhaldenstrasse 16e,5300,Turgi,9/3/1967,,+4156 288 08 20,,,aktiv,,,FALSE,stenz@gmx.ch
+2409,Sarkadi,Attila,,Rietheimerstrasse 45,5330,Bad Zurzach,24/2/1975,Ungarn,,,+4179 127 95 67,aktiv,,,FALSE,attilasarkadi@icloud.com
+2411,Palla,Iris,,"Hauptstrasse, 239",5314,Kleindöttingen,24/6/1970,Remigen,+4156 245 72 53,,+4176 511 39 01,aktiv,,,FALSE,iris@burlianer.ch
+2413,Nuoto,Toni,,Hauptstrasse 239,5314,Kleindöttingen,21/2/1974,Leibstadt,+4156 245 72 53,,+4176 411 21 02,aktiv,,,FALSE,toni@burlianer.ch
+2414,Argin,Kim,,Affanderweg 6,5303,Würenlingen,30/12/1996,Ettingen BL,,,+41 76 805 56 81,aktiv,,,FALSE,k.argin@outlook.com
+2416,Moshfegh,Kuros,,Bälstrasse 84,8194,Hüntwangen,9/12/1957,Basel Stadt,+41 44 845 34 63,,+41 76 725 70 62,aktiv,,,FALSE,k45.mo300@gmail.com
+2417,Stenz,Yolanda,,,,,,,,,,aktiv,,,FALSE,
+2418,Bascio,Beni,,,,,,,,,,aktiv,,,FALSE,
+2420,Timell,Anna,,Bachstrasse  46,5034,Suhr,17/5/1972,Schweden,,,+4179 824 44 26,aktiv,,,FALSE,a.timell@main.ch
+2423,Käser,Andreas,,Aspstr. 18,5608,Stetten,16/10/1992,Oberflachs,,,+41 78 779 33 50,aktiv,,,FALSE,andreaskaeser92@gmail.com
+2424,Schleuniger,Denise,,Horngasse 1,5070,Frick,30/4/1977,Gerzensee,,,+41 79 469 36 52,aktiv,,,FALSE,denise.schleuniger@bluewin.ch
+2425,Dombovari,Andrea Julia,,Sonnhalde 4,5425,Schneisingen,16/2/1966,Schneisingen,,,+41 79 872 55 86,aktiv,,,FALSE,andreadombovari@gmail.com
+2426,Tschudy,Patrizia,,Wiesenweg 25,5415,Nussbaumen AG,4/10/1972,Elsau ZH,+41 56 282 52 29,,+41 76 382 52 29,aktiv,,,FALSE,patrizia.tschudy@sunrise.ch
+2246,Kuhn,Doris,,Ranspelhof 169,5276,Wil AG,24/9/1982,,+41 62 875 10 11,,+41 79 784 49 04,aktiv,,,FALSE,ranspelhof@bluewin.ch
+2247,Grossmann,Daniel,,Schulhausstrasse 13,5113,Holderbank AG,23/10/1976,,,,+41 78 955 70 20,aktiv,,,FALSE,darobike@gmx.ch
+2248,Bürli,Monika,,Mühlehaldenweg  358,5325,Leibstadt,25/7/1959,Klingnau,+4156 247 15 50,,+4179 645 47 59,aktiv,,,FALSE,monika.buerli@gmx.ch
+2249,Brühlhart,Carmen,,Rheintalstrasse 12,5332,Rekingen AG,18/12/1991,Ueberstorf,,,+41 76 391 23 17,aktiv,,,FALSE,
+2250,Thilagenthirarajah,Rubika,,Wiesenweg 2,5234,Villigen,30/4/1988,Sargans SG,,,+41 78 857 94 27,aktiv,,,FALSE,rubi.t@hotmail.ch
+2253,Kurz,Karin,,Parkstrasse 5,8962,Bergdietikon,25/9/1958,Walenstadt SG,,,+41 79 680 88 56,aktiv,,,FALSE,karin3kz@gmail.com
+2255,Bischof,Katharina,,Hauptstrasse 184,5324,Full-Reuenthal,11/6/1995,,,,+41 79 859 04 07,aktiv,,,FALSE,kathi.bischof@hotmail.de
+2256,Häfeli,Jasmin,Rafael Winter  (Partner),Alte Zurzacherstrasse  34,5306,Tegerfelden,16/2/1996,,,,+41 79 930 89 64,aktiv,,,FALSE,jasmin.haefeli@hotmail.com
+2257,Pauli,Anja,,Hofacker 139,5077,Elfingen,31/1/1973,,+41 76 233 73 73,,+41 76 322 44 50,aktiv,,,FALSE,a.pauli@vtxmail.ch
+2258,Mertl,Helena,,Rainstrasse 8,5314,Kleindöttingen,3/6/1953,Dübendorf,+41 56 249 31 23,,+41 76 365 31 23,aktiv,,,FALSE,mertl@sunrise.ch
+2280,von Büren,Véronique,,Zimmermannstrasse  25,5200,Brugg AG,18/3/1997,Flumenthal  SO,,,+4179 / 409 02 89,aktiv,,,FALSE,sivonbueren@bluewin.ch
+2281,Höchli,Leo,,Werbenstr.  4,5417,Untersiggenthal,10/4/1948,Klingnau,+4156 245 36 35,,+4176 245 36 35,aktiv,,,FALSE,l.hoechli@bluewin.ch
+2284,Eberlein,Mirko,,Chratzstrasse 71,5426,Lengnau AG,1/6/1979,Saalfeld,+41 56 535 50 21,,+4179 922 61 45,aktiv,,,FALSE,mail@mirko-eberlein.de
+2287,Schuhmacher,Claudia,,Föhrenweg 37 b,5313,Klingnau,30/7/1968,,+41 56 245 47 73,,,aktiv,,,FALSE,schumi_1@sunrise.ch
+2290,Blättler,Susan,,Rainackerweg 80,5303,Würenlingen,,,+41 56 282 18 55,,+41 79 643 50 86,aktiv,,,FALSE,
+2291,Müller,Dilia,,Schwändiweg 21,5313,Klingnau,20/12/1971,,,,+41 79 203 22 56,aktiv,,,FALSE,dilia@diliwell.ch
+2293,Valverde,Solange,,Lierenstrasse 7,5417,Untersiggenthal,30/11/1973,La Sagne (NE),,,+41 76 392 44 06,aktiv,,,FALSE,solange_vuille@hotmail.com
+2296,Zeqiri,Armanda,,Mellikonerstrasse 30,5332,Rekingen AG,30/11/1999,,+41 76 378 98 81,,,aktiv,,,FALSE,armanda.zeqiri@outlook.com
+2298,Gratwohl,Manuel,,Gansingerstrasse 6,5236,Remigen,6/5/1996,Niederwil AG,,,+41 76 582 99 16,aktiv,,"hat nicht auf Mail reagiert und nach Nachfrage gesagt, er hätte sich umentschieden",FALSE,manii.gratwohl@gmail.com
+2299,Suter,Sandra,,Tegerfelderstrasse 13,5303,Würenlingen,13/5/1972,,,,+41 79 633 08 72,aktiv,,,FALSE,sayonara28@bluewin.ch
+2300,Lanzillo,Sofia,Federico Agnello  (Sohn),Fischerweg 2,5430,Wettingen,9/11/1966,,,,+41 76 574 11 70,aktiv,,,FALSE,agnellotti5@yahoo.de
+2302,Gutierrez,Patrik J.,,Oberdorfstrasse 23,5316,Leuggern,27/6/2000,,+41 56 245 74 05,,,aktiv,,,FALSE,francisco.gutierrez@aguaworld.ch
+2303,Hoffmann,Max,,Stauseestrasse 30,5316,Gippingen,15/10/1945,Zürich/Seengen,+41 56 245 53 55,,+41 79 678 39 21,aktiv,,,FALSE,max.hoffmann@bluewin.ch
+2305,Tempera,Simona,,Dorfstrasse 10,5332,Rekingen AG,28/1/1985,,,,+41 76 377 26 62,aktiv,,,FALSE,
+2306,Urland,Franziska,,Kirchweg 4,5306,Tegerfelden,16/7/1985,,,,+41 78 721 60 09,aktiv,,,FALSE,franziska.urland@web.de
+2307,Gassler,Ursula,,Rebhalde  9A,5322,Koblenz,25/11/1948,Koblenz,+4156 246 10 14,,+4179 363 49 10,aktiv,,,FALSE,wurga@bluewin.ch
+2308,Leffler,Anders,,Aeschstrasse  19,5430,Wettingen,13/2/1955,Wettingen,,,+4179 770 80 38,aktiv,,,FALSE,aleffler@gmx.ch
+2310,Wameling,Cäcilia,Bernhard Richon (Partner),Schlierenstr. 59,5408,Ennetbaden,,,+4156 222 73 58,,+4179 228 30 37,aktiv,,,FALSE,c.wameling@bluewin.ch
+2312,Kummer,Brigitte,,im Bungert  4,8955,Oetwil an der Limmat,24/1/1953,Limpach,+4144 748 19 87,,+4179 710 57 20,aktiv,,,FALSE,brigitte_kummer@gmx.ch
+2314,Agnello,Federico,,,,,,,,,,aktiv,,,FALSE,
+2315,Winter,Rafael,,,,,,,,,,aktiv,,,FALSE,
+2317,Manuel,Oeschger,,Mandacherstrasse,5317,Hettenschwil,2/1/1979,,Corinne +4179 / 705 12 77,,+4179 / 511 51 37,aktiv,,,FALSE,erne.corinne@gmail.com
+2318,Keller,Cynthia Alena,,Oberdorfweg  103,5274,Mettau,22/2/1998,Full-Reuenthal,,,+4179 / 958 23 40,aktiv,,,FALSE,cynthia.alena.keller@gmail.com
+1868,Leder,Lukas,,,,,,,,,,aktiv,Begleitp. FAS,Begleitperson FAS,FALSE,
+1945,Kramer,Yvonne,,Bernau 188,5325,Leibstadt,19/11/1963,Leibstadt,+41 56 247 15 81,,+41 79 488 02 79,aktiv,,,FALSE,
+2119,Ellenberger,Stephan,,Landstrasse 78,5275,Etzgen,26/6/1965,Landiswil / BE,,,+41 76 481 91 00,aktiv,,,FALSE,stephan.ellenberger@gmx.ch
+2121,Wyler,Antoinette,,Staldenstrasse 127,5077,Elfingen,27/1/1967,Obersiggenthal,,,+41 76 427 01 67,aktiv,,,FALSE,wyler5077@bluewin.ch
+2124,Ravindran,Pratheepan,,Grubstrasse 12,5300,Turgi,,,,,,aktiv,FAS Begleitp,,FALSE,
+2126,Stimoli,Deborah,,Neumattweg  10,5315,Böttstein,28/12/1996,,,,+4176 440 38 27,aktiv,,,FALSE,d.stimoli@gmail.com
+2130,Weidmann,Beatrice,,Altenbergstrasse 12,5415,Nussbaumen AG,3/8/1963,Marthalen ZH,+41 56 282 23 67,,+41 79 302 71 15,aktiv,,,FALSE,mb.weidmann@bluewin.ch
+2139,Bergamin,Romy,,Alte Bahnhofstr. 14,5084,Rheinsulz,11/8/1989,Zürich,,,+41 76 391 34 84,aktiv,,,FALSE,romy.bergi@gmail.com
+2146,Burkart,Sandra,,Hinterer Hafen 10,5225,Oberbözberg,2/6/1969,Deutschland,,,+41 79 253 93 49,aktiv,,,FALSE,andy-cook@gmx.com
+2225,Spiekermann,Ute,,Felsenstr. 5,5400,Baden,16/4/1967,Deutschland,+41 79 648 84 55,,+41 79 648 84 55,aktiv,,,FALSE,u.spiekermann@limita.ch
+1964,Rudin,Andrea,,Mooshalde 232,5027,Herznach,7/2/1980,,+41 79 543 73 63,,+41 79 543 73 63,aktiv,,,FALSE,andrea.rudin@gelterkinden.ch
+1969,Steger,Claudia,,Brühlstrasse 1 k,5416,Kirchdorf AG,21/10/1959,Horgen,+41 56 282 22 73,,+41 79 209 36 02,aktiv,,,FALSE,c.b.steger@hispeed.ch
+2013,Steiner,Marlis,,Schulstrasse 15,5234,Villigen,3/9/1956,Gluringen VS,+41 79 761 09 45,,+41 79 761 09 45,aktiv,,,FALSE,marlis.steiner.michlig@gmail.com
+2019,Elmer,Pierre,,Bruggerstrasse 43,5330,Bad Zurzach,29/9/1954,Elm,+41 76 381 07 21,,+41 76 381 07 21,aktiv,,,FALSE,pierre.elmer@hispeed.ch
+2157,Merkli,Iris,,Mandacherstrasse 15,5315,Böttstein,1/3/1960,,,,+41 79 174 03 87,aktiv,,Hat sich 2 Tage vor Beginn vom FAS abgemeldet! Ohne Bereitschaft Verantwortung dafür zu übernehmen und ist nicht bereit etwas dafür zu bezahlen!!! Sehr fragwürdiges Mail!!!,FALSE,iris.mer@hispeed.ch
+2226,Zimmermann,Flavia,,Hardstrasse 43,5432,Neuenhof,6/3/1965,Würenlos,+4177 440 67 83,,+41 77 440 67 83,aktiv,,,FALSE,flavia.zimmermann65@hotmail.com
+2228,Strebel,Stefan,,Obere Rebenstrasse 58,5463,Wislikofen,4/10/1980,Kloten,+41 78 736 73 00,,+41 78 736 73 00,aktiv,,"Missverständnis mit Richi, danach abgemeldet",FALSE,s.t.strebel@gmx.ch
+2229,Reinhard,Helen,,Ulmenweg 5,5210,Windisch,27/5/1956,Kerns  OW,+41 44  856 16 05,,+41 79 733 77 32,aktiv,,,FALSE,helen.reinhard@bluewin.ch
+2231,Viertler,Stefanie,,Baslerstrasse 46,4632,Trimbach,18/12/1992,Urnäsch,,,+4176 386 60 69,aktiv,,,FALSE,stefanie.viertler@schweiz5.ch
+2234,Yolal,Bulak,,Birchmattstrasse 1,5703,Seon,,,,,,aktiv,,Begleitperson FAS,FALSE,
+2235,Krumpholz,Nathalie,,Unterdorfstrasse 19,5212,Hausen AG,,,,,+4179 738 87 79,aktiv,,Begleitperson FAS,FALSE,
+2237,Thalmann,Marion,,Hauptstrasse  15,5085,Sulz AG,24/4/1979,Sternenberg  ZH,,,+4179 254 00 79,aktiv,,,FALSE,marion.thalmann@johnsongroup.ch
+2239,Kirchner,Kathrin,,Neugrütstrasse 5,5332,Rekingen AG,1/10/1983,,076 603 54 89,,076 603 54 89,aktiv,,,FALSE,kirchnerkathrin10@gmail.com
+2240,Stefanelli,Yasmin,,Rainächer 18,5332,Rekingen AG,19/9/1985,Zernez,+41 56 310 41 93,,+41 79 763 82 06,aktiv,,,FALSE,
+2261,Neff,Walter,,Geissenweg 6a,5330,Bad Zurzach,3/1/1954,Appenzell (AI),+41 56 249 35 70,,+41 79 269 85 82,aktiv,,,FALSE,neff.keller@bluewin.ch
+2262,Suter,Andreas,,Langmesser 17,5306,Tegerfelden,27/7/1982,Lengnau AG,,,+41 79 275 41 56,aktiv,,,FALSE,suterandy@gmx.ch
+2263,Hauenstein,Georges,,Hüttenmattstrasse 10,5213,Villnachern,9/8/1951,,+41 56 441 48 13,,+41 79 633 08 70,aktiv,,,FALSE,ge.hauenstein@bluewin.ch
+2264,Meier,Remo,,Hauptstrasse,5312,Döttingen,26/7/1989,,,,+4176 261 98 88,aktiv,,,FALSE,meier.remo@outlook.com
+2269,Angst,Christian,,Rütenenweg 2,5408,Ennetbaden,25/12/1961,,,,+41 76 429 69 49,aktiv,,,FALSE,christian.angst@bluewin.ch
+2270,Walter,Trudy,,Jurastrasse 4,5200,Brugg AG,22/5/1973,Glarus,+41 44 771 81 10,,+41 797 72 25 22,aktiv,,,FALSE,trudywalter@gmx.net
+2272,Buttacavoli,Alexandra,,Höngerstr. 23,5313,Klingnau,22/8/1963,Wettingen,+41 565 99 13 97,,+41 77 537 78 17,aktiv,,,FALSE,alexandra@buttacavoli.it
+2274,Buttacavoli,Enzo,,Höngerstr. 23,5313,Klingnau,6/9/1997,Wettingen,+41 565 99 13 97,,+41 775 34 16 44,aktiv,,,FALSE,alexandra@buttacavoli.it
+2275,Milio,Diana,,Badenerstr. 32,5442,Fislisbach,10/6/1968,,,,+41 767 56 56 90,aktiv,,,FALSE,alexandra@buttacavoli.it
+2276,Kraenz,Silvia,,,,,,,,,,aktiv,,,FALSE,
+2277,Knecht,Beatrice,,,,,,,,,,aktiv,,,FALSE,
+2278,Nitzpon,Michael,,,,,,,,,,aktiv,,,FALSE,
+2321,Zeller,Tiziana,,Fluhmattstrasse 12,5400,Baden,7/3/1956,Steffisburg BE,+41 56 222 22 05,,+41 76 501 37 77,aktiv,,,FALSE,tiziana.zeller@cityart.ch
+2323,Gloor,Michael,,Limmatplatz 9,,Zürich,13/6/1980,Briwil,,,+41 796 77 63 68,aktiv,,"Freundin: Andrina Schneller / Tel.  +4179 / 547 74 91
+
+Sie ist mit dem Hund im Mi.Nami Kurs 15.00 Uhr",FALSE,michaelw.gloor@gmail.com
+2324,Curd,Stefka,,Weidgasse 13,5304,Endingen,13/1/1975,,+41 56 242 10 45,,+41 787 62 25 29,aktiv,,,FALSE,stefka.curd@bluewin.ch
+2325,Kintrup,Katrin,,Klausenstraße 25,,Waldshut-Tiengen,12/2/1990,Tiengen,+49 162 76 65 8 92,,,aktiv,,,FALSE,katrin.kintrup@hotmail.de
+2326,Suter,Claudia,,Bachstrasse 44,5033,Buchs AG,6/1/1982,Gränichen,+41 62 842 64 47,,+4179 333 66 45,aktiv,,,FALSE,suter.claudia@gmail.com
+2327,Kaiser,Hermann,,Gibriststrasse 9,5317,Hettenschwil,9/10/1952,,,,+41 79 644 03 58,aktiv,,,FALSE,hermann.kaiser@gmx.ch
+2329,Hofstetter,Othmar,,Winkelstrasse 45,5314,Kleindöttingen,7/2/1942,Wildhaus SG,+41 56 245 57 58,,+41 79 541 11 33,aktiv,,,FALSE,othmar.hofstetter@hispeed.ch
+2330,Arp,Jutta,,Aufwiesenstrasse 22,8305,Dietlikon,28/4/1962,Münster D,,,+41 865 78 85,aktiv,,,FALSE,buskutscherin@gmail.com
+2331,Rocchinotti,Sergio,,Bärenmattstrasse 4,5620,Bremgarten AG,27/6/1991,Bremgarten,,,+4176 343 54 00,aktiv,,,FALSE,s.rocchinotti@gmail.com
+2332,Himmler,Jacqueline,,Hinterreistrasse 13,5244,Birrhard,21/7/1956,,+41 56 225 10 48,,+4176 415 21 07,aktiv,,,FALSE,werner.himmler@bluewin.ch
+2333,Käppeli,Erika,,Weiheracherstrasse 26,8114,Dänikon,5/12/1948,Dänikon,+44 844 31 11,,+41 79 464 21 90,aktiv,,,FALSE,erikakaeppeli@bluewin.ch
+2334,Frischknecht,Esther,,St. Annaweg 2b,5400,Baden,10/12/1971,Waldstatt (AR),,,+41 79 373 99 78,aktiv,,,FALSE,e.frischknecht@qsb.ch
+2335,Braun,Jens-Uwe,,Rottrottenweg 3b,5313,Klingnau,28/10/1966,Berlin,+41 76 564 80 68,,+41 79 915 68 89,aktiv,,,FALSE,jens-uwe.braun@gmx.ch
+2336,Artho,Jennifer,,Chuntestrasse 58,5312,Döttingen,26/2/1996,,,,+41 79 588 49 03,aktiv,,,FALSE,jenni.artho@outlook.com
+2337,Bascio,Anita,,Hauptstrasse 94,5085,Sulz AG,18/9/1965,Villmergen / AG,,,+4179 441 65 35,aktiv,,,FALSE,bascio@gmx.ch
+2339,Bos,Christiane,,Mittelweg 5,79790,Küssaberg–Rheinheim,19/5/1965,Küssaberg,+41 49 160 11 22 849,,,aktiv,,,FALSE,christiane7.cf@gmail.com
+2342,Hirt,Nadja,,Hürnegässli  13,5242,Birr,28/2/1981,,,,+4176 437 28 02,aktiv,,,FALSE,nadjasurber@hotmail.com
+2343,Kanitz,Franziska,,Grubenweg  6,8154,Oberglatt ZH,3/2/1966,Adligenswil  LU,+4144 850 77 34,+4144 851 20 00,+4179 902 67 12,aktiv,,,FALSE,franziska.kanitz@bluewin.ch
+2347,Schaelchlin,Simone,,Schützenhausstrasse 3a,8707,Uetikon am See,5/4/1961,Winterthur und Zürich,+41 44 920 31 51,,+41 79 667 37 40,aktiv,,,FALSE,simone.schaelchlin@bluewin.ch
+2349,Schneller,Andrina,,Limmatplatz  9,8000,Zürich,13/6/1980,,+4179/ 677 63 68 Michael Gioor,,+4179/ 547 74 91,aktiv,,,FALSE,andrina.schneller@gmx.ch
+2350,Hirt,Dominic,,,,,,,,,,aktiv,,,FALSE,
+2351,Kämpf,Herbert,,,,,,,,,,aktiv,,,FALSE,
+2355,Dupertuis,Alin,,Rengg  8,5306,Tegerfelden,9/8/1974,VD,,,+4179 618 13 18,aktiv,,,FALSE,a.dupertuis@gmail.com
+2356,Cipriano,Kathy,,Mühlebuck 2b,5420,Ehrendingen,25/3/1964,Dübendorf,,,+4178 697 16 38,aktiv,,,FALSE,kathy.cipriano@gmx.ch
+2357,Cipriano,Bruno,,Mühlebuck 2b,5420,Ehrendingen,16/3/1963,Dübendorf ZH,,,+4178 914 16 38,aktiv,,,FALSE,bruno.cipriano@swisslife.ch
+2359,Erdin,Lukas,,Weierhof,5272,Gansingen,18/10/1993,Gansingen,,,+4179/ 8554925,aktiv,,,FALSE,erdin.weiherhof@bluewin.ch
+2361,Bürli,Andrea,,Burhaldenweg  64,5313,Klingnau,7/9/1992,,,,+4179/ 245 61 36,aktiv,,,FALSE,andrea.buerli@bluewin.ch
+2442,Engler,Alexandra,,Weidweg  21,5415,Hertenstein AG,,,,,+4179 348 67 29,aktiv,,,FALSE,engleralexandra@hotmail.com
+2443,Isenschmid,Christina,,Bruggerstrasse  30,5106,Veltheim AG,4/9/1970,Willisau LU,,,+4179 277 45 32,aktiv,,,FALSE,christa.isenschmid@bluewin.ch
+2445,Vollandt,Sybille,,Unterwerkstrasse 30,8192,Zweidlen,26/9/1985,,,,+41 763 78 64 28,aktiv,,hat sich nach 1. Stunde wieder abgemeldet. Die Art sei nichts für sie,FALSE,sybille.vollandt@hotmail.ch
+2448,Gieskes,Raymond,,Guggimoos 14,5425,Schneisingen,11/3/1960,,,,+41 789 65 11 25,aktiv,,,FALSE,raym.gieskes60@hispeed.ch
+2450,Häusler,Sherri-Lynn,,Nussgasse 12,5301,Siggenthal Station,28/9/1971,Gondiswil,+41 56 281 309 84,,+41 79 634 52 01,aktiv,,,FALSE,sherri_latus@hotmail.com
+2451,Scheller,Robin,,Seefeldstrasse  226,,Zürich,12/11/1988,Deutschland,,,+4179 920 26 44,aktiv,,19071661.1 auf Ausweis,FALSE,mail@derscheller.com
+2453,Knecht,Heidi,,Surbtalstrasse  3,5312,Döttingen,8/5/1949,Döttingen,,,+41 76 309 39 13,aktiv,,,FALSE,heidiknecht@bluewin.ch
+2455,Meury,Jeannine,,Homrigstr.  11a,5304,Endingen,3/7/1970,Winterthur,+41 56 281 12 10,,+41 76 331 55 74,aktiv,,,FALSE,j.meury@bluewin.ch
+2456,Keller,Roland,,Heuweg  6,5314,Kleindöttingen,11/2/1958,Herisau,+41 56 245 70 82,,+41 79 829 70 90,aktiv,,,FALSE,roro.keller@gmx.ch
+2457,Steigmeier,Peter,,Aarestr.  5,5313,Klingnau,16/2/1955,Klingnau,+41 56 245 34 23,,+41 79 531 32 65,aktiv,,,FALSE,psteigmeier@sunrise.ch
+2458,Burkhardt,Brigitte,,Gartenstr.  3,5322,Koblenz,29/3/1955,,,,+41 79 409 40 73,aktiv,,,FALSE,burkhardt.kob@gmail.com
+2460,Bieli,Bruno,,Segelhalde 26,5405,Dättwil AG,31/8/1957,Selzach,+41 56 493 52 53,,+41 79 375 40 80,aktiv,,,FALSE,info@bieli-tech.ch
+2825,Hartmann,Jennifer,,Simonweg  7,5415,Nussbaumen AG,12/10/1995,Schinznachdorf,,,+4176 488 47 47,aktiv,,,FALSE,
+2827,Bertl,Birgit,,Bürglen 33,5323,Rietheim,25/7/1975,Schaffhausen,,,+4176 580 69 96,aktiv,,Begleitperson:  Mario und Luca Bertl,FALSE,birgitbertl1975@gmail.com
+2829,Wunderl,Monika,,Leibernweg 279,4468,Kienberg,31/8/1968,,,,+4179 872 96 29,aktiv,,,FALSE,monika.wunderl@bluewin.ch
+2831,Saiger,Friderike,,Birkenstrasse 1,5415,Nussbaumen AG,,,,,,aktiv,,,FALSE,esaiger@hispeed.ch
+2832,Bertl,Mario,,,,,,,,,,aktiv,,Als Begleitung Freiappell,FALSE,
+2833,Bertl,Luca,,,,,,,,,,aktiv,,Als Begleitperson Freiappell,FALSE,
+2834,Hübscher,Gino,,,,,,,,,,aktiv,,Als Begleitperson Freiappell,FALSE,
+2836,Spahni,Silvia,,Püntstrasse,8164,Bachs,21/10/1980,Stadel/ ZH,,,+4179 480 59 88,aktiv,,Durch Daniela Kalt,FALSE,silvia.spahni@gmx.ch
+2837,Beck,Regina,,Oberdorf 262,5318,Mandach,19/6/1989,Deutschland,,,+4177 400 04 66,aktiv,,Google,FALSE,regina.beck@gmx.ch
+2838,Conrad,Peter,,Martinsbergstrasse 33 A,5400,Baden,30/6/1944,Baden,,,+4179 405 03 09,aktiv,,,FALSE,Partikular@bluewin.ch
+2839,Mattiuzzo,Simone,,Vogtsmattweg 6,5080,Laufenburg,10/5/1982,Röthenbach i. E.,,,+4179 371 87 01,aktiv,,Durch das Internet.,FALSE,simone.mattiuzzo.erb@gmail.com
+2841,Klavora,Nadja,,Feldstrasse 17,5412,Gebenstorf,7/7/1977,,,,+4176 572 26 30,aktiv,,,FALSE,n.klavora@gmx.ch
+2950,Wyss-Meier,Yolanda,,Hertensteinstrasse  5,5408,Ennetbaden,6/9/1953,Untersiggenthal,,,+4176 585 18 30,aktiv,,Walti: 30.11.1952  +4179 355 18 30,FALSE,wyssmeier@greenmail.ch
+2362,Schnyder,Beatrice,,Böndler  83,5415,Nussbaumen AG,3/1/1956,Obersiggenthal,+4156/ 282 57 85,,+4179/ 631 53 74,aktiv,,,FALSE,trix.schnyder@bluewin.ch
+2365,Stumpf,Ueli,,Haldenstrasse  14,5415,Nussbaumen AG,4/4/1961,Obersiggenthal,,,+4176/ 569 04 61,aktiv,,,FALSE,ustu@hispeed.ch
+2367,Schindelholz,Anna,,Siggenthalerstr.  3,5303,Würenlingen,16/3/1998,,,,+4179/ 625 11 65,aktiv,,,FALSE,annaschindelholz98@gmail.com
+2368,Beck,Ashala,,Aspstr. 18,5608,Stetten AG,21/6/1993,Hofstetten,,,+4179/ 8635377,aktiv,,,FALSE,ashala.beck@gmail.com
+2369,Loprete,Krystyna,,Oberdorfstr. 128,5325,Leibstadt,8/12/1948,Leibstadt,+4156/ 247 15 01,,,aktiv,,,FALSE,lolek4@me.com
+2386,Suter,Karin,,Brunnengasse 5b,5420,Ehrendingen,18/11/1971,Ehrendingen,+41 56 221 52 84,,+41 78 631 8449,aktiv,,,FALSE,amantius@swissonline.ch
+2387,Hess,Lenny,,Schlösslibuckweg 3,5330,Bad Zurzach,21/8/2002,Reuenthal,+41 56 249 29 24,,+41 76 580 93 80,aktiv,,Hat nach der Anmeldung zum Welpenkurs wieder abgemeldet,FALSE,lennymahlonhess@gmail.com
+2388,Looser,Silvia,,Pradels 144,7525,S-chanf,20/8/1965,Zürich,,,+4176 399 03 72,aktiv,,,FALSE,s.looser@bachsertal.ch
+2389,Sabrina,Camelin,,Tannenweg 2,5316,Fehrenthal,16/8/1987,,,,+4178 83221 61,aktiv,,,FALSE,sabrina.camelin@bluemail.ch
+2391,Wirth,Guido,,Bachstrasse  55 a,5034,Suhr,21/10/1963,Zell   ZH,+4162 546 06 29,,+4179 5010539,aktiv,,,FALSE,guido_wirth@gmx.ch
+2392,Bernhard,Matthias,,St. Annaweg 2b,5400,Baden,28/1/2048,,,,+4179 403 61 68,aktiv,,,FALSE,matthias.bernhard@bernhard.ch
+2393,Marcel,Furler,,Hophanstr.  1,5085,Sulz AG,19/10/1947,Ziefen,+4162 875 00 01,,+4179 873 08 94,aktiv,,,FALSE,bea.furler@icloud.com
+2397,Cipriano,Silas,,Mühlebuck  2b,5420,Ehrendingen,,,,,,aktiv,,,FALSE,
+2398,Eichler,Daria,,,,,,,,,,aktiv,,,FALSE,
+2399,Keller,Daniel,,,,,,,,,,aktiv,,,FALSE,
+2400,Wirth,Beatrix,,,,,,,,,,aktiv,,,FALSE,
+2402,Bleisch,Ursula,,Hennenbühlweg 5,5745,Safenwil,17/9/1968,Mels / Weisstannen,+4162 797 36 84,,+4177 405 31 23,aktiv,,,FALSE,ursula.bleisch@hotmail.com
+2403,Walker,Petra,,Hombergstrasse 7,5000,Aarau,1/9/1969,Lohn / Solothurn,+4162 842 39 90,,+4178 881 13 78,aktiv,,,FALSE,petrawalker@oliverwalker.ch
+2404,Meisel,Marlene,,Im First,5420,Ehrendingen,18/3/1956,Leuggern,,,+4176 344 53 00,aktiv,,,FALSE,marlenemeisel@hotmail.com
+2429,Moshfegh,Helen,,,,,,,,,,aktiv,,,FALSE,
+2430,Schleuniger,Nick,,,,,,,,,,aktiv,,,FALSE,
+2432,Throne,Heiko,,Unterm Aspalter 14,5106,Veltheim AG,18/5/1972,Deutschland,+41 56 544 90 22,,,aktiv,,,FALSE,heiko@repothron.de
+2433,Throne,Doreen,,Unterm Aspalter 14,5106,Veltheim AG,9/10/1974,Oppelheim,+41 56 544 90 22,,,aktiv,,,FALSE,
+2434,Giambanco,Giuseppe,,,,,,,,,,aktiv,,,FALSE,
+2435,Thomann,Katharina,,Chratzstr.  27,5426,Lengnau AG,12/4/1959,Untersiggenthal,+4156 241 16 61,,+4179 636 24 12,aktiv,,,FALSE,katharina.thomann@hispeed.ch
+2436,Wyer-Bicvic,Jasmin,,Jonermattring  34,5313,Klingnau,11/12/1979,Visp,,,+4179 470 00 90,aktiv,,vor Kursbeginn abgesagt,FALSE,jasmin.wyer@bluewin.ch
+2437,Meier,Urban,,Gartenstrasse  47,5303,Würenlingen,22/2/1957,Lengnau AG,,,+4179 343 23 36,aktiv,,an 2 Orten angemeldet und bei uns wieder abgesagt,FALSE,urban.meier@gmx.net
+2438,Schmidt,Yvonne,,Kumetstrasse  1,5234,Villigen,4/8/1978,Villigen,,,+4178 881 37 02,aktiv,,,FALSE,yvonne.schmidtxxx@gmail.com
+2439,Brem,Daniel,,Römerstrasse  49,5303,Würenlingen,24/2/1983,Rudolfstetten,,,+4179 448 93 11,aktiv,,,FALSE,danielbrem@bluewin.ch
+2440,Findling,Ingrid,,Schybenächerweg  128,5324,Full-Reuenthal,14/1/1957,Leibstadt,+4156 246 24 37,,+4179 410 21 92,aktiv,,,FALSE,fam.findling@bluewin.ch
+2462,Hauenstein,Daniela,,Riedhof,5306,Tegerfelden,2/3/1979,Tegerfelden,,,+41 79 484 10 19,aktiv,,,FALSE,d.hauenstein.roth@gmail.com
+2463,Bollinger,Marion,,Rheinackerweg,5325,Leibstadt,22/7/1969,,,,+41 79 321 01 70,aktiv,,,FALSE,marionbollinger@gmx.ch
+2465,Widmer,Marika,,Rütenenweg 2,5322,Koblenz,3/2/1955,Zürich,+41 79 331 35 42,,+41 793 32 55,aktiv,,,FALSE,wimak@bluewin.ch
+2467,Wanner,Robert,,Hinterdorfstrasse 5a,5322,Koblenz,24/5/1954,Schleitheim SH,+4156 246 24 02,,+4179 500 92 57,aktiv,,,FALSE,skag@bluewin.ch
+2469,Meier,Nadia,,Plattenweg 3,5223,Riniken,27/2/1998,Baden,,,+41 79 222 12 43,aktiv,,,FALSE,nadia_meier98@hotmail.com
+2470,Himmler,Philipp,,Plattenweg 3,5223,Riniken,1/10/1986,Zollikon,,,,aktiv,,,FALSE,
+2471,Zach,Katinka,,Bohrturmweg 9,5330,Bad Zurzach,10/6/1982,,,,+41 79 356 96 07,aktiv,,,FALSE,k.zach@gmx.ch
+2472,Kontny,Tabea,,Im First 8,5420,Ehrendingen,22/4/1987,,,,+4178 206 60 64,aktiv,,,FALSE,tabeakontny@web.de
+2473,Garo,Florian,,Fasanenweg 16,4334,Sisseln AG,24/3/1983,,,,+41 79 749 18 04,aktiv,,,FALSE,garo.florian@gmail.com
+2476,Schurr,Willi,,Bäumliackerstrasse 13,5213,Villnachern,25/11/1946,Rickenbach LU,,,+41 79 235 08 76,aktiv,,,FALSE,willi.schurr@bluewin.ch
+2478,Stalder,Sibylle,,Sandweg 8 Etzwil,5317,Hettenschwil,25/5/1968,Würenlingen,,+41 245 39 89,+41 79 561 72 90,aktiv,,,FALSE,sibylle@stalder-natuerlich.ch
+2479,Bürgy,Oliver,,Haldenweg 76,5313,Klingnau,16/6/1973,,,,+41 79 532 76 50,aktiv,,,FALSE,grandoli@gmx.ch
+2481,Joost,Walter,,Dorfstrasse 151,5245,Habsburg,4/1/1955,Lauperswil BE,+41 56 442 39 08,,+41 79 425 90 44,aktiv,,,FALSE,gaertner1955@gmx.ch
+2484,Hess,Andrea,,Chilmattring 4,5316,Leuggern,4/5/1963,Full-Reuenthal,+41 56 245 55 55,,+41 79 229 62 81,aktiv,,,FALSE,andyhess@bluewin.ch
+2486,Weiss,Nadine,,Hauptstrasse 142,5072,Oeschgen,19/12/1990,Sulz AG,,,+41 79 335 57 26,aktiv,,,FALSE,nadineweiss.090@gmail.com
+2487,Kreis,Laura,,Am Schmittenbach 11a,5236,Remigen,27/11/1993,,,,+41 79 838 34 81,aktiv,,,FALSE,kreis.laura@gmail.com
+2488,Stumpf,Morris,,Allmendstrasse 15b,5300,Turgi,29/7/1994,Obersiggenthal,,,+41 76 343 59 94,aktiv,,,FALSE,morris.stumpf@hotmail.com
+2492,Villiger,Reto,,Boldistrasse 84,5415,Rieden AG,4/7/1974,Sins AG,+41 56 450 39 29,,+41 78 710 14 71,aktiv,,,FALSE,reto@villiger.me
+2494,Carnevale,Franziska,,Boldistr.,5415,Rieden AG,23/2/1981,Hüneberg,,,+4176 515 57 13,aktiv,,,FALSE,franziska.carnevale@gmail.com
+2496,Häni,Nadine,,Hofstrasse 16,3937,Baltschieder,16/5/2021,Les Breuleux JU,,,+4179 270 88 29,aktiv,,,FALSE,nbouverat@gmx.net
+2501,Ramuz,Marco,,,,,,,,,,aktiv,,,FALSE,
+2502,Sidler,Claude,,,,,,,,,,aktiv,,,FALSE,
+2504,Buge,Julia,,Seefeldstrasse 226,8008,Zürich,9/12/1982,,,,+41 79 909 06 46,aktiv,,,FALSE,juliabuge@hotmail.com
+2506,Keller,Beat,,Bühlstrasse 11a,5076,Bözen,21/4/1981,Volken ZH,,,+41 76 501 11 23,aktiv,,,FALSE,beat.keller1981bk@gmail.com
+2507,Bracher,Beatrice,,Hinterohfenstrasse 35,5322,Koblenz,14/10/1957,Wienigen ZH,,,+41 79 537 30 17,aktiv,,,FALSE,bea.bracher@gmx.ch
+2508,Renner,Nicole,,Lenggstrasse 2,5322,Koblenz,15/10/1972,,,,+41 76 463 75 07,aktiv,,,FALSE,hanirenner@gmx.ch
+2511,Keller,Rahel,,Ifangstrasse 131,5463,Wislikofen,,,,,+41 79 583 54 50,aktiv,,,FALSE,
+2513,Cyril,Karin,,Schlüsselstrasse 55,5222,Umiken,14/9/1993,Schaffhausen,,,+41 76 443 20 40,aktiv,,,FALSE,cyrilkarin@gmail.com
+2515,Richoz,Laurence,,Am Bach 3d,5436,Würenlos,23/10/1970,Vauderens,,,+41 78 609 50 39,aktiv,,,FALSE,lolotte@gmx.ch
+2516,Baur,Carla,,Winzerstrasse 45,5430,Wettingen,11/9/1994,,,,+41 78 665 64 66,aktiv,,ist ohne Grund nicht mehr gekommen,FALSE,carla.baur@gmx.ch
+2517,Müller,Heinrich,,Oberdorfstrasse 131,5325,Leibstadt,14/2/1975,,,,+41 79 347 32 12,aktiv,,,FALSE,mueller_heinrich@yahoo.de
+2519,Leonforte,Patrizia,,Burgzelglistrasse 4,4322,Mumpf,14/6/1992,Laufenburg,,,+4179 963 46 22,aktiv,,,FALSE,leonforte.patrizia@gmail.com
+2520,Leonforte,Irène,,,,,,,,,,aktiv,,,FALSE,
+2522,Rudolf,Daniel,,,5200,Brugg AG,,,,,,aktiv,,,FALSE,
+2523,Schuhmann,Kara,,Bruggerstrasse 127,5400,Baden,28/9/1963,Büttenhard,+4156 210 35 83,,+4178 677 23 26,aktiv,,,FALSE,kara.schuhmann@gmail.com
+2524,Brühwiler,Patricia,,Tiefensteinweg 16,5303,Würenlingen,17/9/1974,,,,+4179 785 62 57,aktiv,,,FALSE,patty.bruehwiler@bluewin.ch
+2525,Keller,Christine,,,,,,,,,,aktiv,,,FALSE,
+2526,Werder,Silvia,,,,,,,,,,aktiv,,,FALSE,
+2528,Iannone,Sabrina,,Gartenstrasse,5303,Würenlingen,13/1/1981,,,,+4176 579 01 81,aktiv,,,FALSE,s.santamaria@gmx.ch
+2529,Frank,Noëmi,,Alte Poststrasse 268,5462,Siglistorf,14/10/1972,Hessigkofen SO,,,+4176 5359101,aktiv,,,FALSE,nofranks@bluewin.ch
+2530,Blesi,Peter,,Veilchenweg  2,5303,Würenlingen,10/4/1957,,,,+4178 658 64 63,aktiv,,,FALSE,peter.blesi@bluewin.ch
+2532,Brändli,Ursula,,Breitestr.  8,5330,Bad Zurzach,23/3/1964,Alt St.Johann SG,+4156 249 06 55,,+4179 417 72 53,aktiv,,,FALSE,ursulabraendli@bluewin.ch
+2533,Steidinger,Jacqueline,,Zeppelinstr. 41,,Bad Säckingen,10/9/1994,,,,+49 176 453 502 76,aktiv,,,FALSE,jacqueline.steidinger94@gmail.com
+2534,Milica,Milovanovic,,Schiffmühlestr.  23,5417,Untersiggenthal,20/3/1979,,,,+4176 561 35 48,aktiv,,,FALSE,milicapop@hotmail.com
+2535,Schenker,Karin,,Alter Schulweg  48,5102,Rupperswil,10/9/1992,,,,+4176 390 29 43,aktiv,,,FALSE,karin_schenker@hotmail.com
+2536,Bayar,Tamara,,Rosengässli  2 a,5330,Bad Zurzach,15/1/2021,Jura,,,+4179 625 63 58,aktiv,,,FALSE,tami.bayar@gmail.com
+2537,Hauss,Marcel,,Rehwiesenstr. 3,5330,Bad Zurzach,11/10/1980,Deutschland,,,+4176 558 52 81,aktiv,,,FALSE,elduwik@hauss-gmbh.ch
+2539,Gaglio,Caterina,,Rennweg  8 b,5303,Würenlingen,28/4/1980,Italien,,,+4176 565 81 89,aktiv,,,FALSE,Gaglio80@gmail.com
+2541,Vögtle,Marilen,,Lettenstrasse 5,79804,Dogern,24/8/1970,D-79804 Dogern,+49 1512 27 747 77,,+49 1512 27 747 77,aktiv,,,FALSE,marilenvoegtle@gmail.com
+2542,Hüppeler,Adolf,,Hauptstrasse 77,5032,Rohr AG,12/4/1954,Oberdiessbach (BE),+41 62 822 15 81,,+4176 531 34 72,aktiv,,,FALSE,adisa@sunrise.ch
+2543,Zemp,Sandra,,Hübelweg 21,5083,Ittenthal,19/10/1964,Dagmersellen,+4162 871 56 02,,+4179 288 77 82,aktiv,,,FALSE,sandrazemp@gmail.com
+2544,Zemp,Daniel,,,,,,,,,,aktiv,,,FALSE,
+2545,Keller,Marc,,Ifangstrasse 131,5463,Wislikofen,15/4/1966,Reuenthal,,,+4179 677 83 54,aktiv,,,FALSE,info@nsmmusic.ch
+2546,Renner,Hans,,,,,,,,,,aktiv,,,FALSE,
+2549,Mühlebach,Nicole,,Brunnenweg  3,5330,Bad Zurzach,20/3/1981,,,,+4176 529 52 73,aktiv,,,FALSE,nm-design@gmx.ch
+2550,Keller,Bruce,,Kastanienweg  4,5234,Villigen,4/8/1955,Baden,+4156 281 25 30,,+4179 363 03 69,aktiv,,,FALSE,bruce.keller@bluewin.ch
+2551,Eberlein,Janet,,Chratzstrasse 71,5426,Lengnau AG,15/2/1984,Deutschland,+4156 535 50 21,,+4176 615 02 84,aktiv,,,FALSE,mail@janet-eberlein.com
+2554,Rüedi,Alesandro,,Brühlstrasse 2,5412,Gebenstorf,27/1/1976,Tamins,,,+4179 437 24 40,aktiv,,,FALSE,daniela.rueedi@sunrise.ch
+2555,Fischer-Keller,Irene,,Hauptstrasse  443,5324,Full-Reuenthal,6/6/1970,Endingen,,,+4179 710 57 64,aktiv,,,FALSE,i.fischer.70@bluewin.ch
+2556,Schwere,Silvia,,Hagenfirsterstrasse  13,5317,Hettenschwil,11/2/1985,,+4156 245 55 22,,+4179 376 70 92,aktiv,,,FALSE,stefan.schwere@greenmail.ch
+2557,Keller-Rey,Lotti,,Russen  14,5304,Endingen,9/10/1955,Schweiz,+4156 242 20 41,,+4179 713 38 19,aktiv,,,FALSE,lotti.keller55@bluewin.ch
+2558,Spielmann,Daniel,,Bürglen  25,5323,Rietheim,30/6/1985,Obergössgen SO,,,+4179 302 77 88,aktiv,,,FALSE,dany20070@gmail.com
+2559,Despotovic,Dragana,,Dragonerstrasse  53,5600,Lenzburg,24/7/1992,Turgi,,,+41 76 512 81 05,aktiv,,,FALSE,draganadespotovic@msn.com
+2562,Voorhees  Schurr,Susan,,Bäumliackerstrasse 13,5213,Villnachern,27/12/1953,Rickenbach LU,,,+4179 401 09 00,aktiv,,,FALSE,colorado.sue@bluewin.ch
+2564,Gysel,Simone,,Schaffhauserstrasse 60,8222,Beringen,29/7/1979,,,,+4179 475 86 14,aktiv,,,FALSE,beauci1010@hotmail.com
+2565,Flügel,Monika,,Promenadestrasse  14,5330,Bad Zurzach,6/6/1961,Bad Zurzach,,,+4176 797 91 77,aktiv,,,FALSE,m.fluegel@gmx.ch
+2566,Zahnd,Yvonne u. Gianni,,Am Schmittenbach  9A,5236,Remigen,4/1/1954,Schwarzenburg,,,+4178 677 58 42,aktiv,,,FALSE,gianni.zahnd@swissonline.ch
+2567,Sahr,Andrea,,Wiesenweg 13,5415,Nussbaumen AG,12/10/1967,Deutschland,,,+4179 303 50 88,aktiv,,,FALSE,Andrea@sahr.Info
+2568,Wiederkehr,Fredy,,Kirchweg 3,5420,Ehrendingen,8/10/1963,,,,+4176 431 63 65,aktiv,,,FALSE,tbassi@sunrise.ch
+2569,Waser,René,,Margrethenweg 18,5314,Kleindöttingen,4/10/1955,Lumnezia GR,,,+4176 456 56 55,aktiv,,,FALSE,wasi55@bluewin.ch
+2570,Meier,Sybille,,Winkelstrasse 18a,5314,Kleindöttingen,1/4/1982,Böttstein,,,+4176 433 88 22,aktiv,,,FALSE,sybille@meier-kalt.ch
+2572,Oesch,Wilhelm,,Reginaweg 2,5316,Gippingen,12/1/1953,Oberlangenegg,,,4179 713 45 08,aktiv,,,FALSE,wilhelm.oesch@gmx.ch
+2573,Winter,Claudia,,Hauptstrasse 373,5075,Hornussen,27/10/1992,,,,+4178 403 46 66,aktiv,,,FALSE,claudia-winter@msn.com
+2574,Schillig,Sanja,,Trottenweg,5312,Döttingen,21/9/1988,,,,+4179 924 76 64,aktiv,,,FALSE,
+2576,Schildhauer,Dominique,,Kapellebstrasse 32,4323,Wallbach,29/5/1994,,,,+4179 938 25 84,aktiv,,,FALSE,dominque.schildhauer@outlook.com
+2577,Vögeli,Hermann,,Rosenweg  2,5314,Kleindöttingen,17/6/1955,Böttstein,+4156 245 21 52,,+4179 156 91 62,aktiv,,Begleitperson Freiappell: Dorli Vögeli,FALSE,dorli.voegeli@bluewin.ch
+2578,Viazzoli,Quirina,,Hegi  8,5317,Hettenschwil,17/5/1950,Schweiz,+4156 245 30 58,,+4176 583 17 17,aktiv,,,FALSE,quirina@hispeed.ch
+2580,Leitner,Ramona,,Am Schmittenbach 9b,5236,Remigen,15/7/1988,,,,+4179 107 86 16,aktiv,,,FALSE,ramona-leitner@outlook.com
+2581,Nüchter,Marlen,,Geisacker 31,5418,Mandach,19/6/1999,Deutschland,,,+4176 511 45 62,aktiv,,,FALSE,marlennuechter@gmail.com
+2582,Oberle,Angelika,,Hauptstrasse 16,5324,Full-Reuenthal,3/1/1959,Reinach/AG,+4156 246 01 30,,+4179 254 54 59,aktiv,,,FALSE,city.buur@bluewin.ch
+2583,Würgler,Dario,,Fröhlichstrasse 9,5000,Aarau,21/2/1987,Aarau,,,+4179 564 13 18,aktiv,,,FALSE,d.wuergler@elektrowuergler.ch
+2586,Bühler,Ivan,,Hauptstrasse 17,5026,Densbüren,31/3/1993,Wolhusen LU,,,+4176 340 99 54,aktiv,,,FALSE,noxtron.event@gmail.com
+2587,Calcò,Fabiano,,Tromsberg 44a,5416,Kirchdorf AG,2/7/1987,,,,+4179 389 75 34,aktiv,,,FALSE,fabianocalco@gmail.com
+2588,Blattner,Heidi,,alte Zurzacherstrasse   32,5306,Tegerfelden,,,,,+4179 456 73 86,aktiv,,,FALSE,heidi.blattner@gmx.ch
+2591,Joos,Marco,,Sudetenstraße 10,79761,Tiengen,29/7/2003,Tiengen,,,+4178 255 00 90,aktiv,,,FALSE,joos.marco2907@gmail.com
+2592,Fellmann,Brigitte,,Reinerstrasse 242,5235,Rüfenach AG,,,+4162 892 18 71,,+4176 583 82 56,aktiv,,,FALSE,bfellmann@bluewin.ch
+2593,Bächli,Simon,,Leuberg  15,5306,Tegerfelden,15/10/1992,Baden AG,,,+4179 685 57 56,aktiv,,,FALSE,simon.baechli@gmail.com
+2594,Patrizio,Luca,,Buckstrasse  7,5322,Koblenz,1/8/1974,Italien,,,+476 433 62 84,aktiv,,,FALSE,luca.patrizio@iwebnet.ch
+2595,Colucci,Angela,,Chuntestrasse  50,5312,Döttingen,4/10/1990,,,,+4176 682 82 35,aktiv,,,FALSE,colucci.1990@web.de
+2596,Fellmann,Brigitte,,,,,,,,,,aktiv,,,FALSE,
+2597,Gärtner,Raphael,,,,,,,,,,aktiv,,,FALSE,
+2599,Ott,Desiree,,,,,,,,,,aktiv,,,FALSE,
+2600,Klose,Michaela,,Chuntestrasse  48,5312,Döttingen,13/2/1998,Opfikon  ZH,,,+4179 8722711,aktiv,,,FALSE,mklch@hotmail.ch
+2601,Fiorino,Giuseppe,,Winkelstrasse 9,5304,Endingen,18/6/1963,Italien,,,+4179 561 19 03,aktiv,,,FALSE,fugior@gmail.com
+2602,Stavrusev,Nicole,,Zedernweg 4,8956,Killwangen,15/11/1980,,+41 76 426 45 43,,+41 79 659 19 99,aktiv,,,FALSE,nstravrusev@yahoo.com
+2604,Schibli,Daniela,,Feldstrasse 8,5507,Mellingen,10/1/1990,Zürich/Fislisbach,,,+41 79 684 18 96,aktiv,,,FALSE,daniela_schibli@hotmail.com
+2605,Pannek,Wanda,,Furlängeweg 654,5325,Leibstadt,25/2/1994,,,,+41 76 801 70 09,aktiv,,,FALSE,wandapannek@web.de
+2606,Waldburger,Michelle,,Alte Gasse 3,5107,Schinznach Dorf,12/2/1999,Teufen AR,,,+41 79 905 12 02,aktiv,,,FALSE,waldburgermichelle99@gmail.com
+2607,Borgesano,Beatrice,,Stumpenweg 28,5303,Würenlingen,19/3/1970,,+41 44 850 52 92,,+41 79 909 37 47,aktiv,,,FALSE,enigma4u@gmx.ch
+2609,Brauner,Sharon,,Chilbert 1,5312,Döttingen,21/11/2000,,,,+4176 340 81 29,aktiv,,,FALSE,sharon.brauner@hotmail.com
+2610,Völlmin,Niklaus,,"Tiergartenstrasse, 23",5303,Würenlingen,6/12/1957,Würenlingen,+4156 297 10 59,,+4179 635 29 27,aktiv,,,FALSE,niklaus.voellmin@gmail.com
+2611,Höchli,Albert,,Hauptstrasse  136,5326,Schwaderloch,21/11/1955,Klingnau,,,+4179 377 89 68,aktiv,,,FALSE,albert.hoechli@hotmail.com
+2612,Keller,Bernhard,,Semlistrasse   14,5304,Endingen,29/4/1953,Endingen,,,+4179 654 14 57,aktiv,,,FALSE,
+2613,Decreuze,Dana Daniele,,Mandacherstrasse 22,5315,Böttstein,24/6/1967,,+4156 250 01 51,,+4176 534 78 88,aktiv,,,FALSE,mail@decreuze.com
+2617,Strebel,Beatrice,,Winkelstrasse 30,5236,Remigen,13/1/1978,Untersiggenthal,+41 56 441 23 87,,+41 79 244 49 37,aktiv,,,FALSE,beatrice.strebel@gmx.ch
+2618,Dousse,Hilda,,Poststrasse,8954,Geroldswil,14/3/1972,,+41 434 55 55 29,,+41 79 274 40 15,aktiv,,,FALSE,hilda@dousse.net
+2621,Bassi,Tina,,,,,,,,,,aktiv,,,FALSE,
+2623,Gisler,Janine,,Raihalde 9,5306,Tegerfelden,5/4/1977,,,,+4176 394 05 04,aktiv,,,FALSE,janine.bienert@gmail.com
+2625,Hehli,Patrick,,Erlenweg  1E,5416,Kirchdorf AG,23/1/1970,Appenzell,,,+4179 32768 46,aktiv,,,FALSE,paede.hehli@bluewin.ch
+2626,Hehli,Monica,,,,,,,,,,aktiv,,,FALSE,
+2628,Schwarz,Rudolf,,Alemannenweg 270,5234,Villigen,24/7/1956,Villigen,,,+4179 336 98 56,aktiv,,,FALSE,ruedi-schwarz@gmx.ch
+2629,Ganeshalingam,Pira,,Surbtalstrasse,5304,Endingen,4/9/1987,,,,+4179 917 05 94,aktiv,,,FALSE,g.pira@gmx.ch
+2630,Teuscher,Petra,,Bodenackerstrasse 45,5200,Brugg AG,18/6/1980,Diemtigen BE,+4156 441 52 27,,+4178 654 52 25,aktiv,,,FALSE,petra.teuscher@bluewin.ch
+2631,Rohner,Sharon,,Stöckmattstrasse 13,5316,Leuggern,7/10/1986,Fischenthal ZH,,,+4176 303 80 34,aktiv,,,FALSE,sharon.rohner@outlook.com
+2632,Birtone,Luana,,Wiesenweg  35a,5102,Rupperswil,22/11/2003,Untersiggenthal,,,+4176 341 43 48,aktiv,,,FALSE,luanabirtone03@gmail.com
+2633,Bühler,Gina,,Chratzstrasse 6,5426,Lengnau AG,26/8/1990,,,,+4179 226 61 85,aktiv,,,FALSE,ginabuehler90@gmail.com
+2634,Schmid,Brigitte,,Rebmoosweg  49c,5200,Brugg AG 3,29/11/1960,Brugg,,,+4179 712 13 61,aktiv,,,FALSE,schmid-rebmoos@hispeed.ch
+2635,Torun,Volkan,,Samichlausenstr.  6A,5312,Döttingen,21/4/1979,,,,+4176 780 30 49,aktiv,,,FALSE,senem.dal@gmail.com
+2637,Varga,Nathalie,,Sandstrasse 76,5412,Gebenstorf,12/11/1989,,,,+4176 480 76 60,aktiv,,,FALSE,nathifabi.varga@gmail.com
+2639,Arter,Theo,,,,,,,,,,aktiv,,,FALSE,
+2640,Engel,Mirjam,,Fliederstrasse  9,5417,Untersiggenthal,22/12/1989,Fischbach Göslikon,,,+4178 831 64 02,aktiv,,,FALSE,mirjam.engel1989@gmail.com
+2641,Häfliger,Jens,,Fliederstrass  9,5417,Untersiggenthal,,,,,,aktiv,,,FALSE,
+2642,Schaffner,Martin,,Mülacherstrasse  19,5212,Hausen AG,,,,,,aktiv,,,FALSE,
+2643,Warnke,Heike,,,,,,,,,,aktiv,,,FALSE,
+2645,Luchsinger,Elke,,Bürgleu 5,5323,Rietheim,,,+4156 634 55 59,,+4179 329 93 38,aktiv,,,FALSE,elke.luchsinger@outlook.com
+2646,Marquart,Jörg,,,,,,,,,,aktiv,,,FALSE,
+2648,Wanner,Heidi,,,,,,,,,,aktiv,,,FALSE,
+2649,Wanner,Eva,,,,,,,,,,aktiv,,,FALSE,
+2650,Schürch,Pascal,,,,,,,,,,aktiv,,,FALSE,
+2651,Bürgisser,Beatrice,,Hübelweg 11,5032,Rohr AG,20/10/1956,Aarau Rohr,,,+41 79 750 97 49,aktiv,,,FALSE,beatrice_b@bluemail.ch
+2652,Zollinger,Kurt,,Im Eichli 22,8162,Steinmaur,,,,+41 44 853 26 38,+41 78 401 57 21,aktiv,,,FALSE,
+2653,Tschäppät,Karin,,Gotzäcker 203,5462,Siglistorf,,,,,,aktiv,,,FALSE,
+2654,Oeschger,Felix,,Gotzäcker 203,5462,Siglistorf,,,,,,aktiv,,,FALSE,
+2655,Biercher,Henrick,,Breitenstrasse 197,5274,Mettau,27/5/1983,,,,+4179 960 30 01,aktiv,,,FALSE,Hbiercher@biercher.net
+2656,Hauenstein,Doris,,Grabenstrasse  7,5426,Lengnau AG,30/9/1958,,,,+4179 237 38 48,aktiv,,,FALSE,dhauenstein@bluewin.ch
+2657,Kaiser,Monika,,Stadlerstrasse 8,8182,Hochfelden,26/10/1949,Biberist,+4144 850 22 54,,+4179 889 46 28,aktiv,,,FALSE,kd-studio@gmx.ch
+2658,Stählin,Peter,,Dorfstrasse  21,8175,Windlach,18/6/1946,Beromünster,+4144 886 61 01,,+4179 400 99 60,aktiv,,,FALSE,peter.staehlin@bluewin.ch
+2659,Warnke,Mario,,Oele   6,5034,Suhr,20/6/1956,,+4162 842 44 02,,+4179 107 49 12,aktiv,,,FALSE,mariowarnke@ziksuhr.ch
+2661,Bronder,Beate,,Riedweg 18,5452,Oberrohrdorf,11/7/1955,Kopenhagen,+4156 221 33 21,,+4179 708 70 01,aktiv,,,FALSE,bronder@bro-law.ch
+2663,Egloff,Othmar,,Kempfhofstrasse 32,5436,Würenlos,8/2/1958,Wettingen,,,+4179 423 10 33,aktiv,,,FALSE,othmaregloff@bluewin.ch
+2664,Bless,Stefan,,Eulenweg 19,5400,Baden,22/7/1999,Flums SG,,,+4176 490 66 70,aktiv,,,FALSE,roland.nlbless@gmail.com
+2666,Reinsch,Leticia,,		Alte Poststrasse 268,5462,Siglistorf,28/11/2002,,,,+4176 682 84 32,aktiv,,,FALSE,leticiareinsch@gmx.ch
+2668,Brühwiler,Colin,,,,,,,,,,aktiv,,,FALSE,
+2669,Falk,Hans,,Zugerstrasse 10,5620,Bremgarten AG,5/1/1958,Luzein/GR,,,+4179 600 02 29,aktiv,,,FALSE,hansfalk@pudelfreunde.ch
+2670,Binder,Astrid,,Unterdorfstrasse  9,5333,Baldingen,10/7/1959,,,,+4177 428 14 59,aktiv,,,FALSE,as.binder59@gmail.com
+2671,Meier,Carmen,,"Kornweg, 6",5322,Koblenz,1/5/1990,,,,+4179 482 11 96,aktiv,,,FALSE,carmenmeier90@gmail.com
+2672,Spahr,Nicole,,Bachstr. 200,5462,Siglistorf,22/10/1975,,+4156 241 05 50,,+4179 507 54 80,aktiv,,,FALSE,nicole.spahr@hotmail.ch
+2673,Suter,Natalia,,Haldenstrasse 13b,5415,Nussbaumen AG,22/12/1970,Freienwil,+4156 282 41 09,,+4179 677 18 32,aktiv,,,FALSE,natisuter@bluewin.ch
+2676,Spicher,Andrea,,Ziegelweg  8,5107,Schinznach Dorf,13/8/1991,,,,+4179 758 31 28,aktiv,,,FALSE,andrea.noemi.spicher@gmail.com
+2677,Lam,Minh,,Gussstrasse 46,8180,Bülach,16/3/1969,,,,+4176 222 99 98,aktiv,,,FALSE,lamduyminh@hotmail.com
+2678,Neff,Judith,,Geissenweg 6a,5330,Bad Zurzach,10/8/1957,Appenzell,+4156 249 35 70,,+4176 469 32 65,aktiv,,,FALSE,judith.neff@bluewin.ch
+2679,Herbrich,Helene,,Bachweg 6,5222,Umiken,10/6/1982,,,,+4179 436 08 12,aktiv,,,FALSE,rintini333@gmail.com
+2680,Bailey,Louise,,Höhenweg 5,5426,Lengnau AG,16/3/1964,Lengnau AG,,,+4178 823 95 43,aktiv,,,FALSE,louisekbailey@gmail.com
+2682,Laufmann,Oliver,,Leibernweg 269,4468,Kienberg,3/11/1973,,,,+4179 966 47 57,aktiv,,Begleitperson: Constanze  Laufmann,FALSE,coroola@gmail.com
+2683,Laufmann,Constanze,,,,,,,,,,aktiv,,,FALSE,
+2684,Vögeli,Dorli,,Rosenweg  2,5314,Kleindöttingen,,,,,+4179 156 91 62,aktiv,,,FALSE,
+2686,Delfosse,Manuela,,"Obere Leestrasse, 11",5236,Remigen,3/9/1985,Linden b. Bern,,,+4176 377 89 76,aktiv,,,FALSE,manuela.delfosse85@gmx.ch
+2687,Bailey,Nick,,,,,,,,,,aktiv,,,FALSE,
+2690,Hochreutener,Julia,,Talackerstrasse 13,5415,Nussbaumen AG,3/2/1977,Teufen,,,+4176 569 39 77,aktiv,,Vermittelt von Ueli Stumpf,FALSE,juliahochreutener@gmail.com
+2691,Küng,Jessica,,Webermühle  42,5432,Neuenhof,11/1/1995,,,,+4179 245 75 40,aktiv,,,FALSE,jessy_-_@hotmail.com
+2692,Hochreutener,Marianne,,,,,,,,,,aktiv,,,FALSE,
+2693,Conrad,Samuel,,Tromsberg  44a,5416,Kirchdorf AG,24/12/1981,,,,+41 79 383 82 78,aktiv,,,FALSE,samuel.conrad@hin.ch
+2694,Huser,Andrea,,Beckenmoosstrasse 26,5330,Bad Zurzach,,,,,+4176 526 41 57,aktiv,,,FALSE,
+2696,Loosli,Tania,,Brühlstrasse 4A,5416,Kirchdorf AG,26/3/1989,Bremgarten,,,+4179 656 13 00,aktiv,,,FALSE,taenu_89@hotmail.com
+2697,Pleuss,Natalie,,Multenrain  1,5037,Muhen,20/4/1976,,,,+4179 367 86 41,aktiv,,,FALSE,nataliepleuss@gmail.com
+2698,Giarratana,Emmanuel,,Neumattstrasse 2,5703,Seon,21/6/1987,21.06.1987,,,+4176 280 50 55,aktiv,,Begleitperson: Lea Bigler,FALSE,egiarratana@hotmail.com
+2699,Schröder,Lars,,Pfründmatt 253,5318,Mandach,20/2/1972,,,,+4178 821 28 12,aktiv,,Begleitperson: Marlies  						Schweizer,FALSE,larsschroeder72@gmx.ch
+2700,Arrigoni,Beatrice,,Hardackerstrasse 35,5301,Siggenthal Station,20/12/1964,,,,+4179 653 46 42,aktiv,,,FALSE,beatrice.arrigoni@bluewin.ch
+2701,Nartz,Daniel,,"13, rue charles baudelaire",68390,Baldersheim  (Frankreich),1/2/1958,Frankreich,,,+3364 354 11 89,aktiv,,,FALSE,danielnartz@hotmail.de
+2702,Köstinger,Sophie,,Hübelrebe 2,5453,Remetschwil-Busslingen,9/9/1986,Tafers FR,,,+41799621916,aktiv,,Begleitperson: Urs Köstinger,FALSE,koestinger.sophie@gmail.com
+2703,Schneider,Lisa,,"Schulstrasse, 7",5505,Brunegg,10/7/1959,Oberflachs,,,+4179 353 81 39,aktiv,,,FALSE,li_schneider@bluewin.ch
+2704,Wilhelm,Silvia,,Neudorfstrasse 24,4813,Uerkheim,8/6/1968,,+4162  721 71 20,,+4179 333 17 63,aktiv,,,FALSE,tswilhelm@bluewin.ch
+2705,Frei,Caroline,,"Sommerhaldenstrasse, 46",5200,Brugg-Lauffohr,25/1/1986,,,,+4179 543 76 04,aktiv,,,FALSE,caro_rysi@gmx.ch
+2706,Overbeck,Aylin,,Am Landgraben 36,79761,Waldshut-Tiengen,31/10/1999,Deutschland,,,+4915128389756,aktiv,,,FALSE,aylin.overbeck@gmx.de
+2707,Biercher,Birgit,,Breitenstrasse 197,5274,Mettau,25/6/1980,Deutschland,+4156-535 50 23,,+4176 451 25 06,aktiv,,Begleitperson: Hendrick Biercher,FALSE,Birgit@biercher.net
+2709,Gaufroid,Barbara,,Hardackerstrasse 4,5303,Würenlingen,9/4/1959,,+4156 281 13 64,,+4179 329 51 00,aktiv,,,FALSE,b.gaufroid@gmail.com
+2711,Joder,Irene,,Panoramaweg 33,5504,Othmarsingen,4/12/1963,,,,+4179 401 52 38,aktiv,,Begleitperson: Daniel Schäfli,FALSE,irene.joder@byjoder.com
+2712,Coblitz,Heidi,,Höchweidstrasse 90,5724,Dürrenäsch,22/6/1967,Wynigen,,,+4179 285 16 11,aktiv,,Begleitperson: Benny Coblitz,FALSE,heidi.coblitz@bluewin.ch
+2713,Brändle,Barbara,,Dorfstrasse 4,5079,Zeihen,8/9/1983,,,,+4179 483 08 81,aktiv,,,FALSE,bama0221@outlook.com
+2714,Köstinger,Urs,,,,,,,,,,aktiv,,,FALSE,
+2715,Siegrist Roth,Susanne,,Birkenweg 7,5502,Hunzenschwil,17/11/1956,Meisterschwanden,,,+4178 928 22 67,aktiv,,,FALSE,siero@bluewin.ch
+2717,Weber,Margrit,,Gartenweg 18,4310,Rheinfelden,13/4/1958,Oberburg,,,+4179 568 76 30,aktiv,,Begleitperson: Bruno Weber,FALSE,sittich1@me.com
+2718,Heiniger,Sylvia,,Rankstrasse 5,5415,Nussbaumen AG,13/12/1988,,,,+4176 517 09 02,aktiv,,,FALSE,Sylviaheiniger@gmail.com
+2719,Schwenold,Sandra,,Sonnhalde 4,5322,Koblenz,16/2/1967,Niedergössgen,+4156 246 47 05,,+4176 586 25 01,aktiv,,,FALSE,Sandy16@sunrise.ch
+2720,Nyffenegger,Wanda,,Mühlegässli  4,5107,Schinznach Dorf,31/10/1960,Wyssachen,,,+4179 281 25 42,aktiv,,,FALSE,wanda.nyffenegger@bluewin.ch
+2721,Keller,Alexandra,,Rankstrasse 21,5304,Endingen,1/12/1989,Endingen,,,+4176 464 42 82,aktiv,,,FALSE,Info@alexandra-keller.ch
+2723,Coblitz,Benny,,,,,,,,,,aktiv,,,FALSE,
+2724,Schäfli,Daniel,,,,,,,,,,aktiv,,,FALSE,
+2726,Weber,Bruno,,,,,,,,,,aktiv,,,FALSE,
+2727,Gall,Eveline,,Rebmattweg 11,5234,Villigen,31/3/1962,Hirschthal,,,+4179 297 98 85,aktiv,,Begleitperson:   Pierre  Duperrex,FALSE,eveline.gall@gmx.ch
+2728,Duperrex,Pierre,,,,,,,,,,aktiv,,,FALSE,
+2730,Zollinger,Christine,,Im Eichli 22,8162,Steinmaur,7/4/1960,Zürich,+4144 853 26 38,,+4179 650 24 78,aktiv,,Begleitperson:  Kurt  Zollinger,FALSE,christine.zollinger@bluewin.ch
+2731,Spuhler,Petra,,Am Brunnen 6,5332,Rekingen AG,11/7/1972,Rekingen,,,+4179 957 42 26,aktiv,,,FALSE,
+2732,Mäder,Patricia,,Hauptstrasse 213,5314,Kleindöttingen,27/8/1985,Mettauertal,,,+4176 488 82 87,aktiv,,,FALSE,pati3@gmx.ch
+2951,Fontana,Bruno,,Zypressenstrasse  15,8408,Winterthur,,,+4152 202 18 91,,+4179 344 17 27,aktiv,,,FALSE,bfontana@fo-reifen.ch
+2733,Hug,Bruno,,Langmattstrasse 21,5200,Brugg AG,28/11/1959,,,,+4179 344 87 07,aktiv,,,FALSE,bruno.hug@hotmail.ch
+2735,Huber-Fedier,Yvonne,,Röthlerholzstrasse 7f,5406,Rütihof,2/4/1959,Frauenfeld,,,+4179 609 83 60,aktiv,,,FALSE,yv.huber@hispeed.ch
+2736,Heim,Melanie,,Hangstrasse 12,5426,Lengnau AG,15/3/1980,Lengnau AG,+41 56 210 41 40,,+41 76 391 22 15,aktiv,,,FALSE,tommer.heim@hispeed.ch
+2737,Häfliger,Nicole,,Dorfstrasse 34 c,5430,Wettingen,5/11/1977,Grossdietwil,,,+4179 208 75 89,aktiv,,,FALSE,nicolehafliger@gmail.com
+2738,Mourino,Sabrina,,Geissboden 10,5225,Oberbözberg,14/8/1983,Zürich,,,+41 79 510 12 25,aktiv,,,FALSE,sabrina.mourina@gmail.com
+2741,Meyer,Sandra,,Eggental 20a,5607,Hägglingen,27/8/1982,Hägglingen,,,+4176 422 13 65,aktiv,,,FALSE,sand_peru@hotmail.com
+2743,Rubin,Franziska,,Nordstrasse 13,8620,Wetzikon ZH,25/2/1985,,,,+4178 691 37 33,aktiv,,Begleitperson:  Sven Rubin,FALSE,franziska.gerig@hotmail.com
+2744,Rennhard,Elian,,im Bifig 2,5316,Leuggern,16/10/1995,,,,+4179 962 96 45,aktiv,,,FALSE,eli.rennhard@bluewin.ch
+2745,Knobel,Fabienne,,Rinikerstrasse 12,5236,Remigen,1/9/1977,,,,+4179 457 89 13,aktiv,,,FALSE,fabienne.knobel@gmx.ch
+2746,Irion,Sabrina,,Aeusserer Hübelackerweg 1,5502,Hunzenschwil,2/10/1995,,,,+4176 382 10 95,aktiv,,Begleitperson:  Dennis  Müller,FALSE,irion.sabrina@gmail.com
+2747,Saccomanno,Claudia,,Steinfeldstrasse 10,5033,Buchs AG,14/3/1967,,,,+4178 709 14 67,aktiv,,Begleitperson:  Vincenzo  De Stasi,FALSE,c.saccomanno@yahoo.de
+2749,Fricker,Deborah,,Römerhof 6,5416,Kirchdorf AG,6/3/1983,,,,+4179 127 13 36,aktiv,,,FALSE,debi_fricker@hotmail.com
+2750,Bigler,Lea,,Neumattstrasse 2,5703,Seon,,,,,,aktiv,,,FALSE,
+2751,Rubin,Sven,,Nordstrasse 13,8620,Wetzikon ZH,,,,,+41 78 691 37 33,aktiv,,,FALSE,franziska.gerig@hotmail.com
+2754,Schneider,Daniel,,Steinfeldstrasse 1,5034,Suhr,6/12/1961,,,,+41 79 889 18 84,aktiv,,,FALSE,schneider_aebersold@yahoo.de
+2757,Wiederkehr,Laurène,,Schlatterstrasse 7,5316,Leuggern,4/11/1981,,,,+41 76 561 79 78,aktiv,,,FALSE,info@horsemind.ch
+2759,Lerch,Sevi,,Höhenweg 23,4654,Lostorf,1/7/1975,,,,+41 76 335 69 38,aktiv,,Begleitpers: Thomy Lerch,FALSE,sevi.lerch@gmx.ch
+2760,Lerch,Thomy,,,,,,,,,,aktiv,,,FALSE,
+2761,Zorba,Baris,,Breitensteinstrasse 2,5417,Untersiggenthal,16/5/1999,Turgi AG,,,+41 76 455 46 99,aktiv,,,FALSE,baris.zorba1605@gmail.com
+2762,Nützi,Evelyne,,Galliweg 52 c,4852,Rothrist,6/10/1961,,,,+41 79 639 44 84,aktiv,,,FALSE,evenuetzi@gmail.com
+2763,Lardi,Claudia,,Erliacherweg 3,5436,Würenlos,8/11/1980,Poschiavo,,,+41 79 471 31 23,aktiv,,,FALSE,c.lardi@gmx.net
+2766,Näf,Brigitte,,Heusserstrasse,8192,Glattfelden,23/11/1968,Zürich,,,+4179 825 57 52,aktiv,,,FALSE,b.naef@hotmail.ch
+2767,Szabo,Magdalena,,Hägelerstrasse 69,5400,Baden,29/2/1956,Schweiz/ Ungarn,,,+4179 372 48 19,aktiv,,,FALSE,magdiszabo561@gmail.com
+2769,Furundaoturan,Süleyman,,Plattenstrasse 11,5605,Dottikon,5/9/1959,Krauchthal BE,+4156 621 23 15,,+4179 435 41 74,aktiv,,,FALSE,mirarafet@bluewin.ch
+2770,Wenger,Ingrid,,Plattenstrasse 11,5605,Dottikon,27/9/1963,Längenbühl BE,+4156 621 23 15,,+4178 821 50 34,aktiv,,,FALSE,mirarafet@bluewin.ch
+2771,Dürrbaum,Kerstin,,Fliederweg 8,4452,Itingen,15/1/1959,,,,+4179 375 06 02,aktiv,,,FALSE,kerstin.duerrbaum@sunrise.ch
+2773,Bühler,Yvonne,,Unterdorfstrasse 3,8523,Hagenbuch ZH,31/3/2001,,,,+4179 311 44 38,aktiv,,Begleitperson: Ernst Bühler,FALSE,y.buehler6@gmail.com
+2774,Hunkeler,Romy,,Mattenstieg 4a,5607,Hägglingen,29/12/1960,,,,+4179 363 07 67,aktiv,,Begleitperson: Peter Hunkeler,FALSE,romy.hunkeler@gmx.net
+2775,Scherrer,Cassandra,,Oelhofstrasse 292,5325,Leibstadt,20/8/1998,Nesslau SG,,,+4176 370 78 30,aktiv,,,FALSE,scherrercassie@gmail.com
+2776,Meyer,Johannes,,,,,,,,,,aktiv,,,FALSE,
+2778,Bühler,Ernst,,,,,,,,,,aktiv,,,FALSE,
+2779,Reinsch,Antje,,Salomon Landolt- Weg 38,8193,Eglisau,28/12/1969,Eglisau,,,+4176 330 12 69,aktiv,,,FALSE,antje.reinsch@schule-winkel.ch
+2780,siegrist,werner,,Hertensteinstrasse 70/9,5408,Ennetbaden,14/6/1955,,+4156 222 61 42,,+4179 400 31 11,aktiv,,,FALSE,siegrist.werner@gmail.com
+2781,Keller,Rosetta,,Hauptstrasse 67,5277,Hottwil,5/8/1969,,,,+4179 675 29 31,aktiv,,,FALSE,rosetta.keller@bluewin.ch
+2784,Kumli,Susanne,,Weiherweg 1,5332,Rekingen AG,15/6/1965,Utzenstorf,,,+4179 713 14 95,aktiv,,,FALSE,susannekumli@outlook.de
+2785,Coskun-Ulas,Lisa,,Im Spitz 6e,5333,Baldingen,26/5/1997,,,,+4179174 93 52,aktiv,,,FALSE,lisa.ulas@outlook.com
+2953,Iciek,Nil,,Weinbergstrasse 5a,5417,Untersiggenthal,5/5/1974,Leuggern,,,+4179 713 22 13,aktiv,,,FALSE,iciek@bluewin.ch
+2786,Lange,Michaela,,Hauptstrasse 61,5027,Herznach,29/6/1976,,,,+4176 586 13 07,aktiv,,,FALSE,m.lange-schenk@hotmail.com
+2788,Hauenstein,Ivana,,Trottenweg 31 a,5304,Endingen,14/10/1986,,,,+4179 549 42 58,aktiv,,Begleitperson: Raffael Schmid,FALSE,ivana.hauenstein@gmail.com
+2789,Schaffner,Jeanine,,Kornweg 1,5312,Döttingen,3/7/2000,,,,+4178 903 26 54,aktiv,,,FALSE,jeanine0schaffner@gmail.com
+2791,Irion,Corinna,,Bauvereinstrasse 27,79725,Laufenburg,10/10/1969,Deutschland,,,+49171 811 07 29,aktiv,,,FALSE,corinna.irion@gmail.com
+2792,Spuhler,Beatrix,,Am Brunnen 6,5332,Rekingen AG,5/4/1967,Zurzach,,,+4178 661 08 96,aktiv,,,FALSE,Beatrixspuhler@gmail.com
+2794,Reiss,Renate,,Rebberg 175,5275,Etzgen,19/2/1978,,,,+4176 747 34 11,aktiv,,Begleitperson:  Bernhard Henes,FALSE,Renate_reiss@web.de
+2795,Henes,Bernhard,,,,,,,,,,aktiv,,,FALSE,
+2796,Hunkeler,Peter,,,,,,,,,,aktiv,,,FALSE,
+2797,Bertolino,Valentina,,Lärchenweg 2a,5312,Döttingen,19/4/1991,Brugg,,,+4179 431 92 18,aktiv,,,FALSE,valentina.bertolino@outlook.com
+2798,Bächli,Alois,,Römerstrasse 18,5303,Würenlingen,22/12/1955,Würenlingen,+4156 281 30 45,,+4176 622 34 44,aktiv,,,FALSE,alois.baechli@bluewin.ch
+2799,Schmidt,Thomas Justus,,Salzstrasse 30,5330,Bad Zurzach,7/12/1970,Deutschland,,,+476 382 59 05,aktiv,,,FALSE,schmidt_tj@web.de
+2800,Pfeiffer,Ursula,,Niedermattstrasse  16,8192,Glattfelden,10/10/2023,,,,+4179 446 44 24,aktiv,,,FALSE,upfeiffer@gmx.ch
+2954,Wartini,Nadine,,Zuberbühlerstrasse 1,5330,Bad Zurzach,3/1/1978,Neerach,,,+4176 319 09 38,aktiv,,Übername des Hundes von Ihren Eltern da sie ins Heim gingen.,FALSE,nadine.wartini@gmx.ch
+2801,Börjesson,Sabrina,,Huebweg,5235,Rüfenach AG,2/7/1987,Remigen,,,+4179 644 86 28,aktiv,,Susanne kenne ich von früher. Alice und Karl Läuchli aus ehem. Remigen sind meine Eltern. Sehr gerne möchte ich mit Susanne arbeiten.,FALSE,sabrina.boerjesson@outlook.com
+2802,Walther,Esther,,Hinterdorfstrasse 19,5322,Koblenz,2/6/1957,,+4161 813 03 00,,+4179 352 54 12,aktiv,,,FALSE,strizzi5@bluewin.ch
+2804,Elsener,Max,,Untere Trottmatt 189 a,5274,Mettau,1/6/1956,Menzingen,,,+4176 335 03 39,aktiv,,,FALSE,max.elsener@bluewin.ch
+2805,Bütler,Mona,,Alte bernstrasse 14,5036,Oberentfelden,25/2/1990,,,,+4176 588 01 15,aktiv,,,FALSE,mangusko@gmail.com
+2806,Brasser,Suzanne,,Wiesenstrasse 10,5400,Baden,25/9/1958,Churwalden,+4156 222 96 24,,+4179 645 19 77,aktiv,,,FALSE,suz.bras@bluewin.ch
+2807,Zilliox,Susanne,,Hauptstrasse 81,5212,Hausen AG,15/8/1960,,,,+4179 636 62 86,aktiv,,,FALSE,susi.zilliox@gmail.com
+2808,Kuprina,Tanja,,Vorderdorfstrasse  16,5242,Birr,,,,,+4178 259 23 76,aktiv,,,FALSE,
+2809,Hufschmid,Karin,,Hirschweg  2,5632,Buttwil,5/1/1992,Niederwil AG,,,+4179 192 87 06,aktiv,,Empfehlung: Mona Bütler,FALSE,hufschmid.karin@gmx.ch
+2811,Vögeli,Evelyne,,"Talhof, Mandacherstrasse 14",5317,Etzwil / Hettenschwil,2/1/1991,,,,+4176 418 21 17,aktiv,,,FALSE,evevoegeli@hotmail.com
+2813,Gloor,Mariana,,Husacherweg 6,5522,Tägerig,22/3/1981,Brasilien,,,+4179 777 91 18,aktiv,,,FALSE,mariana@gloorious.com
+2814,Stoeckli,Brigitte,,Mohrenacherstrasse  7,4800,Zofingen,25/3/1965,Willisau,,,+4179 334 83 18,aktiv,,,FALSE,brigitte.stoeckli49@gmail.com
+2816,Hübscher,Jacqueline,,Sonnenweg 4,8965,Berikon,30/12/1986,,,,+4179 730 07 71,aktiv,,Vermittelt von Sophie Köstinger,FALSE,jackih86@hotmail.com
+2818,Serventi,Sandra,,Alte Poststrasse 27,5522,Tägerig,22/9/1971,Adliswil/Zürich/Thayngen,,,+4176 345 80 70,aktiv,,,FALSE,sserventi@bluewin.ch
+2819,Schmid,Nicole,,,4334,Sisseln AG,11/4/1969,,,,+4179 656 78 69,aktiv,,,FALSE,schmid.licht@gmail.com
+2820,Zielke,Richard,,Bernaustrasse 635,5325,Leibstadt,20/9/1997,Leibstadt,,,‪+4179 933 40 93‬,aktiv,,Partnerin:  Melanie  Enenko,FALSE,melanie.enenko97@gmail.com
+2821,Hirt,Anna,,Im Muracher 14,5213,Villnachern,7/8/2000,Stolli,,,+4176 328 40 34,aktiv,,,FALSE,hirtanna@yetnet.ch
+2824,Saiger,Erich,,Birkenstrasse  1,5415,Nussbaumen AG,20/12/1954,Nussbaumen,,,+4179 958 20 89,aktiv,,,FALSE,esaiger@hispeed.ch
+2842,von Rotz,Jürg,,Mittelstrasse 11,5430,Wettingen,10/10/1958,,+4156 426 60 80,,+4179 758 61 84,aktiv,,,FALSE,juerg.vonrotz@bluewin.ch
+2844,Beck,Daniel,,Hegi 132,5305,Unterendingen,4/3/1982,,,,+4179 550 31 72,aktiv,,,FALSE,beck.carlen@gmail.com
+2846,Romano,Dario,,Trottenweg  9a,5303,Würenlingen,11/10/1983,Würenlingen,,,+4176 585 27 94,aktiv,,,FALSE,83.romano@gmail.com
+2847,Höhener,Karin,,Schlössliweg 16,5425,Schneisingen,27/4/1961,,,,+4176 396 22 35,aktiv,,,FALSE,ax.hoehener@gmail.com
+2849,Eberhardt,Marcus,,Bauelengasse 8,5415,Rieden AG,31/12/1967,Obersiggenthal,,,+4179 830 76 50,aktiv,,,FALSE,dr.eberhardt@hotmail.ch
+2852,Frei,Brigitta,,Zelglistrasse 20,5425,Schneisingen,8/4/1959,,,,4176 574 81 72,aktiv,,,FALSE,brigitta.frei@gmx.ch
+2854,Mäder,Marcial,,,,,,,,,,aktiv,,,FALSE,
+2855,Conrad,Andrea,,,,,,,,,,aktiv,,,FALSE,
+2857,Barhacs,Lilla,,Sommerhaldenstrasse 15A,5200,Brugg AG,1/8/1985,Ungarn,,,+4179 555 71 22,aktiv,,,FALSE,lilia0801@gmail.com
+2858,Hajnal,Szimonetta,,Fahrstrasse 6,5314,Kleindöttingen,4/2/1992,,,,+4176 688 40 26,aktiv,,,FALSE,hajanals@gmail.com
+2859,Schwaiger,Christin,,Alte Buchserstrasse 11,8113,Boppelsen,23/7/1984,,,,+4176 342 80 49,aktiv,,,FALSE,christin.mandler@gmx.de
+2860,Paul,David,,Hüsliweg 15,8166,Niederweningen,19/9/1989,,,,+4176 785 62 34,aktiv,,,FALSE,david-paul.info@web.de
+2861,Leber,Tamara,,Froowaldhof  43,5237,Mönthal,12/8/1976,Mettauertal,,,+4176 596 82 46,aktiv,,Vermittelt von Cornelia Schneider,FALSE,gongo11@iclcud.com
+2862,Chirivi,Candido,,Bahnhofstrasse 40,5430,Wettingen,17/11/1964,Utzenstorf BE,,,+4179 440 31 04,aktiv,,,FALSE,c.chirivi@bluewin.ch
+2865,Blöchliger,Yvonne,,Sonnhalde 10,5400,Baden,24/6/1962,Uznach SG,+4156 222 22 56,,+4178 642 16 17,aktiv,,Begleitperson: Rolf Blöchliger,FALSE,kristall@bluemail.ch
+2866,Stettler,Romina,,Fluhweg 9,5412,Gebenstorf,7/2/2002,Bolligen,,,+4176 490 74 34,aktiv,,Begleitperson:  Charlotte/Christoph Stettler,FALSE,verenomina@gmail.com
+2867,Schmid,Raffael,,,,,,,,,,aktiv,,Begleitperson,FALSE,
+2868,Stimoli,Michelle,,,,,,,,,,aktiv,,Begleitperson,FALSE,
+2869,Schmid,David,,,,,,,,,,aktiv,,,FALSE,
+2870,Stettler,Christoph,,,,,,,,,,aktiv,,,FALSE,
+2871,Blöchliger,Rolf,,,,,,,,,,aktiv,,,FALSE,
+2956,Conte,Remo,,Erbsletstrasse 10,5234,Villigen,14/7/1957,Zürich,,,+4176 576 57 07,aktiv,,,FALSE,remo.conte@gmail.com
+2872,Kriesi,Joris,,Weidgasse 21,5304,Endingen,7/1/1989,,,,+4179 487 64 89,aktiv,,,FALSE,joris@kriesi.ch
+2873,Tomas,Jose,,Dürrestrasse 6,5314,Kleindöttingen,21/8/1983,Portugal,,,+4176 327 08 24,aktiv,,,FALSE,neleloisa@hotmail.com
+2874,Baumgartner,Michele,,Bündtlistrasse 3,5322,Koblenz,30/9/1996,,,,+4179 923 59 66,aktiv,,,FALSE,baumgartnermichele0@gmail.com
+2875,Fischer,Sabrina,,Am Bach 10,5213,Villnachern,7/6/1978,,,,+4179 457 31 78,aktiv,,,FALSE,spm.fischer@bluewin.ch
+2878,Haldimann,Nicole,,Am Hölibach 7,5412,Gebenstorf,24/8/1983,Hägglingen,,,+4178 635 30 55,aktiv,,Begleitpers: Andreas Haldimann,FALSE,nicole.haudi@gmail.com
+2879,Wulff,Martin,,Oberfeld 31d,5306,Tegerfelden,24/6/1976,,+4156 511 21 42,,+4178 835 52 42,aktiv,,,FALSE,wulff@nevermind.ch
+2881,Barchetti,Antonio,,Hauptstrasse  44,5200,Brugg AG,13/6/1971,Mettauertal AG,,,+4176 779 38 40,aktiv,,,FALSE,antonio.barchetti@gmail.com
+2882,Stettner,Nina,,Surbtalstrasse 26A,5312,Döttingen,25/8/1980,,,,+4178 715 53 08,aktiv,,,FALSE,ninastett@yahoo.de
+2883,Pfeiffer,Maja,,Königsteinweg  5,5000,Aarau,11/7/1959,Zürich,+4162 822 79 75,,+4179 261 08 05,aktiv,,,FALSE,maja.pfeiffer@cex.ch
+2884,Altendorfer,Marion,,Nuechtalstrasse 20,5415,Nussbaumen AG,22/10/1966,,,,+4179 295 15 77,aktiv,,Vermittlung Meyers mit Yuki,FALSE,maaltku@gmail.com
+2887,Barchetti,Tanja,,Hauptstrasse 44,5200,Brugg AG,4/11/1980,Embrach ZH / Mettauertal AG,,,+4176 779 68 40,aktiv,,Begleitperson: Antonio Barchetti,FALSE,antonio.barchetti@gmail.com
+2888,Marti Kienberger,Edith Anna,,Soggelweg 1B,5212,Hausen AG,21/2/1958,Oeschgen/AG,+4156 442 24 72,,+4179 438 84 62,aktiv,,,FALSE,Kienbergermarti@bluewin.ch
+2889,Valeri,Monika,,Mulflerstrasse 1,8164,Bachs,16/5/1967,Richterswil,,,+4179 420 74 12,aktiv,,,FALSE,monica.valeri@bluewin.ch
+2891,Guzzo,Marco,,Bündtenstrasse 10,5417,Untersiggenthal,18/6/1976,,,,+4176 437 06 76,aktiv,,Kollegin,FALSE,Margu1976@gmail.com
+2892,Bäbler,Hansueli,,Im Geerig 69,5507,Mellingen,3/2/1960,,,,+4179 773 07 11,aktiv,,von Lukas Klauser,FALSE,hansueli.baebler@baden.ch
+2893,de Lippe,Gabriele (Ella),,Lauchringer Strasse 66,DE-79793,Wutöschingen,5/6/1959,Dübendorf,01578 91388700 Whatsapp,,+49 162 340 9707,aktiv,,von Bianca Witulski,FALSE,gabriele.delippe@gmail.com
+2894,Waldner,Christa,,Eggstrasse 414,5276,Wil AG,14/4/1950,Basel,,,+4179 778 49 02,aktiv,,,FALSE,C.waldner@bluewin.ch
+2895,Boesch,Chea,,Terrassenweg 10,5313,Klingnau,17/5/2000,,,,+4179 458 96 34,aktiv,,Freunde und Internet,FALSE,cheaboesch@gmail.com
+2896,Suter,Annette,,Josebosenweg 13B,5134,Villigen,9/2/1963,,,,+4179 500 16 43,aktiv,,,FALSE,annette.sutergoes@gmail.com
+2897,Hochstrasser,Sandra,,Nussgasse 10,5301,Siggenthal Station,11/5/1978,Hägglingen AG,,,+4176 318 71 42,aktiv,,,FALSE,sandra.hochstrasser@gmx.ch
+2899,Schleuniger,Anja,,Am Schmittenbach 10a,5236,Remigen,11/12/1980,,,,+4179 576 55 11,aktiv,,Gespräch mit Bekannten,FALSE,anja-schleuniger@gmx.ch
+2901,Merki,Sibylle,,Irisweg 2,5303,Würenlingen,13/9/1967,,,,+4179 736 58 80,aktiv,,,FALSE,merki.sibylle@bluewin.ch
+2902,Beck,Patricia,,,,,,,,,,aktiv,,,FALSE,
+2903,Ziltener,David,,Baldingerstrasse  6,5304,Endingen,23/4/1969,,,,+4179 876 47 93,aktiv,,Begleitperson: Samantha Ziltener,FALSE,david.ziltener@bluewin.ch
+2904,Trpkoska,Ivona,,Seetalstrasse 77,5503,Schafisheim,1/10/2001,,,,+4179 353 34 31,aktiv,,Begleitperson: Neco,FALSE,ivona.trpkoska@gmail.com
+2905,Koch,Annett,,Badstrasse 135,5323,Rietheim,25/11/1968,Deutschland,+4156 249 07 47,,+4179 510 65 86 / +4179 510 65 87,aktiv,,,FALSE,dak@bluewin.ch
+2907,Wyttenbach,Ronny,,Unterdorf 278,5324,Full-Reuenthal,15/9/1988,Thun,,,+4176 481 50 31,aktiv,,,FALSE,ronnywyttenbach88@gmx.ch
+2909,Moser,Rafael,,Gibriststrasse 14,5317,Hettenschwil,5/8/1989,Vaz-Obervaz,,,+4179 347 10 15,aktiv,,,FALSE,moserrafael_89@outlook.com
+2910,Markus,Eszter,,Weidstrasse 1,5222,Umiken,22/3/1958,Herisau,+4156 441 90 72,,+4176 396 90 72,aktiv,,,FALSE,eszter.markus@gmx.ch
+2911,Roch,Janine,,Am Schmittenbach 7,5236,Remigen,6/11/1970,,,,+491514 625 11 36,aktiv,,,FALSE,janine.roch@gmx.ch
+2912,Meier,Sandra,,Hauptstrasse 17b,5315,Böttstein,26/9/1992,Mellingen,,,+4179 760 27 05,aktiv,,,FALSE,sandy.krell@gmail.com
+2913,SCARPATO,Carole,,Bollstrasse 4,5417,Untersiggenthal,12/3/1985,FR/IT,,,+4178 823 83 20,aktiv,,,FALSE,carole.scarpato@gmail.com
+2914,Langer,Stefanie,,Birkenweg 1a,79805,Eggingen,18/11/1994,Deutschland,,,+49173 202 51 69,aktiv,,,FALSE,steffi13@live.de
+2917,Schuler,Adrian,,Rätschegass 2,8155,Niederhasli,2/1/1985,,,,+4176 797 82 41,aktiv,,,FALSE,adrian.schuler@gmx.ch
+2957,Alt,Claudia,,Erbsletstrasse 10,5234,Villigen,22/6/1969,Würenlingen,,,+4178 783 48 44,aktiv,,,FALSE,remo.conte@gmail.com
+2918,Bigler,Irene,,Seefeldstrasse 33,5616,Meisterschwanden,26/10/1965,Worb BE,,,+4176 414 03 74,aktiv,,,FALSE,bigler3@gmx.ch
+2920,Michel-Binkert,Claudia,,Propstbergstr.3,5312,Döttingen,7/9/1963,Kaisten,+4156 245 30 51,,+4176 245 68 38,aktiv,,,FALSE,cmibi@sunrise.ch
+2921,Wyss,Isabelle,,Schulstrasse 31,4332,Stein AG,9/12/1969,,,,+4179 662 57 92,aktiv,,,FALSE,isa.wyss@bluewin.ch
+2924,Turalija,Kristina,,Kirchweg 27a,5415,Nussbaumen AG,5/8/1973,Obersiggenthal,,,+4179 704 73 24,aktiv,,,FALSE,k.turalija@copy-print.ch
+2925,Unternährer,Katja,,Hüsliweg 15,8166,Niederweningen,19/9/1989,,,,,aktiv,,,FALSE,
+2926,Widmer,Andrea,,Hasenstrasse  7,5212,Hausen AG,9/7/1983,Sterzing (BZ) Italien,,,+4179 291 55 76,aktiv,,,FALSE,a.obletter@gmail.com
+2927,Steiner,Brigitte,,Parkweg  3,5000,Aarau,10/2/1958,Aarau,,,+4179 170 73 45,aktiv,,,FALSE,brigitte_pacbell@bluewin.ch
+2928,Steiner,Urs,,Parkweg  3,5000,Aarau,,,,,,aktiv,,,FALSE,
+2929,Petkovic,Nemanja,,Seetalstrasse  77,5503,Schafisheim,,,,,,aktiv,,,FALSE,
+2931,Janz,Céline,,Innerdorfstrasse 31,5314,Kleindöttingen,9/11/1988,St. Stephan,,,+4179 227 51 09,aktiv,,,FALSE,C.n.janz@hotmail.com
+2932,Spahr,Stefanie,,Rütihof 2,5462,Siglistorf,9/12/1986,Gachnang TG,,,+4179 827 91 49,aktiv,,,FALSE,Stefanie.spahr.frei@gmail.com
+2933,Keller,Heike,,Gartenstrasse 5,5322,Koblenz,7/2/1968,,,,+4176 334 71 50,aktiv,,,FALSE,h.keller@mailbox.org
+2935,Tanner,Monika,,Steinbruchweg 6,5465,Mellikon,16/1/1965,Speicher AR,,,+4179 523 82 83,aktiv,,,FALSE,mt49@bluewin.ch
+2936,Adelino,Ana Maria,,Kirchweg 23,5415,Nussbaumen AG,17/2/1973,Portugal,,,+4176 477 52 72,aktiv,,,FALSE,anamariaadelino@hotmail.com
+2938,Bryner,Evelyne,,Hans Hässigstrasse 20,5000,Aarau,21/9/1962,Möriken-Wildegg,+4162 559 92 92,,+4176 309 69 68,aktiv,,Werbung: Maja Pfeiffer,FALSE,e.bryner@hotmail.com
+2939,Gorza,Christine,,Schlotterboden 145,5077,Elfingen,2/5/1964,,,,+4177 403 29 23,aktiv,,,FALSE,ces.g@gmx.ch
+2941,Hitz,Shannon,,Tannenweg 3,5332,Rekingen AG,3/6/2002,Obersiggenthal,,,+41 78 915 33 15,aktiv,,,FALSE,gissmo2002@gmail.com
+2943,Reinhard,Evelyn,,Im Eigen 188,5277,Hottwil,17/12/1979,,,,+41 79 766 93 29,aktiv,,,FALSE,evelyn-reinhard@bluewin.ch
+2945,Hospenthal,Esther,,Oberer Firstweg 23,6356,Rigi Kaltbad,27/6/1966,Arth-Goldau,,,+41 79 634 75 67,aktiv,,,FALSE,esther.hospenthal@gmail.com
+2946,Sieder,Bettina,,Unterdorf  278,5324,Full-Reuenthal,,,,,,aktiv,,,FALSE,
+2947,Schweizer,Elisabeth,,Hauptstrasse  31,5237,Mönthal,26/8/1951,,,,+4177 464 01 49,aktiv,,,FALSE,elikasch2@gmail.com
+2949,Müller,Christina,,Gibriststrasse 14,5317,Hettenschwil,5/2/1994,,,,+4176 424 19 94,aktiv,,Begleitung: Rafael Moser,FALSE,cm.mueller@hotmail.de
+2958,Suter,Desiree,,Zelglistrasse 29,5417,Untersiggenthal,18/2/1990,,,,+4179 586 36 26,aktiv,,,FALSE,desi.suter@hotmail.com
+2959,Jovanovic,Jennifer,,Enzianweg 11,5314,Kleindöttingen,15/6/1987,,,,+4179 588 90 84,aktiv,,,FALSE,jennifer.k@hispeed.ch
+2960,Kalt,Matthias,,Anglikerstrasse 58,5612,Villmergen,6/7/1981,Böttstein,,,+4179 742 68 43,aktiv,,,FALSE,matthiaskalt12@gmail.com
+2961,Bühler,Sandra,,Beerliweg 5,5210,Windisch,4/3/1982,Kirchberg SG,,,+4179 630 02 84,aktiv,,,FALSE,sandra-buehler@outlook.de
+2962,Giarratana,Lea,,Neumattstrasse 2,5703,Seon,19/10/1997,Worb  BE,,,+4179 604 21 09,aktiv,,,FALSE,lea.giarratana@hotmail.com
+2963,Schmidt,Daniela,,Im Winkel  1,5323,Rietheim,14/11/1950,Deutschland,,,+4176 420 86 61,aktiv,,,FALSE,
+2965,Oberle,Christoph,,Pestalozzistrasse 17,5210,Windisch,2/4/1993,Full-Reuenthal,,,+4179 473 78 47,aktiv,,Empfohlen: Angelika Oberle,FALSE,christoph_oberle@msn.com
+2966,Fellmann,Janine,,Zürichstrasse 17,5426,Lengnau AG,12/6/1987,,,,+4179 648 62 25,aktiv,,,FALSE,fellmann_janine@hotmail.com
+2968,Hirt,Valeria,,Tegerfelderstrasse 8,5303,Würenlingen,17/3/1990,,,,+4179 738 28 30,aktiv,,,FALSE,Valeriachantal@hotmail.com
+2970,Fontana,Richard,,Vorhard  7,5312,Döttingen,1/2/1959,Wetzikon,,,+4179 677 90 18,aktiv,,,FALSE,
+2030,Kuhn,Iren,,,,Riniken,,,+41 56 442 66 60,,+41 79 299 52 43,aktiv,,,FALSE,
+2060,Fellmann,Christoph,,Reinerstrasse 242,5235,Rüfenach AG,13/2/1953,,+4162 892 18 71,,+4176 583 82 56,aktiv,,,FALSE,ch.fellmann@sunrise.ch
+2102,Siegrist-Minikus,Esther,,Hertensteinstrasse 93,5415,Hertenstein AG,31/12/1955,Obersiggenthal,+41 56 282 15 84,,+41 79 305 68 42,aktiv,,,FALSE,siegrist.ernst@bluewin.ch
+2104,Licari,Ninfina,,Oberfeld 32,5306,Tegerfelden,18/9/1981,Würenlingen,,,+41 764 75 44 22,aktiv,,,FALSE,nuovaidea25@hotmail.com
+2106,Krom,Brenda,,Badstrasse 85e,5330,Bad Zurzach,19/3/1985,Bremgarten,,,+41 787 65 26 25,aktiv,,,FALSE,brenda@webzeit.ch
+2107,Jetzer,Barbara,,Rosenweg 2,5415,Nussbaumen AG,1/4/1973,Basel Stadt,+41 56 282 56 04,,+41 76 477 59 10,aktiv,,,FALSE,babs-vitus-jetzer@bluewin.ch
+1000,Fontanas DogWorld,,Postfach  131,Vorhard  2 A,5312,Döttingen,,,Fax: +41 56 245 03 51,+41 56 245 03 50,+41 79 677 90 18,deaktiviert,,Wird benötigt für SKN-Angaben und Weiteres --> bitte alle Eingaben mit Ihren Daten überschreiben.,FALSE,info@fontanas-dogworld.ch
+1001,Spadot-Online,Marco,,Stampfiweg 9,4812,Mühlethal,30/8/1949,Rohr AG,079 409 56 46,,079 409 56 46,deaktiviert,Instruktor(in),"16.12.2011 rifo: Marco ist heute bei Fontana.
+Test-Adresse
+Support Seminarverwaltung",FALSE,marco.spadot@dogtaps.ch
+1085,Hertel,Marjo gestorben,,Föhrenweg 7,5235,Rüfenach AG,27/3/1958,,+41 56 284 16 48,,+41 76 433 44 77,deaktiviert,FAS,,FALSE,marjo.hertel@sunrise.ch
+1176,Müller,Lucia (verstorben),,Laubberghof,5276,Wil AG,19/5/1963,Wil AG,+41 62 875 13 09,,,deaktiviert,SKN P,verstorben,FALSE,
+1183,Hirt,Petra (gestorben),,Hauptstr.1,5324,Full-Reuenthal,22/11/1959,Würenlingen,+41 56 246 00 93,,+41 79 236 46 83,deaktiviert,SKN P,,FALSE,petra.hirt@bluewin.ch
+1264,Wäspi,Hans Rudolf (verstorben),,Burri 3,5079,Zeihen,21/9/1950,Krinau,062 875 13 95,,+41 79 420 48 76,deaktiviert,SKN Th,verstorben,FALSE,waespiair@yahoo.de
+1267,Binzegger,Charly (verstorben),,Breitenstr.  20,5330,Bad Zurzach,11/8/1948,Baar,+41 56 249 48 71,,+41 79 402 97 03,deaktiviert,,,FALSE,binzi1@bluewin.ch
+1437,Horat,Nicolas,,Chäppelistrasse 2,5312,Döttingen,23/6/1995,Humlikon ZH,,,+41 79 461 81 18,deaktiviert,SKN Th,,FALSE,facebook_95@gmx.ch
+1702,Hetzke,Adrian,,Lindauerstrasse 25,8309,Nürensdorf,5/3/1966,Klingnau AG,+41 76 322 06 44,,+41 76 322 06 44,deaktiviert,,,FALSE,adrian.hetzke@outlook.com
+1818,Spadot,Walter,,Postfach 243,4812,Mühlethal,,,,,,deaktiviert,,- verbucht aus Online-Anmeldung: 29.02.2016,FALSE,marco.spadot@todaps.ch
+1885,Martinovic,Marina,,Lärchenweg 5,5312,Döttingen,16/7/1994,Kroatien,+41 56 245 69 07,,+41 76 802 07 16,deaktiviert,,"hat nichts angenommen, nur geschimpft, Geld zurück gegeben nach 3 Lektionen. Meldung Vet.-Dienst. Könnte Problemhund geben",FALSE,martinovicmarina2@gmail.com
+1927,Niesper,Simone,,Stepackerstrasse 8,8194,Hüntwangen,8/1/1994,Zürich,+41 789 66 01 47,,+41 78 966 01 47,deaktiviert,,"kommt doch nicht, ohne Angabe von Grund",FALSE,leika.sn@gmail.com
+2040,Schmid,Roy,,In Hintereichen 1,8166,Niederweningen,13/2/1975,Erlinsbach,+41 79 482 19 70,,+41 79 482 19 70,passiv,,,FALSE,s.r.weisschmi@gmail.com
+2042,Bürgi,Rolf,,Limmatstrasse  57,5412,Gebenstorf / Vogelsang,30/4/1959,Feusisberg,,,+4176 671 59 27,passiv,FAS,,FALSE,rolf.buergi@hispeed.ch
+2045,Wengi,Ronald,,,,,,,,,,passiv,FAS,,FALSE,
+2047,Schreiber,Priska,,Stückstrasse 14,5212,Hausen AG,2/11/1966,Kyburg ZH,+41 79 630 89 52,,+41 79 630 89 52,passiv,,nicht mehr erschienen,FALSE,Priska.schreiber@swissonline.ch
+2048,Stimoli,Sonja,,Wasenstrasse  4,5312,Döttingen,26/8/1971,,,,+4176/ 434 50 64,passiv,,,FALSE,s.stimoli@hotmail.com
+2049,Rohner,Bianca,,Dorfstrasse  49,5463,Wislikofen,30/7/1995,Mellstorf,,,+4179/ 840 54 65,passiv,,,FALSE,biancarohner@outlook.de
+2050,Jandl,Ralf,,Aarestrasse  11b,5412,Gebenstorf / Vogelsang,13/3/1980,,+41 56 535 94 14,,,passiv,,,FALSE,ralf.jandl80@gmail.com
+2051,Cilluffo,Francesca + Inga,,Sodaquartier  22,5330,Bad Zurzach,24/10/1942,Italien,+4156 249 33 86,,+4179 944 58 06,passiv,,,FALSE,hexekino@bluewin.ch
+2054,Fellmann,Sabrina,,Rebhalde 5,5042,Hirschthal,20/7/1984,Uffikon,,,04179 251 87 69,passiv,FAS,,FALSE,smr.fellmann@gmail.com
+2055,Fellmann,Margot,,Rebhalde 5,5042,Hirschthal,2/6/1960,Schötz,,,04179 251 87 69,passiv,FAS,,FALSE,margot.fellmann@gmx.ch
+2062,Schaller,Roland,,,,,,,,,,passiv,FAS,,FALSE,
+2064,Buch,Yolanda,,Lindenhof 7,5430,Wettingen,16/8/1951,Zürich,+41 56 426 19 88,,+41 78 406 43 04,passiv,,,FALSE,yolanda.buch@hispeed.ch
+2069,Gashi,Gentiana,,Usserdorfstrasse 13,5312,Döttingen,17/10/1997,Döttingen,,,+41 78 668 31 65,passiv,,,FALSE,shalagentiana97@gmail.com
+2071,Brüderlin,Irene,,Rainweg 4,5330,Bad Zurzach,29/12/1953,,+41 56 243 18 06,,+41 79 262 12 37,passiv,,,FALSE,i.bruederlin@gmx.ch
+2072,Schenk,Manfred,,Rebbergstrasse 28,5417,Untersiggenthal,13/5/1968,,,,+41 79 770 33 33,passiv,,hat sich nicht mehr geändert. MAulkorb geborgt und nach mehrmaligem Mahnen kaputt zurück gebracht,FALSE,manfred@schenks.ch
+2073,Albiez,Martin,,Oberrütiweg 5,5417,Untersiggenthal,,,,,+41 76 366 87 37,passiv,,,FALSE,martin.albiez@sunrise.ch
+2076,Steiner,Gianna,,Unterriedenstrasse 33,5412,Gebenstorf,28/10/1993,,,,+41 79 351 41 79,passiv,,"hat wieder abgemeldet, weil der Kurstag nicht geht",FALSE,giannasteiner@gmail.com
+2079,Echle,Heidi,,Sandacherweg 17,5235,Rüfenach AG,26/4/1952,,,,+41 79 526 77 02,passiv,,einfach nicht mehr erschienen,FALSE,fabi.yuke@gmail.com
+2081,Meier,Fabienne,,Staltig 12,5306,Tegerfelden,22/8/1990,,,,+41 79 735 50 58,passiv,,,FALSE,fabi.yuke@gmail.com
+2085,Bütikofer,Sabine,,Dörnhaldeweg 4,5312,Döttingen,5/12/1972,Rülen Niederwil,,,+41 76 317 63 30,passiv,,hatte Probleme mit Richis Art,FALSE,sabine.buetikofer@buetigips.ch
+2086,Hauser,Nathalie,,Husen 198,5426,Lengnau AG,1/2/1967,Niederweningen,+4156 241 05 70,,+4179 773 78 23,passiv,HFS,,FALSE,naturs@gmx.ch
+2087,Pozzi,Nathalie,,Zurzacherstr.  31,5200,Brugg AG,22/6/1966,Locarno TI,,,+4179 343 69 20,passiv,,,FALSE,nathalie.pozzi@hotmail.com
+2089,Martinez,Stephanie,,Nussgraben 2,5312,Döttingen,11/2/1990,Obersiggental,,,+41 79 676 56 52,passiv,,,FALSE,stephanie.martinez21@bluewin.ch
+2091,Milosevic,Natasa,,Sommerhaldenstrasse 13d,5405,Dättwil AG,20/10/1974,Turgi,+41 56 223 22 47,,,passiv,,,FALSE,nv.milos@gmail.com
+2093,Kalt,Nadine,,Weidstrasse 4,5420,Ehrendingen,16/11/1993,,,,+41 79 245 93 87,passiv,,,FALSE,nadine_kalt@hotmail.com
+2097,Dedial,Markus,,Stroppelstrasse  22,5417,Untersiggenthal,25/2/1961,Zürich,,,+4179 324 51 74,passiv,FAS,,FALSE,renate.moser@moser-art.ch
+2098,Moser,Renate,,,,,,,,,,passiv,FAS,,FALSE,
+2099,Boudouar,Gabriela,,Dorfstrasse 25,5412,Gebenstorf,17/6/1973,Wohlen,,,+41 76 376 62 73,passiv,,"Töchter waren abwechslungsweise im Kurs. Oft abgesagt, dann irgendwann im neuen Jahr nicht mehr erschienen",FALSE,gabriela.rib@sunrise.ch
+2158,Keller,Pascal,,,,,,,,,,passiv,FAS,,FALSE,
+2160,Kempf,Alexandra,,Unterfeldstrasse  25,5722,Gränichen,20/3/1964,,,,+4176 380 68 60,passiv,FAS,,FALSE,info@alexandra-kempf.ch
+2161,Trümpler,Sonja,,Rebmoosweg 41,5200,Brugg AG,,,,,,passiv,FAS,,FALSE,
+2162,Stumpf,Jennifer,,Scheunengasse  12,5512,Wohlenschwil,,,,,+41 77 976 74 10,passiv,,,FALSE,
+2170,Stehli-Knötzinger,Nicole,,Schwarzenbergstr. 14a,79771,Klettgau-Grießen,20/2/1967,,+49 17 366 84 662,,+49 77 428 50 337,passiv,,hat Privatstundeabo gelöst und ist nach 3x nicht mehr erschienen mit Ausreden.(Verletzung Hund),FALSE,nicistehli@gmail.com
+2171,Eckert,Renate,,Alemannenstrasse 29,79774,Albbruck,1/4/1964,Buch,+49 160 422 21 44,,+49 77 53 21 65,passiv,,Hund hat Gelenkprobleme im Junghundealter. Hört auf. 05.12.2018,FALSE,renate.eckert.buch@t-online.de
+2178,Meier,Walter,,Zurzacherstrasse 268,5203,Brugg Lauffohr,14/3/1954,Reisiswil,,,+41 79 819 67 62,passiv,,einmalige Privatstunde. Hund hat starkes Territorialverhalten zuhause. Wurde nichts mit ihm gemacht. Halter nicht wirklich motiviert etwas zu ändern,FALSE,walter_nadia@bluewin.ch
+2186,Bayard,Caroline,,Im Roggebode 3a,5400,Baden,8/3/1966,Eischoll VS,,,+41 79 732 24 87,passiv,FAS,,FALSE,caroline_bayard@bluemail.ch
+2188,Seiler,Rene,,Tannhof 2a,5524,Nesselnbach,22/5/1953,,+41 56 622 73 16,,,passiv,FAS,,FALSE,remyr.seiler@gmail.com
+2190,Patriarca,Roberta,,Ziegelweg 5,5200,Brugg AG,17/11/1968,Torriccella,+41 56 441 39 78,,+41 79 577 41 25,passiv,FAS,,FALSE,rs.patriarca@bluewin.ch
+2191,Ryser,Walter,,Seilbahnweg 5,5303,Würenlingen,16/12/1935,Dürenroth,+41 56 281 10 02,,,passiv,,ist einfach ohne Absage nicht mehr gekommen,FALSE,
+2193,Güntert,Charlotte,,Steigstrasse 5,5313,Klingnau,7/1/1950,,,,+41 79 689 66 47,passiv,,hat angefragt wegen Mantrail. War aber kein Platz frei,FALSE,
+2195,Weber,Thorsten,,,,,,,,,,passiv,FAS,,FALSE,
+2215,Gerz,Angelina,,Landstrasse 17,5322,Koblenz,13/2/1998,,,,+41 76 293 04 95,passiv,,,FALSE,angelina.gerz@gmx.ch
+2216,Venditti,Angela,,Tüftelstrasse 24,5322,Koblenz,15/12/1964,Dietikon,,,+41 79 402 34 36,passiv,,,FALSE,a.venditti@bluewin.ch
+2217,Mutter,Silvia,,Schulhausstrasse 2,5314,Kleindöttingen,23/4/1956,Böttstein,+41 56 245 73 26,,+41 79 347 93 17,passiv,,,FALSE,silvia.mutter@bluewin.ch
+2222,Zumsteg,Jolanda,,Galten 12,5272,Gansingen,10/5/1979,Gansingen,+41 628 75 13 00,,+4179 701 03 80,passiv,FAS,,FALSE,jolanda.zumsteg@gmx.ch
+1002,Meier,Hildegard,,Mattenweg  22,5314,Kleindöttingen,2/10/1953,,+41 56 245 29 24,,+41 79 489 58 29,passiv,,,FALSE,hilde_meier@bluewin.ch
+1003,Schlatter,Monika,,Pfauengasse 8,5330,Bad Zurzach,13/4/1957,,+41 44 883 77 66,,+41 79 252 93 44,passiv,SKN P / So-Pl,Privatstunde am 21.01.2016,FALSE,info@axessuar.ch
+1007,Vogt,Astrid,,Kirchweg 9,5314,Kleindöttingen,9/11/1966,,+41 56 245 23 36,,+41 79 445 21 82,passiv,,,FALSE,asi.vogt@bluewin.ch
+1009,Kummer,Angelika,,Via Scuola 24,7114,Uors,28/11/1972,,056 470 78 46,,+41 79 827 32 52,passiv,,,FALSE,pekummer@bluewin.ch
+1010,Meier,Andreas,,Kronengasse 5,5400,Baden,11/6/1951,,+41 56 222 43 42,,+41 79 678 55 51,passiv,,,FALSE,
+1011,Märki,Bea,,Berninastrasse 9,4313,Möhlin,20/10/1993,,+41 61 851 44 48,,+41 79 581 62 84,passiv,,,FALSE,bea.maerki@bluewin.ch
+1012,Kamer,Brigitte,,Hauptstrasse 16,4422,Aristorf,14/1/1969,,+41 61 811 12 09,,+41 76 498 43 67,passiv,SKN P,hat Kurs abgebrochen,FALSE,brigittekamer@bluewin.ch
+1013,Finsterwald,Brigitte,,Mitteldorfstrasse 1,5234,Villigen,5/8/1957,,+41 56 441 91 39,,+41 76 560 91 39,passiv,,,FALSE,bfinsterwald@sunrise.ch
+2242,Keller,Jessica,,Hauptstr.  18,5316,Leuggern,21/2/1993,Hottwil,,,+4179 620 65 16,passiv,,"erst ganz begeistert zugesagt zum kommen, dann einfach nicht erschienen und auf Nachfrage nicht reagiert",FALSE,j.keller93@hotmail.de
+1014,Büttner,Barbara,,Industriestrasse 15,5303,Würenlingen,,,+41 56 281 32 00,,+41 79 273 44 55,passiv,,,FALSE,info@schlachthofbuettner.ch
+1020,Karrer,Cornelia,,Ahornweh 5,5316,Gippingen,7/12/1963,,+41 56 245 25 66,,+41 79 763 09 31,passiv,,,FALSE,cornelia.karrer@yahoo.com
+1022,Schellenberg,Daniela,,Flaschenbach 16,5028,Ueken,9/11/1977,,,,+41 79 797 70 00,passiv,SKN P,,FALSE,d.shell@bluewin.ch
+1023,Vögeli,Daniel,,Kasteln 1,5108,Oberflachs,20/2/1965,,+41 56 544 90 41,,+41 79 697 06 50,passiv,FAS,,FALSE,denny65@yetnet.ch
+1024,Bär,Gerda,,Neugrütstrasse 33,5332,Rekingen,20/3/1954,Zürich-Oerlikon,+41 56 249 00 81,,+41 76 484 25 26,passiv,FAS,,FALSE,gbaer@gmx.ch
+1026,Bascelli,Franco,,Hinterer Kirchweg 4 D,5076,Bözen,12/3/1964,Oberhofen TG,+41 56 624 48 65,,+41 76 363 97 55,passiv,SKN P / FAS,,FALSE,franco@skynd.ch
+1027,Von Arx,Heidi und Ruedi,,Badstrasse 112,5323,Rietheim,21/9/1947,,+41 56 249 20 78,,+41 79 383 27 35,passiv,So-Pl,,FALSE,heidi.vonarx@bluewin.ch
+1028,Hospenthal,Hanna,,Landstrasse 37,5417,Untersiggenthal,21/3/1941,,+41 56 288 13 27,,+41 79 378 16 34,passiv,FAS,,FALSE,blumen@hospenthalkaegi.ch
+1029,Bernet,Helga,,Lierenstrasse 5,5417,Untersiggenthal,3/11/1953,,+41 56 288 27 19,,+41 79 657 47 01,passiv,,,FALSE,
+1030,Kovacevic,Anto,,Schwändiweg 6,5313,Klingnau,26/5/1978,,,,+41 79 276 34 15,passiv,,,FALSE,antokov.78@gmail.com
+1032,Jäger,Hannelore,,Rebenstrasse 133,5463,Wislikofen,3/8/1942,,+41 56 243 12 39,,+41 79 728 36 15,passiv,FAS,,FALSE,
+1034,Lang,Jasmin,,Usserdorfstrasse 13,5312,Döttingen,14/7/1983,,,,+41 76 528 43 18,passiv,,,FALSE,
+1035,Baldinger,Jasmin,,Chilchmattring 12,5316,Leuggern,30/9/1977,,+41 56 245 08 65,,+41 79 691 51 67,passiv,FAS,"--> Kontakte-Outlook per: 29.08.2021 16:15:20 Uhr 
+",FALSE,jasmin.baldinger@pop.agri.ch
+1036,Rankin,Jennifer,,Kropfmatt 291,5082,Kaisten,26/7/1986,,,,+41 79 572 72 05,passiv,FAS,,FALSE,jjr@netwings.ch
+1038,Invernale,Karin,,Terrassenstrasse 26,5312,Döttingen,17/11/1961,,+41 56 245 31 30,,,passiv,,,FALSE,ka.invernale@bluewin.ch
+1039,Woll,Karl-Heinz,,Siedlung Stein 10,5312,Döttingen,29/4/1967,,+41 56 245 81 19,,+41 76 322 16 46,passiv,,,FALSE,post@landseer-vom-palmenstein.ch
+1040,Weiss-Frei,Katharina,,Wängi 343,5326,Schwaderloch,25/10/1962,,+41 56 247 19 44,,+41 76 419 00 21,passiv,,,FALSE,kat.weiss@bluewin.ch
+1041,Wigger,Karin,,Lettenstrasse 13,5210,Windisch,12/11/1974,,+41 56 442 90 59,,+41 79 673 06 05,passiv,,,FALSE,
+1042,Schneider,Gaby,,Wängi 342,5326,Schwaderloch,27/9/1968,,+41 56 247 03 10,,+41 79 396 86 67,passiv,,,FALSE,gaby-andy@highspeed.ch
+1044,Weibel,Franziska,,Huebachersteig 13,5417,Untersiggenthal,4/10/1968,,,,+41 79 654 17 75,passiv,,,FALSE,
+1046,Schuler,Evelyn,,Mattenweg 19,5314,Kleindöttingen,15/8/1964,,+41 56 245 73 62,,+41 79 625 04 00,passiv,,,FALSE,schuler.evelyn@pop.agri.ch
+1047,Christen,Edith,,Beckenmoosstrasse 18 A,5330,Bad Zurzach,8/4/1944,,+41 56 249 21 55,,+41 79 282 59 39,passiv,,,FALSE,em.christen@gmx.ch
+1049,Fazzone,Daniela,,Tannenweg 5,5303,Würenlingen,25/3/1970,,+41 56 242 25 50,,+41 79 308 73 41,passiv,,,FALSE,daniela@fazzone.ch
+1050,Huser,Doris,,Segelhalde 46,5405,Baden,6/3/1946,,+41 56 493 00 60,,+41 79 444 05 79,passiv,,,FALSE,dhuser@bluewin.ch
+1051,Kern,Corinne,,Dorfstrasse 13,5233,Stilli,26/6/1965,Stettfurt TG,+41 56 284 52 20,,+41 79 333 95 86,passiv,,,FALSE,conny.kern@gmx.ch
+1052,Weber,Ruedi,,Süessmattstrasse 22,5212,Hausen,24/5/1973,,,,+41 79 355 77 23,passiv,,,FALSE,weber-barbara@bluewin.ch
+1053,Leutwyler,Anna,,foehrenweg 2,5242,Birr,22/1/1935,,+41 56 444 92 13,,,passiv,,,FALSE,
+1054,Egger,Sibylle,,Langmattstrasse 4,5200,Brugg,,,+41 56 442 45 94,,+41 79 224 61 22,passiv,,,FALSE,sibylle.egger@liebherr.com
+1056,Hauenstein,Lea,,Badstrasse 7,5234,Villigen,12/3/1971,Unterendingen,+41 56 284 19 74,,+41 79 629 76 80,passiv,,,FALSE,hauenstein5@bluewin.ch
+1058,Meier,Lise,,Im Hasli 6,5636,Benzenschwil,24/6/1961,Dagmersellen,+41 41 787 28 64,,+41 79 374 37 80,passiv,,,FALSE,lise.meier@bluewin.ch
+1060,Bonura,Marilu,,Grossmattenring,5312,Döttingen,19/1/1969,,+41 56 245 23 87,,+41 79 329 22 10,passiv,,,FALSE,
+1061,Gross,Marianne,,Laubberghof,5323,Rietheim,17/2/1969,,+41 56 249 18 03,,+41 78 815 34 27,passiv,,,FALSE,laubberghof@bluewin.ch
+1063,Kovacevic,Marinko,,Föhrensteig 2,5313,Klingnau,26/5/1978,,+41 56 245 16 49,,+41 79 684 01 31,passiv,,,FALSE,kov.marinko@gmail.com
+1064,Kahle,Michael,,Neugrütstrasse 39,5332,Rekingen,1/6/1969,,+41 56 441 15 46,,+41 76 779 05 85,passiv,,,FALSE,ani1970@hotmail.ch
+1065,Schäubli,Maria-Louisa,,Dahlienweg 13,5330,Bad Zurzach,27/5/1950,Bad Zurzach,+41 56 249 21 76,,+41 79 374 96 79,passiv,FAS / So-Pl,,FALSE,ml.sch@bluewin.ch
+1066,Francavilla,Monika,,Huebacherstrasse 4 A,5417,Untersiggenthal,16/7/1953,,+41 56 288 23 66,,+41 78 842 09 09,passiv,,,FALSE,
+1070,Vögele,Michael,,Gansingerstrasse 58,5236,Remigen,24/4/1974,,+41 56 284 02 62,,+41 76 701 81 18,passiv,FAS,,FALSE,bird_michi@hotmail.com
+1071,Meier,Marcel,,Irisweg 3,5417,Untersiggenthal,,,+41 56 470 32 87,,+41 79 659 36 92,passiv,FAS,hat zeitlich nicht mehr gepasst,FALSE,cello.meier@bluewin.ch
+1072,Keller,Margrit,,Kanalstrasse 11,5314,Kleindöttingen,4/11/1958,,+41 56 245 25 25,,+41 76 566 25 07,passiv,FAS,,FALSE,margrit.keller@sunrise.ch
+1073,Fazzone,Marco,,Tannenweg 5,5303,Würenlingen,30/11/1972,,+41 56 242 25 50,,+41 79 263 89 32,passiv,,,FALSE,marco@fazzone.ch
+1074,Baumgartner,Miriam,,Weihermatt 9,5082,Kaisten,14/12/1970,,+41 62 874 00 86,,+41 79 713 03 21,passiv,,,FALSE,wolfsrudel70@hotmail.com
+1076,Oswald,Marina,,Josebodenweg 3,5234,Villigen,24/11/1966,Egliswil,+41 56 284 02 28,,+41 76 334 11 66,passiv,FAS,,FALSE,osi.m@bluewin.ch
+1077,Salzmann,Michel,,Nelkenweg 1,5417,Untersiggenthal,27/5/1985,,,,+41 76 415 56 23,passiv,,,FALSE,michel.salzmann@salzmanntransporte.ch
+1083,Schindelholz,Marianne,,Stauseestrasse 26,5316,Gippingen,4/10/1963,,+41 56 245 29 53,,+41 79 454 04 03,passiv,,,FALSE,maryschindi@gmail.com
+1084,Wehinger,Markus,,Rank 6 A,5108,Oberflachs,15/2/1965,,+41 56 443 40 01,,+41 79 600 99 88,passiv,,,FALSE,markus@wehinger.com
+1086,Schwarz,Nathalie,,Ãƒâ€“lbergweg 11,5234,Villigen,30/4/1982,,,,+41 79 820 71 38,passiv,,,FALSE,nathalieschwarz@gmx.ch
+1087,Wolf,Nora,,Schrannstrasse 19,5107,Schinznach-Dorf,26/10/1980,,,,+41 79 415 55 43,passiv,,,FALSE,nora.wolf@gmx.ch
+1088,Gelder,Nicole,,Kastanienweg 1,5234,Villigen,4/11/1972,,+41 56 284 07 28,,+41 76 374 17 22,passiv,FAS,,FALSE,nicole@gelder.ch
+1090,Nasser- Schmid,Nadine,,Im Rüteli  11,5405,Dättwil,14/9/1976,,,,+41 79 463 04 61,passiv,FAS,,FALSE,schmidnadine@bluewin.ch
+1092,Benda,Oliver,,Hauptstrasse 48,5323,Rietheim,7/8/1970,,+41 56 249 08 18,,+41 79 219 71 49,passiv,,,FALSE,0.benda@bluewin.ch
+1094,Assmann,Rita,,Sonnenbueelweg 1,5426,Lengnau,7/5/1946,,+41 56 241 16 37,,+41 79 746 94 55,passiv,,,FALSE,ritaassmann@bluewin.ch
+1095,Hagger,Rita,,Breitenstrasse 13,5303,Würenlingen,14/12/1966,Quinten,+41 56 290 03 33,,+41 79 231 88 34,passiv,SKN P,,FALSE,r.hagger@bluewin.ch
+1096,Kalt,Roswitha,,Winkelstrasse 29,5314,Kleindöttingen,3/4/1959,,+41 56 245 38 76,,+41 79 784 43 73,passiv,,,FALSE,roswitha.kalt@bluewin.ch
+1097,Rieder,René,,Poststrasse 23 A,5303,Würenlingen,11/7/1967,,+41 56 281 29 29,,+41 79 420 18 20,passiv,,,FALSE,rene.rieder1@bluewin.ch
+1098,Rios,Rahel,,Lümberg 11,5082,Kaisten,11/4/1985,Kaisten,,,+41 79 660 10 34,passiv,FAS,,FALSE,ayunbeauci@gmail.com
+1101,Vogt,Sven,,Sommerhaldenstrasse 50,5200,Brugg,2/8/1985,,,,+41 79 362 13 83,passiv,,,FALSE,sv85@gmx.ch
+1102,Fried,Simone,,Tueftelstrasse 57,5322,Koblenz,26/10/1971,,,,+41 79 237 52 90,passiv,,,FALSE,simi71@bluewin.ch
+1103,Schatzmann,Susan,,Neumattstrasse 17,5236,Remigen,5/5/1955,,+41 56 284 28 92,,,passiv,,,FALSE,susan.schatzmann@hispeed.ch
+1105,Giacomelli,Simone,,Langackerweg 14 C,5303,Würenlingen,20/7/1967,,+41 56 281 30 07,,+41 79 290 22 80,passiv,,,FALSE,
+1106,Stam,Sandra,,Breitestrasse 36,5330,Bad Zurzach,5/10/1965,,+41 56 249 32 66,,+41 76 513 50 79,passiv,FAS,,FALSE,sandhaas@mac.com
+1107,Spörri,Susanne,,Tanneckstrasse 2,5312,Döttingen,1/4/1963,,+41 56 245 32 00,,+41 79 630 35 41,passiv,,,FALSE,s.spoerri@bluewin.ch
+1108,Bill,Sandra,,Baldeggstrasse 50,5400,Baden,29/8/1961,,+41 56 222 12 20,,,passiv,,,FALSE,sandra@billbaden.ch
+1109,Walthert,Sonja,,Stöckmattstrasse 19,5316,Leuggern,16/12/1965,Oberdiesbach,+41 56 245 62 86,,+41 79 331 77 10,passiv,,,FALSE,walthert.s@gmail.com
+1110,Obrist,Sandra,,Rainackerweg 70,5303,Würenlingen,17/2/1980,,,,+41 78 835 92 76,passiv,FAS,,FALSE,sandracaluori@yahoo.de
+1112,Georg,Susanne,,Stauseestrasse 17,5316,Gippingen,3/9/1967,,+41 56 245 75 78,,+41 78 854 08 33,passiv,,,FALSE,uwe.georg@bluewin.ch
+1113,Ineichen,Sonja und Luzia,,Galten 29,5272,Gansingen,9/1/1952,Zürich,,,+41 79 420 71 42,passiv,SKN P,,FALSE,ineichens@sunrise.ch
+1115,Käch,Theres,,Widumstrasse 3,5233,Stilli,8/10/1963,Häutligen BE,+41 79 275 35 53,,+41 79 275 35 53,passiv,So-Pl,,FALSE,
+1116,Wenger,Trix,,Bärenweg 7,5303,Würenlingen,2/1/1958,,+41 56 281 17 45,,+41 79 593 56 01,passiv,FAS,,FALSE,trix.wenger@hotmail.com
+1117,Mattuglia,Tina,,Grottenweg 7,5316,Leuggern,17/11/1987,Leuggern,+41 56 245 54 56,,+41 79 737 67 24,passiv,SKN P,ohne Absage nicht mehr gekommen,FALSE,tina.mattuglia@gmx.ch
+1118,Anderes,Theresia,,Vorstadt 5,5200,Brugg,1/4/1956,,+41 56 223 17 00,,+41 79 280 70 24,passiv,FAS,,FALSE,t.anderes@bluewin.ch
+1119,Knecht,Uschi,,Ausserdorf 80,5276,Wil,12/12/1951,,+41 62 875 16 81,,+41 79 565 67 77,passiv,,,FALSE,
+1120,Cvetkovic,Valentina,,Risistrasse 11 b,5312,Döttingen,24/9/1990,Döttingen,,,+41 76 459 97 09,passiv,,,FALSE,valentina_cvetkovic@hotmail.com
+1121,Maier,Willi,,NULL,79761,Waldshut,2/10/1932,,+49 7751 800 673,,,passiv,FAS,,FALSE,maier-delius@gmx.de
+1122,Bachmann,Yvonne,,Bremgarterstrasse 57,8967,Widen,25/3/1983,,,,+41 76 369 85 48,passiv,,,FALSE,yvonne.bachmann@strahltechnik.ch
+1126,Widerroe,Rolf,,Nussgasse 6,5301,Siggenthal Station,3/9/1941,,+41 56 290 07 08,,+41 79 401 57 59,passiv,FAS,,FALSE,rolf@wideroee.com
+1127,Schneider,Daniela,,Feldstrasse 9,5323,Rietheim,16/5/1970,,+41 56 249 34 53,,+41 76 456 60 43,passiv,FAS,,FALSE,info@faesackerhof.ch
+1128,Siegenthaler,Sabine,,Hinterdorfstrasse 3,5233,Stilli,18/12/1978,Trub BE,+41 56 284 20 75,,+41 79 295 05 82,passiv,FAS,,FALSE,sabine@sigishomepage.ch
+1130,De Pasquale,Christina,,Breitestrasse  2,5425,Schneisingen,13/9/1980,Zürich,,,+41 79 715 81 88,passiv,FAS,hatte nach Jahren plötzlich mit Richi ein Problem. Keine Antwort auf Nachfrage wieso,FALSE,christina@rossplatz.ch
+1132,Meyer,Roland,,Theodor Rätzer-Weg 3,5505,Brunegg,28/11/1956,,+41 62 896 24 74,,+41 79 352 66 39,passiv,FAS/So-Pl,,FALSE,rmeyer@pop.agri.ch
+1133,Van Ooijen,Brigitta,,Lättenstr. 40,5242,Birr,,,,,+41 79 681 97 52,passiv,FAS,,FALSE,
+1134,Wolf,Mathilde,,Chratzgasse 4,8162,Steinmaur,5/1/1948,,+41 44 853 33 82,,,passiv,FAS,,FALSE,retowolf@bluewin.ch
+1135,Friedrich,Katharina,,Dorfstrasse 15,5233,Stilli,22/4/1942,,+41 56 284 11 59,,+41 76 513 19 14,passiv,FAS,Mailadresse von Tochter,FALSE,mipafr07@gmail.com
+1137,Wolf,Reto,,Fahrhäuser 221,5324,Full-Reuenthal,22/3/1972,,,,+41 79 221 57 23,passiv,FAS,,FALSE,retowolf@bluewin.ch
+1139,Murmann,Heidi,,Staldenstrasse 21,5417,Untersiggenthal,,,+41 56 288 21 65,,+41 79 719 74 20,passiv,FAS,,FALSE,
+1140,Schmid,Heinz,,Bühlstrasse 129,5273,Oberhofen,24/9/1947,,+41 79 773 24 22,,+41 79 664 41 17,passiv,FAS,,FALSE,heinz.schmid@linde-lansing.ch
+1141,Käser,Brigitte,,Bahnhofstrasse 35 a,5507,Mellingen,,,+41 56 284 18 73,,,passiv,FAS,,FALSE,sibylle.roth@bluewin.ch
+1142,Pauletto,Sandra,,Bifangstrasse 15,5244,Birr,14/1/1970,,,,+41 78 666 85 18,passiv,FAS,,FALSE,dasira@swissonline.ch
+1143,Weber,Michael,,Kaltbrunnenstrasse 69,4054,Basel,,,+41 61 301 73 17,,,passiv,FAS,,FALSE,bennynyffeler@pop.agri.ch
+1144,Nyffeler,Bernadette,,Kindergartenweg 140,5072,Oeschgen,,,+41 62 871 66 90,,+41 78 626 89 66,passiv,FAS,,FALSE,bennynyffeler@pop.agri.ch
+1145,Brunner,Eveline,,Buenstrasse 108,8600,Dübendorf,,,,,+41 79 286 80 56,passiv,FAS,,FALSE,eveline.brunner@gmx.ch
+1147,Brack,Monika,,St. Johannserstrasse 20,5312,Döttingen,6/8/1972,Birmenstorf AG,+41 56 282 08 41,,+41 79 422 03 18,passiv,,,FALSE,monikabrack@swissonline.ch
+1151,Knecht,Heidi,,Schützenhausstrasse 7,5312,Döttingen,10/1/1950,,+41 56 245 19 03,,+41 79 717 15 36,passiv,,,FALSE,heidi.knecht@sunrise.ch
+1152,Lehmann,Christine,,Schwächelerstrasse 42,5314,Kleindöttingen,6/4/1956,Vechigen BE,+4156 245 55 61,,+4179 468 49 77,passiv,FAS/So-Pl/SKN,,FALSE,rolf-lehmann@bluewin.ch
+1153,Strijk,Helvetia,,Stampfi 337,4805,Brittnau,28/4/1963,Wohlenschwil,+41 56 223 52 74,,+41 76 427 52 74,passiv,,,FALSE,helvetiastrijk@hotmail.ch
+1154,Weber,Editta,,Dammweg 9,8952,Schlieren,7/1/1964,,+41 44 730 68 14,,+41 79 720 12 72,passiv,FAS,,FALSE,edittaweber@bluewin.ch
+1158,Wüthrich,Klara,,Falkengasse 1,5330,Bad Zurzach,5/5/1938,,+41 56 249 06 76,,+41 79 308 42 77,passiv,,,FALSE,kwuethrich@bluewin.ch
+1161,Cica,Tanja,,Lindauerstrasse 25,8309,Nürensdorf,29/12/1990,Pfäffikon ZH,,,+41 79 612 50 14,passiv,,,FALSE,tanja.cica@hotmail.com
+1163,Cid,Jos,,Grubenstrasse  21,9230,Flawil,15/10/1984,,,,+41 78 746 61 26,passiv,,,FALSE,jc.catch@gmx.net
+1164,Bühler,Beat und Angelina,,Mühliweiher  8,5079,Zeihen,21/1/1957,,+41 62 878 10 48,,,passiv,,,FALSE,beatbuehler@bluewin.ch
+1165,Schaffner,Ursula,,Mülacherstr.  19,5212,Hausen AG,28/11/1965,Würenlingen / Hausen AG,+41 79 600 63 78,,+41 79 600 63 78,passiv,,,FALSE,ursula.schaffner@ksl-ing.ch
+1167,Wyssen,Beatrice,,Scheideggweg  5,5303,Würenlingen,26/8/1989,Frutigen,+41 56 281 10 54,,+41 79 837 62 07,passiv,,,FALSE,beatrice_wyssen@gmx.ch
+1168,Barbera,Monika,,Parkstr.  13,5313,Klingnau,22/10/1970,Italien,+41 56 245 00 87,,+41 78 881 82 07,passiv,SKN Th/P,,FALSE,monikaelisa@hotmail.ch
+1169,Stauffer,Karin,,Wisstrotteweg  22,5313,Klingnau,10/9/1968,Eggiwil  BE,+41 56 245 63 62,,+41 79 697 92 40,passiv,SKN Th/P,,FALSE,peter-karin@sunrise.ch
+1170,Studer,Esther,,Zollplatz  10,5322,Koblenz,7/10/1973,Frutigen,,,+41 76 549 22 04,passiv,SKN Th,,FALSE,esther.studer@hotmail.com
+1171,Binder,Andy,,Zollplatz 10,5322,Koblenz,17/4/1968,Baldingen,,,+41 79 244 27 85,passiv,SKN Th,,FALSE,esther.studer@hotmail.com
+1172,Studer,Karl,,Langäckerstrasse  32,8957,Spreitenbach,1/3/1941,Frutigen,+41 56 401 51 10,,,passiv,SKN Th,,FALSE,esther.studer@hotmail.com
+1173,Studer,Nelly,,Langäckerstrasse  32,8957,Spreitenbach,9/1/1949,Wolfenschiessen,+41 56 401 51 10,,,passiv,SKN Th,,FALSE,esther.studer@hotmail.com
+1174,Suter,Othmar,,Dorfstrasse  21,5423,Freienwil,25/10/1963,Freienwil,+41 56 222 56 21,,+41 79 403 77 33,passiv,SKN Th,,FALSE,othmar.suter@hispeed.ch
+1177,Dähler,Peter,,Unterer Leeweg  5,5236,Remigen,3/8/1949,Appenzell AI,+41 56 284 24 32,,+41 79 787 30 68,passiv,SKN P,,FALSE,pm daehler@bluewin.ch
+1178,Hintermeister,Andreas,,Berg,8488,Turbenthal,5/8/1971,Basel / Schwammendingen,+41 52 385 15 45,,+41 79 557 68 31,passiv,,,FALSE,hintermeister@tbwnet.ch
+1179,Russo,Veronica,,Gartenweg  5,5312,Döttingen,15/2/1988,Döttingen,,,+41 76 488 17 91,passiv,SKN Th/P,,FALSE,russoveronica@hotmail.com
+1180,Süess,Natalie,,Büren  6,5272,Gansingen,7/11/1984,Buttisholz  LU,,,+41 79 237 79 92,passiv,SKN P,,FALSE,nata.sue@gmail.com
+1182,Luginbühl,Harald,,Birkenweg  3,5303,Würenlingen,28/3/1962,Oberthal  BE,+41 56 281 28 39,,+41 79  267 52 49,passiv,SKN P,,FALSE,haraldluginbuehl2@hotmail.com
+1184,Prano,Eleonora,,Surbtalstr.  21,5312,Döttingen,11/3/1974,Italien,+41 56 245 81 24,,+41 77 210 86 04,passiv,SKN P,,FALSE,
+1185,Boutellier,Tony,,Birkenweg  2,5436,Würenlos,10/1/1954,,+41 56 424 06 11,,+41 79 701 96 19,passiv,,,FALSE,zibouto@tbwnet.ch
+1186,Zeindlhofer,Ingrid,,Hornsteinweg  4,79713,Bad Säckingen,7/7/1963,Deutschland,+49 7761 55 37 36 3,,+41 78 903 99 19,passiv,FAS,,FALSE,nailart02@yahoo.de
+1187,Maurer,Uta,,Paradiesstr. 10,5223,Riniken,9/1/1971,,+41 56 450 26 90,,+41 79 768 69 67,passiv,FAS/So-Pl,,FALSE,uta.maurer@sunrise.ch
+1188,Strub,Armin,,Rigistr.  21,8330,Pfäffikon ZH,9/3/1980,,,,+41 76 569 79 89,passiv,FAS,,FALSE,a.strub@bluemail.ch
+1191,Luginbühl,Anna,,Rüttistr.  2,5074,Eiken,16/8/1962,,+41 62 871 44 28,,+41 79 664 44 11,passiv,,,FALSE,anna.luginbuehl@bluewin.ch
+1192,Lehner,Hans,,Kellenäckerstr.  6,5303,Würenlingen,3/3/1941,,+41 56 281 21 30,,+41 79 363 70 51,passiv,FAS,,FALSE,h.lehner@gmx
+1193,Schmid,Maria,,Schachenstrasse 3,5412,Vogelsang,20/1/1988,,,,+41 79 239 69 31,passiv,,,FALSE,mariaevaschmid@gmail.com
+1195,Pieper,Holger,,Hauptstrasse 39,5234,Villigen,20/12/1968,Deutschland,+41 56 284 09 55,,+41 78 698 56 33,passiv,,,FALSE,holger.pieper@gmail.com
+1196,Maxton,Anita,,Fliederweg  4,5316,Gippingen,25/3/1978,Bad Zurzach,+41 56 241 09 11,,+41 79 365 09 77,passiv,FAS,,FALSE,maxmi@hispeed.ch
+1197,Stadler,Franziska,,Rebbergstr.  5,5312,Döttingen,27/12/1964,Birrwil,+41 56 245 42 33,,+41 79 236 10 55,passiv,FAS,,FALSE,kurt.stadler@hispeed.ch
+1200,Heuberger,Kari,,Mitteldorfstr.  2 b,5276,Wil AG,27/1/1957,Brugg,+41 62 875 22 81,,,passiv,,"keine Zeit mehr. Will wieder kommen, aber trailen. 05.12.2018",FALSE,jenkiboy@gmail.com
+1202,Rokyta,Marek,,Wilerweg  3,5317,Hettenschwil,3/11/1976,Tschechien,+41 56 245 19 69,,+41 79 274 41 84,passiv,,,FALSE,info@valurhof.ch
+1203,Pereira,Carla,,Steigbrunneweg  22,5313,Klingnau,17/9/1973,Portugal,+41 56 245 12 91,,+41 76 443 19 73,passiv,SKN Th/P,,FALSE,alexper73@hotmail.com
+1204,Pereira Amorim,Alice Maria,,Winkelstr.  31,5314,Kleindöttingen,7/6/1982,Portugal,,,+41 78 673 50 95,passiv,SKN Th/P,,FALSE,movraofrancisco@hotmail.com
+1205,Meyer,Robyn Claudia,,Badenerstr. 6b,5200,Brugg AG,24/11/1991,Strättlingen/Thun,,,+41 76 578 76 40,passiv,SKN Th/P,,FALSE,meyer.robyn.claudia@gmail.com
+1206,Rimann,Katrin,,Rebmoosweg  51,5200,Brugg AG,11/3/1947,Oberrohrdorf,+41 56 442 39 52,,+41 76 424 44 20,passiv,,,FALSE,katrin.rimann@sunrise.ch
+1207,Ryser,Roger,,Rennweg  18,5303,Würenlingen,30/6/1973,Dürrenrot BE,,,+41 79 355 53 56,passiv,,,FALSE,ryser.roger@bluewin.ch
+1208,Botrugno,Monica,,Schwächelerstr.  5,5314,Kleindöttingen,17/4/1980,Böttstein,+41 56 282 14 38,,,passiv,SKN Th/P,,FALSE,botrugno@gmx.ch
+1209,Zeindler,Monika,,Berg  925,8488,Turbenthal,5/12/1977,Bellikon / Beinwil am See,+41 52 385 15 45,,+4179 569 00 05,passiv,SKN Th,,FALSE,hintermeister@tbwnet.ch
+1210,Meier,Andreas,,Höngerstr.  23,5313,Klingnau,31/10/1979,Romoos  LU,+41 56 249 18 80,,,passiv,SKN Th,,FALSE,ambrosius@gmx.ch
+1212,Dürst,Yolanda,,Parkstr.  5,5223,Riniken,23/3/1955,,+41 56 441 12 40,,+41 76 440 23 55,passiv,FAS,,FALSE,duerst@pop.agri.ch
+1213,Baumann,Deborah,,Schlattstr.  13 B,5315,Boettstein,18/7/1985,Bottenwil,,,+41 79 826 96 15,passiv,SKN P,,FALSE,debbie_baumann@hotmail.com
+1214,Kämpfer,Doris,,Alpergstrasse 3,5236,Remigen,29/3/1967,Oeschenbach BE,+41 56 441 95 33,,+41 79 578 66 60,passiv,So-Pl,,FALSE,doris.kaempfer@bluewin.ch
+1217,Wittulski,Bianca,,Am kalten Bach  10,79761,Tiengen,26/11/1974,Deutschland,,,+49 1766 1299 359,passiv,,,FALSE,extravagant@loop.de
+1219,Vos de Mooij,Sabine,,Baumertacherstr.  3,5272,Gansingen,22/9/1970,Dürrenäsch,+41 62 875 05 89,,+41 79 245 09 04,passiv,SKN P,,FALSE,sabi70@sunrise.ch
+1220,Böck,Klaus Dieter,,Selanderweg  21,5223,Riniken,9/8/1942,Riniken,+41 56 441 45 69,,+41 79 353 32 63,passiv,SKN P,,FALSE,info@satzattelierb.ch
+1221,Dodane,Paul u. Patrik,,Böckergasse  45,5276,Wil AG,5/11/1948,Eschlikon,+41 62 874 28 69,,+41 79 758 98 48,passiv,SKN P/FAS/So-Pl,,FALSE,dodane@bluewin.ch
+1223,Graf,Karin,,Stauseestr. 23,5316,Gippingen,19/9/1973,Böttstein,+41 56 245 64 36,,+41 78 673 39 30,passiv,SKN P,,FALSE,karingraf73@hotmail.com
+1225,Hug,Eva,,Wiesenstr. 7,5303,Würenlingen,20/12/1947,Zürich,+41 56 281 30 11,,+41 79 359 42 13,passiv,SKN P,,FALSE,
+1226,Stutz,Anja,,Zürcherstrasse 78,5432,Neuenhof,17/9/1988,Sarmenstorf,056 284 28 84,,+41 79 104 52 54,passiv,FAS,,FALSE,stutz.anja@gmx.ch
+1227,Schori,Francine,,Hauptstr.  167,5274,Mettau,8/6/1958,Seedorf BE,+41 62 875 27 43,,+41 77 441 14 92,passiv,,,FALSE,francine.schori@bluewin.ch
+1228,Wiederkehr,Martin,,Obweg 7,5108,Oberflachs,2/4/1972,Luzern,+41 56 222 98 02,,+41 79 608 34 52,passiv,,,FALSE,martin.wiederkehr@gmx.ch
+1231,Fuchs Bolliger,Ursula,,Rinikerstrasse 150,5222,Umiken,26/5/1952,,+41 56 442 06 11,,+41 79 404 63 15,passiv,,,FALSE,ufuchs@bluewin.ch
+1236,Welte,Maria,,Rheintalstrasse 206,5325,Leibstadt,24/4/1947,Leibstadt,+41 56 247 14 89,,+41 79 228 56 58,passiv,SKN,,TRUE,mariawelte@bluewin.ch
+1237,Bartlome,Claudine,,Ahornweg 7,5316,Gippingen,7/4/1959,,+41 56 245 65 75,,+41 79 294 69 89,passiv,,,FALSE,c.bartlome@bluewin.ch
+1238,Junker,Romy,,Trottenmatt 237,5318,Mandach,18/4/1985,,+41 56 284 03 28,,+41 78 878 95 85,passiv,,,FALSE,romy.junker@gmx.ch
+1239,Dim,Tatjana,,Husbergweg 3,5234,Villigen,4/8/1986,,+41 56 284 26 21,,+41 76 369 26 21,passiv,,,FALSE,tatjanadim@maag.com
+1241,Aschwanden,Heliane,,Neugruetstrasse 53,5332,Rekingen AG,27/4/1970,,+41 56 249 49 18,,+41 78 891 24 45,passiv,,,FALSE,atelier.heliane@gmail.com
+1242,Chrubasik,Elli  Joachim,,Tessinstrasse 15,4054,Basel,17/3/1952,,+41 61 311 83 00,,+41 78 851 73 57,passiv,,,FALSE,
+1244,Pieren,Brigitte,,Mittelgasse 13,5301,Siggenthal Station,27/3/1961,,+41 56 281 35 34,,+41 78 821 90 41,passiv,,,FALSE,brigitte.pieren@gmail.com
+1246,Fossa,Marco,,Bahnhofstrasse 37,5605,Dottikon,15/10/1983,,+41 43 211 05 24,,+41 78 867 08 80,passiv,,,FALSE,ragazzidellanord@hotmail.com
+1247,Gaal,Erika,,Loohof  6,5304,Endingen,4/6/1970,Steinmauer  ZH,+41 56 242 25 24,,+41 79 323 40 61,passiv,SKN P,,FALSE,famgaal@bluewin.ch
+1250,Knorr,Roger,,Wuhrmattweg 479,5075,Hornussen,15/3/1965,,+41 62 871 77 61,,+41 78 623 57 27,passiv,,,FALSE,roger_knorr.@bluewin.ch
+1254,Müller,Mathilda,,Hauptstrasse 48,5273,Oberhofen AG,15/11/1964,,+41 62 875 25 18,,+41 79 385 62 87,passiv,FAS/So-Pl,,FALSE,hildimueller@bluewin.ch
+1255,Eckert,Manuela,,Schlossackerweg 315,5325,Leibstadt,2/11/1967,Leibstadt,,,+41 78 876 19 04,passiv,So-Pl / FAS,,FALSE,
+1256,Kaufmann,Elisabeth,,Brüelstrasse 3A,5312,Döttingen,8/2/1950,Leibstadt,+41 56 245 03 02,,,passiv,FAS,,FALSE,
+1257,Reinert,Ursula,,Breitacher  4b,5210,Windisch,15/2/1947,Horw/ LU,,,+41 79 658 48 17,passiv,,,FALSE,ursula.reinert@hispeed.ch
+1261,Pettke,Angelika,,Hauptstr. 26,5323,Rietheim,22/6/1966,Deutschland,+41 56 249 08 18,,+41 79 478 80 98,passiv,,,FALSE,a.pettke@bluewin.ch
+1262,Zappala,Davide,,Jltisstr.  2,5212,Hausen AG,24/4/1974,Italien,+41 56 444 94 79,,+41 76 347 37 17,passiv,FAS / SKN P,,FALSE,davide.zappala@allianz-suisse.ch
+1824,Wuillemin,Astrid,,Rinikerstrasse 20,5236,Remigen,25/7/1964,Roggenburg,,,+41 79 545 96 84,passiv,,,FALSE,astrid.wuillemin@hispeed.ch
+1265,Oehninger,Nicole,,Chrüzweg  15,5332,Rekingen AG,2/8/1993,Frauenfeld,,,+41 79 481 14 27,passiv,SKN Th,,FALSE,nicole120000@hotmail.com
+1268,Erni,Desirée,,Rainweg 11,5417,Untersiggenthal,14/3/1991,,+41 56 288 25 79,,+41 79 769 13 07,passiv,,,FALSE,desi_erni@hotmail.com
+1269,Raulf,Elfriede,,Buchstr. 17,5322,Koblenz,14/8/1936,Deutschland,+41 56 534 67 21,,+41 79 740 17 15,passiv,,,FALSE,
+1270,Meier,Max,,Gartenstr.  7,5322,Koblenz,17/5/1950,Koblenz,+41 56 246 21 94,,+41 79 279 66 22,passiv,FAS,,FALSE,esther.meier@bluewin.ch
+1272,Dietsche,Jan,,Dammweg 18,5314,Kleindöttingen,6/11/1988,Weiach  ZH,,,+41 79 780 25 22,passiv,,,FALSE,jan.dietsche@bluewin.ch
+1273,Ackermann,Ueli,,Hofmattstr.  7,5223,Riniken,8/2/1947,Riniken,+41 56 442 10 61,,+41 79 300 17 62,passiv,,,FALSE,ulrich.ackermann@bluewin.ch
+1274,Teixeira Grilo,Diego,,Breitenweg  14,5314,Kleindöttingen,14/10/1990,Portugal,,,+41 79 767 87 80,passiv,SKN Th,,FALSE,diego__1990@hotmail.com
+1275,Strebel,Roland,,Hauptstrasse  219,5314,Kleindöttingen,6/7/1961,Uezwil  AG,+41 56 245 64 09,,+41 79 630 42 00,passiv,,,FALSE,roland.strebel@bluewin.ch
+1276,Pfund,Sandra,,Oberdorfstr. 37,5316,Gippingen,8/4/1968,Hallau,+41 56 245 74 45,,+41 79 415 50 83,passiv,,,FALSE,familiepfund@hispeed.ch
+1277,Darnutzer,Marina,,Kirchweg  32,5415,Nussbaumen AG,20/6/1989,,,,+41 76 331 20 89,passiv,,,FALSE,biina89@hotmail.com
+1278,Furrer,Arno,,Ausserfeldstr. 16,5032,Rohr AG,27/11/1969,Lüterkofen,+41 62 824 39 47,,+41 79 571 99 59,passiv,,,FALSE,arsurohr@bluewin.ch
+1280,Funk,Ruedi + Marianne,,Verenikerstr.  13b,8152,Opfikon,24/7/1941,,+41 44 810 59 24,,+41 79 537 65 81,passiv,,,FALSE,ruedi.funk@funkag.ch
+1282,Speck,Maria Sonia,,Reutenenstrasse  11b,5210,Windisch,1/1/1962,Oberkulm,+41 56 442 14 67,,+41 79 520 77 18,passiv,SKN Th/P,,FALSE,soniaspeck2011@hotmail.com
+1283,Schmid,Marcella,,Bahnhofstrasse 16,5316,Felsenau AG,19/12/1950,Disentis,+41 56 246 12 05,,+41 79 535 26 76,passiv,SKN Th,,FALSE,marcella_schmid22@yahoo.de
+1284,Erdin,Dorli,,Weiherhof,5272,Gansingen,31/8/1961,Gansingen / Wil im Mettauertal,+41 62 875 24 12,,+41 79 660 11 54,passiv,SKN Th,,FALSE,fd.erdin@bluewin.ch
+1286,Zeder,Beatrice,,Dorfstrasse 1,5316,Leuggern,31/3/1972,Bönigen BE,+41 56 245 68 40,,+41 76 498 18 16,passiv,,,FALSE,familie.zeder@bluewin.ch
+1287,Bolliger,Sascha,,Schlüsselstr.  21,5222,Umiken,6/4/1982,Schmiedrued,+41 56 441 32 12,,+41 77 216 01 12,passiv,,,FALSE,bolligers@hotmail.de
+1288,Burren,Evelyne,,Dorfstr.  64,5512,Wohlenschwil,25/2/1968,Hägglingen,+41 56 491 13 37,,+41 79 653 38 75,passiv,,,FALSE,frrevi@hispeed.ch
+1289,Vögeli,Sanja,,Schützenhausstrasse  1,5312,Döttingen,25/1/1979,Klingnau,+41 56 245 03 91,,+41 79 704 90 94,passiv,,,FALSE,sanjavoegeli@bluewin.ch
+1290,Reicht,Nadja,,Refentalstrasse  14,5722,Gränichen,,,,,+41 76 567 73 70,passiv,FAS,,FALSE,nadja.reicht@bluewin.ch
+1291,Daugaard,Jeannette,,Hohmattrainstrasse  1,8173,Neerach,,,+41 440 870 17 19,,+41 79 377 77 73,passiv,FAS,,FALSE,jeannette_dauaard@bluewin.ch
+1294,Marti,Nina,,Hard 628,5018,Erlinsbach,,,,,+41 78 801 30 00,passiv,,,FALSE,nina_marti@bluewin.ch
+1295,Suter,Heinz,,Lilienweg  3,5303,Würenlingen,29/4/1963,Freienwil,,,+41 79 126 36 88,passiv,SKN P,,FALSE,heinzsuter@gmx.ch
+1296,Erni,Jasmin,,Rainweg  20,5417,Untersiggenthal,31/12/1988,Werthenstein  LU,,,+41 76 432 88 22,passiv,SKN Th,,FALSE,jasmin_erni@gmx.ch
+1297,Brown,Nicole,,Rietwiesenstrasse 3,5426,Lengnau AG,19/2/1983,Eggiwil / BE,,,+41 76 408 19 02,passiv,SKN Th,,FALSE,nicolebrown@neuroleadership.org
+1298,Grütter,Leta,,Hürnegässli  15,5242,Birr,1/7/1987,Roggwil / BE,,,+41 79 124 71 43,passiv,,,FALSE,leta.gruetter@bluewin.ch
+1299,Gutierrez,F. Javier,,Oberdorfstr.  23,5316,Gippingen,23/6/1966,Spanien,+41 56 245 74 05,,+41 76 562 31 74,passiv,,,FALSE,francisco.guti@gmx.ch
+1300,Joost,Daniel,,Schliffenenweg  37,5436,Würenlos,26/9/1983,Lauperswil / BE,,,+41 79 228 88 41,passiv,,,FALSE,daniel_joost@yahoo.com
+1301,Huser,Birgit,,Bergstr.  38,5452,Oberrohrdorf,7/9/1965,Deutschland,+41 56 534 11 50,,+41 76 325 72 93,passiv,,,FALSE,thomas.birgit.huser@bluewin.ch
+1302,Keller,Bernadette & Hans,,Ruchbülstr.,5276,Wil AG,17/1/1946,Hottwil,+41 62 875 15 38,,+41 79 450 22 37,passiv,FAS,,FALSE,
+1303,Mühlebach,Rita,,Langfohrenstr. 12,5322,Koblenz,13/7/1954,Tegerfelden,+41 56 246 14 65,,+41 79 709 78 01,passiv,FAS,,FALSE,rita.muehlebach@bluewin.ch
+1304,Lampert,Luzia und Christian,,Staldenstr. 30,5417,Untersiggenthal,24/5/1962,Römerswil LU,+41 56 288 24 02,,+41 79  381 14 91,passiv,,,FALSE,lulampert@bluewin.ch
+1305,Knecht,Marina,,Feldstr.  365,5326,Schwaderloch,7/3/1977,Schwaderloch,+41 56 247 04 51,,+41 79 946 07 88,passiv,,,FALSE,marinaknecht@bluewin.ch
+1309,Senn,Gerda,,Grubenstrasse 3a,5417,Untersiggenthal,16/5/1947,Gansingen,+41 56 610 41 77,,+41 78 717 61 91,passiv,FAS,,FALSE,gerda.senn@bluewin.ch
+1310,Honegger,Esther,,Schlossgasse 23,5245,Habsburg,5/6/1971,Effingen,+41 56 284 07 04,,+41 79 374 33 07,passiv,FAS,,FALSE,esther@demtierzuliebe.ch
+1313,Imhof,Ronny,,Badstr.  24,5330,Bad Zurzach,2/9/1982,Spiringen  UR,,,+41 76 422 36 09,passiv,,,FALSE,ronnyimhof@gmx.ch
+1314,Duss,Daniel,,Malzmatt 34,4632,Trimbach,22/10/1984,Ballwil LU,,,+41 79 705 47 02,passiv,SKN Th,,FALSE,sabrina_fritschi@hotmail.com
+1316,Forrer,Melissa,,Trottenmatt 246,5318,Mandach,6/4/1981,Frauenfeld,+41 56 624 06 80,,+41 76 502 52 33,passiv,SKN Th,,FALSE,melissa.forrer@hispeed.ch
+1317,Fritschi,Sabrina,,Nusshaldenstrasse 12,5312,Döttingen,29/10/1986,Spreitenbach,,,+41 76 476 55 07,passiv,SKN Th,,FALSE,sabrina_fritschi@hotmail.com
+1318,Wiederkehr,Daniel,,Schlatterstrasse 7,5316,Leuggern,12/6/1978,Gontenschwil,,,+41 76 377 38 05,passiv,SKN Th/P,,FALSE,info@horsemind.ch
+1319,Senn,Josef,,Surbtalstrasse 18,5312,Döttingen,24/2/1956,Obersiggenthal,+41 56 245 40 33,,+41 79 404 48 22,passiv,SKN P,,FALSE,info@jsenn.ch
+1321,De Pasquale,Fabian,,Chalstorfstrasse 9,8165,Oberweningen,10/6/1977,Rietheim AG,,,+41 79 768 15 08,passiv,,,FALSE,fabian.de.pasquale@intel.com
+1323,Jenni,Tabea,,Hinterhag 451,5324,Full-Reuenthal,25/3/1972,Iffwil BE,+41 56 246 23 19,,,passiv,,,FALSE,tabea.jenni@gmx.ch
+1324,Simon,Claudia,,Chuntestrasse 11,5312,Döttingen,22/7/1978,,+41 56 245 68 93,,+41 76 461 81 99,passiv,,,FALSE,claudia.gabor@gmail.com
+1325,Marti,Chantal,,Feldacher 6,6244,Nebikon,4/10/1991,Ufhusen LU,,,+41 79 625 97 75,passiv,,,FALSE,marti_chantal@hotmail.com
+1326,Räber,Fabian,,Pilatusstrasse 78,4663,Aarburg,20/11/1981,Madiswil BE,,,+41 79 376 17 53,passiv,,,FALSE,raeber.f.@bluewin.ch
+1327,Schlosser,Nicole,,Trottenweg 12,5313,Klingnau,6/11/1973,Zürich,+41 43 534 37 72,,+41 79 596 52 02,passiv,,,FALSE,nb.schlosser@svknet.ch
+1328,Huser,Helene,,Riedholzweg 4,5312,Döttingen,11/7/1952,,+41 56 245 72 04,,+41 79 945 15 71,passiv,,,FALSE,hhuser7@bluewin.ch
+1329,Erne,Marlies,,Breitestrasse 46,5330,Bad Zurzach,15/3/1953,Leuggern,+41 56 249 20 51,,,passiv,,,FALSE,vikerne@bluewin.ch
+1330,Von Dach,Christine,,Schulhausstrasse 2,5314,Kleindöttingen,15/7/1955,Grossaffoltern BE,+41 56 245 39 86,,+41 79 768 21 75,passiv,,,FALSE,ch.vondach@bluewin.ch
+1331,Wolleb,Marianne,,Weierstr.  49,5242,Lupfig,21/3/1963,Lupfig,+41 56 444 81 74,,,passiv,,,FALSE,mariannewolleb@me.com
+1333,De Pasquale,Christina,,Ifluhstrasse 1a,5301,Siggenthal Station,6/11/1953,Rietheim AG,+41 56 281 33 07,,,passiv,,,FALSE,christina.depasquale@psi.ch
+1334,Mühlebach,Fabienne,,Landstrasse 7,5415,Rieden AG,2/9/1986,Tegerfelden,+41 56 555 87 88,,+41 79 595 50 49,passiv,,,FALSE,fabienne.m@hotmail.com
+1335,Glück,Thomas,,Landstrasse 7,5415,Rieden AG,11/2/1984,Sandberg,+41 56 555 87 88,,+41 79 595 50 49,passiv,,,FALSE,fabienne.m@hotmail.com
+1337,Ruefli,Jürg,,Baldingerstr.  12,5304,Endingen,21/1/1944,Basel Stadt,+41 56 242 10 38,,,passiv,,,FALSE,edeltraud.ruefli@bluewin.ch
+1338,Spielmann,Tatiana,,,,Tschechei,11/3/1980,Aadorf TG,,,+41 79 332 47 69,passiv,,,FALSE,tatiana.spielmann@gmail.com
+1339,Thut,Sandra,,Bollstrasse 6,5442,Fislisbach,31/3/1963,,+41 56 470 04 84,,+41 79 372 96 70,passiv,,,FALSE,s-thut@pop.agri.ch
+1341,Rycroft,Cloe Davina,,Ausserdorfstr. 96,5276,Wil AG,2/12/1977,"Muttenz BL,Egnach TG, Winterthur",+41 62 875 06 73,,+41 76 569 00 73,passiv,SKN P,,FALSE,c.d.rycroft@hotmail.com
+1342,Hofmann,Franziska,,Neumatthof  330,5276,Wil AG,14/8/1990,Unterkulm,,,+41 79 720 12 28,passiv,,,FALSE,franziska_hofmann@gmx.ch
+1344,Mollenhauer,Jennifer Jessica,,Dorfstrasse  29,5332,Rekingen AG,2/4/1981,Deutschland,+41 56 535 09 39,,+41 79 729 95 36,passiv,,,FALSE,j.mollenhauer@gmx.ch
+1346,Schwarz,Ernst,,Ackerstrasse 16c,5415,Nussbaumen AG,1/5/1947,Zürich,+41 56 282 29 75,,+41 79 206 68 08,passiv,,,FALSE,es0547@bluewin.ch
+1347,Rüegsegger,Bruno,,Rheintalstrasse 207,5325,Leibstadt,6/6/1955,Röthenach  BE,+41 56 247 18 02,,+41 79 404 41 92,passiv,FAS/So-Pl,,FALSE,geli57@bluewin.ch
+1348,Kern,Katja,,Dorfstrasse 13,5233,Stilli,9/12/1992,Stettfurt TG,+41 56 284 52 20,,+41 79 959 49 16,passiv,,,FALSE,kern.katja3a@gmail.com
+1350,Huber,Marlene,,Oedenholz 127,5276,Wil AG,27/2/1974,Küttigen/Wil,+41 62 875 03 07,,+41 79 420 65 01,passiv,,,FALSE,mmshuber@bluewin.ch
+1351,Soweja,Claudia,,Beckenmoosstrasse 9,5330,Bad Zurzach,30/8/1966,Nürnberg D,+49 160 865 46 47,,+41 79 360 36 90,passiv,,,FALSE,claudia-huber@hotmail.de
+1352,Berger,Heidi,,Brueggliacher 2,5452,Oberrohrdorf,26/9/1960,,+41 56 470 17 45,,+41 76 224 16 35,passiv,So-Pl,,FALSE,heidi.berger@flecto.ch
+1353,Jellinghaus,Gundela,,Schulstr. 1a,5442,Fislisbach,,,+41 56 470 20 58,,+41 79 918 41 64,passiv,,,FALSE,f.jellinghaus@bluewin.ch
+1356,Gächter,Hanni,,NULL,0,NULL,25/2/1942,,,,+41 79 294 63 40,passiv,So-Pl,,FALSE,hanni.gaechter@bluewin.ch
+1357,Mühlebach,Ursula,,Brüelstrasse 7,5312,Döttingen,7/4/1949,Malters LU,+41 56 491 09 49,,+41 79 462 65 80,passiv,,,FALSE,filday@bluemail.ch
+1360,Schenk,Brigitte,,Risistrasse 12,5312,Döttingen,22/2/1953,,,,+41 76 394 29 56,passiv,,,FALSE,
+1361,Piraccini,Christa,,Rychenbergstrasse 093,8404,Winterthur,27/10/1955,,+41 52 246 08 90,,+41 79 220 16 60,passiv,,,FALSE,piraccini@bluewin.ch
+1362,Rieder,Christa,,Poststrasse 23a,5303,Würenlingen,9/8/1967,St.Stephan (BE),+41 56 281 29 29,,+4179 885 36 22,passiv,,,FALSE,christa.rieder1@bluewin.ch
+1364,Moser Wiederkehr,Franziska,,Wegächerstrasse 9,5417,Untersiggenthal,9/7/1970,,+41 56 426 11 33,,+41 79 797 70 12,passiv,,,FALSE,franziskamoser@yahoo.de
+1365,Moser,Guido,,Mittelstrasse 7,5430,Wettingen,27/2/1967,,+41 56 430 15 81,,+41 79 642 12 70,passiv,,,FALSE,guido.moser@backparadies.ch
+1366,Schlittler,Joelle,,Steinenbühlstrasse 14,5417,Untersiggenthal,1/8/1972,,+41 56 288 10 24,,+41 76 560 37 13,passiv,,,FALSE,joelle.schlittler@hotmail.com
+1367,Roser,Kathrin,,Oberdorfstrasse 27b,5245,Habsburg,25/1/1973,,+41 56 442 03 38,,,passiv,,,FALSE,kkkk@postmail.ch
+1368,Wyss,René,,Surbtalstrasse 3,5312,Döttingen,29/2/1952,Klingnau,,,+41 76 429 29 52,passiv,,,FALSE,info@renewyss.ch
+1369,Baumann,Vreni,,Traubenweg 51,5313,Klingnau,15/2/1948,,+41 56 245 67 58,,,passiv,,,FALSE,vreni.baumann@bluewin.ch
+1370,Knecht,Tanja,,Sännelocherstrasse 20,5312,Döttingen,14/7/1978,,+41 56 245 04 25,,+41 79 704 96 67,passiv,,,FALSE,
+1371,Rummel,Marion,,Rainackerweg 16,5303,Würenlingen,23/1/1963,,,,+41 78 922 37 66,passiv,,,FALSE,bennyrummel@aol.com
+1372,Strebel,Mirjam,,Hauptstrasse 219,5314,Kleindöttingen,8/5/1961,Uezwil  AG,+41 56 245 64 09,,+41 78 788 61 16,passiv,,,FALSE,roland.strebel@bluewin.ch
+1373,Schaffner,Bettina,,Dammweg  18,5314,Kleindöttingen,25/11/1989,Effingen,,,,passiv,,,FALSE,jan.dietsche@bluewin.ch
+1374,Jud,Margrit,,Brüelstrasse 3b,5312,Döttingen,25/5/1950,,+41 56 245 24 07,,,passiv,,,FALSE,m-f-jud@bluewin.ch
+1375,Jamain,Laurene,,Schlatterstrasse 7,5316,Leuggern,4/11/1981,Fankreich,,,+41 76 377 38 05,passiv,,,FALSE,laurenejamain@hotmail.fr
+1376,Kenel,Karin,,Grossmatt 274,5276,Wil AG,7/10/1965,,+41 62 842 76 81,,+41 79 486 35 81,passiv,,,FALSE,floh@mymails.ch
+1378,Forster,Junko,,Schlossackerweg 269,5325,Leibstadt,8/4/1960,,+41 56 247 16 47,,,passiv,,,FALSE,junko1@swissonline.ch
+1381,Silvestri,Gabriele,,Trottenacker 241,5078,Effingen,2/11/1951,,+41 62 876 18 31,,+41 79 684 25 93,passiv,,,FALSE,gabi.silvestri@bluewin.ch
+1382,John,Daniel,,Talstrasse 215,5275,Etzgen,25/6/1969,,+41 62 875 30 03,,,passiv,,,FALSE,info@spritzwerkjohn.ch
+1383,Troller,Chantal,,Obere Dellstrasse  4,4333,Münchwilen AG,25/11/1984,Melchnau,,,+41 79 564 84 53,passiv,,,FALSE,chantal.jufer@hispeed.ch
+1384,Villiger,Andrea,,Melligerstrasse 1,5400,Baden,8/9/1969,,+41 56 210 43 90,,+41 79 295 23 01,passiv,,,FALSE,andrea@baden.ch
+1385,Suter,Andrea,,Rainackerweg 30,5303,Würenlingen,19/6/1968,,,,+41 76 507 71 24,passiv,,,FALSE,info@suter-reisen.ch
+1386,Redecker,Reiner,,Abbergerstrasse 13,79801,Hohentengen,25/12/1943,,+49 77 42 77 02,,+41 79 252 23 33,passiv,,,FALSE,reiner.redecker@lb-log.ch
+1387,Hofer,Regula,,Dorfstrasse 27,5233,Stilli,12/4/1967,,+41 56 284 14 70,,,passiv,,,FALSE,regula.hofer@freesurf.ch
+1388,Boysen,Petra,,Brüderstall 339,5276,Wil AG,8/9/1968,,+41 62 875 00 25,,+41 79 746 96 28,passiv,,,FALSE,boysen@bluewin.ch
+1389,John,Eliane,,Postgasse 8,5079,Zeihen,29/9/1957,,+41 62 876 27 50,,+41 79 260 54 36,passiv,,,FALSE,eliane.john@bluewin.ch
+1390,Meier,Cornelia,,Brömliacherweg 3,5301,Siggenthal Station,21/11/1963,,+41 56 281 32 60,,,passiv,,,FALSE,uc.meier@bluewin.ch
+1392,Llop,Carola,,Seidenstrasse 21,5200,Brugg AG,,,,,+41 79 555 33 97,passiv,,,FALSE,
+1393,Corrodi,Yvonne,,Orchideenweg 13,5303,Würenlingen,23/4/1969,Uffikon LU,+41 56 281 17 81,,+41 76 578 23 28,passiv,,,FALSE,yvonne.corrodi@hispeed.ch
+1394,Taglioni-Oetiker,Sandra,,Hardackerstrasse 25,5301,Siggenthal Station,20/10/1972,Bioggio TI / Oetwil a. See,+41 56 281 35 30,,+41 79 366 15 19,passiv,,,FALSE,sandra.taglioni@bluewin.ch
+1396,Birchmeier,Edith,,Im Bifig 7,5316,Leuggern,16/1/1964,Würenlingen,+41 56 245 26 06,,+41 78 860 8876,passiv,,,FALSE,edithbirch@hispeed.ch
+1397,Behnke-Schoepp,Bettina,,Waaggaessli 8,5330,Bad Zurzach,30/6/1971,Deutschland,+41 62 534 47 85,,+41 79 457 15 63,passiv,,,FALSE,behsch@hispeed.ch
+1400,Fontana,Michael (klein),,Neuweg 8,5605,Dottikon,21/3/2007,,,,+41 76 547 47 90,passiv,,,FALSE,
+1401,Gloor,Franziska,,Langstrasse 2,5242,Birr,,,,,+41 76 388 77 17,passiv,,www.tierbetreuung24h.ch,FALSE,franziska_gloor@bluewin.ch
+1402,Briner,Angela,,Badstrasse 62,5330,Bad Zurzach,10/4/1977,Pfungen ZH,+41 56 204 90 63,,+41 78 832 22 80,passiv,,,FALSE,marcobriner@sunrise.ch
+1403,Wenger,Jovita,,Bürgelistr.  369,5326,Schwaderloch,13/5/1968,Wattenwil,+41 61 871 00 24,,+41 78 644 32 65,passiv,,,FALSE,wenger.urs13@bluewin.ch
+1404,Nicotera,Fabienne,,Dorfstr. 7 A,5417,Untersiggenthal,12/5/1979,Bussnang  TG,+41 56 282 53 60,,+41 76 559 62 82,passiv,,,FALSE,fabienne-79@hotmail.com
+1405,Steck,Janine,,Oberdorfstr.  8,5236,Remigen,6/11/1970,Zürich,,,+41 79 717 32 07,passiv,,,FALSE,rush7@gmx
+1406,Kojic,Zoran,,Roggenweg  8,5034,Suhr,8/9/1988,Zetzwil AG,,,+41 76 572 05 32,passiv,,,FALSE,zoran.kojic@gmx.ch
+1408,Maier,Nadine,,Hauptstrasse 34,5314,Kleindöttingen,9/2/1985,Bad Säckingen,,,+41 76 494 11 90,passiv,SKN Th,,FALSE,nana4@gmx.net
+1410,Keller,Dora,,Lindenrain  1,5108,Oberflachs,,,+41 56 245 20 27,,,passiv,,,FALSE,blueme-gade@bluewin.ch
+1412,Sager,Franz,,Hägelerstrasse  27,5453,Remetschwil,,,+41 56 496 21 30,,,passiv,,,FALSE,franzsager@hispeed.ch
+1414,Schäfer,Nora,,Rebmoosweg 39,5200,Brugg AG,3/5/1995,Lupsingen,+41 56 442 51 80,,+41 76 344 42 62,passiv,,,FALSE,nora.schaefer@gmx.ch
+1415,Ryser,Saskia,,Stampfi  337,4805,Brittnau,7/6/1996,Dürrenroth  BE,+4156 223 52 74,,+4178 628 77 40,passiv,,,FALSE,saskiaryser@gmx.ch
+1416,Mühlebach,Thomas,,Langfohrenstr.  12,5322,Koblenz,2/3/1989,Tegerfelden,+41 56 246 14 65,,,passiv,,,FALSE,rita.muehlebach@bluewin.ch
+1417,Vögeli-Lagler,Jutta,,Trottenstr.  77,5276,Wil AG,24/8/1965,Wil  AG,+41 62 875 02 78,,+41 79 722 98 80,passiv,SKN P,,FALSE,jd.voegeli@bluewin.ch
+1418,Bernet,Martina,,Feldstr.  121,5326,Schwaderloch,7/11/1965,Dietikon,+41 56 247 10 83,,+41 79 773 81 85,passiv,,,FALSE,martina@swissriggers.com
+1419,Baumgartner,Markus,,Dahlienweg 10,5330,Bad Zurzach,28/6/1962,Oberried SG,,,+41 76 580 80 00,passiv,,,FALSE,markus.baumgartner@gmx.ch
+1420,Häring,Elisabeth,,Lauffohrstrasse 4,5412,Vogelsang,24/1/1959,Arisdorf BL,+41 56 223 36 15,,+41 78 744 00 39,passiv,,,FALSE,lisa.haering@agdneuenhof.ch
+1421,Rispy,Claudia,,Zielweg 4,5702,Niederlenz,29/2/1984,Amriswil TG,,,+41 76 322 11 10,passiv,,,FALSE,claudia.rispy@gmail.com
+1422,Rüegger,Bettina,,Bahnhofstrasse 27,8180,Bülach,17/12/1981,,,,+41 79 822 46 88,passiv,So-Pl / FAS,,FALSE,bettina.rueegger@gmx.ch
+1423,Gadient,Peter,,Schützenstrasse 2,5416,Kirchdorf AG,19/12/1967,,+41 56 282 01 47,,,passiv,FAS,,FALSE,pgadient@sunrise.ch
+1424,Wohler,Walter,,Kornstrasse 16,5436,Würenlos,,,+41 56 424 36 51,,+41 79 396 08 75,passiv,FAS,,FALSE,annawalti.wohler@tbwnet.ch
+1425,Moser,Lorenz,,Traubenweg 47,5313,Klingnau,31/7/1951,,,,+41 79 378 13 54,passiv,Fas,,FALSE,lorenz.moser@nab.ch
+1426,Waller,Annette,,Grametstrasse 10,5272,Gansingen,13/8/1957,,+41 62 875 28 88,,+41 79 455 60 70,passiv,FAS /So-Pl,,FALSE,anwaga@bluewin.ch
+1427,Laube,Ueli,,Chriesibaumweg 71,5463,Wislikofen,3/1/1961,,+41 56 243 14 15,,+41 79 543 03 65,passiv,FAS / SO-Pl,,FALSE,ulaube@bluewin.ch
+1428,Meier,Martina,,Bergstrasse 38,5452,Oberrohrdorf,18/3/1978,,+41 56 282 30 33,,+41 79 611 69 75,passiv,FAS /So-Pl,,FALSE,mm@stimag.ch
+1429,Rubli,Beat,,Oberfeld 33,5306,Tegerfelden,29/3/1957,Dachsen,+41 56 245 34 84,,+41 79 222 08 68,passiv,SKN Th,,FALSE,beat.rubli@bluewin.ch
+1430,Barone,Angela,,Margrethenweg 7,5314,Kleindöttingen,13/5/1958,Italien,+41 56 245 17 09,,,passiv,,"sehr schwierige Kundin, versteht kaum deutsch, sehr nervös",FALSE,raffaella.calabrese@bluewin.ch
+1431,Dembowski,Kerstin,,Pfauengasse 19,5330,Bad Zurzach,21/7/1996,Bremen (D),+41 56 249 13 15,,+41 79 208 14 97,passiv,SKN Th,,FALSE,kerstin.dembowski@gmx.ch
+1432,Faude,Petra,,Stalden 3,5106,Veltheim AG,,,+41 56 443 03 92,,+41 79 770 09 86,passiv,,,FALSE,petrafaude@gmail.com
+1433,Gassner,Andreas,,Baslerstrasse 941,79713,Bad Säckingen,,,,,+49 7761 78 43,passiv,,hat Kurs abgebrochen,FALSE,gassner.andreas@tonline.de
+1434,Brühl,Claudia,,Bahnhofstrasse 38,5322,Koblenz,,,+41 56 246 04 67,,+41 76 306 04 67,passiv,,,FALSE,claudia7112@freenet.de
+1438,Pennetta,Olha,,Chäppelistrasse 63,5312,Döttingen,13/12/1981,Döttingen,+41 56 245 18 90,,,passiv,SKN Th,,FALSE,olha.pennetta@gmail.com
+1440,Berisha,Ines,,Unterriedwies 6,5412,Gebenstorf,27/12/1972,Deutschland,+41 56 534 76 70,,,passiv,,,FALSE,ceneberisha.cb@gmail.com
+1441,Witzig,Romain,,Husmattstr. 380 A,5224,Unterbözberg,18/10/1949,Laufen / Uhwiesen,+41 56 441 83 82,,+41 79 266 37 87,passiv,,,FALSE,romwitzig@sunrise.ch
+1442,Lattanzio,Rosmarie,,Chilbert  5,5312,Döttingen,18/8/1950,Zürich,+41 56 245 08 32,,+41 79 677 21 12,passiv,,kommt nicht mehr,FALSE,lattanzio.rosmarie@gmail.com
+1443,Brechbühler,Monika,,Risisweg  19,5312,Döttingen,8/4/1957,Huttwil,+41 56 245 57 94,,+41 76 201 23 73,passiv,,,FALSE,
+1445,Alder,Stephanie,,Kornweg 2,5504,Othmarsingen,8/10/1976,,,,+41 76 585 13 53,passiv,,,FALSE,alder@diabetesgesellschaft.ch
+1448,Jllien,Kathrin,,Chäppelistr. 37,5312,Döttingen,29/7/1984,Vals,,,+41 79 644 70 74,passiv,,,FALSE,dispo@zurikurier.ch
+1449,Jllien,Lars,,Chäppelistrasse  37,5312,Döttingen,20/9/1976,Vals,,,+41 79 644 70 75,passiv,,,FALSE,dispo@zurikurier.ch
+1450,Jllien,Claire,,Gotzäcker  194,5462,Siglistorf,1/11/1940,Vals,+41 56 243 14 29,,,passiv,,,FALSE,claire.jllien@bluewin.ch
+1451,Bernhard,Sylvia,,Reichstr. 43,5412,Gebenstorf,7/11/1957,Seedorf,+41 56 223 39 76,,+41 79 484 08 40,passiv,,,FALSE,sylvia.bernhard@bluewin.ch
+1452,Vögeli,Jeannette,,Tanneckstr.  2,5312,Döttingen,27/7/1952,Schwaderloch,+41 56 245 50 12,,+41 79 681 77 42,passiv,,,FALSE,voegeli.frei@bluewin.ch
+1453,Schäfer,Evelyne,,Badstrasse  32,5312,Döttingen,4/6/1945,Baden,+41 56 493 43 53,,,passiv,,,FALSE,evi.schaefer@bluewin.ch
+1454,Hediger,Petra,,Neuweltstrasse 104,5325,Leibstadt,17/3/1974,Leibstadt,+41 56 535 88 72,,+41 79 267 25 06,passiv,,,FALSE,petra.hediger@bluewin.ch
+1455,Meier,Manfred,,Sonnenbergstrasse 11a,5303,Würenlingen,30/3/1954,Würenlingen,+41 56 281 10 44,,+41 79 762 72 22,passiv,,,FALSE,mani-meier@hotmail.com
+1456,Probst,Gabriela,,Terrassenstrasse 16,5312,Döttingen,20/9/1991,Bellach SO,+41 56 245 87 89,,,passiv,,,FALSE,benjamin.probst@hispeed.ch
+1457,Kübler,Franziska,,Usserdorf 11,5312,Döttingen,13/2/1953,Büsserach,+41 56 245 36 47,,,passiv,,,FALSE,
+1458,Zumsteg,Margrit,,Zum Felsblick,5325,Leibstadt,12/9/1968,Wil AG,+41 56 247 19 60,,+41 79 314 66 63,passiv,,,FALSE,m.r.zumsteg@bluewin.ch
+1459,Sommer,René,,Albtalstrasse  50,79774,Albbruck,19/11/1977,Sumiswald,+41 62 875 04 41,,+41 76 577 26 31,passiv,,,FALSE,rensommer77@gmail.com
+1460,Bollhalder,Sarah,,Hauptstrasse 32,5312,Döttingen,27/11/1993,Alt St. Johann,,,+41 76 445 80 01,passiv,,,FALSE,amoredacuore@hotmail.com
+1462,Peplow,Thorsten,,St.Georg-Strasse 5,79862,Höchenschwand,,,+49 152 246 534 79,,+41 76 480 88 63,passiv,,,FALSE,h.zimmermann40@web.de
+1463,Zimmermann,Heike,,St.Georg-Strasse 5,79862,Höchenschwand,19/4/1968,,+49 152 246 534 79,,+41 76 480 88 63,passiv,,,FALSE,h.zimmermann40@web.de
+1465,Gutierrez,Tamara,,Oberdorfstrasse 23,5316,Gippingen,30/4/1993,Spanien,+41 56 245 74 05,,,passiv,,,FALSE,t.gutierrez@gmx.ch
+1466,Zahno,Eva,,Roosweg 10 d,5423,Freienwil,22/4/1978,Köniz BE,,,+41 79 620 50 99,passiv,,,FALSE,ezahno@bluewin.ch
+1467,Berner,Judith,,Talstrasse 5,5103,Wildegg,27/4/1942,Andermatt,+41 62 893 22 83,,,passiv,,,FALSE,ruberner@bluewin.ch
+1469,Rüegg,Kurt,,Hölzlistrasse 10,5417,Untersiggenthal,12/7/1964,St. Gallenkappel,,,+41 79 301 35 46,passiv,,,FALSE,k.ruegg@die-entsorger.ch
+1470,Surber,Röbi,,Hürnegässli 15,5242,Birr,17/5/1954,Höri ZH,,,+41 79 544 08 04,passiv,,,FALSE,rsurber@planzer.ch
+1473,Kindhauser,Hans,,Unterfeldstrasse 10,5312,Döttingen,27/6/1947,Wiesendangen,+41 56 245 69 65,,+41 76 463 75 00,passiv,,,FALSE,
+1475,Fuchs,Silvia,,Zehntenweg 1,5235,Rüfenach AG,16/11/1955,Nidwalden,+41 56 284 14 59,,,passiv,,,FALSE,silvia.55@gmx.ch
+1476,Huber,Peter,,Weststrasse 19,5426,Lengnau AG,22/7/1951,Elsau ZH,+41 56 241 23 02,,+41 76 369 12 28,passiv,,,FALSE,peter.huber@domaco.com
+1477,Guy,Renate,,Chaeppelistrasse  25,5312,Döttingen,,,+41 56 245 73 20,,,passiv,,,FALSE,reni.guy@gmail.com
+1478,Keller-Gonzalves,Ana,,Hauptstrasse 61,5277,Hottwil,6/7/1972,Brasilien,+41 62 875 23 04,,+41 79 417 67 56,passiv,,,FALSE,anagoret@hotmail.com
+1479,Bühler,Elsbeth und Erich,,Beckenmoosstrasse10,5330,Bad Zurzach,28/7/1944,,+41 56 249 44 24,,+41 79 400 55 61,passiv,,,FALSE,elsbeth.buehler@yahoo.de
+1481,Läuchli,Oliver,,Breitenstrasse 117,5274,Mettau,15/4/1969,Remigen,+41 62 875 26 17,,+41 79 424 34 78,passiv,,,FALSE,oliver.laeuchli@zwilag.ch
+1482,McGinnes,Gabriela,,Föhrenweg 11d,5312,Döttingen,10/12/1961,Adliswil,+41 56 209 14 62,,+41 76 319 68 36,passiv,,,FALSE,mcginnes@sunrise.ch
+1483,Freudenberg,Agnes,,Neumatt 210,5324,Full-Reuenthal,22/10/1981,Deutschland,+41 56 441 38 74,,+41 76 688 69 73,passiv,,,FALSE,marcofreudenberg@bluewin.ch
+1485,Oberthaler,Roger,,Hinterhofstrasse 7,5312,Döttingen,12/3/1962,Bremgarten,+41 56 245 07 65,,+41 79 718 70 32,passiv,,,FALSE,info@restaurantcentral.ch
+1486,Bölsterli,Brigitte,,Rosengartenegg 12 a,5417,Untersiggenthal,26/11/1964,Glarus,,,+41 78 898 05 51,passiv,,,FALSE,b.boelsterli@hotmail.com
+1490,Wettstein,Sabrina,,Klausenweg 7 a,5103,Möriken,5/7/1986,Rüeggisberg,,,+41 79 773 00 08,passiv,,,FALSE,sabrina@mbw.ch
+1491,Wettstein,Sascha,,Klausenweg 7 a,5103,Möriken AG,14/5/1981,Remetschwil,,,+41 78 831 19 70,passiv,,,FALSE,sascha@mbw.ch
+1492,Fornera,Sarah,,Grossmattenring 51 a,5312,Dötttingen,18/12/1991,Döttingen,+41 56 245 58 94,,,passiv,,,FALSE,sarah.fornera@hotmail.com
+1493,Schär-Henneberg,Carina,,Hofackerweg 8 a,5200,Brugg AG,18/11/1972,Dänemark,,,+41 78 765 32 40,passiv,,,FALSE,c.s.h@outlook.com
+1494,Vögele,Sonja,,Im Hof  6,5316,Leuggern,13/8/1965,Leuggern,+41 56 245 19 26,,+41 78 912 19 65,passiv,,,FALSE,b.voegele@bluewin.ch
+1496,Suter,Thomas,,Hauptstrasse 116,5085,Sulz AG,28/4/1956,CH,+41 56 491 43 86,,+41 79 435 43 45,passiv,So-Pl,,FALSE,thom.suter@gmail.com
+1497,Hofer,Elisabetta,,Sommerhaldenstrasse 28 B,5200,Brugg AG,14/2/1972,Italien,+41 44 811 42 38,,+41 78 806 35 86,passiv,,,FALSE,roger_eli@bluewin.ch
+1498,Da Silva,Cornelia,,Villigerstrasse 33,5236,Remigen,1/7/1977,Thalheim,,,+41 79 320 44 20,passiv,,,FALSE,info@zoo-hasel.ch
+1499,Hauri,Sabrina,,Hauptstrasse 22 a,5105,Auenstein,12/7/1980,Seengen,,,+41 76 398 74 82,passiv,,,FALSE,sabrina.hauri@gmx.ch
+1500,Gamma,Romina,,Im First 12,5420,Ehrendingen,1/8/1987,Zürich,,,+41 76 484 28 10,passiv,,,FALSE,mina_merlin@hotmail.com
+1501,Krähenbühl,Regina,,Hauptstrasse 101,5324,Full-Reuenthal,13/10/1965,Signau/BE,+41 56 246 18 02,,+41 76 422 58 24,passiv,,,FALSE,mr.kraehenbuehl@bluewin.ch
+1502,Rosa,Neil,,Wehntalerstrasse 290,8106,Adlikon b. Regensdorf,22/8/1982,Bretzwil BL,,,+41 79 765 06 82,passiv,,,FALSE,neiro.neiro@hotmail.com
+1503,Siffert,Astrid,,Rinikerstrasse  182 A,5222,Umiken,,,+41 56 624 35 64,,+41 76 210 93 65,passiv,,,FALSE,deppe.siffert@hispeed.ch
+1504,Laudani,Doriana,,Unterfeldstrasse 2,5312,Döttingen,17/6/1982,Döttingen,+41 76 416 27 26,,076 4162726,passiv,,,FALSE,doriana@bluemail.ch
+1506,Keller,Gaby,,Trottenmatte 205,5318,Mandach,11/7/1971,Mandach / Hottwil,+41 56 284 00 17,,+41 79 549 58 32,passiv,,,FALSE,riniker77@hotmail.com
+1507,Giger,Karin,,Dorfhof 11,5303,Würenlingen,1/4/1982,Vordemwald AG,,,+41 76 412 55 05,passiv,,,FALSE,karin.giger@gmail.com
+1508,Traxler,Sandra,,Trottenweg 11,5313,Klingnau,30/5/1973,Chur,056 249 18 45,,078 677 02 35,passiv,,,FALSE,sandra.traxler@me.com
+1509,Raschle,Nathalie,,Pintenstrasse 3 a,5464,Rümikon AG,12/9/1986,Oberhelfenschwil,,,+41 79 886 51 57,passiv,,,FALSE,
+1512,Ebi,Marlies,,Rottrottenweg 30,5313,Klingnau,31/12/1956,Waldshut,+41 56 246 07 20,,+41 79 200 53 78,passiv,,,FALSE,marlies.ebi@gmx.ch
+1513,Tomasina,Fabio,,Alte Hauptstrasse  85,5463,Wislikofen,2/12/1987,Gerra Gambarogno,,,+41 79 888 38 03,passiv,,,FALSE,tomasinaforst@gmail.com
+1514,Faria,Manuela,,Chruezwiesstrasse  11,5332,Rekingen AG,10/4/1980,Portugal,,,+41 79 613 93 85,passiv,,,FALSE,manuelatomas@iol.pt
+1515,Kull,Hansjörg,,Rheinweg  35,5332,Rekingen AG,1/4/1946,Niederlenz,+41 56 249 38 37,,+41 79 864 65 35,passiv,,,FALSE,hansjoerg.kull@hispeed.ch
+1516,Sennhauser,Astrid,,Hinterdorfstrasse,5322,Koblenz,22/12/1957,Kirchberg  SG,+41 56 246 16 72,,,passiv,,,FALSE,astridsennhauser@gmx.ch
+1517,Frei,Hansjörg,,Tanneckstrasse  2,5312,Döttingen,27/1/1951,Würenlingen,+41 56 245 50 12,,+41 79 438 18 92,passiv,,Tel. Geschäft: 062 858 60 60,FALSE,hj.frei@toner-recycling.ch
+1518,Zollinger,Margrit,,Breitstrasse 6,8157,Dielstorf,27/4/1945,,+41 44 856 12 42,,,passiv,,,FALSE,margrit.zollinger@yahoo.de
+1519,Bucsko,Sonja,,Im Löchli 3,4658,Dänikon,26/5/1974,,,,+41 78 671 32 05,passiv,,,FALSE,bereiter2000@bluewin.ch
+1521,Spitzer,Séverine,,Hüsliweg  11a,8166,Niederweningen,25/11/1974,Ochlenberg,+41 44 856 27 31,,+41 76 548 08 06,passiv,,,FALSE,s_mspitzer@bluewin.ch
+1522,Dos Santos,Bruno,,Salzstrasse  12,5330,Bad Zurzach,29/5/1995,Portugal,,,+41 79 176 70 39,passiv,,,FALSE,dossantosbruno_95@hotmail.com
+1523,Christen,Nathalie,,Eggstrasse 420,5276,Wil AG,20/8/1993,Oberdorf  NW,+41 62 875 25 19,,+41 77 419 74 69,passiv,,,FALSE,christen.nathalie@gmail.com
+1524,Winkler,Kathrin,,Schlatterstrasse  8,5316,Leuggern,15/11/1982,Oberhof  AG,+41 56 245 72 02,,+41 79 755 96 16,passiv,,,FALSE,kathrinfricker@gmx.ch
+1525,Sturm,Inge,,Im Acker 189,5077,Elfingen,4/11/1959,Deutschland,+41 61 833 30 89,,+41 79 590 77 11,passiv,,,FALSE,inge.sturm@bluewin.ch
+1529,Frei,Eva,,Langmatt 18,5420,Ehrendingen,6/3/1978,,+41 56 204 91 41,,+41 76 440 91 41,passiv,,,FALSE,evaannefrei@hotmail.com
+1531,Wullf,Michelle,,Flurstrasse  7,5415,Nussbaumen,28/9/1980,Obersiggenthal,056 511 21 42,,079 411 91 86,passiv,,,FALSE,michelle@nevermind.ch
+1533,Graham,Anita,,Winkelstrasse 14,5236,Remigen,18/8/1966,Mellingen,+41 56 284 51 85,,+41 79 577 81 92,passiv,,keine Zeit mehr,FALSE,anita.ws@sunrise.ch
+1535,Büttner,Yvonne,,Selmattstrasse 9,5085,Sulz,13/3/1949,,,,+41 79 247 23 32,passiv,,,FALSE,yvonne.buettner@bluewin.ch
+1537,Mäder,Lars,,Finstergässli 4a,5304,Endingen,7/12/1983,Mühlenberg BE,+41 56 534 18 20,,+41 76 347 70 73,passiv,,,FALSE,info@larslindenberg.ch
+1538,Schärer,Heinz,,Euelgrabeweg  1,5426,Lengnau AG,28/6/1960,Affoltern i.E.,+41 56 241 06 59,,+41 79 693 05 63,passiv,,,FALSE,hschaerer@blechteam.ch
+1539,Wulf,Alice,,Limmatstrasse 106,5300,Turgi,12/11/1941,,,,+41 76 589 32 75,passiv,,2 Privatstunden,FALSE,h.unda.wulf@solnet.ch
+1540,Meili,Paul,,Steinäckerstrasse 7b,5442,Fislisbach,6/12/1935,Homburg TG,+41 56 245 07 01,,,passiv,,,FALSE,
+1542,Brunner,Monika,,Stöckmatt 21,5316,Leuggern,27/4/1958,Laupersdorf SO,+41 56 245 04 65,,+41 76 395 39 78,passiv,,hat aufgehört,FALSE,brunnermoni@gmx.ch
+1543,Pereira,Maria,,Unterbernaustrasse 20,5325,Leibstadt,28/8/1976,Portugal,+41 56 247 00 48,,+41 78 953 01 55,passiv,,,FALSE,daniela_p_pereira@hotmail.com
+1544,Müller,Raphaela,,Oberdorfstrasse 43,5305,Unterendingen,29/4/1978,Eriz,+41 56 245 06 18,,+41 77 455 17 58,passiv,,"hat Welpenkurs angefangen, dann nicht mehr gekommen",FALSE,raphi.mueller@gmx.ch
+1545,Stjepanovic,Goran,,Neubergstrasse 40,5330,Bad Zurzach,4/9/1974,Bad Zurzach,+41 56 249 31 76,,+41 76 349 31 76,passiv,,,FALSE,vstjepanovic@bluewin.ch
+1546,Lupo,Giuseppina,,Unterfeldstrasse 7,5312,Döttingen,23/5/1978,Italien,+41 56 534 77 93,,+41 76 369 62 98,passiv,,,FALSE,giusy.lupo@hotmail.com
+1547,Hinz,Petra,,Rheinblickweg 503,5325,Leibstadt,22/1/1958,Berlin,+4156 247 10 57,,+4179 750 30 76,passiv,,,FALSE,ingbuerohinz@bluewin.ch
+1548,Ruivo,Dario,,Breitenstrasse 1,5303,Würenlingen,6/1/1983,Portugal,,,+41 79 831 97 66,passiv,,,FALSE,darior83@hotmail.com
+1549,Gerber,Katharina,,Ettenriedweg 1,5316,Gippingen,16/11/1961,,+41 78 763 85 27,,+41 79 717 46 63,passiv,,"2 Privatstunden
+Larry Angst: 078 763 85 27",FALSE,katharina61.gerber@hispeed.ch
+1550,Tomas,Eloisa,,Chrüzwiestrasse  9,5332,Rekingen AG,24/8/1983,Portugal,,,+41 76 467 06 02,passiv,,,FALSE,neleloisa@hotmail.com
+1551,Meier,Olivia,,Gartenstrasse 7,5322,Koblenz,26/3/1984,Koblenz,+41 56 246 00 75,,+41 76 424 53 22,passiv,,,FALSE,meierolivia@bluemail.ch
+1554,Haller,Arlette,,Wildeggerstrasse 21,5106,Veltheim,5/9/2001,Reinach AG,,,+41 78 721 88 60,passiv,,Hund läuft auf Tochter (Arlette),FALSE,rebekka.haller@hotmail.ch
+1555,Neuvecelle,Fabienne,,Tannermattstrasse 24,5242,Birr,15/4/1967,Lausanne,+41 79 913 82 85,,+41 79 913 82 85,passiv,,,FALSE,fabienne.neuvecelle@bluewin.ch
+1556,Zumsteg,Anja,,Grundbachhof 324,5276,Wil,28/11/1969,Warszawa,+41 62 875 00 84,,+41 79 750 30 50,passiv,,,FALSE,anja.zumsteg@bluewin.ch
+1558,Hägele,Margot,,Rainächer 19,5332,Rekingen,3/3/1970,Thayngen,+41 56 246 04 91,,,passiv,,,FALSE,haegeleand@yahoo.de
+1560,Klaus,Susanne,,Langmattstrasse 8,5200,Brugg,19/8/1953,Hellikon,+41 56 441 90 56,,+41 79 662 69 44,passiv,,,FALSE,susanne.klaus@bluewin.ch
+1561,Lareida,Sabrina,,Nidereggweg 31,8605,Gutenswil,20/9/1983,Präz  GR,,,+41 79 285 18 29,passiv,,,FALSE,sabrina.lareida@gmail.com
+1563,Jäggin,Clivia,,Chäppelistrasse 73,5312,Döttingen,20/2/1967,,,,+41 79 131 97 96,passiv,,zahlt Einzellektionen,FALSE,clivia67@hotmail.com
+1564,Fromme-Cibis,Michiko,,Ifang 26,5304,Endingen,9/7/1976,,+41 56 245 15 60,,,passiv,,,FALSE,michiko.cibis@gmail.com
+1565,Suter,Yvonne,,Unterdorf 26,5318,Mandach,20/12/1967,Kölliken,+41 56 284 00 62,,+41 79 913 61 64,passiv,,,FALSE,melissa.forrer@ispeed.ch
+1566,Sartori,Petra,,Postgasse 16,39100,Bozen,1/8/1967,Bozen Italien,+39 0471977 353,,+39 347 864 07 87,passiv,,,FALSE,info@raia-jara.it
+1568,Erne,Seraina,,Gislibachweg 2,5306,Tegerfelden,29/7/1977,Leuggern,,,+41 79 456 73 66,passiv,,Sonntagsplausch,FALSE,seraina.erne@gmail.com
+1569,Goncalves,Claudia,,Sodaquartier 8,5330,Bad Zurzach,24/2/1974,Portugal,+41 56 249 05 24,,+41 79 638 02 23,passiv,,,FALSE,marco_seixal@hotmail.ch
+1570,Martins Carneiro,Catarina,,Alte Döttingerstrasse 9,5306,Tegerfelden,7/7/1982,Portugal,+41 56 245 20 39,,+41 76 572 04 50,passiv,,,FALSE,catarina_carneiro82@hotmail.com
+1571,Bratge,Kerstin,,Hofacherstrasse 10,5426,Lengnau,28/6/1985,Deutschland,,,+41 77 429 94 09,passiv,,,FALSE,kebra28@gmx.net
+1572,Pivic,Boban,,Kanalstrasse 11,5314,Kleinöttingen,2/12/1994,Klingnau,,,+41 76 435 02 12,passiv,,,FALSE,bobanpivic9@gmail.com
+1574,Grütter,Markus,,Sonnmattstrasse 133,5242,Birr,13/5/1955,Roggwil BE,+41 56 444 87 16,,+41 79 230 99 04,passiv,,,FALSE,markus.gruetter@agv-ag.ch
+1575,Bertolino,Lea,,Weiermattstrasse 4,5210,Windisch,29/7/1969,Italien,+41 56 441 94 93,,+41 79 694 63 24,passiv,,,FALSE,fabio02@bluewin.ch
+1576,Hundt,Jeanine,,Promenadestr.  16,5330,Bad Zurzach,28/9/1979,Perleberg,+41 56 536 17 02,,+49 173 306 35 28,passiv,,,FALSE,capperli@yahoo.de
+1577,Gehrig,Yvonne,,Sonnenbergstrasse 21,5303,Würenlingen,6/10/1966,Ammerswil,,,+41 79 704 21 94,passiv,,Sonntagsplausch,FALSE,ygreg@bluewin.ch
+1578,Yersin,Patricia,,Koblenzerstrasse  52,5313,Klingnau,20/4/1969,Rougemont VD,,,+41 79 934 30 40,passiv,,,FALSE,coraya69@gmail.com
+1579,Schiferli,Michael,,Alte Surbtalstrasse 29,5305,Unterendingen,14/8/1977,Tegerfelden,,,+41 79 622 32 38,passiv,,,FALSE,gabriel.schiferli@hotmail.com
+1581,Meyer-Wegner,Beate,,Weltiweg  7c,5330,Bad Zurzach,27/12/1972,Deutschland,+41 56 249 06 38,,+41 78 828 61 04,passiv,,,FALSE,robby.wegner@bluewin.ch
+1582,Führer,Gaby,,Dorfstrasse 87,5417,Untersiggenthal,22/10/1968,Valzeina GR,+41 56 223 41 65,,,passiv,,,FALSE,fuehrergabi@bluewin.ch
+1583,Meier,Anita,,Holzackerstrasse  67,5324,Full-Reuenthal,3/1/1963,Luzern,+41 56 246 10 80,,+41 78 860 96 45,passiv,,,FALSE,meieranita@gmx.ch
+1584,Widmer,Karin,,Rennweg 46d,5303,Würenlingen,17/4/1968,O`siggenthal/Reinach AG,,,+41 79 356 46 71,passiv,,,FALSE,rzkw@hispeed.ch
+1586,Schneider,Elisabeth,,Römerstrasse 61,5303,Würenlingen,11/12/1966,Würenlingen,+41 56 281 10 04,,+4179 605 21 56,passiv,,,FALSE,elisa_schneider@bluewin.ch
+1587,Leuenberger,Othmar,,Rebeweg 16,5242,Birr,28/12/1961,Koblenz,+41 43 931 50 71,,+41 79 375 44 72,passiv,,,FALSE,o.leuenberger@gmx.ch
+1588,Scherer,Alfred,,Zeughausstrasse 60,5236,Remigen,28/5/1958,Untersiggenthal,+41 56 284 14 08,,+41 79 339 51 45,passiv,,"Welpen besucht
+Junghund besucht
+SKN
+Freiappell",FALSE,fredi.scherer@gmail.com
+1590,Meier,Monika,,Maria Bernarda  9,5644,Auw,3/12/1962,,,,+41 79 637 28 70,passiv,,,FALSE,klassische-homoeopathie@bluewin.ch
+1591,Wenger,Regula,,Rosenweg 5,5314,Kleindöttingen,11/7/1955,,,,+41 76 347 79 29,passiv,SO-Pl,So-Plausch,FALSE,wenger50@hispeed.ch
+1597,Wegner,Roberto,,Weltiweg  7c,5330,Bad Zurzach,28/7/1971,Deutschland,+41 56 249 06 38,,+41 78 828 61 04,passiv,,,FALSE,robby.wegner@bluewin.ch
+1598,Merki,Rolf,,Birkenweg 14,5303,Würenlingen,1/7/1962,Würenlingen,+41 56 281 20 79,,+41 79 222 08 88,passiv,,,FALSE,spenglerei.merki@bluewin.ch
+1600,Karlowski,Heike,,Hinterer Kirchweg 4d,5076,Bözen,7/5/1972,Suhl D,+41 56 624 48 65,,+41 76 363 97 55,passiv,,,FALSE,karlowski@rohrag.ch
+1603,Merki,Martina,,Birkenweg 14,5303,Würenlingen,27/9/1965,Würenlingen,+41 56 281 20 79,,+41 79 404 80 87,passiv,,,FALSE,martinamerki@bluewin.ch
+1605,Merki,Melanie,,Birkenweg 14,5303,Würenlingen,13/7/1998,Würenlingen,+41 56 281 20 79,,+41 79 958 24 65,passiv,,,FALSE,m.merki@gmx.net
+1606,Collodel,Doris,,Hüsliweg 15,8166,Niederweningen,22/9/1940,Winterthur,+41 44 875 03 62,,+41 76 331 59 40,passiv,,,FALSE,doris.collodel@bluewin.ch
+1607,Wiedemeier,Etel,,Erbsletstrasse 13,5234,Villigen,22/6/1954,,+41 56 284 19 25,,,passiv,,Privatstunde,FALSE,etelwiedemeier@yahoo.de
+1608,Mohr,Alessia,,Buchenweg 3,5235,Rüfenach AG,31/3/1993,Zürich,,,079 693 48 31,passiv,,,FALSE,alessia.mohr93@hotmail.com
+1610,Lo Manto,Rosario,,Seminarstrasse 54,5430,Wettingen,,,+41 56 288 03 16,,,passiv,,,FALSE,vinz22@me.com
+1615,Taormina,Nadja,,Rechenbühl 69,8106,Adlikon b. Regensdorf,23/6/1986, Italien,,,+41 76 579 63 93,passiv,,,FALSE,nadja.taormina@gmail.com
+1616,Rohner,Verena,,Winkelstrasse 15,5236,Remigen,18/9/1960,Schneebrunn AR,+41 56 210 14 52,,+41 79 585 29 00,passiv,,,FALSE,rohnerverena@bluewin.ch
+1617,Knecht,Melanie,,Bergstrasse  20,5274,Mettau,19/6/1983,Schwaderloch,062 875 01 45,,079 333 27 41,passiv,,,FALSE,melanie-knecht@bluewin.ch
+1620,Oberle,Susanne,,Hauptstrasse 22,5324,Full-Reuenthal,16/3/1965,Full,+41 56 246 00 55,,+41 76 578 11 52,passiv,,,FALSE,stroberle@bluewin.ch
+1621,Rohner,Beatrice,,Kirchplatz 2,5316,Leuggern,19/8/1959,Rebstein SG,+41 56 245 08 28,,+41 79 487 21 82,passiv,,,FALSE,rohnerbeatrice@sunrise.ch
+1624,Kummer,Marietta,,Landstrasse 7,5426,Lengnau,6/1/1951,Hochstetten BE,+41 56 241 10 41,,+41 79 443 23 41,passiv,,,FALSE,kummer.mar@bluewin.ch
+1626,Meier,Heinrich,,Mägenwilerstrasse  2,5504,Othmarsingen,4/10/1962,Bünzen,+41 62 896 03 03,,+41 79 350 27 27,passiv,,,FALSE,heiri.meier@meier-bedachungen.ch
+1628,Hartmann,Monika,,Büntefeldstrasse 11,5212,Hausen AG,18/2/1953,Villnachern,+41 56 444 77 74,,+41 79 412 03 82,passiv,,,FALSE,monika.hartmann@bluewin.ch
+1629,Vogt,Lilian,,Gartenweg 14,5213,Villnachern,19/2/1961,Wangen bei Olten,+41 56 442 98 61,,+41 79 473 65 06,passiv,,,FALSE,lilian.vogt@bluewin.ch
+1631,Fontela,Marina,,Dorfstrasse 23,5332,Rekingen,26/4/1985,Jona SG,+41 43 534 75 41,,+41 76 513 07 36,passiv,,,FALSE,marina.fontela@gmail.com
+1632,Vogt,Nadine,,Neuweg 4,5605,Dottikon,30/7/1992, Regensdorf ZH,,,+41 79 554 26 73,passiv,,,FALSE,nadinevogt@gmx.ch
+1633,D`Amico,Michael,,Schiffmüliweg  25,5316,Gippingen,14/8/1978,Leuggern,,,+41 76 411 14 08,passiv,,,FALSE,michael.damico@psi.ch
+1635,Van der Velden,Jan-Willem,,Linn 47,5225,Bözberg,,,,,+41 79 664 99 82,passiv,,Sonntagsplausch,FALSE,mesama@bluewin.ch
+1636,Gassmann,Eveline,,Vogelsangstrasse 6,5426,Lengnau AG,28/11/1981,,,,+41 79 708 04 51,passiv,,,FALSE,manuk2811@yahoo.de
+1638,Weber,Corinne,,Allmenweg  4,5610,Wohlen AG,,,,,+41 79 605 52 77,passiv,,Freiappell an-und wieder abgemeldet.,FALSE,corinneweber1@bluewin.ch
+1639,Fässler,Michaela,,Chriesiweg 1,5243,Mülligen,9/9/1972,,,,+41 79 489 40 39,passiv,,,FALSE,marmi.faessler@swissonline.ch
+1640,Kräuchi,Dominic,,Surbtalstrasse 2,5312,Döttingen,,,,,+41 79 270 04 55,passiv,,"2 Privatstunden, Hund umplaziert",FALSE,caprice.kraeuchi@hotmail.ch
+1641,Celluci,Donatella,,Bahnhofstrasse 2,5316,Felsenau,2/2/1985,,,,+41 76 236 15 80,passiv,,,FALSE,
+1642,Wegmann,Iris,,Gagenacher 11,5234,Villigen,6/7/1963,,,,+41 79 336 57 51,passiv,,hat nicht gepasst,FALSE,iris.wegmann@bluewin.ch
+1643,Zweifel,Andrea,,Villigerstrasse 3,5236,Remigen,9/11/1972,Luzern/Schänis SG,+41 79 267 20 06,,+41 79 267 18 55,passiv,,Privatstunde,FALSE,andrea.mueller72@gmx.ch
+1645,Deubelbeiss,Bettina,,Grametstrasse  27,5272,Gansingen,24/6/1983,,,,+41 79 510 08 43,passiv,,,FALSE,bettinadeubelbeiss@hotmail.com
+1646,Gehrig,Erich,,Tannermattstrasse 24,5242,Birr,, Künten,,,+41 79 355 53 88,passiv,,,FALSE,erich.gehrig70@bluewin.ch
+1647,Christen,Cynthia,,Haldenweg  7,5200,Brugg AG,7/9/1966,,,,+41 76 532 67 42,passiv,,,FALSE,christen5@sunrise.ch
+1648,Barnabeo,Marilena,,Hauptstrasse  46,5234,Villigen,20/5/1972,Birr AG,+41 56 284 08 68,,+41 79 732 42 68,passiv,,,FALSE,marilena.barnabeo@gmx.net
+1649,Sigrist,Angie,,Schulstrasse  22,5426,Lengnau AG,24/12/1983,Mengen,+41 56 496 26 47,,+41 78 608 09 77,passiv,,,FALSE,angie.sigrist@me.com
+1650,Guccione,Giuseppe,,Weidgasse 23,5304,Endingen,3/5/1988,Döttingen / Italien,,,+41 76 419 87 00,passiv,,,FALSE,
+1653,Gattiker,Sarah,,Kornweg 14 c,5322,Koblenz,8/8/1985,Embrach  ZH,,,+4176 429 08 85,passiv,,,FALSE,sarahgattiker@hotmail.com
+1654,Buch,Michael,,Kornweg 14c,5322,Koblenz,30/11/1980,Deutschland,,,,passiv,,,FALSE,
+1655,Winkler,Marianne,,Breitensteinstrasse 346,5325,Leibstadt,8/9/1951,Wil Mettauertal,+41 56 247 10 50,,,passiv,,,FALSE,m.k.winkler@bluewin.ch
+1656,Carneiro,Nelson,,Samichlausenstrasse 4b,5312,Döttingen,5/11/1982,Portugal,,,+41 76 542 97 43,passiv,,,FALSE,carneiro_meme@hotmail.com
+1657,Kummer,Willi,,Landstrasse 7,5426,Lengnau AG,22/6/1944,Höchstetten  BE,+41 56 241 10 41,,+41 79 443 23 41,passiv,,,FALSE,
+1660,Barbera,Ingrid,,Schützenmatt 7,5316,Gippingen,25/7/1960,Deutschland,,,+41 76 542 45 49,passiv,,,FALSE,
+1662,Mohr,Alessia,,Breitacker 25,5210,Windisch,31/3/1993,Zürich,,,+41 79 693 48 31,passiv,,"macht Pause, will im Januar wieder kommen",FALSE,alessia.mohr93@hotmail.com
+1664,Knecht,Pascal,,Bergstrasse 20,5274,Mettau,1/10/1979,Schwaderloch,+41 62 875 01 45,,+41 79 757 11 89,passiv,,Begleitperson:  Knecht Melanie,FALSE,p.knecht@bluewin.ch
+1665,Fontana,Michael,,Neuweg  8,5605,Dottikon,3/2/1984,Wetzikon,,,+41 78 786 69 29,passiv,,Sohn von Richi,FALSE,
+1880,Vinclair,Cedric,,Im Gibrist 5,5317,Hettenschwil,19/7/1971,Frankreich,,,: +41 79 403 82 29,passiv,,,FALSE,chcevin71@gmail.com
+1666,Broillet,Heidi,,Schlossbergweg 7,5400,Baden,,,+41 56 426 12 12,,+41 79 326 91 48,passiv,,1 Privatstunde,FALSE,broillet@into.ch
+1667,Bauer,Saraly,,Breitenstrasse 4,5303,Würenlingen,7/1/1975,Aachen D,,,+41 77 465 49 66,passiv,,,FALSE,basa7758@yahoo.de
+1668,Milan,Nadja,,Dahlienweg 5,5504,Othmarsingen,1/6/1986,Moosleerau,,,,passiv,,,FALSE,
+1669,Milan,Stefan,,Dahlienweg 5,55,Othmarsingen,23/4/1982,Schwarzhäusern,,,,passiv,,,FALSE,
+1670,Peach,Clare,,Weidgasse 8,5304,Endingen,11/6/1974,England,,,+41 79 911 00 73,passiv,,,FALSE,clarelpeach@gmail.com
+1671,Fiedermann,Yvonne,,Baslerstrasse 29,5330,Bad Zurzach,3/5/1972,Richterswil,,,076 326 61 30,passiv,,Privatstunde/SKN,FALSE,info@beyou-coaching.ch
+1672,Kümin,Adriana,,Gorgen 24,5076,Bözen,1/10/1965,,+41 62 876 16 82,,+41 79 466 80 42,passiv,,FAS,FALSE,beat.kuemin@gmx.ch
+1674,Zumsteg,Susanne,,Eggstrasse 11,5276,Wil,24/12/1957,Wil,+4162 875 27 13,,,passiv,,,FALSE,ilona.zumsteg@gmx.net
+1675,Binkert,Brigitte,,Hauptstrasse 18,5316,Leuggern,3/1/1966,Bözen,+4162 876 14 05,,+4179 224 25 05,passiv,,,FALSE,beat.binkert@bluewin.ch
+1676,Keller,Beate,,Rebbergstrasse 100,5330,Bad Zurzach,11/5/1961,Deutschland,+4156 249 34 73,,+4179 420 64 11,passiv,,,FALSE,beate.g.keller@hotmail.com
+1677,Fornera,Martin,,Höllsteweg 1,5312,Döttingen,23/9/2000,Döttingen,+41 77 918 39 05,,+41 77 918 39 05,passiv,,"Hund wurde nur gekauft, um den verkorksten Jungen zu therapieren. Nimmt nichts an, Mutter redet ständig drein. Hat dann Mail gemacht mit Anschuldigungen. Verbreitet Unwahrheiten. Hat Theoriekurs wieder abgemeldet. Kommt nicht mehr.",FALSE,martin_fornera@hotmail.com
+1678,Dauenhauer,Odarissa,,Binz 7,5316,Leuggern,14/11/1985,Sankt Petersburg,,,+41 76 572 74 34,passiv,,,FALSE,odarissadauenhauer@yahoo.de
+1679,Brechbühler,Claudia,,Rebbergstrasse 8,5303,Würenlingen,12/3/1968,Würenlingen,+41 56 281 15 45,,+41 79 333 77 59,passiv,,,FALSE,claudia.brechi@gmx.ch
+1680,Schläfli,Irene,,Fliederweg 1,5316,Gippingen,20/10/1986,Freienbach SZ,+41 56 535 94 10,,+41 79 330 86 03,passiv,,,FALSE,i.schlaefli86@gmail.com
+1681,Khawaya,Waseya,,Sonnenweg 1,5333,Baldingen,7/9/2000,Pakistan,+41 71 222 61 91,,+41 79 441 50 00,passiv,,,FALSE,waseya.khawaya@gmail.com
+1682,Josch,Michael,,Hardackerstrasse 16,5301,Siggenthal-Station,20/8/1961,Deutschland,+41 56 281 90 29,,+41 78 639 91 65,passiv,,,FALSE,info@jomodi.ch
+1683,Weber,Charlotte,,Kornweg 2,5303,Würenlingen,25/5/1951,Laufenburg,+41 56 281 15 46,,,passiv,,,FALSE,charlotte_zw@yahoo.de
+1685,Gaebel,Anne,,Chileweg 5,5272,Gansingen,11/5/1989,Deutschland,+41 79 771 72 43,,+41 79 771 72 43,passiv,,,FALSE,anne.gaebel@outlook.de
+1686,Keller,Tracy,,Mühlemattweg 2,5272,Gansingen,31/3/1995,Frick,,,+41 77 430 77 94,passiv,,,FALSE,keller_tracy@hotmail.com
+1687,Süss,Miriam,,Chapf 3,5225,Bözberg,16/11/1994,Villigen,+41 56 441 10 43,,+41 79 676 80 89,passiv,,,FALSE,miriam-suess@hotmail.com
+1688,Süss,Agnes,,Chapf 3,5225,Bözberg,11/3/1961,Bözberg,+41 56 441 10 43,,,passiv,,,FALSE,miriam-suess@hotmail.com
+1689,Künzi,Marion,,Obergrütweg 4,5200,Brugg,23/7/1960,Erlach (BE),+41 56 442 20 05,,,passiv,,,FALSE,villa-kunterbunt@gmx.ch
+1690,Suter,Petra,,Bodenstrasse 15,5426,Lengnau,29/10/1972,Kölliken,+41 56 241 28 66,,+41 79 960 95 24,passiv,,,FALSE,petra-suter@bluewin.ch
+1691,Nothaft,Jasmin,,Rosenweg 5,5314,Kleindöttingen,30/5/1983,Deutschland,+41 56 535 97 68,,+41 78 735 41 96,passiv,,,FALSE,jasminbelusa@yahoo.de
+1692,Thomann,Ruth,,Hinterdorf 40,5323,Rietheim,8/4/1958,Himmelried SO,+41 56 249 30 88,,,passiv,,will Agility machen,FALSE,ruth.thomann@gmx.ch
+1694,Haller,Rebekka,,Wildeggerstrasse 21,5106,Veltheim,20/5/1977,Hägglingen,+41 56 443 33 58,,+41 78 721 88 60,passiv,,,FALSE,rebekka.haller@hotmail.ch
+1695,Müller,Anita,,Ifang 181,5273,Oberhofen,8/9/1965,Mettauertal,+41 62 875 23 86,,+41 79 628 91 66,passiv,FAS,,FALSE,anita.beat65@bluewin.ch
+1696,Reichen,Cornelia,,Rheintalstrasse 162,5325,Leibstadt,4/12/1969,Adelboden,+41 56 247 12 80,,+41 76 423 51 54,passiv,,"Partner: Claudio Tirinzoni, geb.23.11.1964
+Hund hatte Unfall, hat sich danach nicht mehr gemeldet",FALSE,reichen94@bluewin.ch
+1697,Winter,Ute,,Villnachernstrasse 29,5222,Umiken,23/6/1983,,+41 61 551 06 83,,+41 78 601 92 11,passiv,,,FALSE,ute.winter@neverseen.ch
+1698,Martins,Manuela,,Gewerbestrasse  24,5314,Kleindöttingen,16/5/1969,Portugal,+41 56 245 04 93,,+41 76 368 67 69,passiv,,keine Zeit mehr,FALSE,manuelmartins@sunrise.ch
+1699,Piot,Gisela,,Remigerstr. 27,5234,Villigen,29/7/1944,,+41 56 284 12 22,,,passiv,,"hat abgebrochen, geht jetzt zu Schlegel",FALSE,g.piot@bluewin.ch
+1864,Bugmann,Eva,,Unterstadtgasse 13,5313,Klingnau,29/3/1971,Appenzell,,,+4179 830 93 01,passiv,,,FALSE,e.bugmann@hotmail.com
+1881,Vinclair,Nimia Valeria,,Im Gibrist 5,5317,Hettenschwil,3/3/1986,USA,,,+41 76 434 97 24,passiv,,,FALSE,valeria.vinclair@gmail.com
+1704,Jachimow,Isabelle,,Surbtalstrasse 2,5312,Döttingen,,Köniz BE,,,+41 79 101 02 47,passiv,,"2 Privatstunden
+Hund umplaziert",FALSE,j.jachimow@gmail.com
+1706,Rutschek,Jessica,,Obere Breite 4,8108,Dällikon,5/9/2001,Fescoggia TI,,,+41 78 717 05 16,passiv,,,FALSE,j_rutschek@bluewin.ch
+1708,Lo Manto,Giovanna,,Rütlistrasse 16,5430,Wettingen,2/12/1994,Dietikon ZH,+41 56 426 03 31,,+41 79 251 20 19,passiv,,,FALSE,mlomanto@bluewin.ch
+1709,Lo Manto,Edith,,Seminarstrasse 54,5430,Wettingen,17/8/1970,,+41 56 288 03 16,,,passiv,,,FALSE,vinz22@me.com
+1710,Niedermann,Paul,,Luzimatt 6,5312,Döttingen,27/4/1945,Niederhelfenschwil SG,+41 56 401 62 94,,+41 78 952 17 17,passiv,,,FALSE,paul.niedermann@gmx.ch
+1711,Ziegler,Dirk,,Terrassenstrasse 6,5312,Döttingen,17/2/1958,Horgen ZH,,,+41 79 855 58 81,passiv,,,FALSE,dirk.ruegg1994@hotmail.com
+1712,Turconi,Susanne,,Sonnenheimstrasse 7,5322,Koblenz,,Zürich,+41 56 250 20 01,,+41 78 758 52 53,passiv,,So-Plausch,FALSE,turconi@ggaweb.ch
+1713,Körkel,Christine,,Kapellenstrasse 27,4323,Wallbach,,Möhlin,+41 61 861 00 48,,+41 79 668 60 13,passiv,,So-Plausch,FALSE,lekreok@bluewin.ch
+1714,Lang,Elisabeth,,Trottenweg 1,5313,Klingnau,12/4/1946,Obererlinsbach,+41 56 245 12 50,,+41 79 715 13 11,passiv,,So-Plausch,FALSE,elisabeth-maria.lang@bluewin.ch
+1715,Keller,Elaine,,Hittnauerstrasse 23,8345,Adetswil,,,+41 44 941 08 78,,+41 79 138 72 28,passiv,,So-Plausch,FALSE,elainekeller@rocketmail.com
+1872,Hausherr,Doris,,Schluchenstrasse 2,5312,Döttingen,8/11/1972,Sulz AG,+41 56 245 68 01,,+41 79 512 18 24,passiv,,,FALSE,dorishausherr@bluewin.ch
+1920,Zumsteg,Iréne,,Untere Trottmatt 95,5274,Mettau,20/8/1959,Mettau,,,+41 79 403 20 40,passiv,,,FALSE,irene.zumsteg@psi.ch
+1716,Rossi,Susi,,Rebhaldeweg 10,5443,Niederrohrdorf,,Trueb BE,+41 56 496 62 11,,+41 79 235 96 23,passiv,,So-Plausch,FALSE,susi.rossi@tiscalinet.ch
+1718,Gubler,Gisèlle,,Schulstrasse 17,5423,Freienwil,,,,,,passiv,,So-Plausch,FALSE,gigubler@bluewin.ch
+1720,Keller,Franz,,Hittnauerstrasse 23,8345,Adetswil,,Unterschlatt TG,+41 44 941 08 78,,,passiv,,So-Plausch,FALSE,franz.keller32@yahoo.de
+1721,Fries,Irene,,Linn 49,5225,Bözberg,5/9/1962,Alchenstorf,+41 56 441 99 06,,+41 76 318 21 40,passiv,,So-Plausch,FALSE,irene.fries@bluewin.ch
+1722,Kündig,Gabriela,,Kanalstrasse 8,5200,Brugg,,,+41 56 441 95 70,,+41 78 861 01 71,passiv,,So-plausch,FALSE,gabriela.kuendig@gmx.ch
+1723,Curt,Reto,,Birnenweg 10,5507,Mellingen,,Rapperswil,,,+41 79 354 00 88,passiv,,So-Plausch,FALSE,bearbones@bluewin.ch
+1724,Kunz,Marianne,,Waldhausweg 2,5032,Aarau Rohr,,,+41 62 897 09 14,,,passiv,,So-Plausch,FALSE,
+1725,Henschel,Brigitte,,Alte Landstrasse 29,8955,Oetwil,,Zürich,+41 44 748 33 84,,,passiv,,SO-Plausch,FALSE,h.brigitte@gmx.ch
+1726,Weber,Julia,,Erlenweg  7,5200,Brugg,8/4/1991,,,,+41 78 803 00 55,passiv,,"2 Privatstunden, dann einfach nicht mehr gemeldet, obwohl Stunde abgemacht",FALSE,julia.weber.3005@gmail.com
+1727,Panainte,Mirela,,Breitenstrasse 4,5303,Würenlingen,12/9/1963,Deutschland,,,+4177 435 38 65,passiv,,,FALSE,mirellapanaite@yahoo.de
+1728,Wenger,Rolf,,Bärenweg 7,5303,Würenlingen,26/4/1959,Rapperswil BE,+41 56 281 17 45,,+41 78 635 94 43,passiv,,"Welpen besucht
+Junghund besucht",FALSE,rowenger@hotmail.com
+1729,Saugy,Irene,,Schlüsselgasse 9,5330,Bad Zurzach,30/8/1969,Alt St. Johann,+41 56 249 44 63,,+41 79 293 29 43,passiv,,,FALSE,irene.saugy@bluewin.ch
+1730,Tuzzolino,Christine,,Kirschbergstrasse 28,79730,Murg/Deutschland,16/10/1967,Deutschland,+41 77 63 69 06,,+49 170 485 19 66,passiv,,2 Privatstunden,FALSE,tuzzolinomh@aol.com
+1731,Berens,Brenda,,Rüslerstrasse 23,5452,Oberrohrdorf,20/4/1954,Grossbritannien/ Oberrohrdorf,+41 56 496 43 24,,+41 76 342 43 24,passiv,,,FALSE,brenda.berens@sunrise.ch
+1732,Filipovic,Sladjana,,Wolfackerweg 2,5303,Würenlingen,24/9/1980,Schweiz/Kroatien,+41 56 245 03 17,,+41 78 637 85 16,passiv,,,FALSE,martina1509@msn.com
+1733,Wettach,Vreni,,Propstbergstrasse 244,5313,Klingnau,21/3/1969,Curaglia GR,+41 56 245 44 39,,+41 79 564 12 74,passiv,,,FALSE,wettach@bluewin.ch
+1734,Pörschke,Nadia,,Schybenaecherweg  128,5324,Full,10/7/1984,Deutschland,,,+41 79 391 14 47,passiv,,,FALSE,nadiapoerschke@yahoo.de
+1735,Kirsch,Nelly,,Breitensteinstrasse 239,5325,Leibstadt,14/11/1952,Sarmenstorf,+41 56 247 15 38,,,passiv,,SKN Theorie,FALSE,di.ki@bluewin.ch
+1736,Kirsch,Dietmar,,Breitensteinstrasse 239,5325,Leibstadt,7/12/1944,Wiesloch / D,+41 56 247 15 38,,,passiv,,SKN Theorie,FALSE,di.ki@bluewin.ch
+1737,Wächter,Marc,,Ettenried  3,5316,Gippingen,4/6/1988,,,,+41 79 768 22 74,passiv,FAS,,FALSE,andrea.graf@outlook.com
+1738,Baumann,Dorota,,Bruggerstr.  131,5400,Baden,28/9/1971,,,,+41 76 443 09 28,passiv,,,FALSE,baumann.dorota@gmail.com
+1739,Demirkiran,Derya,,Nelkenstr.  16,5432,Neuenhof,17/8/1981,Unterkulm,,,+41 76 576 96 76,passiv,,,FALSE,derya.demirkiran@hansgrohe.ch
+1740,Schärer,Erika,,Habsburgerstrasse  50 B,5200,Brugg,29/7/1943,Rumandingen,+41 56 441 31 76,,+41 77 456 58 00,passiv,,,FALSE,armin.schaerer@windowslive.com
+1741,Abrecht,Cornelia,,Scheuerackerstrasse  17,5116,Schinznach-Bad,22/3/1992,Lengnau  BE,,,+41 79 280 44 48,passiv,,,FALSE,marc_bircher@ziknet.ch
+1742,Schranz,Nicole,,Gartenstrasse  8,5303,Würenlingen,10/10/1972,Gossau  ZH,+41 56 470 44 04,,+41 76 328 54 06,passiv,,,FALSE,muggls@bluewin.ch
+1743,Pungillo,Rosalba,,Sommerhaldenstrasse 19 a,5405,Dättwil,20/5/1964,Erlenbach ZH,+41 76 387 90 60,,+41 76 387 90 60,passiv,,,FALSE,r.pungillo@gmx.ch
+1744,Stam,Hugo,,Breitestrasse 36,5330,Bad Zurzach,16/2/1960,Kriens,+41 56 249 32 66,,,passiv,,,FALSE,sandhaas@mac.com
+1745,Niederer,Sarah,,Linn  9,5225,Bözberg,10/4/1981,Trimmis / GR,,,+4178 850 70 07,passiv,,,FALSE,niederer.sarah@gmail.com
+1746,Mohr,Jennis,,Enzianweg 3,5314,Kleindöttingen,28/1/1991,Zürich,,,+41 76 457 00 85,passiv,,,FALSE,jennis.mohr14@hotmail.com
+1747,Höppli,Kerstin,,Schulhausstrasse 28,5116,Schinznach-Bad,11/1/1955,Zürich,+41 56 288 38 49,,+41 79 583 40 02,passiv,,Sonntagsplausch,FALSE,kerstin.hoeppli@gmail.com
+1748,Höltschi,Susy,,Hüsliweg  15,8166,Niederweningen,21/3/1962,Zürich,+4144 875 10 05,,,passiv,,,FALSE,as.hoeltschi@hotmail.com
+1750,Schneider,Nicole,,Neumattring 617,5325,Leibstadt,8/4/1992,Strättligen Thun,,,+4179 741 55 49,passiv,,SKN Theorie,FALSE,nicoleschneider165@gmail.com
+1751,Weiler,Katja,,Pestalozzistrasse 99,5242,Birr,12/11/1968,Schattdorf UR,+41 56 464 25 94,,+41 77 425 22 71,passiv,,,FALSE,katja_weiler1968@web.de
+1752,Herger,Hans,,Rütistrasse 16,4334,Sisseln,13/12/1962,Spiringen UR,+41 62 871 40 80,,+41 79 677 62 23,passiv,,,FALSE,mail@hans-herger.ch
+1753,Müller,Andreas,,Hinterhofstrasse 6,5312,Döttingen,22/4/1973,,,,+41 76 329 98 81,passiv,,So-Plausch,FALSE,
+1754,Stutz,Beatrice,,Eidgenossenhäuser 3,5317,Hettenschwil,31/12/1959,Sarmenstorf,+41 56 284 28 84,,,passiv,,,FALSE,stutz@highspeed.ch
+1755,Meier,Esther,,Gartenstrasse  7,5322,Koblenz,17/5/1950,Koblenz,+4156 246 21 94,,+4179 279 22 66,passiv,,,FALSE,esther.meier@bluewin.ch
+1756,Rüegger,Rahel,,Iberg 3,5079,Zeihen,6/5/1956,Rothrist,+4162 876 10 79,,+4179 749 33 09,passiv,,,FALSE,juergrueegger@bluewin.ch
+1757,Schaffner,Sarah,,Buchenstrasse 1,5222,Umiken,16/4/1986,Oberkirch LU,+41 76 418 15 55,,+41 76 418 15 55,passiv,So-Pl,Sonntagsplausch-Kunde,FALSE,info@podoprima.ch
+1758,Donninger,Zoé,,Habsburgerstrasse 64,5200,Brugg,9/8/2000,,+41 78 739 13 21,,+41 78 739 13 21,passiv,,So-Plausch,FALSE,
+1759,Hassler,Marianne,,Vogelsangstrasse 47,5426,Lengnau,9/12/1950,,+41 56 241 14 30,,,passiv,,So-Plausch,FALSE,khassler@bluewin.ch
+1760,Baumann,Janine,Beaglezucht from the wispering hunters,Schwabistalstrasse 47,5037,Muhen,,,+41 62 724 02 53,,,passiv,,,FALSE,nifty@zik5037.ch
+1761,Schaufler,Sven,,Rottrottenweg 32,5313,Klingnau,8/8/1972,Obersiggenthal,+41 56 210 28 92,,+41 76 347 53 51,passiv,,,FALSE,sven.schaufler@gmail.com
+1764,Baumgartner,Bruno,,Moosweg 17,5512,Wohlenschwil,6/11/1948,Cham,+41 56 491 11 27,,+41 79 470 92 34,passiv,,,FALSE,bruno.baumgartner6@bluewin.ch
+1765,Peter,Petra,,Arkadenweg 7,5417,Untersiggenthal,9/4/1967,Untersiggenthal,+41 56 288 13 88,,+41 79 713 76 04,passiv,,Hat es sich anders überlegt und kommt doch nicht,FALSE,petrapeter@bluewin.ch
+1766,Meier-Rohr,Rosmarie,,Rebbergstr. 29,5416,Kirchdorf,11/2/1962,Obersiggenthal,+41 56 282 39 40,,+41 76 548 51 47,passiv,,,FALSE,rosy.meier@gmail.com
+1767,Donninger,Pascale,,Habsburgerstrasse 64,5200,Brugg,20/12/1964,Oberkirch LU,+41 78 739 13 21,,+41 78 739 13 21,passiv,,,FALSE,
+1768,Zmoos,Luana,,Zentralstrasse 42,5430,Wettingen,30/3/2003,,+41 426 73 99,,+41 76 801 39 54,passiv,,,FALSE,claudia.zmoos@hispeed.ch
+1769,Seiler,Ruth,,Milchgasse 15,5503,Schafisheim,17/6/1972,Bönigen/BE,+41 79 962 79 45,,+41 79 962 79 45,passiv,,nicht mehr erschienen ohne Abmeldung,FALSE,seiler.ruth@sunrise.ch
+1770,Kluge,Stefan,,Mattenstrasse 32,5722,Gränichen,5/12/1980,Deutschland,+4177 206 05 75,,+4177 206 05 75,passiv,,,FALSE,s.kluge@gmx.ch
+1772,Maag,Rolf,,Pfauengasse 8,5330,Bad Zurzach,18/8/1948,Zürich & Bachenbülach ZH,+41 78 883 77 66,,+41 78 883 77 66,passiv,,ohne Absage nicht mehr gekommen,FALSE,rolf.maag@bluewin.ch
+1773,Eggenberger,Olivia,,Rümikerstrasse  13,5463,Wislikofen,2/4/1984,"Grabs, Embrach",+41 79 934 71 77,,+41 79 934 71 77,passiv,,Privatstunde,FALSE,o_eggenberger@bluewin.ch
+1774,Scheuber,Sabrina,,Nussbaumweg 4,5604,Hendschiken,19/2/1989,,+41 76 411 62 79,,+41 76 411 62 79,passiv,FAS,,FALSE,s_scheuber@hotmail.com
+1775,Gauch,Wally,,Hengertstrasse 16,5426,Lengnau,4/2/1953,Tentlingen FR,+41 56 241 23 16,,+41 79 460 89 25,passiv,,,FALSE,pgauch@bluewin.ch
+1776,Märki,Karin,,Liebefelsweg 8,5313,Klingnau,6/10/1972,Mandach,+41 56 245 14 86,,+41 79 684 23 23,passiv,,,FALSE,karin.maerki@gmx.ch
+1779,Geraci,Leonardo,,Rosengartenweg 6a,5417,Untersiggenthal,19/6/1990,Italia,+41 76 334 49 01,,+41 76 334 49 01,passiv,,,FALSE,geraci.leo90@gmail.com
+1780,Wollny,Martin,,Chrüzwiesstrasse 13,5232,Rekingen,19/2/1975,Dübendorf ZH,+41 79 375 49 88,,+41 79 375 49 88,passiv,,hat Welpenkurs abgebrochen,FALSE,martin.wollny@hotmail.com
+1782,Almeida Ribeiro,Maria Lucia,,Nägeliweg 1,5313,Klingnau,16/3/1964,Portugal,+41 76 249 41 70,,+41 76 249 41 70,passiv,,,FALSE,lucia.ribeiro6464@gmail.com
+1783,Villano,Antonella,,Badstrasse 132,5323,Rietheim,4/2/1981,Rietheim,+41 56 249 05 50,,+41 78 656 05 81,passiv,,,FALSE,v.antonella@sunrise.ch
+1784,Lorimer,Charlotte,,Neugrütstrasse 45,5332,Rekingen,13/12/1949,Hallau  SH,+41 56 249 16 66,,,passiv,,,FALSE,c.lorimer@bluewin.ch
+1785,Pinto Moreira,Jose Rodrigo,,Gewerbestrasse 24,5312,Kleindöttingen,4/12/1978,Portugal,+41 76 570 54 45,,+41 76 570 54 45,passiv,,"trotz Abmachung nicht erschienen. Weder in Kurs, noch in SKN Theorie",FALSE,manuelmartins@sunrise.ch
+1786,Gaziano,Antonino,,Erlenweg  4,5312,Döttingen,27/6/1970,Italien,+4156 245 25 83,,,passiv,,Sonntagsplausch,FALSE,
+1787,Schwarz,Heinz,,Maiackerstr. 11,5200,Brugg,17/7/1954,Effingen,+4156 441 44 29,,+4178 891 92 10,passiv,,,FALSE,heinz.schwarz@vtxmail.ch
+1789,Vogler,Tamara,,Baslerstrasse 47,8048,Zürich,10/8/1993,Niederrohrdorf,,,+4179 587 71 29,passiv,,Wollten zum Dienstagabend-Kurs kommen. Haben sich nicht mehr gemeldet,FALSE,tam.vogler@bluewin.ch
+1790,Picek-Burg,Holger,,Schattengasse 35-37,5313,Klingnau,13/1/1971,Ãƒâ€“sterreich,,,,passiv,,"Hat Theorie angemeldet, und dann auf mehrere Mails nicht reagiert",FALSE,holger.picek@ahoo.de
+1791,Mijatovic,Danijela,,Tannhübelstrasse 4,5212,Hausen AG,10/11/1984,Kroatien,+41 76 585 73 44,,+41 76 585 73 44,passiv,,,FALSE,d.mijatovic1984@mail.com
+1792,Sonderegger,Violetta,,Dorfstrasse 1269,5728,Gontenschwil,9/7/1983,Appenzell,+41 56 444 05 78,,+41 78 9201027,passiv,,,FALSE,sonderegger.violetta@gmail.com
+1793,Karli,Hortensia,,Oelbergweg 23,5234,Villigen,12/4/1954,Villigen,+41 56 284 07 32,,,passiv,,,FALSE,hortensia.karli@bluewin.ch
+1794,Amstutz,Monika,,Hauptstrasse 22,5277,Hottwil,15/12/1970,Würenlos,+41 62 875 02 21,,+41 79 541 86 95,passiv,,,FALSE,monika.amstutz@gmx.net
+1796,Rimml,Gina,,Höhtalmatt  9,5420,Ehrendingen,5/9/1976,Ennetbaden,+4156 534 85 56,,+4176 381 74 76,passiv,,,FALSE,gina.rimml@bluewin.ch
+1797,Schmid,Klara,,Obermattenweg 23,5313,Klingnau,15/11/1944,Mettau,+41 56 245 27 51,,+41 79 259 30 10,passiv,,,FALSE,klaerli.schmid@bluewin.ch
+1798,Uka,Leonita,,Margrethenweg 7,5314,Kleindöttingen,23/10/1986,Rohr,+41 56 245 49 06,,+41 79 945 82 57,passiv,SKN,,FALSE,pizzeria.romantica@mx.ch
+1799,Verdross- Niedermair,Heike,,General-Guisanstrasse 12,5316,Leuggern,15/3/1977,Italien,+41 56 536 03 90,,+41 76 608 68 20,passiv,,,FALSE,verdrosshei@gmail.com
+1800,Tempera,Giuseppe,,Chisweg 27 a,5313,Klingnau,7/10/1964,Italien,,,+41 76 560 87 67,passiv,,,FALSE,g.tempera@bluewin.ch
+1801,Petrucci,Alessandro,,Rosengartenweg 8 b,5417,Untersiggenthal,11/7/1981,Italien,,,+41 78 815 21 13,passiv,,,FALSE,alexpetrucci1981@gmail.com
+1802,Kamber,Nadine,,Hauptstrasse 14,5324,Full-Reuenthal,3/11/1976,Deutschland,+41 56 246 02 14,,,passiv,,,FALSE,nkamber@gmx.ch
+1803,Frey,Manuela,,Tannenweg 3,5303,Würenlingen,3/3/1969,Würenlingen,,,+41 79 352 80 94,passiv,,"Arbeitet momentan über Privatstunde. Hat Mühe in der Gruppe, da sie dann verunsichert ist",FALSE,manuelafrey@bluewin.ch
+1804,Rimann,Nadja,,Spinnereistrasse 6,5210,Windisch,8/10/1976,Oberrohrdorf,+41 56 470 15 08,,+41 76 342 04 76,passiv,,,FALSE,nadja.rimann@gmail.com
+1806,Hättenschwiler,Jörg,,Breitensteinstrasse 434,5325,Leibstadt,11/5/1964,Gottshaus,061 323 57 00 G,,,passiv,,Hat 2016 SKN Theorie gemacht,FALSE,haette@bluewin.ch
+1808,Höhener,Denise,,Müselstrasse 4,5417,Untersiggenthal,9/4/1975,Thal SG,+41 56 288 01 58,,+41 76 390 01 58,passiv,,Geschäft: +41 56 288 33 00,FALSE,denisehoehener@hispeed.ch
+1809,Siegenthaler,Selina,,Hinterdorfstrasse 3,5233,Stilli,28/12/2001,Trub BE,+41 56 284 20 75,,+4178 618 06 15,passiv,,,FALSE,selina.siegenthaler@siegenthalerag.ch
+1810,Schäfauer,Natascha,,Rainächer 3,5332,Rekingen AG,30/9/1974,Thalwil,,,+41 76 571 79 76,passiv,,"einfach nicht mehr erschienen, ohne Abmeldung",FALSE,patrik.schaefauer@gmail.com
+1811,Frau,Yvonne,,Zuberbühlerstrasse 18,5323,Rietheim,4/12/1977,Deutschland,+41 76 201 67 96,,+41 76 201 67 96,passiv,,,FALSE,yvonne.frau@gmail.com
+1812,Ceccato,Walter,,Landstrasse 3,5426,Lengnau AG,11/10/1954,Kloten,+41 56 496 52 63,,+41 79 517 31 00,passiv,,,FALSE,ssallneeds@gmail.com
+1813,Bass-Brantschen,Daniela,,Kornfeldweg 21,5417,Untersiggenthal,29/1/1948,Tschierv Val Müstair GR,+4156 288 33 01,,+4176 376 33 01,passiv,,,FALSE,danba@me.com
+1815,Colombo,Daniela,,Fahrstrasse 14,5314,Kleindöttingen,21/5/1956,Klingnau,+41 56 245 41 06,,+41 79 613 92 21,passiv,,,FALSE,daniela.colombo@bluewin.ch
+1821,Kneubühl,Michael,,Bützmattstrasse 4,5272,Gansingen,7/4/1977,,+41 62 873 07 77,,+41 79 225 90 93,passiv,,,FALSE,michael@kneubuehl.ch
+1826,Culap,Stefi,,Sitenhof 257,5304,Endingen,9/12/1995,,,,+41 79 246 32 78,passiv,,,FALSE,stefi.culap@hotmail.ch
+1827,Hambach,Roman,,Wängiweg 239,5326,Schwaderloch,30/9/1984,,,,+41 77 464 62 14,passiv,,,FALSE,s.pilk@gmx.ch
+1828,Schlegel,Agnes,,Trottenmatte 208,5318,Mandach,25/1/1953,Wartau,+41 56 284 27 65,,+41 79 829 78 59,passiv,,,FALSE,agnes.schlegel@bluewin.ch
+1830,Hauenstein,Walti,,Trottenmatte 208,5318,Mandach,3/10/1957,Unterendingen,+41 56 284 27 65,,+41 79 829 78 59,passiv,Begleitp. FAS,"Partner von Agnes Schlegel
+Begleitperson FAS",FALSE,agnes.schlegel@bluewin.ch
+1832,Janosevic,Sanela,,Salzstrasse 30,5330,Bad Zurzach,21/6/1989,Winterthur,,,+41 79 233 47 75,passiv,,,FALSE,sanela_2106@hotmail.com
+1833,Ludin,Andreas,,Parkstrasse 7,5313,Klingnau,3/7/1962,Klingnau,+41 56 245 33 85,,,passiv,,,FALSE,andreas.ludin@gmx.de
+1834,Rauer,Jaqueline,,Parkstrasse 7,5313,Klingnau,20/12/1975,Klingnau,+4156 245 33 85,,+4176 322 64 43,passiv,,,FALSE,jrauer@gmx.ch
+1975,Barbieri,Nicole,,Trottensteig 1,5313,Klingnau,13/4/1969,,,,+41 79 462 65 75,passiv,,,FALSE,barbieri@31nord.ch
+1976,Kunz,Severin,,Austrasse 4,5312,Döttingen,25/5/1993,Zams A,,,+41 79 471 58 67,passiv,,,FALSE,sevikunz@outlook.com
+1977,Tomasi,Andrea,,Sonnhalde 5,5322,Koblenz,12/7/1959,,+41 56 246 12 76,,+41 79 360 34 05,passiv,,,FALSE,andrea.tomasi@bluewin.ch
+1983,Wendelspiess,Manuela,,Bergstrasse 36,5430,Wettingen,9/8/1974,,,,+41 79 199 26 27,passiv,,,FALSE,msfritschi@gmail.com
+1987,Gysin,Martha,,Weihermattweg 167,4494,Oltingen,11/5/1950,Oltingen,+41 61 991 05 84,,+41 79 487 66 13,passiv,,,FALSE,martha.gysin@bluewin.ch
+1988,Gysin,Hans,,,,,,,,,,passiv,,,FALSE,
+1993,Blösch,Sina,,Kellenäckerstrasse 36,5301,Siggenthal Station,21/9/1983,Laufenburg,,,+41 76 418 12 16,passiv,,"Hund wurde trächtig, hatte auch OP. Danach nicht mehr gekommen",FALSE,sina.bloesch@outlook.de
+1994,Maier,Monika,,Kellenäckerstrasse 3,5303,Würenlingen,12/2/1980,Herznach,,,+41 79 650 23 73,passiv,,"gleichzeitig mit Sina Blösch aufgehört. Ihr Hund wurde leider hier gebissen, war aber für sie kein Problem",FALSE,monikabotta@gmx.ch
+1995,Moser,Karin,,Landstrasse 162,5430,Wettingen,3/8/1968,Schaffhausen,,,+41 76 500 26 40,passiv,SO-PL,,FALSE,karin3868@hotmail.com
+1996,Bachmann,Erika,,Aegerten 4a,8494,Bauma,25/11/1955,Sternenberg,,,+41 79 264 71 62,passiv,,,FALSE,bachmann.e@icloud.com
+1999,Kaire,Armando,,Ziegelhofstrasse 7a,5242,Lupfig,10/12/1989,,,,+41 76 467 05 96,passiv,,,FALSE,armando_89kaire@yahoo.de
+2000,Arndt (gestorben),Rita,,Weidhofstrasse  9,6044,Udligenswil,27/6/1967,Meggen,041 41 370 03 03,,041 79 291 16 82,passiv,,"Vermittelt von Angela Steimer- Ihr Fridolin ist der Bruder von Fender
+
+Hat nach vielen erfolglosen Versuchen, den Hund in den Griff zu kriegen, ihn weggegeben",FALSE,rita.arndt@cozza.ch
+2001,Campacci,Valentino,,Chileweg 6,5413,Birmenstorf AG,18/5/1991,,,,+4176 516 45 00,passiv,,,FALSE,valentino.campacci@gmail.com
+2002,Bachmann,Felix,,Aegerten 4a,8494,Bauma,,,,,,passiv,,,FALSE,
+2004,Hauenstein,Jasmin,,Reinerstrasse 5,5235,Rüfenach AG,29/2/1984,,,,+4179 128 85 64,passiv,,keine Zeit mehr,FALSE,jasmin_hauenstein@hotmail.ch
+2007,Marini,Sandra,,,,,,,,,,passiv,,"Hund hat schwierig auf Schlauch reagiert im FAS, danach nichts mehr gehört.",FALSE,
+2008,Trüssel,Christoph,,,,,,,,,,passiv,,,FALSE,
+2010,Steger,Beni,,,,,,,,,,passiv,,,FALSE,
+2259,Permnit,Willi,,Tüftelstrasse 20,5322,Koblenz,14/7/1969,Deutschland,,,+41 76 369 05 90,passiv,,,FALSE,willy.schellhorn@hotmail.com
+2260,Bruns,Merle,,Brunnenweg 4,5330,Bad Zurzach,15/7/1984,,+49 151 425 44 182,,,passiv,,"Nach Privatstunden und Kursstunden und Freiappell, bei welchen sie immer einen zufriedenen EIndruck gemacht hatten, haben sie plötzlich abgesagt. Auf Nachfrage weshalb, hiess es die Tierärztin sei auch Hundetrainerin und unsere Methoden passen nicht zu ihnen. Mit dem Schlauch arbeiten gar nicht. Sie wollen nun die Methode der Tierärztin ausprobieren",FALSE,brunsmerle@aol.de
+2289,Knecht,Martina,,Gontenweg 5,5316,Leuggern,13/1/1979,Mülligen AG,+41 56 245 44 14,,+41 76 537 26 99,passiv,,,FALSE,knechtmartina@hispeed.ch
+1835,Brumann,Brigitta,,Rainächer 11,5332,Rekingen AG,8/2/1952,Tegerfelden AG,+41 56 249 03 09,,+41 78 713 23 12,passiv,,,FALSE,brigitta.brumann@bluewin.ch
+1837,Sutter,Manuela,,Ettenriedweg 14,5316,Gippingen,15/6/1985,Schaffhausen,+41 56 245 03 23,,+41 79 377 04 73,passiv,,Welpenkurs ohne Angabe von Gründen abgebrochen,FALSE,m.sutter-frattini@bluewin.ch
+1838,Hauenstein,Monika,,Riedhof,5306,Tegerfelden,15/4/1957,Tegerfelden,+41 56 245 45 34,,+41 79 410 47 05,passiv,,,FALSE,m.hauenstein@bluewin.ch
+1840,Walter,Sabrina,,Baslerstrasse  34,5330,Bad Zurzach,16/12/1973,Kaisten,,,+41 79 403 31 90,passiv,,,FALSE,sabrina.wilson@bluewin.ch
+1841,Ammann,Ellen,,Landstrasse 238,5416,Kirchdorf AG,28/11/1949,Boswil,+41 56 443 02 75,,+41 79 505 50 60,passiv,,,FALSE,el.ammann@gmx.net
+1842,Kinir,Siran,,Mülimatt 384,5075,Hornussen,27/4/1968,Frick,+41 62 871 95 15,+41 79 211 68 42,,passiv,,,FALSE,siran.k@bluewin.ch
+1844,Binkert,Sandra,,Panoramaweg 514,5324,Full-Reuenthal,27/6/1983,Schwaderloch,+41 562 46 00 25,,+41 792 89 37 52,passiv,,,FALSE,sandra.binkert@outlook.com
+1848,Freiburghaus,Gunilla,,Winkelstrasse 16,5236,Remigen,31/3/1966,Neuenegg,+41 56 284 0340,,+41 79 269 29 27,passiv,,,FALSE,gu.freiburghaus@bluewin.ch
+1850,Eichenberger,Sheila,,Hofmattstrasse 18,5712,Beinwil am See,9/9/1988,,,,+41 792 18 31 57,passiv,,,FALSE,info@joker-design.ch
+1852,Rohrbach,Corinne,,Margrethenweg 26,5314,Kleindöttingen,15/7/1994,St. Stephan,,,,passiv,,nach Anmeldung zum Theoriekurs behauptet sie hätte nicht angemeldet,FALSE,c.rohrbach@hotmail.ch
+1867,Vivona,Salvo,,,,,,,,,,passiv,Begleitp. FAS,Begleitperson FAS,FALSE,
+1853,Braccini,Olivia,,Chratzstrasse 29,5426,Lengnau,19/1/1993,Bülach ZH,,,+41 79 514 04 49,passiv,,,FALSE,olivia.braccini@gmx.ch
+1856,Kissling,Irene,,Landstrasse 10,5300,Turgi,9/3/1957,Wolfwil,+41 56 534 82 95,,+41 79 294 44 07,passiv,,,FALSE,irenekissling@hispeed.ch
+1857,Otto,Nadja,,Breitensteinstrasse 25,5417,Untersiggenthal,31/1/1979,Untersiggenthal,,,079 784 52 79,passiv,,,FALSE,otto.nadja79@gmail.com
+1858,Dolfi,Vera,,Trottenweg 2,5323,Rietheim,17/8/1991,Bregagila GR,,,+41 79 797 95 00,passiv,,,FALSE,dolfi.vera@gmail.com
+1860,Wyder,Ruedi,,Neugrütstrasse 47,5332,Rekingen AG,11/2/1954,Riggisberg BE,,,+41 79 774 38 98,passiv,,,FALSE,ruedi.wyder@gmx.net
+1861,Finsterwald,Heidi,,Dorfstrasse 19,5233,Stilli,4/7/1953,Stilli,,,+41 79 948 25 33,passiv,,,FALSE,h.fiwa@bluewin.ch
+1869,Nothaft,Felix,,,,,,,,,,passiv,Begleitp. FAS,Begleitperson FAS,FALSE,
+1870,Nagyova,Zuzana,,Fliederweg 3,5314,Kleindöttingen,5/1/1981,Slowakei,+41 79 486 08 72,,+41 78 712 08 36,passiv,,,FALSE,zuzan.nagy@gmx.ch
+1873,Ayfer,Rossella,,Rebbergstrasse 25 a,5417,Untersiggenthal,4/7/1977,Gebenstorf,+41 56 245 84 83,,+41 79 509 56 82,passiv,,,FALSE,
+1874,Kural,Günes,,Zürcherstrasse 20,5210,Windisch,1/10/1988,Chur,+41 77 400 40 00,,+41 77 400 40 00,passiv,FAS,,FALSE,g.kural@hotmail.ch
+1875,Baycan-Keller,Ruth,,Bahnhofstrasse 91 A,4313,Möhlin,7/12/1955,Gebenstorf,+41 61 851 01 20,,,passiv,,hat Schule gewechselt,FALSE,ruth.baycan@bluewin.ch
+1877,Streuli,Bruno,,Ringstrasse 9,5116,Schinznach Bad,29/11/1955,Herisau AR,+41 56 441 70 80,,+41 79 301 41 54,passiv,,,FALSE,b.streuli@yetnet.ch
+1878,Grossi,Enza,,Pestalozzistrasse 72,5242,Birr,9/5/1962,Italien,,+41 56 444 91 00,+41 78 814 11 06,passiv,,,FALSE,
+1882,Gebistorf,Linda,,Poststrasse 113,8957,Spreitenbach,27/12/1991,Luzern,,,+41 78 717 82 72,passiv,,,FALSE,lindagebistorf@yahoo.de
+1884,Exer,Daniela,,Bückli 2,5304,Endingen,29/5/1978,Seedorf (UR),+41 56 284 06 32,,+41 79 317 55 78,passiv,,keine Zeit mehr. Andere Ambitionen,FALSE,daniela.exer@bluewin.ch
+1889,Wehinger,Manuela,,Parkstrasse  29,5313,Klingnau,7/4/1965,Niederlenz,,,+41 76 448 83 01,passiv,,,FALSE,angliker65@gmail.com
+1891,Lüthi,Marcello,,Stauseestrasse 34,5316,Gippingen,15/2/1963,Leuggern,+41 56 245 62 62,,+41 79 298 19 77,passiv,,"sind ohne Meldung einfach weggeblieben, obwohl sie immer ganz begeistert waren",FALSE,physio.faude@bluewin.ch
+1892,Brechbühl,Gabriela,,Gutweg 8,5420,Ehrendingen,11/4/1965,Trubschachen BE,+41 56 288 38 48,,+41 79 431 99 28,passiv,,,FALSE,g.brechbuehl@bluewin.ch
+1895,Chen,Lichuan,,Steigweg 20,5303,Würenlingen,25/10/1974,Taiwan,+41 56 534 96 53,,+41 79 927 11 37,passiv,,,FALSE,fraususanchen@gmail.com
+1896,Oeschger,Sarah,,Chileweg 4,5272,Gansingen,4/8/1994,,,,+41 79 449 12 33,passiv,,,FALSE,sarahlita_94@hotmail.com
+1897,Meier,Claudine,,Kirschenweg 1,5507,Mellingen,14/1/1949,Obersiggenthal,,,+41 79 120 47 79,passiv,So-Pl / FAS,,FALSE,osmeier@bluewin.ch
+1899,Pennacchio,Gaetano,,Rosenweg 3,5106,Veltheim AG,28/5/1947,,+41 56 443 01 59,,+41 79 377 84 70,passiv,So-Pl,,FALSE,maria@pennacchio.ch
+1902,Baldinger,Maria,,Steigweg 40,5303,Würenlingen,26/11/1945,Rekingen AG,+41 56 281 37 66,,+41 79 676 11 71,passiv,,,FALSE,bawama@bluewin.ch
+1903,Ernst,Thomas,,Dorfstrasse 21,5233,Stilli,27/5/1968,Zürich,,,+41 79 677 61 40,passiv,,,FALSE,thomas@wunschraeume.ch
+1904,Caruso,Nicole,,Dahlienstrasse 2,5200,Brugg AG,,,,,,passiv,So-Pl,,FALSE,ncaruso@gmx.ch
+1905,Diament,Sandra,,Feldstrasse  11 C,5417,Untersiggenthal,20/10/1958,Basel,+4156 282 10 33,,+4176 518 03 73,passiv,,,FALSE,Sandia158@gmail.com
+1906,Pelagatti,Maria,,Erligasse  10,5106,Veltheim AG,19/7/1967,Veltheim,+4156 443 36 05,,+4176 370 36 05,passiv,,,FALSE,maria.pelagatti@gmail.com
+1907,Woll,Claudia,,Siedlung Stein 10,5312,Döttingen,5/3/1970,Würenlingen,+4156 245 81 19,,,passiv,,,FALSE,post@landseer-vom-palmenstein.ch
+1908,Topp,Nelly,,Trottenstr. 56,5276,Wil AG,18/11/1951,Affoltern a.A.,041 758 00 23,,079 791 34 80,passiv,,Wegen Krankheit den Hund weggegeben,FALSE,nellytopp@bluewin.ch
+1909,Topp,Wolfgang,,Trottenstr. 56,5276,Wil AG,21/5/1940,Affoltern a.A.,041 758 00 23,,079 791 34 81,passiv,,,FALSE,nellytopp@bluewin.ch
+1913,Carusone,Immacolata,,Wasenstrasse 6,5312,Döttingen,9/9/1992,Italien,,,+41 79 462 14 75,passiv,,,FALSE,t.carusone@hotmail.com
+1915,Buccianelli,Santina,,Enzianweg 15,5314,Kleindöttingen,10/10/1975,Italien,,,+41 76 534 86 01,passiv,,,FALSE,s.buccianelli@hotmail.com
+1917,Pietrzyk,Marek,,Feldstrasse,5312,Döttingen,22/11/1977,,,,+41 78 879 84 04,passiv,,,FALSE,maek50@gmail.com
+1919,Biland,Marcel,,Föhrenweg 7,5235,Rüfenach AG,5/3/1955,Birmenstorf,,,+41 76 362 61 20,passiv,,,FALSE,marcel.biland@gmail.com
+1921,Betschmann,Oskar,,Feldstrasse 11c,5417,Untersiggenthal,15/1/1964,Siglistorf,+41 56 282 10 33,,+41 79 282 10 33,passiv,,,FALSE,o.betschmann@bluewin.ch
+1923,Müller,Daniela,,Obere Trottmatt 191,5274,Mettau,19/7/1961,Wil AG,,,+41 79 366 50 33,passiv,,,FALSE,daniela.mueller61@gmail.com
+1924,Jäger,Fanny,,Haselmatte 12c,6210,Sursee,20/7/1989,,,+41 62 758 11 55,+41 79 745 59 47,passiv,,"Hatte sich zum Freiappell angemeldet und wieder abgesagt, da es zeitlich nicht gepasst habe. Danach nichts mehr gehört",FALSE,fanny.jaeger@me.com
+1926,Surber,Simone,,Stillihusstrasse 15,5233,Stilli,25/12/1987,,,,+41 76 344 69 16,passiv,,geht zu Dogrelax,FALSE,simonesurber@gmx.ch
+1928,Heinrich,Viola,,Hardtweg 18,79790,Küssaberg,24/6/1957,Küssaberg,+49 774 16 61 98,,,passiv,,,FALSE,fh20@gmx.de
+1929,Ernst,Monika,,Dorfstrasse 21,5233,Stilli,1/8/1971,Neuenhof / Zürich,,,+41 79 257 77 11,passiv,,keine Zeit mehr,FALSE,monika@wunschraeume.ch
+1931,Conte,Rosaria,,Alemannenweg 30,5234,Villigen,11/10/1967,Mülligen,+41 56 442 23 74,,+41 76 411 23 74,passiv,,,FALSE,info@insegno.ch
+1932,Stefani,Margrit,,Wiegehof  716,5312,Döttingen,1/12/1947,,+41 56 245 40 94,,,passiv,,,FALSE,nicole.stefani@gmx.ch
+1934,Caruso,Noëmi,,Rosenweg 2,5107,Schinznach Dorf,24/7/1992,,,,+41 79 815 65 05,passiv,,,FALSE,noemicaruso@gmx.ch
+1935,Schwegler,Béatrice,,Grottenweg 24,5316,Leuggern,5/4/1968,Wolhusen,+41 56 245 61 05,,+41 79 245 61 05,passiv,,Ferienhund,FALSE,beatrice.schwegler@hotmail.com
+1937,Egloff,Elvira,,Kirchmattstrasse 9,5064,Wittnau,25/4/1975,Niederrohrdorf,+41 56 634 57 57,,+41 79 711 74 85,passiv,,,FALSE,elvira.egloff@bluewin.ch
+1938,Frey,Patrick,,Burghaldenweg  56,5313,Klingnau,,,,,+41 79 810 08 36,passiv,,"Privatstunde vor Ort
+Di. 01. Nov. 2016
+11.00
+
+Zwei Hunde streiten dauernd.",FALSE,
+1940,Premier,Christine,,Grossäcker 1,5334,Böbikon,24/2/1960,Lengnau AG,+41 56 249 24 70,,+41 79 757 20 58,passiv,,,FALSE,g.premier@bluewin.ch
+1942,D`Ercole,Ingrid Doris,,Rebberg 20,5306,Tegerfelden,26/2/1963,Leonberg D,+43 535 18 22,,+41 79 194 44 27,passiv,,,FALSE,ingrid.dercole@hispeed.ch
+1943,Kiese,Lyn,,Wasenstrasse 2,5312,Döttingen,21/4/1989,Winterthur,,,+41 79 533 92 53,passiv,,,FALSE,l.kiese@hotmail.com
+1946,Meier,Jeanette,,Hengelweg 26,5303,Würenlingen,23/9/1955,Kirchlindach BE,+41 56 245 13 89,,+41 79 390 59 59,passiv,,,FALSE,meier_mj@hotmail.ch
+1948,Giger,Eddy,,Flaschenbach,5028,Ueken,25/6/1965,Kaltbrunn SG,+41 62 871 43 10,,+41 79 957 27 36,passiv,,,FALSE,d.shell@bluewin.ch
+1949,Vetter,Janina,,Fliederweg 17,5074,Eiken,18/12/1993,Herznach,,,+41 79 516 29 94,passiv,,,FALSE,janinavetter@gmx.ch
+1950,Hertel,Steve,,Brühlstrasse 17,5304,Endingen,26/6/1990,,,,+41 78 943 70 05,passiv,,,FALSE,steve_hertel@hotmail.com
+1953,Gaudin,Jeannette,,Rosenstrasse 5,5223,Riniken,20/5/1957,Madiswil,+41 56 442 30 72,,+41 79 734 30 72,passiv,,,FALSE,bjgaudin@hotmail.com
+1956,Kolmorgen,Ruth,,Badstrasse 147,5323,Rietheim,,,+41 56 249 06 80,,+41 79 518 44 77,passiv,,hat nicht gepasst,FALSE,ruth.kolmorgen@gmail.com
+1957,Bruno,Gianluca,,Hauptstrasse 63,5037,Muhen,25/10/1990,Italien,+41 79 934 78 81,,+41 79 934 78 81,passiv,,,FALSE,lubruno_10@hotmail.com
+1958,Langenegger,Melanie,,Herrengasse 5,5082,Kaisten,7/2/1995,,,,,passiv,,hat nicht gepasst,FALSE,mila.jegge@hotmail.com
+1961,Kalt-Rohner,Daniela,,Hauptstrasse 63,5463,Wislikofen Mellstorf,30/5/1979,,+41 56 247 03 78,,+41 79 261 65 71,passiv,,,FALSE,danielakalt@greenmail.ch
+1963,Knecht,Silvia,,Bergstr. 116,5274,Mettau,28/10/1962,Schwaderloch,+41 62 875 18 80,,+41 79 412 64 67,passiv,,,FALSE,s-h.knecht@bluewin.ch
+2110,Vögeli,Norma,,Gränicherweg 9,5502,Hunzenschwil,11/7/1987,Gächlingen,,,+41 78 664 00 99,passiv,FAS,,FALSE,voegelinorma@gmail.com
+2113,Rüedi,Doris,,Bergstrasse 2,8955,Oetwil an der Limmat,6/4/1947,,,,+41 79 678 28 18,passiv,Fas,,FALSE,doris.rueedi@bluewin.ch
+2115,Haas,Gabrielle,,Höhenweg 7,5426,Lengnau AG,21/7/1950,,+41 56 241 28 68,,,passiv,FAS,,FALSE,haas2000@bluewin.ch
+2116,Gerspach,Kathrin,,Dorfstraße 8,79736,Rickenbach,3/12/1981,Rickenbach-Hottingen,+49 77 65 /91 82 18,,+49 171 934 27 86,passiv,FAS,,FALSE,oliver.rued@web.de
+2117,Ponti,Amanda,,Rugghölzli  15  d,5453,Remetschwil,23/11/1964,Fislisbach&Gebenstorf,+41 56 493 33 48,,+41 76 527 23 88,passiv,,"01.05.2018 rifo: Privatstunde:
+Dienstag, 01. Mai 2018
+14.30 Uhr
+Bei Kurs nicht mehr erschienen",FALSE,amanda.ponti64@gmail.com
+2120,Wyler,Martin,,Staldenstrasse 127,5077,Elfingen,18/7/1959,Gerzensee,,,+41 76 427 01 67,passiv,FAS,,FALSE,wyler5077@bluewin.ch
+2122,Rüd,Oliver,,Dorfstrasse 8,79736,Rickenbach,,,,,+49 171 934 27 86,passiv,FAS,,FALSE,oliver.rued@web.de
+2123,Mangili,Andreas,,Oberfeld 32,5306,Tegerfelden,,,,,,passiv,FAS,,FALSE,
+2127,Schmid,Yvo,,,,,,,,,,passiv,FAS,,FALSE,
+2132,Teixeira Carvalho,Inês,,Steinbruchweg 4,5303,Würenlingen,8/10/1990,Portugal,,,+41 762 49 29 76,passiv,,,FALSE,inestcarvalho@live.com.pt
+2133,Kobler,Ivana,,Landstrasse 14 b,5322,Koblenz,24/8/1972,Rüthi SG / Hüttikon ZH,,,+41 79 404 14 36,passiv,,,FALSE,ivanakobler@gmail.com
+2134,Sidler,Chantal,,Hauptstrasse 49,5330,Bad Zurzach,17/1/1991,Schwyz,,,+41 78 921 62 06,passiv,,,FALSE,chantisidler@gmail.com
+2135,Balog,Andrea,,Panoramastrasse 16,5417,Untersiggenthal,4/12/1964,Untersiggenthal,,,+41 76 405 15 92,passiv,,"hat nie geübt, konnte sich vermutlich nicht mit Philosophie anfreunden. Ist weggegangen",FALSE,abalog@hispeed.ch
+2136,Pevic,Karin,,Austrasse 6,5312,Döttingen,11/9/1953,,+41 56 245 02 70,,+41 76 580 11 09,passiv,,,FALSE,karinhanec@hotmail.com
+2140,Wyss,Emil,,Römerhof 6,5416,Kirchdorf AG,21/2/1960,Triengen,+41 56 282 16 16,,,passiv,SOPL,,FALSE,
+2142,Haller,Doris,,Staldenstrasse 15,5412,Gebenstorf,6/4/1962,,,,+41 79 382 11 20,passiv,FAS,,FALSE,privat@dorishaller.ch
+2143,Ferro,Laura,,Stauseestrasse 17,5316,Leuggern,9/4/1985,,,,+41 78 730 53 62,passiv,,,FALSE,laura85.ferro@gmail.com
+2145,Palla,Heidi,,Rosenweg 10,5314,Kleindöttingen,27/4/1972,,+41 78 800 80 17,,+41 78 800 80 17,passiv,,,FALSE,heidi_palla@hotmail.com
+1966,Eichler,Jeani,,Vogelrüti 116 b,5443,Niederrohrdorf,16/5/1956,Oberrohrdorf,+41 56 496 43 49,,+41 79 285 60 43,passiv,,,FALSE,jeanieichler@gmail.com
+1968,Stumm,Alice,,Unterer Leeweg 19,5236,Remigen,4/9/1994,,+41 79 812 12 33,,+41 79 812 12 33,passiv,,Hund wurde überfahren,FALSE,alice.stumm@gmail.com
+1971,Mathieu,Rebecca,,Alemannenweg 34,5234,Villigen,30/3/1984,Lungern,,,+41 79 532 39 59,passiv,,,FALSE,mathieurebecca@hotmail.com
+1972,Huwiler,Viola,,Römergut 20,5234,Villigen,28/12/1985,Fischbach-Gösliken,,,+41 76 531 05 63,passiv,,,FALSE,viola.huwiler@hotmail.com
+2011,Huwiler,Marcel,,,,,,,,,,passiv,,,FALSE,
+2012,Obrist,Rebecca,,Reinerstrasse 140,5235,Rüfenach AG,8/2/1981,Rüfenacht,,,+4179 540 73 30,passiv,,keine Zeit mehr,FALSE,rebecca.obrist@gmx.ch
+2014,Kania,André,,Parkweg 33,5314,Kleindöttingen,19/7/1963,Frankfurt a.d. Oder,+41 56 245 07 32,,+41 76 587 07 63,passiv,,einfach nicht mehr gekommen,FALSE,monika.rigassi@bluemail.ch
+2017,Keller,Sabine,,Hombergstrasse 20,5415,Nussbaumen AG,20/9/1964,Baden,+41 56 282 27 27,,+41 79 372 14 14,passiv,,"12.01.2020 rifo: (Nov. 2019) hat Privatstunde gemacht bei uns, da sie die Erziehung hat schleifen lassen
+
+Hat trotz Warteabmachung sich in einer andern Hundeschule angemeldet und bei uns abgemeldet",FALSE,sabine.keller@bluemail.ch
+2147,Keller,Andrea,,Mülligerstrasse 2,5413,Birmenstorf AG,16/7/1983,,,,+4176 387 07 53,passiv,FAS,,FALSE,anotter@gmx.ch
+2149,Bertschi,Ruth,,Bachstrasse 7,5200,Brugg AG,15/10/1963,,+41 56 442 12 18,,+41 79 217 30 27,passiv,,,FALSE,ruth.bertschi@hispeed.ch
+2150,Serrnano-Alcazar,Pablo,,Neubergstrasse 71,5330,Bad Zurzach,20/11/1985,Spanien,,,+41 78 754 14 03,passiv,FAS,,FALSE,nati248@hotmail.com
+2152,Schneider,Irma,,Kellenäckerstrasse 4,5303,Würenlingen,8/1/1950,Würenlingen,,,+41 79 410 10 65,passiv,FAS,,FALSE,schneider.irma@icloud.com
+2153,Bareiss,Daniel,,Rebmoosweg 41,5200,Brugg AG,6/5/1960,,,,+41 79 227 97 06,passiv,FAS,,FALSE,daniel.bareiss@hispeed.ch
+2154,Beek,Brigitte,,Fahrstrasse 15,5314,Kleindöttingen,20/12/2018,,+41 56 223 12 58,,,passiv,FAS,,FALSE,brigittebeek@hispeed.ch
+2232,Gruchel,Lars,,Lärchenweg 1 a,5312,Döttingen,1/7/1972,Deutschland,+41 56 535 63 77,,+41 78 400 36 46,passiv,,hat aufgehört weil er zuwenig Zeit zum üben hat,FALSE,l.gruchel@icloud.com
+2233,Huber,Liselotte,,Ländliweg 5,5436,Würenlos,14/7/1953,Oberkirch LU,+41 79 320 35 69,,+41 79 320 35 69,passiv,FAS,,FALSE,huber.liselotte@bluewin.ch
+2236,Zumsteg,Roger,,Galten 12,5272,Gansingen,,,,,,passiv,FAS,,FALSE,
+2268,Karakaya,Mesut,,Chuntestrasse 50,5312,Döttingen,2/6/1978,Türkei,,,+41 78 956 80 01,passiv,,haben Hund weggegeben mangels Zeit,FALSE,arzuoecal@gmail.com
+2338,Utzinger,Marietta,,Dorfstrasse 10,5277,Hottwil,18/6/1955,Niederweningen,,,+41 76 586 02 86,passiv,,kommt nicht mehr,FALSE,mariettautzinger.55@gmail.com
+2352,Stone,Lisa,,Unterdorfstrasse  43,,Birr,15/3/1967,,,,+4179/ 611 12 23,passiv,,macht nicht weiter. kommt mit Philosophie nicht zurecht,FALSE,lisa.stone@hispeed.ch
+2022,Hafner,Cornelia,,Dorfstrasse 227,5462,Siglistorf,29/10/1984,,,,+41 79 937 43 21,passiv,,,FALSE,corneliahafner@gmx.ch
+2023,Hartmann,Tsui hui,,Talbachweg 11,5107,Schinznach Dorf,5/7/1973,,+41 56 443 03 48,,,passiv,,nicht mehr gekommen,FALSE,Stella_teng@yahoo.com
+2024,Kaufmann,Nathalie,,Im Winkel 7,5332,Rekingen AG,18/1/1995,Rekingen,+41 56 249 36 49,+41 76 675 59 16,,passiv,,,FALSE,nathaliekaufmann95@hotmail.com
+2026,Baldinger,Silvia,,Lättenweg 5,5332,Rekingen AG,28/3/1964,Rekingen AG/ Wangen SZ,+41 56 249 36 16,,+41 79 385 31 12,passiv,,Ist sehr zufrieden mit Gelerntem und hat sich abgemeldet,FALSE,info@atembewusstsein.ch
+2028,Durante,Mary,,Wilermattenstrasse 5,5300,Turgi,11/1/1972,Italien,+41 56 223 14 06,,+41 79 319 21 61,passiv,,hat aufgehört,FALSE,donut123@hispeed.ch
+2029,Zimmermann,Denise,,Röhrliberg 30,6330,Cham,26/10/1981,Weggis,,,+41 78 646 91 67,passiv,,"22.11.2017 rifo: Hat danach wieder angemeldet und FAS besucht
+
+hat die Anmeldung wieder storniert ohne Angabe von Grund",FALSE,zimmermann_de@bluewin.ch
+2031,Fehr,Katharina,,Klosterweg 33,5313,Klingnau,22/3/2003,,+4162/ 54608 25,,,passiv,,"Haben dem Vater nahegelegt, einen Platz für den Hund zu suchen, da ihn niemand mehr will. Seither nicht mehr erschienen",FALSE,p.fehr@bluewin.ch
+2032,Wengi,Annamarie,,Unterdorf 40,5324,Full-Reuenthal,25/4/1959,,+41 56 246 15 51,,,passiv,,,FALSE,annamarie.wengi@sunrise.ch
+2035,Basler,Jennifer,,Seidenhofweg  2,8914,Aeugstertal,26/4/1991,Küttigen,,,+41 79 798 59 22,passiv,,ist weggezogen,FALSE,j.basler08@gmail.com
+2036,van der Meer,Gerrit,,Steigweg 30,5303,Würenlingen,22/5/1972,Langnau im Emmental BE,056 470 17 69,,078 910 18 10,passiv,,,FALSE,chaerrit@gmail.com
+2038,Ludin,Jaqueline,,Parkstrasse,5313,Klingnau,20/12/1975,,+41 56 245 33 85,,,passiv,,,FALSE,jrauer@gmx.ch
+2056,Maier,Manuela,,Waldhofweg  9,5034,Suhr,19/9/1976,,,,+4176 383 09 70,passiv,,,FALSE,manuela-maier@bluewin.ch
+2058,Tschofen,Rahel,,Rainisbergstrasse 15,5304,Endingen,7/8/1986,,,,+41 796 85 41 70,passiv,,,FALSE,r.tschofen@bluewin.ch
+2059,Suter,Astrid,,Sonnenstrasse 10,5415,Nussbaumen AG,7/12/1964,,+4156 282 37 84,,+4179 373 45 87,passiv,,,FALSE,suterastrid@bluewin.ch
+2061,Killer,Pirkko,,Sandrain 3,5412,Gebenstorf,30/8/1945,Turgi,+41 56 534 92 95,,+41 78 659 45 00,passiv,,,FALSE,pirkko.killer@gmail.com
+2100,Mueller,Cornelia,,Parkstrasse 11,5313,Klingnau,20/4/1969,Hundwil,+41 56 245 45 47,,+41 76 852 13 06,passiv,,"möchte gerne mit Tochter (14) kommen, da grad schwierig mit ihr",FALSE,david-fischer@bluewin.ch
+2105,Bissegger,Marcel,,Hof 27,5612,Villmergen,13/11/1967,Bussnang,+41 79 681 71 71,,+41 79 681 71 71,passiv,,,FALSE,ma_bissegger@sunrise.ch
+2108,Fouché,Retha,,Kreuzweg 18,5234,Villigen,8/10/1970,Südafrika,+41 56 535 04 10,,+41 76 783 94 97,passiv,,hat auf unser Mail bezüglich Kursbeginn nicht geantwortet,FALSE,retha.fouche@yahoo.com

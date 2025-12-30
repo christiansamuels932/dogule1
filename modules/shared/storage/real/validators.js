@@ -116,6 +116,7 @@ export function validateHund(record) {
   assertOptionalString(record.rufname, "hunde.rufname");
   assertOptionalString(record.rasse, "hunde.rasse");
   assertOptionalString(record.geschlecht, "hunde.geschlecht");
+  assertOptionalString(record.status, "hunde.status");
   assertOptionalString(record.geburtsdatum, "hunde.geburtsdatum");
   assertOptionalNumber(record.gewichtKg, "hunde.gewichtKg");
   assertOptionalNumber(record.groesseCm, "hunde.groesseCm");

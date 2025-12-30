@@ -90,6 +90,7 @@ function normalizeHund(data = {}, existing) {
     rufname: data.rufname ?? existing?.rufname ?? "",
     rasse: data.rasse ?? existing?.rasse ?? "",
     geschlecht: data.geschlecht ?? existing?.geschlecht ?? "",
+    status: data.status ?? existing?.status ?? "",
     geburtsdatum: data.geburtsdatum ?? existing?.geburtsdatum ?? "",
     gewichtKg: data.gewichtKg ?? existing?.gewichtKg ?? null,
     groesseCm: data.groesseCm ?? existing?.groesseCm ?? null,

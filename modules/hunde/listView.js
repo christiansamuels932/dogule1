@@ -5,6 +5,7 @@ import {
   createNotice,
   createSectionHeader,
   createButton,
+  createFormRow,
 } from "../shared/components/components.js";
 import { listHunde } from "../shared/api/hunde.js";
 import { injectHundToast } from "./formView.js";
@@ -101,6 +102,25 @@ async function populateHundeTable(cardElement) {
       key: "name",
       direction: "asc",
     };
+    const searchState = {
+      query: "",
+    };
+    const searchRow = createFormRow({
+      id: "hunde-search",
+      label: "Suche",
+      placeholder: "Name, Rasse, Geschlecht ...",
+      value: "",
+      required: false,
+    });
+    const searchInput = searchRow.querySelector("input");
+    if (searchInput) {
+      searchInput.type = "search";
+      searchInput.addEventListener("input", (event) => {
+        searchState.query = event.target.value || "";
+        renderRows();
+      });
+    }
+    body.appendChild(searchRow);
     const tableWrapper = document.createElement("div");
     tableWrapper.className = "hunde-list-scroll";
     const table = document.createElement("table");
@@ -110,6 +130,12 @@ async function populateHundeTable(cardElement) {
     const tbody = document.createElement("tbody");
 
     const columns = [
+      {
+        key: "status",
+        label: "Status",
+        value: (hund) => hund.status || "–",
+        sortValue: (hund) => (hund.status || "").toLowerCase(),
+      },
       {
         key: "name",
         label: "Name",
@@ -137,6 +163,28 @@ async function populateHundeTable(cardElement) {
       },
     ];
 
+    function normalizeSearch(value) {
+      return String(value || "")
+        .trim()
+        .toLowerCase();
+    }
+
+    function matchesSearch(hund, query) {
+      if (!query) return true;
+      const haystack = [
+        hund.code,
+        hund.name,
+        hund.rufname,
+        hund.rasse,
+        hund.geschlecht,
+        hund.geburtsdatum,
+      ]
+        .filter(Boolean)
+        .map(normalizeSearch)
+        .join(" ");
+      return haystack.includes(query);
+    }
+
     function updateHeaderState() {
       headerRow.querySelectorAll("th").forEach((th) => {
         const key = th.dataset.sortKey;
@@ -157,7 +205,20 @@ async function populateHundeTable(cardElement) {
 
     function renderRows() {
       tbody.innerHTML = "";
-      const rows = hunde
+      const query = normalizeSearch(searchState.query);
+      const filtered = hunde.filter((hund) => matchesSearch(hund, query));
+      if (!filtered.length) {
+        const row = document.createElement("tr");
+        row.className = "hunde-list-row";
+        const cell = document.createElement("td");
+        cell.colSpan = columns.length;
+        cell.textContent = "Keine Treffer.";
+        row.appendChild(cell);
+        tbody.appendChild(row);
+        return;
+      }
+
+      const rows = filtered
         .map((hund, index) => ({ hund, index }))
         .sort((a, b) => {
           const column = columns.find((col) => col.key === sortState.key);

@@ -4,6 +4,7 @@ import { StorageError, STORAGE_ERROR_CODES } from "./errors.js";
 import { uuidv7 } from "../utils/uuidv7.js";
 
 const DEFAULT_POOL_LIMIT = 10;
+const DEFAULT_SOCKET_PATH = "/home/ran/codex/.local/mariadb/mariadb.sock";
 
 function toNumber(value, fallback = 0) {
   const parsed = Number(value);
@@ -52,11 +53,12 @@ function nowIso() {
 
 function resolveConfig(options = {}) {
   const env = options.env || process.env;
-  const socketPath = options.socketPath || env.DOGULE1_MARIADB_SOCKET || undefined;
+  const socketPath = options.socketPath || env.DOGULE1_MARIADB_SOCKET || DEFAULT_SOCKET_PATH;
+  const defaultUser = env.DOGULE1_MARIADB_USER || env.USER || env.LOGNAME || "root";
   const config = {
     host: options.host || env.DOGULE1_MARIADB_HOST || "127.0.0.1",
     port: Number(options.port || env.DOGULE1_MARIADB_PORT || 3307),
-    user: options.user || env.DOGULE1_MARIADB_USER || "root",
+    user: options.user || defaultUser,
     password: options.password || env.DOGULE1_MARIADB_PASSWORD || "",
     database: options.database || env.DOGULE1_MARIADB_DATABASE || "dogule1",
     connectionLimit: Number(
@@ -109,6 +111,7 @@ function mapHundRow(row) {
     rufname: row.rufname,
     rasse: row.rasse,
     geschlecht: row.geschlecht,
+    status: row.status,
     geburtsdatum: row.geburtsdatum,
     gewichtKg: row.gewicht_kg === null ? null : toNumber(row.gewicht_kg, null),
     groesseCm: row.groesse_cm === null ? null : toNumber(row.groesse_cm, null),
@@ -275,6 +278,7 @@ function normalizeHund(data = {}, existing) {
     rufname: toStringValue(data.rufname ?? existing?.rufname),
     rasse: toStringValue(data.rasse ?? existing?.rasse),
     geschlecht: toStringValue(data.geschlecht ?? existing?.geschlecht),
+    status: toStringValue(data.status ?? existing?.status),
     geburtsdatum: toStringValue(data.geburtsdatum ?? existing?.geburtsdatum),
     gewichtKg: data.gewichtKg ?? existing?.gewichtKg ?? null,
     groesseCm: data.groesseCm ?? existing?.groesseCm ?? null,
@@ -431,7 +435,11 @@ async function ensureExists(pool, table, id) {
 }
 
 export function createMariaDbAdapter(options = {}) {
-  const pool = options.pool || mariadb.createPool(resolveConfig(options));
+  const config = resolveConfig(options);
+  console.log(
+    `[mariadb] connect host=${config.host} port=${config.port} socket=${config.socketPath || "none"} user=${config.user} db=${config.database}`
+  );
+  const pool = options.pool || mariadb.createPool(config);
 
   async function listKunden() {
     try {
@@ -555,6 +563,7 @@ export function createMariaDbAdapter(options = {}) {
       record.rufname,
       record.rasse,
       record.geschlecht,
+      record.status,
       record.geburtsdatum,
       record.gewichtKg,
       record.groesseCm,
@@ -574,7 +583,7 @@ export function createMariaDbAdapter(options = {}) {
     ];
     try {
       await pool.query(
-        "INSERT INTO hunde (id, code, name, rufname, rasse, geschlecht, geburtsdatum, gewicht_kg, groesse_cm, kunden_id, trainingsziele, notizen, felltyp, kastriert, fellfarbe, groesse_typ, herkunft, chip_nummer, created_at, updated_at, schema_version, version) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO hunde (id, code, name, rufname, rasse, geschlecht, status, geburtsdatum, gewicht_kg, groesse_cm, kunden_id, trainingsziele, notizen, felltyp, kastriert, fellfarbe, groesse_typ, herkunft, chip_nummer, created_at, updated_at, schema_version, version) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         params
       );
       return record;
@@ -594,6 +603,7 @@ export function createMariaDbAdapter(options = {}) {
         record.rufname,
         record.rasse,
         record.geschlecht,
+        record.status,
         record.geburtsdatum,
         record.gewichtKg,
         record.groesseCm,
@@ -612,7 +622,7 @@ export function createMariaDbAdapter(options = {}) {
         record.id,
       ];
       await pool.query(
-        "UPDATE hunde SET code=?, name=?, rufname=?, rasse=?, geschlecht=?, geburtsdatum=?, gewicht_kg=?, groesse_cm=?, kunden_id=?, trainingsziele=?, notizen=?, felltyp=?, kastriert=?, fellfarbe=?, groesse_typ=?, herkunft=?, chip_nummer=?, updated_at=?, schema_version=?, version=? WHERE id=?",
+        "UPDATE hunde SET code=?, name=?, rufname=?, rasse=?, geschlecht=?, status=?, geburtsdatum=?, gewicht_kg=?, groesse_cm=?, kunden_id=?, trainingsziele=?, notizen=?, felltyp=?, kastriert=?, fellfarbe=?, groesse_typ=?, herkunft=?, chip_nummer=?, updated_at=?, schema_version=?, version=? WHERE id=?",
         params
       );
       return record;

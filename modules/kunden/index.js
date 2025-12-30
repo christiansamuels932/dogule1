@@ -221,9 +221,28 @@ async function renderList(root) {
     appendSharedEmptyState(listBody);
   } else {
     const sortState = {
-      key: "nachname",
+      key: "status",
       direction: "asc",
     };
+    const searchState = {
+      query: "",
+    };
+    const searchRow = createFormRow({
+      id: "kunden-search",
+      label: "Suche",
+      placeholder: "Name, E-Mail, Ort, Status ...",
+      value: "",
+      required: false,
+    });
+    const searchInput = searchRow.querySelector("input");
+    if (searchInput) {
+      searchInput.type = "search";
+      searchInput.addEventListener("input", (event) => {
+        searchState.query = event.target.value || "";
+        renderRows();
+      });
+    }
+    listBody.appendChild(searchRow);
     const tableWrapper = document.createElement("div");
     tableWrapper.className = "kunden-list-scroll";
     const table = document.createElement("table");
@@ -233,6 +252,12 @@ async function renderList(root) {
     const tbody = document.createElement("tbody");
 
     const columns = [
+      {
+        key: "status",
+        label: "Status",
+        value: (kunde) => valueOrDash(formatKundenStatus(kunde.status)),
+        sortValue: (kunde) => buildStatusSortValue(kunde),
+      },
       {
         key: "nachname",
         label: "Name",
@@ -266,6 +291,41 @@ async function renderList(root) {
       },
     ];
 
+    function normalizeSearch(value) {
+      return String(value || "")
+        .trim()
+        .toLowerCase();
+    }
+
+    function buildStatusSortValue(kunde) {
+      const normalized = String(kunde.status || "").trim().toLowerCase();
+      let rank = 3;
+      if (normalized === "aktiv") rank = 0;
+      else if (normalized === "passiv") rank = 1;
+      else if (normalized === "deaktiviert") rank = 2;
+      const name = `${kunde.nachname || ""} ${kunde.vorname || ""}`.trim().toLowerCase();
+      return `${String(rank).padStart(2, "0")}|${name}`;
+    }
+
+    function matchesSearch(kunde, query) {
+      if (!query) return true;
+      const haystack = [
+        kunde.code,
+        kunde.vorname,
+        kunde.nachname,
+        formatKundenStatus(kunde.status),
+        kunde.status,
+        kunde.email,
+        kunde.telefon,
+        extractTown(kunde.adresse || kunde.address || ""),
+        kunde.adresse,
+      ]
+        .filter(Boolean)
+        .map(normalizeSearch)
+        .join(" ");
+      return haystack.includes(query);
+    }
+
     function updateHeaderState() {
       headerRow.querySelectorAll("th").forEach((th) => {
         const key = th.dataset.sortKey;
@@ -286,7 +346,20 @@ async function renderList(root) {
 
     function renderRows() {
       tbody.innerHTML = "";
-      const rows = kunden
+      const query = normalizeSearch(searchState.query);
+      const filtered = kunden.filter((kunde) => matchesSearch(kunde, query));
+      if (!filtered.length) {
+        const row = document.createElement("tr");
+        row.className = "kunden-list-row";
+        const cell = document.createElement("td");
+        cell.colSpan = columns.length;
+        cell.textContent = "Keine Treffer.";
+        row.appendChild(cell);
+        tbody.appendChild(row);
+        return;
+      }
+
+      const rows = filtered
         .map((kunde, index) => ({ kunde, index }))
         .sort((a, b) => {
           const column = columns.find((col) => col.key === sortState.key);
@@ -722,6 +795,7 @@ async function renderForm(root, view, id) {
       options: [
         { value: "", label: "Bitte wählen" },
         { value: "aktiv", label: "Aktiv" },
+        { value: "passiv", label: "Passiv" },
         { value: "deaktiviert", label: "Deaktiviert" },
       ],
     },
