@@ -5,7 +5,17 @@ const VALID_MODES = new Set(["mock", "real", "mariadb"]);
 
 export function getStorageMode(env = process.env) {
   const raw = env?.DOGULE1_STORAGE_MODE;
-  const mode = (raw || "mock").trim();
+  if (!raw) {
+    throw new StorageError(STORAGE_ERROR_CODES.INVALID_MODE, "MARIADB_REQUIRED", {
+      details: { mode: "" },
+    });
+  }
+  const mode = raw.trim();
+  if (mode !== "mariadb") {
+    throw new StorageError(STORAGE_ERROR_CODES.INVALID_MODE, "MARIADB_REQUIRED", {
+      details: { mode },
+    });
+  }
   if (!VALID_MODES.has(mode)) {
     throw new StorageError(STORAGE_ERROR_CODES.INVALID_MODE, `Unsupported storage mode: ${mode}`, {
       details: { mode },

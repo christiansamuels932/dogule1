@@ -11,6 +11,7 @@ const EDITABLE_DEFAULTS = {
   rufname: "",
   rasse: "",
   geschlecht: "",
+  status: "",
   geburtsdatum: "",
   gewichtKg: null,
   groesseCm: null,

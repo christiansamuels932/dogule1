@@ -1,0 +1,49 @@
+{
+  "kunden": [
+    {
+      "kundennummer": "k-1",
+      "name": "Muster",
+      "vorname": "Max",
+      "email": "max@example.com",
+      "telefon_natel": "+41 79 123 45 67",
+      "status": "aktiv",
+      "adr_strasse": "Musterstrasse 1",
+      "adr_plz": "8000",
+      "adr_ort": "Zuerich"
+    }
+  ],
+  "hunde": [
+    {
+      "hund_nummer": "h-1",
+      "hund_kundennummer": "k-1",
+      "hund_name": "Bello",
+      "hund_rasse": "Labrador",
+      "hund_gebdatum": "2020-01-01"
+    }
+  ],
+  "kurse": [
+    {
+      "seminardat_nummer": "s-1",
+      "seminardat_thema": "Basis",
+      "seminardat_datvon": "2025-12-01 10:00:00",
+      "seminardat_datbis": "2025-12-01 12:00:00",
+      "seminardat_leitung": "Trainer Eins"
+    }
+  ],
+  "finanzen": [
+    {
+      "rek_rechnr": "r-1",
+      "rek_kundennummer": "k-1",
+      "rek_art": "Kurs",
+      "rek_betr_tot_brutto": "120.50",
+      "rek_datum": "2025-12-02"
+    }
+  ],
+  "pension": [
+    {
+      "kundennummer": "k-1",
+      "zimmer_nummer": "p-1",
+      "datum_von": "2025-12-03"
+    }
+  ]
+}

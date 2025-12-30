@@ -6,6 +6,7 @@ USE dogule1;
 
 CREATE TABLE IF NOT EXISTS kunden (
   id CHAR(36) NOT NULL,
+  legacy_id VARCHAR(64) NULL,
   code VARCHAR(64) NOT NULL DEFAULT '',
   vorname VARCHAR(128) NOT NULL DEFAULT '',
   nachname VARCHAR(128) NOT NULL DEFAULT '',
@@ -32,6 +33,7 @@ CREATE TABLE IF NOT EXISTS hunde (
   rufname VARCHAR(128) NOT NULL DEFAULT '',
   rasse VARCHAR(128) NOT NULL DEFAULT '',
   geschlecht VARCHAR(32) NOT NULL DEFAULT '',
+  status VARCHAR(32) NOT NULL DEFAULT '',
   geburtsdatum VARCHAR(32) NOT NULL DEFAULT '',
   gewicht_kg DECIMAL(8,2) NULL,
   groesse_cm DECIMAL(8,2) NULL,

@@ -489,6 +489,7 @@ function buildDetailList(hund) {
     { label: "Rufname", value: hund.rufname },
     { label: "Rasse", value: hund.rasse },
     { label: "Geschlecht", value: hund.geschlecht },
+    { label: "Status", value: hund.status },
     { label: "Geburtsdatum", value: formatDate(hund.geburtsdatum) },
     { label: "Kastriert", value: formatBoolean(hund.kastriert) },
     { label: "Felltyp", value: hund.felltyp || hund.fellTyp },

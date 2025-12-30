@@ -145,6 +145,9 @@ export function createKommunikationApiRouter(options = {}) {
 }
 
 export function createApiRouter(options = {}) {
+  if (process.env.DOGULE1_STORAGE_MODE !== "mariadb") {
+    throw new Error("MARIADB_REQUIRED");
+  }
   const core = createCoreApiRouter(options.core || {});
   const kommunikation = createKommunikationApiRouter(options.kommunikation || {});
 

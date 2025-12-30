@@ -19,9 +19,15 @@ describe("storage mode resolution", () => {
     }
   });
 
-  it("defaults to mock when env is missing", () => {
+  it("throws when env is missing", () => {
     delete process.env.DOGULE1_STORAGE_MODE;
-    expect(getStorageMode()).toBe("mock");
+    expect(() => getStorageMode()).toThrowError(StorageError);
+    try {
+      getStorageMode();
+    } catch (error) {
+      expect(error.code).toBe(STORAGE_ERROR_CODES.INVALID_MODE);
+      expect(error.message).toBe("MARIADB_REQUIRED");
+    }
   });
 
   it("throws with explicit code on invalid mode", () => {
