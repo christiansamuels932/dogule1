@@ -67,6 +67,11 @@ Steps:
    - DSM → Control Panel → Login Portal → Reverse Proxy → disable `dogule1-api`.
 4. (Optional) Close port 8443 in NAS firewall + router if no longer needed.
 
+Future Task — Persistent API Service (DSM Task Scheduler)
+
+- Create a boot-time task to start the API server automatically after NAS reboot.
+- Not implemented yet; schedule for follow-up.
+
 ---
 
 Execution Steps

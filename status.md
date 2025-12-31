@@ -1670,5 +1670,6 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 - Rollback procedure documented in `NAS_STATION76_5_SETUP.md` (stop API, clear staging folder, disable proxy/close port).
 - Station 77 prerequisite met: NAS staging environment is live and stable.
+- Future task logged: add persistent boot-time API service via DSM Task Scheduler (not implemented yet).
 
 # - - - - - - - - - - - - - - - - - - - -
