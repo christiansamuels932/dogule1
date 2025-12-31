@@ -13,14 +13,21 @@ const EDITABLE_DEFAULTS = {
   geschlecht: "",
   status: "",
   geburtsdatum: "",
+  kastriert: null,
+  felltyp: "",
+  fellfarbe: "",
+  groesseTyp: "",
   gewichtKg: null,
   groesseCm: null,
   kundenId: "",
+  herkunft: "",
+  chipNummer: "",
   trainingsziele: "",
   notizen: "",
 };
 
 const NUMBER_FIELDS = new Set(["gewichtKg", "groesseCm"]);
+const BOOLEAN_FIELDS = new Set(["kastriert"]);
 
 const normalizeCodePayload = (payload = {}) => {
   if (payload.code !== undefined) {
@@ -43,10 +50,29 @@ const sanitizeNumber = (value) => {
   return Number.isFinite(parsed) ? parsed : null;
 };
 
+const sanitizeBoolean = (value) => {
+  if (value === null || value === undefined || value === "") {
+    return null;
+  }
+  if (typeof value === "boolean") {
+    return value;
+  }
+  if (value === "1" || value === 1 || value === "true") {
+    return true;
+  }
+  if (value === "0" || value === 0 || value === "false") {
+    return false;
+  }
+  return Boolean(value);
+};
+
 const ensureEditableDefaults = (payload = {}) => {
   const normalized = { ...EDITABLE_DEFAULTS, ...normalizeCodePayload(payload) };
   NUMBER_FIELDS.forEach((key) => {
     normalized[key] = sanitizeNumber(payload[key]);
+  });
+  BOOLEAN_FIELDS.forEach((key) => {
+    normalized[key] = sanitizeBoolean(payload[key]);
   });
   return normalized;
 };
@@ -69,6 +95,8 @@ const sanitizeUpdatePayload = (payload = {}) => {
     if (!Object.prototype.hasOwnProperty.call(EDITABLE_DEFAULTS, key)) return;
     if (NUMBER_FIELDS.has(key)) {
       patch[key] = sanitizeNumber(value);
+    } else if (BOOLEAN_FIELDS.has(key)) {
+      patch[key] = sanitizeBoolean(value);
     } else if (key === "code") {
       patch[key] = (value || "").trim();
     } else {

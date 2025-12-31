@@ -1,3 +1,4 @@
+/* globals process */
 import fs from "node:fs/promises";
 import path from "node:path";
 import { resolveDogtabsConfig } from "./config.js";
@@ -12,9 +13,12 @@ import { writeDogtabsModules } from "./mariadbWriter.js";
 const TABLES = {
   kunden: "$_kundenstamm",
   hunde: "$_kunden_hunde",
-  kurse: "$_seminardaten",
+  kurse: "$_seminarstamm",
   finanzen: "$_rechnung_kopf",
   pension: "$_kunden_zimmer",
+  seminardaten: "$_seminardaten",
+  kundenSeminare: "$_kunden_seminare",
+  tiergruppen: "$_codes_tiergruppen",
 };
 
 const XLSX_SNAPSHOTS = {
@@ -24,6 +28,92 @@ const XLSX_SNAPSHOTS = {
   finanzen: "Save_Daten_Rechnungen_",
   pension: "Save_Daten_Pension_",
 };
+
+function toNumber(value) {
+  if (value === undefined || value === null || value === "") return null;
+  const num = Number(String(value).replace(",", "."));
+  return Number.isFinite(num) ? num : null;
+}
+
+function buildParticipationSummaryBySeminarId(seminardatenRows, kundenSeminareRows) {
+  const seminarIdByDatNummer = new Map();
+  for (const row of seminardatenRows || []) {
+    const datNummer = String(row.seminardat_nummer || "").trim();
+    const seminarId = String(row.seminardat_seminar_id || row.seminardat_stamm_id || "").trim();
+    if (datNummer && seminarId) {
+      seminarIdByDatNummer.set(datNummer, seminarId);
+    }
+  }
+
+  const summaryBySeminarId = new Map();
+  for (const row of kundenSeminareRows || []) {
+    const datNummer = String(row.kundenseminar_seminardat_nummer || "").trim();
+    const seminarId = seminarIdByDatNummer.get(datNummer);
+    if (!seminarId) continue;
+    if (!summaryBySeminarId.has(seminarId)) {
+      summaryBySeminarId.set(seminarId, {
+        entries: 0,
+        lektionen: 0,
+        besucht: 0,
+        passiv: 0,
+        hunde: new Set(),
+        sknFrom: null,
+        sknTo: null,
+      });
+    }
+    const summary = summaryBySeminarId.get(seminarId);
+    summary.entries += 1;
+    summary.lektionen += toNumber(row.kundenseminar_anz_lektionen) || 0;
+    summary.besucht += toNumber(row.kundenseminar_anz_lektionen_besucht) || 0;
+    if (String(row.kundenseminar_passivteilnahme || "").trim()) {
+      summary.passiv += 1;
+    }
+    const hundNummer = String(row.kundenseminar_skn_hund_nummer || "").trim();
+    if (hundNummer) {
+      summary.hunde.add(hundNummer);
+    }
+    const sknFrom = String(row.kundenseminar_skn_datvon || "").trim();
+    const sknTo = String(row.kundenseminar_skn_datbis || "").trim();
+    if (sknFrom) {
+      summary.sknFrom = summary.sknFrom
+        ? sknFrom < summary.sknFrom
+          ? sknFrom
+          : summary.sknFrom
+        : sknFrom;
+    }
+    if (sknTo) {
+      summary.sknTo = summary.sknTo ? (sknTo > summary.sknTo ? sknTo : summary.sknTo) : sknTo;
+    }
+  }
+
+  const notesBySeminarId = new Map();
+  for (const [seminarId, summary] of summaryBySeminarId.entries()) {
+    const parts = [
+      `Teilnahme: Eintraege=${summary.entries}`,
+      `Lektionen=${summary.lektionen}`,
+      `Besucht=${summary.besucht}`,
+      `Passiv=${summary.passiv}`,
+      `Hunde=${summary.hunde.size}`,
+    ];
+    if (summary.sknFrom || summary.sknTo) {
+      parts.push(`SKN=${summary.sknFrom || "?"}..${summary.sknTo || "?"}`);
+    }
+    notesBySeminarId.set(seminarId, parts.join("; "));
+  }
+  return notesBySeminarId;
+}
+
+function buildTiergruppenMap(rows) {
+  const map = new Map();
+  for (const row of rows || []) {
+    const code = String(row.tiergrp_tiergrp || "").trim();
+    const label = String(row.tiergrp_bezeichnung || "").trim();
+    if (code && label) {
+      map.set(code, label);
+    }
+  }
+  return map;
+}
 
 async function fileExists(filePath) {
   try {
@@ -149,6 +239,21 @@ function countBlockers(issueLog) {
     .filter((issue) => issue.severity === "BLOCKER").length;
 }
 
+function parseModuleFilter(options = {}) {
+  const raw = options.moduleFilter || options.modules || process.env.DOGTABS_MODULES;
+  if (!raw) return null;
+  const set = new Set(
+    String(raw)
+      .split(",")
+      .map((entry) => entry.trim())
+      .filter(Boolean)
+  );
+  if (set.has("kurse")) {
+    set.add("trainer");
+  }
+  return set;
+}
+
 export async function runDryRun(options = {}) {
   const config = resolveDogtabsConfig(options);
   const accessDbPath = await resolveAccessDbPath(config);
@@ -167,9 +272,7 @@ export async function runDryRun(options = {}) {
 
   const kundenRows = accessTables.get("kunden").records;
   const kundeLegacySet = new Set(
-    kundenRows
-      .map((row) => String(row.kundennummer || ""))
-      .filter((value) => value.length > 0)
+    kundenRows.map((row) => String(row.kundennummer || "")).filter((value) => value.length > 0)
   );
 
   const reportModules = [];
@@ -190,6 +293,7 @@ export async function runDryRun(options = {}) {
   });
 
   const hundeRows = accessTables.get("hunde").records;
+  const tiergruppeByCode = buildTiergruppenMap(accessTables.get("tiergruppen").records);
   const resolveHundLegacyId = createHundLegacyResolver(hundeRows);
   const hunde = [];
   const ctx = {
@@ -197,6 +301,7 @@ export async function runDryRun(options = {}) {
     kundeLegacySet,
     resolveTrainerId: () => "",
     resolveHundLegacyId,
+    tiergruppeByCode,
   };
   for (const row of hundeRows) {
     const { record, issues } = mapHund(row, ctx);
@@ -218,10 +323,18 @@ export async function runDryRun(options = {}) {
     kundeLegacySet,
   };
   const resolveTrainerId = makeTrainerResolver(trainerCtx, trainerRecords, trainerIssues);
+  const participationSummaryBySeminarId = buildParticipationSummaryBySeminarId(
+    accessTables.get("seminardaten").records,
+    accessTables.get("kundenSeminare").records
+  );
   const kursRows = accessTables.get("kurse").records;
   const kurse = [];
   for (const row of kursRows) {
-    const { record, issues } = mapKurs(row, { ...trainerCtx, resolveTrainerId });
+    const { record, issues } = mapKurs(row, {
+      ...trainerCtx,
+      resolveTrainerId,
+      participationSummaryBySeminarId,
+    });
     const validation = validateRecord("kurse", record);
     collectIssues(issueLog, "kurse", [...issues, ...validation]);
     kurse.push(record);
@@ -314,6 +427,8 @@ export async function runDryRun(options = {}) {
 }
 
 export async function runIngest(options = {}) {
+  const moduleFilter = parseModuleFilter(options);
+  const shouldProcess = (moduleName) => !moduleFilter || moduleFilter.has(moduleName);
   const config = resolveDogtabsConfig(options);
   const accessDbPath = await resolveAccessDbPath(config);
   const registries = new Map();
@@ -328,36 +443,42 @@ export async function runIngest(options = {}) {
     accessTables.set(moduleName, loadAccessTable(accessDbPath, tableName));
   }
 
-  const kundenRows = accessTables.get("kunden").records;
-  const kundeLegacySet = new Set(
-    kundenRows
-      .map((row) => String(row.kundennummer || ""))
-      .filter((value) => value.length > 0)
-  );
+  const kundenRows = shouldProcess("kunden") ? accessTables.get("kunden").records : [];
+  const kundeLegacySet = shouldProcess("kunden")
+    ? new Set(
+        kundenRows.map((row) => String(row.kundennummer || "")).filter((value) => value.length > 0)
+      )
+    : new Set();
 
   const issueLog = {};
   const kunden = [];
-  for (const row of kundenRows) {
-    const { record, issues } = mapKunde(row, registryResolver);
-    const validation = validateRecord("kunden", record);
-    collectIssues(issueLog, "kunden", [...issues, ...validation]);
-    kunden.push(record);
+  if (shouldProcess("kunden")) {
+    for (const row of kundenRows) {
+      const { record, issues } = mapKunde(row, registryResolver);
+      const validation = validateRecord("kunden", record);
+      collectIssues(issueLog, "kunden", [...issues, ...validation]);
+      kunden.push(record);
+    }
   }
 
-  const hundeRows = accessTables.get("hunde").records;
+  const hundeRows = shouldProcess("hunde") ? accessTables.get("hunde").records : [];
+  const tiergruppeByCode = buildTiergruppenMap(accessTables.get("tiergruppen").records);
   const resolveHundLegacyId = createHundLegacyResolver(hundeRows);
   const ctx = {
     ...registryResolver,
     kundeLegacySet,
     resolveTrainerId: () => "",
     resolveHundLegacyId,
+    tiergruppeByCode,
   };
   const hunde = [];
-  for (const row of hundeRows) {
-    const { record, issues } = mapHund(row, ctx);
-    const validation = validateRecord("hunde", record);
-    collectIssues(issueLog, "hunde", [...issues, ...validation]);
-    hunde.push(record);
+  if (shouldProcess("hunde")) {
+    for (const row of hundeRows) {
+      const { record, issues } = mapHund(row, ctx);
+      const validation = validateRecord("hunde", record);
+      collectIssues(issueLog, "hunde", [...issues, ...validation]);
+      hunde.push(record);
+    }
   }
 
   const trainerRecords = new Map();
@@ -367,62 +488,81 @@ export async function runIngest(options = {}) {
     kundeLegacySet,
   };
   const resolveTrainerId = makeTrainerResolver(trainerCtx, trainerRecords, trainerIssues);
+  const participationSummaryBySeminarId = shouldProcess("kurse")
+    ? buildParticipationSummaryBySeminarId(
+        accessTables.get("seminardaten").records,
+        accessTables.get("kundenSeminare").records
+      )
+    : new Map();
 
-  const kursRows = accessTables.get("kurse").records;
+  const kursRows = shouldProcess("kurse") ? accessTables.get("kurse").records : [];
   const kurse = [];
-  for (const row of kursRows) {
-    const { record, issues } = mapKurs(row, { ...trainerCtx, resolveTrainerId });
-    const validation = validateRecord("kurse", record);
-    collectIssues(issueLog, "kurse", [...issues, ...validation]);
-    kurse.push(record);
+  if (shouldProcess("kurse")) {
+    for (const row of kursRows) {
+      const { record, issues } = mapKurs(row, {
+        ...trainerCtx,
+        resolveTrainerId,
+        participationSummaryBySeminarId,
+      });
+      const validation = validateRecord("kurse", record);
+      collectIssues(issueLog, "kurse", [...issues, ...validation]);
+      kurse.push(record);
+    }
   }
   const trainer = Array.from(trainerRecords.values());
-  for (const record of trainer) {
-    const validation = validateRecord("trainer", record);
-    collectIssues(issueLog, "trainer", validation);
+  if (shouldProcess("trainer")) {
+    for (const record of trainer) {
+      const validation = validateRecord("trainer", record);
+      collectIssues(issueLog, "trainer", validation);
+    }
+    collectIssues(issueLog, "trainer", trainerIssues);
   }
-  collectIssues(issueLog, "trainer", trainerIssues);
 
-  const finanzenRows = accessTables.get("finanzen").records;
+  const finanzenRows = shouldProcess("finanzen") ? accessTables.get("finanzen").records : [];
   const finanzen = [];
-  for (const row of finanzenRows) {
-    const { record, issues } = mapFinanz(row, ctx);
-    const validation = validateRecord("finanzen", record);
-    collectIssues(issueLog, "finanzen", [...issues, ...validation]);
-    finanzen.push(record);
+  if (shouldProcess("finanzen")) {
+    for (const row of finanzenRows) {
+      const { record, issues } = mapFinanz(row, ctx);
+      const validation = validateRecord("finanzen", record);
+      collectIssues(issueLog, "finanzen", [...issues, ...validation]);
+      finanzen.push(record);
+    }
   }
 
-  const pensionRows = accessTables.get("pension").records;
-  const pension = pensionRows.map((row) => {
-    const mapped = mapPension(row, ctx);
-    const mapping = registryResolver.resolveId("pension", mapped.legacyId);
-    return {
-      id: mapping?.targetUuid || "",
-      legacyId: mapped.legacyId,
-      kundeId: mapped.kundeId,
-      kundeLegacyId: mapped.kundeLegacyId,
-      raw: mapped.raw,
-      createdAt: "",
-      updatedAt: "",
-    };
-  });
+  const pensionRows = shouldProcess("pension") ? accessTables.get("pension").records : [];
+  const pension = shouldProcess("pension")
+    ? pensionRows.map((row) => {
+        const mapped = mapPension(row, ctx);
+        const mapping = registryResolver.resolveId("pension", mapped.legacyId);
+        return {
+          id: mapping?.targetUuid || "",
+          legacyId: mapped.legacyId,
+          kundeId: mapped.kundeId,
+          kundeLegacyId: mapped.kundeLegacyId,
+          raw: mapped.raw,
+          createdAt: "",
+          updatedAt: "",
+        };
+      })
+    : [];
 
   const blockerCount = countBlockers(issueLog);
   if (blockerCount > 0) {
     const report = {
       ...createReportBase("ingest", { ...config, accessDbPath }),
       modules: [
-        { module: "kunden", sourceCount: kunden.length },
-        { module: "hunde", sourceCount: hunde.length },
-        { module: "trainer", sourceCount: trainer.length },
-        { module: "kurse", sourceCount: kurse.length },
-        { module: "finanzen", sourceCount: finanzen.length },
-        { module: "pension", sourceCount: pension.length },
-      ],
+        shouldProcess("kunden") ? { module: "kunden", sourceCount: kunden.length } : null,
+        shouldProcess("hunde") ? { module: "hunde", sourceCount: hunde.length } : null,
+        shouldProcess("trainer") ? { module: "trainer", sourceCount: trainer.length } : null,
+        shouldProcess("kurse") ? { module: "kurse", sourceCount: kurse.length } : null,
+        shouldProcess("finanzen") ? { module: "finanzen", sourceCount: finanzen.length } : null,
+        shouldProcess("pension") ? { module: "pension", sourceCount: pension.length } : null,
+      ].filter(Boolean),
       issues: issueLog,
       registryAdds: Object.fromEntries(
         Array.from(createdEntries.entries()).map(([key, values]) => [key, values.length])
       ),
+      moduleFilter: moduleFilter ? Array.from(moduleFilter) : null,
       blocked: true,
       blockerCount,
     };
@@ -430,7 +570,14 @@ export async function runIngest(options = {}) {
     return { reportPath, report };
   }
 
-  const modules = { kunden, hunde, trainer, kurse, finanzen, pension };
+  const modules = {
+    kunden: shouldProcess("kunden") ? kunden : null,
+    hunde: shouldProcess("hunde") ? hunde : null,
+    trainer: shouldProcess("trainer") ? trainer : null,
+    kurse: shouldProcess("kurse") ? kurse : null,
+    finanzen: shouldProcess("finanzen") ? finanzen : null,
+    pension: shouldProcess("pension") ? pension : null,
+  };
   const writeResults = await writeDogtabsModules(modules, options.mariadb || {});
 
   for (const [moduleName, entries] of registries.entries()) {
@@ -444,6 +591,7 @@ export async function runIngest(options = {}) {
     registryAdds: Object.fromEntries(
       Array.from(createdEntries.entries()).map(([key, values]) => [key, values.length])
     ),
+    moduleFilter: moduleFilter ? Array.from(moduleFilter) : null,
   };
   const reportPath = await writeDogtabsReport(config.ingestReportDir, report);
   return { reportPath, report };

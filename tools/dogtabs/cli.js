@@ -6,6 +6,9 @@ import { runCustomersCsvImport } from "./customersCsvImport.js";
 
 async function main() {
   const cmd = process.argv[2] || "dry-run";
+  const args = process.argv.slice(3);
+  const modulesArg = args.find((entry) => entry.startsWith("--modules="));
+  const modules = modulesArg?.split("=")[1] || process.env.DOGTABS_MODULES || undefined;
   try {
     if (cmd === "dry-run") {
       const result = await runDryRun();
@@ -20,7 +23,7 @@ async function main() {
       process.exit(0);
     }
     if (cmd === "ingest") {
-      const result = await runIngest();
+      const result = await runIngest({ moduleFilter: modules });
       console.log(`DogTabs ingest report written to ${result.reportPath}`);
       if (result.report?.blocked) {
         console.error(`Ingest blocked by ${result.report.blockerCount} blockers`);

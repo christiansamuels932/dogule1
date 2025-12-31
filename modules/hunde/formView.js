@@ -9,12 +9,18 @@ import {
 import { createHund, updateHund, listHunde } from "../shared/api/hunde.js";
 import { listKunden } from "../shared/api/kunden.js";
 import { runIntegrityCheck } from "../shared/api/db/integrityCheck.js";
+import { HERKUNFT_OPTIONS } from "./herkunft.js";
 
 const TOAST_KEY = "__DOGULE_HUNDE_TOAST__";
 const GESCHLECHT_OPTIONS = [
   { value: "", label: "Bitte wählen" },
   { value: "Rüde", label: "Rüde" },
   { value: "Hündin", label: "Hündin" },
+];
+const KASTRIERT_OPTIONS = [
+  { value: "", label: "Bitte wählen" },
+  { value: "1", label: "Ja" },
+  { value: "0", label: "Nein" },
 ];
 
 export async function createHundeFormView(container, options = {}) {
@@ -148,6 +154,61 @@ function buildFormFields(
     })),
   ];
   const refs = {};
+  const kundenIndex = new Map(kunden.map((kunde) => [kunde.id, kunde]));
+
+  function normalizeSearch(value) {
+    return String(value || "")
+      .trim()
+      .toLowerCase();
+  }
+
+  function filterKundenOptions(query) {
+    const needle = normalizeSearch(query);
+    if (!needle) return kundeOptions;
+    const filtered = kunden.filter((kunde) => {
+      const haystack = [
+        kunde.vorname,
+        kunde.nachname,
+        kunde.email,
+        kunde.telefon,
+        kunde.adresse,
+        kunde.code,
+        kunde.kundenCode,
+      ]
+        .filter(Boolean)
+        .map(normalizeSearch)
+        .join(" ");
+      return haystack.includes(needle);
+    });
+    return [
+      { value: "", label: "Bitte wählen" },
+      ...filtered.map((kunde) => ({
+        value: kunde.id,
+        label: formatKundeName(kunde),
+      })),
+    ];
+  }
+
+  function populateKundenSelect(select, options, selectedValue) {
+    select.innerHTML = "";
+    options.forEach((option) => {
+      const opt = document.createElement("option");
+      opt.value = option.value;
+      opt.textContent = option.label;
+      if (option.value === selectedValue) {
+        opt.selected = true;
+      }
+      select.appendChild(opt);
+    });
+    if (selectedValue && !options.some((option) => option.value === selectedValue)) {
+      const kunde = kundenIndex.get(selectedValue);
+      const opt = document.createElement("option");
+      opt.value = selectedValue;
+      opt.textContent = kunde ? formatKundeName(kunde) : `Auswahl ${selectedValue}`;
+      opt.selected = true;
+      select.appendChild(opt);
+    }
+  }
 
   const immutableIdRow = createFormRow({
     id: "hund-id",
@@ -251,16 +312,45 @@ function buildFormFields(
       },
     },
     {
-      name: "gewichtKg",
-      value: existing?.gewichtKg != null ? String(existing.gewichtKg) : "",
+      name: "kastriert",
       config: {
-        id: "hund-gewicht",
-        label: "Gewicht (kg)",
-        type: "number",
-        placeholder: "z. B. 25",
+        id: "hund-kastriert",
+        label: "Kastriert",
+        control: "select",
+        options: KASTRIERT_OPTIONS.map((option) => ({
+          ...option,
+          selected:
+            option.value ===
+            (existing?.kastriert === true ? "1" : existing?.kastriert === false ? "0" : ""),
+        })),
       },
-      min: "0",
-      step: "0.1",
+    },
+    {
+      name: "felltyp",
+      value: existing?.felltyp ?? existing?.fellTyp ?? "",
+      config: {
+        id: "hund-felltyp",
+        label: "Felltyp",
+        placeholder: "z. B. Kurzhaar",
+      },
+    },
+    {
+      name: "fellfarbe",
+      value: existing?.fellfarbe ?? existing?.fellFarbe ?? "",
+      config: {
+        id: "hund-fellfarbe",
+        label: "Fellfarbe",
+        placeholder: "z. B. Schwarz",
+      },
+    },
+    {
+      name: "groesseTyp",
+      value: existing?.groesseTyp ?? existing?.groesseType ?? "",
+      config: {
+        id: "hund-groesse-typ",
+        label: "Größe (Typ)",
+        placeholder: "z. B. Mittel",
+      },
     },
     {
       name: "groesseCm",
@@ -273,6 +363,39 @@ function buildFormFields(
       },
       min: "0",
       step: "0.5",
+    },
+    {
+      name: "gewichtKg",
+      value: existing?.gewichtKg != null ? String(existing.gewichtKg) : "",
+      config: {
+        id: "hund-gewicht",
+        label: "Gewicht (kg)",
+        type: "number",
+        placeholder: "z. B. 25",
+      },
+      min: "0",
+      step: "0.1",
+    },
+    {
+      name: "herkunft",
+      config: {
+        id: "hund-herkunft",
+        label: "Herkunft",
+        control: "select",
+        options: HERKUNFT_OPTIONS.map((option) => ({
+          ...option,
+          selected: option.value === (existing?.herkunft ?? ""),
+        })),
+      },
+    },
+    {
+      name: "chipNummer",
+      value: existing?.chipNummer ?? existing?.chipnummer ?? "",
+      config: {
+        id: "hund-chip",
+        label: "Chip Nummer",
+        placeholder: "z. B. 978000000000000",
+      },
     },
     {
       name: "kundenId",
@@ -310,6 +433,41 @@ function buildFormFields(
   ];
 
   fields.forEach((field) => {
+    if (field.name === "kundenId") {
+      const searchRow = createFormRow({
+        id: "hund-kunden-search",
+        label: "Kunde suchen",
+        placeholder: "Name, E-Mail, Ort ...",
+      });
+      const searchInput = searchRow.querySelector("input");
+      if (searchInput) {
+        searchInput.type = "search";
+      }
+      form.appendChild(searchRow);
+
+      const row = createFormRow(field.config);
+      const input = row.querySelector("input, select, textarea");
+      input.name = field.name;
+      populateKundenSelect(input, kundeOptions, existing?.kundenId ?? field.value ?? "");
+      if (searchInput) {
+        searchInput.addEventListener("input", () => {
+          const options = filterKundenOptions(searchInput.value);
+          populateKundenSelect(input, options, input.value);
+        });
+      }
+      const hint = row.querySelector(".ui-form-row__hint");
+      const defaultHint = field.config.describedByText || "";
+      if (defaultHint) {
+        hint.textContent = defaultHint;
+        hint.classList.remove("sr-only");
+      } else {
+        hint.classList.add("sr-only");
+      }
+      refs[field.name] = { input, hint, defaultHint };
+      form.appendChild(row);
+      return;
+    }
+
     const row = createFormRow(field.config);
     const input = row.querySelector("input, select, textarea");
     input.name = field.name;
@@ -439,10 +597,17 @@ function buildPayload(values) {
     rufname: values.rufname || "",
     rasse: values.rasse || "",
     geschlecht: values.geschlecht || "",
+    status: values.status || "",
     geburtsdatum: values.geburtsdatum || "",
+    kastriert: toBoolean(values.kastriert),
+    felltyp: values.felltyp || "",
+    fellfarbe: values.fellfarbe || "",
+    groesseTyp: values.groesseTyp || "",
     gewichtKg: toNumber(values.gewichtKg),
     groesseCm: toNumber(values.groesseCm),
     kundenId: values.kundenId,
+    herkunft: values.herkunft || "",
+    chipNummer: values.chipNummer || "",
     trainingsziele: values.trainingsziele || "",
     notizen: values.notizen || "",
   };
@@ -452,6 +617,14 @@ function toNumber(value) {
   if (value === null || value === undefined || value === "") return null;
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : null;
+}
+
+function toBoolean(value) {
+  if (value === null || value === undefined || value === "") return null;
+  if (value === true || value === false) return value;
+  if (value === "1" || value === 1 || value === "true") return true;
+  if (value === "0" || value === 0 || value === "false") return false;
+  return Boolean(value);
 }
 
 function formatKundeName(kunde = {}) {

@@ -15,6 +15,101 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 # - - - - - - - - - - - - - - - - - - - -
 
+# Station 76 — Audit Remediation (XLSX Export)
+
+## Kontext
+
+- Branch: `feature/station76-ui-followup`.
+- Scope: fix CI `pnpm audit` failure caused by `xlsx` vulnerabilities while keeping XLSX export behavior.
+
+## Ergebnis (kurz)
+
+- Removed the `xlsx` dependency and replaced export logic with a minimal in-browser XLSX (OOXML + zip) writer in `modules/shared/utils/xlsxExport.js`.
+- XLSX exports for Kunden/Hunde still generate `.xlsx` files, now without vulnerable third-party dependencies.
+- `pnpm install` updated the lockfile to remove `xlsx` from dependencies.
+
+## Tests
+
+- Not run (dependency and helper refactor only).
+
+## Notizen
+
+- Audit failure details: `xlsx` reported high severity Prototype Pollution and ReDoS advisories; no patched versions available, so dependency was removed.
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 76 — MariaDB Performance & Index Validation (UI Follow-up + Export)
+
+## Kontext
+
+- Branch: `feature/station75-dogtabs-ingestion` (follow-up changes captured here).
+- Scope: complete Station-76 manual UI follow-ups, add Hunde Herkunft enum + form fields, add Kunden/Hunde XLSX exports, and add Kunden list column controls with “Hunde, Name” visibility.
+- Preconditions: MariaDB socket `/run/mysqld/mysqld.sock`, API server (`tools/server/apiServer.js`), and Vite dev (`pnpm dev`) running with `DOGULE1_STORAGE_MODE=mariadb`.
+
+## Ergebnis (kurz)
+
+- Added Kunden list column configurator with Status fixed first, reorderable remaining columns, and visible “Hunde, Name” column populated from linked Hunde; persisted order via localStorage.
+- Added foldable “Spalten anpassen” panel with explicit open/close toggle state and constrained height to reduce distraction.
+- Added XLSX export buttons for Kunden- und Hundeübersicht using a shared export helper + `xlsx` dependency; export respects current filters/sort and visible columns.
+- Implemented Herkunft as a controlled dropdown (privat/züchter/tierheim/tierschutz/internet/zoohandel) plus display formatting on Hund detail.
+- Extended Hunde form to include all detail fields (Status, Kastriert, Felltyp, Fellfarbe, Größe-Typ, Größe (cm), Gewicht (kg), Herkunft, Chip Nummer, Trainingsziele, Notizen) and added Kunden search filter for large lists.
+- Updated Hunde API defaults + mock data to include new fields (kastriert, felltyp, fellfarbe, groesseTyp, chipNummer) for UI visibility.
+
+## Tests
+
+- Not run (manual UI verification only).
+
+## Notizen
+
+- Manual checks completed:
+  - Kunden: column reorder works with Status fixed; “Hunde, Name” visible; XLSX export works.
+  - Hunde: Herkunft dropdown present; Herkunft displays as label in detail view after edit; form shows expanded fields.
+  - Kunden search in Hunde form available for large customer list.
+- `pnpm install` required after adding `xlsx` dependency.
+- Branch mismatch recorded above; follow-up work executed on `feature/station75-dogtabs-ingestion`.
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 76 — MariaDB Performance & Index Validation
+
+## Kontext
+
+- Branch: `feature/station76-mariadb-performance`.
+- Scope: define thresholds, enumerate adapter SQL, run EXPLAIN + timed baselines, UI N+1 sanity check, and document findings in `MARIADB_PERF_REPORT.md`.
+
+## Ergebnis (kurz)
+
+- Locked Station 76 performance thresholds and documented MariaDB adapter SQL + EXPLAIN targets in `MARIADB_PERF_REPORT.md`.
+- Ran EXPLAIN and profiling on system MariaDB socket (`/run/mysqld/mysqld.sock`) and recorded warm-cache p95 baselines + environment details.
+- Ingested Kurse catalog items from `$_seminarstamm` with minimal trainer dependency (1 trainer + 14 kurse inserted) to make baselines representative; no schema/UI changes.
+- Decision: no remediation required; PK index scans accepted under bounded dataset and observed sub-millisecond timings; no schema/adapter changes made.
+- Manual UI sanity check completed (Kunden list → Kunde detail → Hunde list) with no visible multi-step loading; follow-ups noted in the report.
+- Hunde data fidelity fix: normalized DogTabs US-style dates for `geburtsdatum`, mapped `hund_tiergruppe` via `$_codes_tiergruppen` (labels instead of numeric codes), and updated existing Hunde rows.
+
+## Tests
+
+- `mariadb --protocol=socket --socket /run/mysqld/mysqld.sock -N -B dogule1 -e "SELECT 'kunden', COUNT(*) FROM kunden; ..."` ✅
+- `mariadb --protocol=socket --socket /run/mysqld/mysqld.sock -N -B dogule1 <<SQL ... EXPLAIN ... SQL` ✅
+- `mariadb --protocol=socket --socket /run/mysqld/mysqld.sock -N -B dogule1 < /tmp/mariadb_perf.sql` ✅ (profiling runs)
+- `DOGULE1_MARIADB_SOCKET=/run/mysqld/mysqld.sock DOGULE1_MARIADB_USER=ran node tools/dogtabs/cli.js ingest --modules=kurse` ✅
+- `mariadb --protocol=socket --socket /run/mysqld/mysqld.sock -N -B dogule1 -e "SELECT COUNT(*) FROM kurse; SELECT id, status, inventory_flag, portfolio_flag, date, start_time, end_time, notes FROM kurse LIMIT 1;"` ✅
+- `DOGULE1_MARIADB_SOCKET=/run/mysqld/mysqld.sock DOGULE1_MARIADB_USER=ran node tools/dogtabs/updateHundeFields.js` ✅
+- `mariadb --protocol=socket --socket /run/mysqld/mysqld.sock -N -B dogule1 -e "SELECT id, code, geburtsdatum, herkunft FROM hunde LIMIT 5;"` ✅
+
+## Notizen
+
+- Deferred validation: kalender/zahlungen/waren are empty; re-run baselines once data exists.
+- Follow-ups captured in `MARIADB_PERF_REPORT.md`: Kunde Übersicht “Hund verlinkt” column, post-fix UI check for geburtsdatum/Herkunft.
+- Tech-debt: Kurse catalog items use empty strings for date/time fields (schema NOT NULL); acceptable for Station 76, to be revisited in a later station.
+- Pending verification checklist (next session):
+  - UI sanity check (post-fix): open Kunden list, pick a Kunde, confirm Hunde list shows `Geburtsdatum` values (not blank) and `Herkunft` labels (e.g., `Hund`, not numeric codes).
+  - UI detail check: open a Hund detail view and confirm `Geburtsdatum` and `Herkunft` render correctly in the detail list.
+  - Data spot-check in MariaDB: `SELECT id, code, geburtsdatum, herkunft FROM hunde LIMIT 5;` confirm ISO dates and label values.
+  - Report consistency: ensure `MARIADB_PERF_REPORT.md` reflects the Hunde data fix and that the post-fix UI check is marked complete once verified.
+  - Remaining follow-up scope: Kunden Übersicht “Hund verlinkt” column (sortable) still pending; confirm intended sort behavior once implemented.
+
+# - - - - - - - - - - - - - - - - - - - -
+
 # Station 71 — UI Visual Pass & Entity List/Detail Cleanup
 
 ## Kontext
