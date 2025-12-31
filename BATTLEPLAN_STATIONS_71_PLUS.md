@@ -395,3 +395,23 @@ Validation
 Exit criteria
 
 - Beta sign-off recorded in `status.md` with clear readiness statement.
+
+Station 85 — Update/Rollout Workflow (TBD)
+
+Branch: TBD
+
+Scope
+
+- Define a secure, uncomplicated workflow to edit, update, and roll out changes without breaking the NAS deployment. (Needs to be done; definition pending.)
+
+Deliverables
+
+- TBD
+
+Validation
+
+- TBD
+
+Exit criteria
+
+- TBD

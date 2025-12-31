@@ -1636,3 +1636,40 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 - Repo-doc gap: `agents.md` remains missing; Station 61 directory is input-only/immutable after commit.
 
 # - - - - - - - - - - - - - - - - - - - -
+
+# Station 76.5 — NAS Deployment (Staging for Manual Test)
+
+## Kontext
+
+- Branch: `feature/station76.5-nas-deployment`.
+- Scope: deploy MariaDB-backed app to NAS, expose public staging, and validate readiness for Station 77 manual tests.
+- Access scope: public (`https://4c31.synology.me/dogule1-staging/`).
+- NAS profile: Synology DS218play (DSM 7.3.2-86009), SAN.
+
+## Ergebnis (kurz)
+
+- Created reproducible NAS runbook in `NAS_STATION76_5_SETUP.md`; captured environment, access scope, and rollback steps.
+- Repo deployed to NAS (`/volume1/dogule1nasfolder/dogule1`), dependencies installed, `pnpm build` completed, and `dist/` deployed to `/volume1/web/dogule1-staging/`.
+- API server running on NAS (`node tools/server/apiServer.js`), reverse proxy exposed at `https://4c31.synology.me:8443/api`.
+- Added CORS support to API server and configured `DOGULE1_CORS_ORIGINS=https://4c31.synology.me`.
+- NAS MariaDB refreshed from local export; full dataset restored and dashboard counts validated.
+- Deployment report recorded in `NAS_STATION76_5_REPORT.md`.
+
+## Tests
+
+- `curl http://127.0.0.1:5177/api/kunden` ✅
+- `curl --resolve 4c31.synology.me:8443:192.168.1.116 https://4c31.synology.me:8443/api/kunden` ✅
+- Manual UI smoke: Kunden + Hunde create OK; counts updated ✅
+
+## Issues
+
+- CORS blocked cross-port API access; resolved by adding CORS headers in `tools/server/apiServer.js` and setting `DOGULE1_CORS_ORIGINS`.
+- Reverse proxy UI lacked path-based routing; API exposed on port 8443 instead of `/api` on 443.
+
+## Notizen
+
+- Rollback procedure documented in `NAS_STATION76_5_SETUP.md` (stop API, clear staging folder, disable proxy/close port).
+- Station 77 prerequisite met: NAS staging environment is live and stable.
+- Future task logged: add persistent boot-time API service via DSM Task Scheduler (not implemented yet).
+
+# - - - - - - - - - - - - - - - - - - - -
