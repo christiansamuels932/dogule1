@@ -13,6 +13,10 @@ const ROOT = process.env.DOGULE1_WEB_ROOT
   ? path.resolve(process.env.DOGULE1_WEB_ROOT)
   : path.resolve(__dirname, "..", "..", "dist");
 const PORT = Number(process.env.DOGULE1_API_PORT || 5177);
+const ALLOWED_ORIGINS = (process.env.DOGULE1_CORS_ORIGINS || "")
+  .split(",")
+  .map((value) => value.trim())
+  .filter(Boolean);
 
 process.env.DOGULE1_REQUIRE_MARIADB = process.env.DOGULE1_REQUIRE_MARIADB || "1";
 
@@ -56,6 +60,18 @@ async function handleStatic(req, res) {
 
 const server = http.createServer(async (req, res) => {
   try {
+    const origin = req.headers.origin;
+    if (origin && (ALLOWED_ORIGINS.length === 0 || ALLOWED_ORIGINS.includes(origin))) {
+      res.setHeader("Access-Control-Allow-Origin", origin);
+      res.setHeader("Vary", "Origin");
+      res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS");
+      res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+    }
+    if (req.method === "OPTIONS") {
+      res.statusCode = 204;
+      res.end();
+      return;
+    }
     const handled = await router.handle(req, res);
     if (handled) return;
     await handleStatic(req, res);
