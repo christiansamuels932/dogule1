@@ -11,6 +11,7 @@ import { listHunde, createHund } from "../shared/api/hunde.js";
 import { listKurse } from "../shared/api/kurse.js";
 import { listFinanzen } from "../shared/api/finanzen.js";
 import { listWarenByKundeId } from "../shared/api/waren.js";
+import { exportTableToXlsx } from "../shared/utils/xlsxExport.js";
 import {
   createSectionHeader,
   createCard,
@@ -22,6 +23,7 @@ import {
 
 let kundenCache = [];
 const TOAST_KEY = "__DOGULE_KUNDEN_TOAST__";
+const COLUMN_STORAGE_KEY = "__DOGULE_KUNDEN_COLUMNS__";
 
 function createSectionBlock({ title, subtitle = "", level = 2, className = "" } = {}) {
   const section = document.createElement("section");
@@ -83,6 +85,71 @@ function mapToneToNoticeVariant(tone = "info") {
   if (tone === "success") return "ok";
   if (tone === "error" || tone === "warn") return "warn";
   return "info";
+}
+
+function normalizeColumnOrder(order = [], defaults = []) {
+  const unique = new Set(order.filter((key) => defaults.includes(key)));
+  defaults.forEach((key) => {
+    if (!unique.has(key)) unique.add(key);
+  });
+  return Array.from(unique);
+}
+
+function loadColumnOrder(defaults = []) {
+  if (typeof window === "undefined" || !window.localStorage) {
+    return [...defaults];
+  }
+  try {
+    const raw = window.localStorage.getItem(COLUMN_STORAGE_KEY);
+    if (!raw) return [...defaults];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [...defaults];
+    return normalizeColumnOrder(parsed, defaults);
+  } catch (error) {
+    console.warn("[KUNDEN_COLUMNS_LOAD]", error);
+    return [...defaults];
+  }
+}
+
+function saveColumnOrder(order = []) {
+  if (typeof window === "undefined" || !window.localStorage) return;
+  try {
+    window.localStorage.setItem(COLUMN_STORAGE_KEY, JSON.stringify(order));
+  } catch (error) {
+    console.warn("[KUNDEN_COLUMNS_SAVE]", error);
+  }
+}
+
+function buildHundeByKundeId(hunde = []) {
+  const map = new Map();
+  hunde.forEach((hund) => {
+    if (!hund.kundenId) return;
+    if (!map.has(hund.kundenId)) {
+      map.set(hund.kundenId, []);
+    }
+    map.get(hund.kundenId).push(hund);
+  });
+  return map;
+}
+
+function formatHundName(hund = {}) {
+  return hund.name || hund.rufname || hund.code || hund.hundeId || "";
+}
+
+function getHundeNamenString(kunde = {}, hundeByKundeId) {
+  const hunde = hundeByKundeId?.get(kunde.id) || [];
+  const names = hunde.map(formatHundName).filter((name) => name && name.trim());
+  return names.length ? names.join(", ") : "";
+}
+
+function formatHundeNamenForKunde(kunde = {}, hundeByKundeId) {
+  const names = getHundeNamenString(kunde, hundeByKundeId);
+  return names || "–";
+}
+
+function buildExportFilename(prefix) {
+  const stamp = new Date().toISOString().slice(0, 10);
+  return `${prefix}-${stamp}.xlsx`;
 }
 
 export async function initModule(container, routeContext = { segments: [] }) {
@@ -190,6 +257,9 @@ async function renderList(root) {
   actionBody.innerHTML = "";
   const actionWrap = document.createElement("div");
   actionWrap.className = "module-actions";
+  let exportHandler = null;
+  let toggleColumnsHandler = null;
+  let toggleColumnsButton = null;
   actionWrap.appendChild(
     createButton({
       label: "Neuer Kunde",
@@ -199,6 +269,21 @@ async function renderList(root) {
       },
     })
   );
+  actionWrap.appendChild(
+    createButton({
+      label: "Export XLSX",
+      variant: "secondary",
+      onClick: () => exportHandler?.(),
+    })
+  );
+  toggleColumnsButton = createButton({
+    label: "Spalten anpassen",
+    variant: "quiet",
+    onClick: () => toggleColumnsHandler?.(),
+  });
+  toggleColumnsButton.type = "button";
+  toggleColumnsButton.setAttribute("aria-expanded", "false");
+  actionWrap.appendChild(toggleColumnsButton);
   actionBody.appendChild(actionWrap);
 
   const listCard = createStandardCard("Kundenliste");
@@ -206,6 +291,8 @@ async function renderList(root) {
   listBody.innerHTML = "";
 
   let kunden = [];
+  let hunde = [];
+  let hundeLoadFailed = false;
   try {
     kunden = await fetchKunden();
   } catch (error) {
@@ -216,10 +303,24 @@ async function renderList(root) {
     focusHeading(root);
     return;
   }
+  try {
+    hunde = await listHunde();
+  } catch (error) {
+    hundeLoadFailed = true;
+    hunde = [];
+    console.error("[KUNDEN_ERR_LIST_HUNDE]", error);
+  }
 
   if (!kunden.length) {
     appendSharedEmptyState(listBody);
+    exportHandler = () => {
+      window.alert("Keine Daten für den Export verfügbar.");
+    };
+    toggleColumnsHandler = () => {
+      window.alert("Keine Spalten zum Anpassen verfügbar.");
+    };
   } else {
+    const hundeByKundeId = buildHundeByKundeId(hunde);
     const sortState = {
       key: "status",
       direction: "asc",
@@ -243,6 +344,28 @@ async function renderList(root) {
       });
     }
     listBody.appendChild(searchRow);
+    if (hundeLoadFailed) {
+      listBody.appendChild(
+        createNotice("Hunde konnten nicht geladen werden. Die Spalte Hunde bleibt leer.", {
+          variant: "warn",
+        })
+      );
+    }
+    const columnControls = document.createElement("div");
+    columnControls.className = "kunden-columns-config";
+    columnControls.hidden = true;
+    columnControls.style.display = "none";
+    toggleColumnsHandler = () => {
+      const nextHidden = !columnControls.hidden;
+      columnControls.hidden = nextHidden;
+      columnControls.style.display = nextHidden ? "none" : "flex";
+      columnControls.classList.toggle("is-open", !nextHidden);
+      if (toggleColumnsButton) {
+        toggleColumnsButton.textContent = nextHidden ? "Spalten anpassen" : "Spalten schließen";
+        toggleColumnsButton.setAttribute("aria-expanded", String(!nextHidden));
+      }
+    };
+    listBody.appendChild(columnControls);
     const tableWrapper = document.createElement("div");
     tableWrapper.className = "kunden-list-scroll";
     const table = document.createElement("table");
@@ -251,45 +374,60 @@ async function renderList(root) {
     const headerRow = document.createElement("tr");
     const tbody = document.createElement("tbody");
 
-    const columns = [
-      {
+    const columnDefinitions = {
+      status: {
         key: "status",
         label: "Status",
         value: (kunde) => valueOrDash(formatKundenStatus(kunde.status)),
         sortValue: (kunde) => buildStatusSortValue(kunde),
       },
-      {
+      nachname: {
         key: "nachname",
         label: "Name",
         value: (kunde) => valueOrDash(kunde.nachname),
         sortValue: (kunde) => (kunde.nachname || "").toLowerCase(),
         isLink: true,
       },
-      {
+      vorname: {
         key: "vorname",
         label: "Vorname",
         value: (kunde) => valueOrDash(kunde.vorname),
         sortValue: (kunde) => (kunde.vorname || "").toLowerCase(),
       },
-      {
+      hundeNamen: {
+        key: "hundeNamen",
+        label: "Hunde, Name",
+        value: (kunde) => formatHundeNamenForKunde(kunde, hundeByKundeId),
+        sortValue: (kunde) => getHundeNamenString(kunde, hundeByKundeId).toLowerCase(),
+      },
+      telefon: {
         key: "telefon",
         label: "Telefon",
         value: (kunde) => valueOrDash(kunde.telefon),
         sortValue: (kunde) => (kunde.telefon || "").toLowerCase(),
       },
-      {
+      email: {
         key: "email",
         label: "E-Mail",
         value: (kunde) => valueOrDash(kunde.email),
         sortValue: (kunde) => (kunde.email || "").toLowerCase(),
       },
-      {
+      ort: {
         key: "ort",
         label: "Ort",
         value: (kunde) => valueOrDash(extractTown(kunde.adresse || kunde.address || "")),
         sortValue: (kunde) => extractTown(kunde.adresse || kunde.address || "").toLowerCase(),
       },
-    ];
+    };
+    const defaultColumnOrder = ["nachname", "vorname", "hundeNamen", "telefon", "email", "ort"];
+    let columnOrder = loadColumnOrder(defaultColumnOrder);
+
+    function getOrderedColumns() {
+      return [
+        columnDefinitions.status,
+        ...columnOrder.map((key) => columnDefinitions[key]).filter(Boolean),
+      ];
+    }
 
     function normalizeSearch(value) {
       return String(value || "")
@@ -298,7 +436,9 @@ async function renderList(root) {
     }
 
     function buildStatusSortValue(kunde) {
-      const normalized = String(kunde.status || "").trim().toLowerCase();
+      const normalized = String(kunde.status || "")
+        .trim()
+        .toLowerCase();
       let rank = 3;
       if (normalized === "aktiv") rank = 0;
       else if (normalized === "passiv") rank = 1;
@@ -315,6 +455,7 @@ async function renderList(root) {
         kunde.nachname,
         formatKundenStatus(kunde.status),
         kunde.status,
+        getHundeNamenString(kunde, hundeByKundeId),
         kunde.email,
         kunde.telefon,
         extractTown(kunde.adresse || kunde.address || ""),
@@ -324,6 +465,70 @@ async function renderList(root) {
         .map(normalizeSearch)
         .join(" ");
       return haystack.includes(query);
+    }
+
+    function renderColumnControls() {
+      columnControls.innerHTML = "";
+      const title = document.createElement("p");
+      title.className = "kunden-columns-title";
+      title.textContent = "Spaltenreihenfolge (Status bleibt fixiert).";
+      columnControls.appendChild(title);
+
+      columnOrder.forEach((key, index) => {
+        const column = columnDefinitions[key];
+        if (!column) return;
+        const row = document.createElement("div");
+        row.className = "kunden-columns-row";
+        const label = document.createElement("span");
+        label.textContent = column.label;
+        const actions = document.createElement("div");
+        actions.className = "kunden-columns-actions";
+        const moveLeft = createButton({ label: "◀", variant: "quiet" });
+        moveLeft.type = "button";
+        moveLeft.classList.add("kunden-columns-move");
+        moveLeft.disabled = index === 0;
+        moveLeft.addEventListener("click", () => moveColumn(key, -1));
+        const moveRight = createButton({ label: "▶", variant: "quiet" });
+        moveRight.type = "button";
+        moveRight.classList.add("kunden-columns-move");
+        moveRight.disabled = index === columnOrder.length - 1;
+        moveRight.addEventListener("click", () => moveColumn(key, 1));
+        actions.append(moveLeft, moveRight);
+        row.append(label, actions);
+        columnControls.appendChild(row);
+      });
+
+      const resetWrap = document.createElement("div");
+      resetWrap.className = "kunden-columns-reset";
+      const resetBtn = createButton({
+        label: "Standardspalten wiederherstellen",
+        variant: "secondary",
+        onClick: () => {
+          columnOrder = [...defaultColumnOrder];
+          saveColumnOrder(columnOrder);
+          renderColumnControls();
+          renderHeader();
+          renderRows();
+        },
+      });
+      resetBtn.type = "button";
+      resetWrap.appendChild(resetBtn);
+      columnControls.appendChild(resetWrap);
+    }
+
+    function moveColumn(key, direction) {
+      const index = columnOrder.indexOf(key);
+      if (index < 0) return;
+      const nextIndex = index + direction;
+      if (nextIndex < 0 || nextIndex >= columnOrder.length) return;
+      const nextOrder = [...columnOrder];
+      nextOrder.splice(index, 1);
+      nextOrder.splice(nextIndex, 0, key);
+      columnOrder = nextOrder;
+      saveColumnOrder(columnOrder);
+      renderColumnControls();
+      renderHeader();
+      renderRows();
     }
 
     function updateHeaderState() {
@@ -344,11 +549,57 @@ async function renderList(root) {
       });
     }
 
-    function renderRows() {
-      tbody.innerHTML = "";
+    function getDisplayRows() {
       const query = normalizeSearch(searchState.query);
       const filtered = kunden.filter((kunde) => matchesSearch(kunde, query));
-      if (!filtered.length) {
+      if (!filtered.length) return [];
+      const column = columnDefinitions[sortState.key] || columnDefinitions.status;
+      const getValue = column?.sortValue || column?.value;
+      return filtered
+        .map((kunde, index) => ({ kunde, index }))
+        .sort((a, b) => {
+          const aValue = (getValue ? getValue(a.kunde) : "").toString();
+          const bValue = (getValue ? getValue(b.kunde) : "").toString();
+          const compare = aValue.localeCompare(bValue, "de", { sensitivity: "base" });
+          if (compare !== 0) {
+            return sortState.direction === "asc" ? compare : -compare;
+          }
+          return a.index - b.index;
+        })
+        .map(({ kunde }) => kunde);
+    }
+
+    function renderHeader() {
+      const columns = getOrderedColumns();
+      headerRow.innerHTML = "";
+      columns.forEach((column) => {
+        const th = document.createElement("th");
+        th.dataset.sortKey = column.key;
+        th.dataset.label = column.label;
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "kunden-sort-btn";
+        button.addEventListener("click", () => {
+          if (sortState.key === column.key) {
+            sortState.direction = sortState.direction === "asc" ? "desc" : "asc";
+          } else {
+            sortState.key = column.key;
+            sortState.direction = "asc";
+          }
+          updateHeaderState();
+          renderRows();
+        });
+        th.appendChild(button);
+        headerRow.appendChild(th);
+      });
+      updateHeaderState();
+    }
+
+    function renderRows() {
+      tbody.innerHTML = "";
+      const columns = getOrderedColumns();
+      const rows = getDisplayRows();
+      if (!rows.length) {
         const row = document.createElement("tr");
         row.className = "kunden-list-row";
         const cell = document.createElement("td");
@@ -359,21 +610,7 @@ async function renderList(root) {
         return;
       }
 
-      const rows = filtered
-        .map((kunde, index) => ({ kunde, index }))
-        .sort((a, b) => {
-          const column = columns.find((col) => col.key === sortState.key);
-          const getValue = column?.sortValue || column?.value;
-          const aValue = (getValue ? getValue(a.kunde) : "").toString();
-          const bValue = (getValue ? getValue(b.kunde) : "").toString();
-          const compare = aValue.localeCompare(bValue, "de", { sensitivity: "base" });
-          if (compare !== 0) {
-            return sortState.direction === "asc" ? compare : -compare;
-          }
-          return a.index - b.index;
-        });
-
-      rows.forEach(({ kunde }) => {
+      rows.forEach((kunde) => {
         const row = document.createElement("tr");
         row.className = "kunden-list-row";
         columns.forEach((column) => {
@@ -394,33 +631,28 @@ async function renderList(root) {
       });
     }
 
-    columns.forEach((column) => {
-      const th = document.createElement("th");
-      th.dataset.sortKey = column.key;
-      th.dataset.label = column.label;
-      const button = document.createElement("button");
-      button.type = "button";
-      button.className = "kunden-sort-btn";
-      button.addEventListener("click", () => {
-        if (sortState.key === column.key) {
-          sortState.direction = sortState.direction === "asc" ? "desc" : "asc";
-        } else {
-          sortState.key = column.key;
-          sortState.direction = "asc";
-        }
-        updateHeaderState();
-        renderRows();
-      });
-      th.appendChild(button);
-      headerRow.appendChild(th);
-    });
-
     thead.appendChild(headerRow);
     table.append(thead, tbody);
     tableWrapper.appendChild(table);
     listBody.appendChild(tableWrapper);
-    updateHeaderState();
+    renderColumnControls();
+    renderHeader();
     renderRows();
+
+    exportHandler = async () => {
+      const columns = getOrderedColumns();
+      const rows = getDisplayRows();
+      if (!rows.length) {
+        window.alert("Keine Daten für den Export verfügbar.");
+        return;
+      }
+      await exportTableToXlsx({
+        fileName: buildExportFilename("kunden-uebersicht"),
+        sheetName: "Kunden",
+        columns,
+        rows,
+      });
+    };
   }
 
   section.append(actionsCard, listCard);

@@ -428,5 +428,75 @@
     "legacyId": "98",
     "targetUuid": "0d039c8f-fe91-72ba-afa9-01292c402a70",
     "version": 1
+  },
+  {
+    "legacyId": "Fami",
+    "targetUuid": "03ec2ce0-f5fd-7c12-ace9-1f91427cf1b0",
+    "version": 1
+  },
+  {
+    "legacyId": "FreiAppell-G",
+    "targetUuid": "5910a29a-ad60-7e7f-bb32-49e3289191a3",
+    "version": 1
+  },
+  {
+    "legacyId": "FreiAppell-K",
+    "targetUuid": "73475e64-385a-79da-bc5f-3e6847c2d60d",
+    "version": 1
+  },
+  {
+    "legacyId": "Grund",
+    "targetUuid": "5fb47201-0cd5-7eb2-ac13-5753c9befefd",
+    "version": 1
+  },
+  {
+    "legacyId": "HF",
+    "targetUuid": "57844893-cb84-751d-afcd-24118003c271",
+    "version": 1
+  },
+  {
+    "legacyId": "HF-Pr.",
+    "targetUuid": "fcb2bae0-3c3b-7028-9162-431b6a9b2965",
+    "version": 1
+  },
+  {
+    "legacyId": "Jung",
+    "targetUuid": "1c556326-e441-75cc-bc3e-d4ffc68d26aa",
+    "version": 1
+  },
+  {
+    "legacyId": "Priv. Std.",
+    "targetUuid": "81846368-4807-7521-b255-3c416ddc40b1",
+    "version": 1
+  },
+  {
+    "legacyId": "S&S",
+    "targetUuid": "92534f04-dfca-7f79-9da3-5d62ecd00f63",
+    "version": 1
+  },
+  {
+    "legacyId": "SKN-P",
+    "targetUuid": "7e19fed4-4233-76b8-a76d-a8b96048e7b8",
+    "version": 1
+  },
+  {
+    "legacyId": "SKN-T",
+    "targetUuid": "a69172a6-85cd-7f27-8dcd-34806c9294ec",
+    "version": 1
+  },
+  {
+    "legacyId": "Sport",
+    "targetUuid": "1be7a122-ce33-745b-9c9a-68bd1b6cc1c7",
+    "version": 1
+  },
+  {
+    "legacyId": "TH",
+    "targetUuid": "d41962d6-f673-7fcc-acd3-48901c26b7d1",
+    "version": 1
+  },
+  {
+    "legacyId": "Welpen-Junghund",
+    "targetUuid": "72e1deb7-8993-74c7-92e3-de2077c3e788",
+    "version": 1
   }
 ]

@@ -168,6 +168,9 @@ export function mapHund(row, ctx) {
     });
   }
 
+  const tiergruppeCode = normalizeString(row.hund_tiergruppe);
+  const tiergruppeLabel = ctx.tiergruppeByCode?.get(tiergruppeCode) || tiergruppeCode;
+
   const record = {
     id: mapping?.targetUuid || "",
     legacyId: resolvedLegacyId,
@@ -191,7 +194,7 @@ export function mapHund(row, ctx) {
     kastriert,
     fellfarbe: normalizeString(row.hund_farbe),
     groesseTyp,
-    herkunft: normalizeString(row.hund_tiergruppe),
+    herkunft: tiergruppeLabel,
     chipNummer: normalizeString(row.hund_chipnummer),
     createdAt: formatTimestamp(normalizeDateTime(row.erf_dat)),
     updatedAt: formatTimestamp(normalizeDateTime(row.mut_dat)),
@@ -259,26 +262,17 @@ export function mapTrainer(name, ctx) {
 
 export function mapKurs(row, ctx) {
   const issues = [];
-  const legacyId = normalizeString(row.seminardat_nummer || row.seminardat_seminar_id);
+  const legacyId = normalizeString(row.seminar_id);
   const mapping = ctx.resolveId("kurse", legacyId);
 
-  const start = normalizeDateTime(row.seminardat_datvon);
-  const end = normalizeDateTime(row.seminardat_datbis);
-  const createdAt = formatTimestamp(normalizeDateTime(row.erf_dat)) || formatTimestamp(start);
-  const updatedAt = formatTimestamp(normalizeDateTime(row.mut_dat)) || createdAt;
-  let courseDate =
-    start.date || dateFromTimestamp(createdAt) || dateFromTimestamp(updatedAt);
-
   const trainerName =
-    normalizeString(row.seminardat_leitung) ||
-    normalizeString(row.seminardat_referenten) ||
-    [row.seminardat_skn_ausbildner_vorname, row.seminardat_skn_ausbildner_name]
-      .map(normalizeString)
-      .filter(Boolean)
-      .join(" ");
+    normalizeString(row.seminar_leitung) || normalizeString(row.seminar_referenten);
   const trainerId = ctx.resolveTrainerId(trainerName);
 
-  let title = normalizeString(row.seminardat_thema) || normalizeString(row.seminardat_kursinhalt);
+  const createdAt = formatTimestamp(normalizeDateTime(row.erf_dat));
+  const updatedAt = formatTimestamp(normalizeDateTime(row.mut_dat)) || createdAt;
+
+  let title = normalizeString(row.seminar_bezeichnung);
   if (!title) {
     title = "DogTabs Kurs";
     issues.push({
@@ -289,15 +283,15 @@ export function mapKurs(row, ctx) {
     });
   }
 
-  if (!courseDate) {
-    courseDate = "1900-01-01";
-    issues.push({
-      severity: "WARNING",
-      code: "DATE_MISSING",
-      legacyId,
-      message: "Course date missing; defaulted",
-    });
-  }
+  const notes = joinNotes([
+    normalizeString(row.seminar_bemerkung),
+    row.seminar_bereich ? `Bereich: ${normalizeString(row.seminar_bereich)}` : "",
+    row.seminar_typ ? `Typ: ${normalizeString(row.seminar_typ)}` : "",
+    row.seminar_dauer ? `Dauer: ${normalizeString(row.seminar_dauer)}` : "",
+    row.seminar_unterlagen ? `Unterlagen: ${normalizeString(row.seminar_unterlagen)}` : "",
+    row.seminar_ressourcen ? `Ressourcen: ${normalizeString(row.seminar_ressourcen)}` : "",
+    ctx.participationSummaryBySeminarId?.get(legacyId) || "",
+  ]);
 
   const record = {
     id: mapping?.targetUuid || "",
@@ -306,16 +300,16 @@ export function mapKurs(row, ctx) {
     title,
     trainerName,
     trainerId,
-    date: courseDate,
-    startTime: start.time,
-    endTime: end.time,
-    location: normalizeString(row.seminardat_kursort),
-    status: normalizeBoolean(row.seminardat_aufgeloest) ? "abgesagt" : "aktiv",
-    capacity: toNumber(row.seminardat_maxpers_aktiv) || 0,
+    date: "",
+    startTime: "",
+    endTime: "",
+    location: "",
+    status: normalizeBoolean(row.seminar_aufgeloest) ? "deaktiviert" : "aktiv",
+    capacity: toNumber(row.seminar_maxpersonen_aktiv) || 0,
     bookedCount: 0,
     level: "",
-    price: toNumber(row.seminardat_grundpreis_aktiv) || 0,
-    notes: normalizeString(row.seminardat_bemerkung),
+    price: toNumber(row.seminar_grundpreis_aktiv) || 0,
+    notes,
     hundIds: [],
     kundenIds: [],
     outlookEventId: "",
@@ -323,7 +317,7 @@ export function mapKurs(row, ctx) {
     outlookStart: "",
     outlookEnd: "",
     outlookLocation: "",
-    inventoryFlag: false,
+    inventoryFlag: true,
     portfolioFlag: false,
     createdAt,
     updatedAt,

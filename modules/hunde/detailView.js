@@ -12,6 +12,7 @@ import { getKurseForHund } from "../shared/api/kurse.js";
 import { listFinanzenByKundeId } from "../shared/api/finanzen.js";
 import { runIntegrityCheck } from "../shared/api/db/integrityCheck.js";
 import { injectHundToast, setHundToast } from "./formView.js";
+import { formatHerkunft } from "./herkunft.js";
 
 export async function createHundeDetailView(container, hundId) {
   if (!container) return;
@@ -497,7 +498,7 @@ function buildDetailList(hund) {
     { label: "Größe (Typ)", value: hund.groesseTyp || hund.groesseType },
     { label: "Größe (cm)", value: hund.groesseCm },
     { label: "Gewicht (kg)", value: hund.gewichtKg },
-    { label: "Herkunft", value: hund.herkunft },
+    { label: "Herkunft", value: formatHerkunft(hund.herkunft) },
     { label: "Chip Nummer", value: hund.chipNummer || hund.chipnummer },
     { label: "Trainingsziele", value: hund.trainingsziele },
     { label: "Notizen", value: hund.notizen },

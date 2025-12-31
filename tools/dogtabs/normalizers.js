@@ -57,10 +57,27 @@ function parseIsoDate(value) {
   };
 }
 
+function parseUsDate(value) {
+  const match = value.match(
+    /^(\d{2})\/(\d{2})\/(\d{2}|\d{4})(?:\s+(\d{2}):(\d{2})(?::(\d{2}))?)?$/
+  );
+  if (!match) return null;
+  let [, mm, dd, yyyy, hh, min, ss] = match;
+  if (yyyy.length === 2) {
+    const yearNum = Number(yyyy);
+    if (Number.isNaN(yearNum)) return null;
+    yyyy = yearNum <= 49 ? `20${yyyy}` : `19${yyyy}`;
+  }
+  return {
+    date: `${yyyy}-${mm}-${dd}`,
+    time: hh ? `${hh}:${min || "00"}:${ss || "00"}` : "",
+  };
+}
+
 function normalizeDateTime(value) {
   const raw = normalizeString(value);
   if (!raw) return { date: "", time: "" };
-  const parsed = parseIsoDate(raw) || parseGermanDate(raw);
+  const parsed = parseIsoDate(raw) || parseGermanDate(raw) || parseUsDate(raw);
   if (!parsed) return { date: "", time: "" };
   return parsed;
 }

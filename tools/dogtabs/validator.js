@@ -2,7 +2,7 @@ const REQUIRED_FIELDS = {
   kunden: ["id", "nachname"],
   hunde: ["id", "name", "kundenId"],
   trainer: ["id", "name"],
-  kurse: ["id", "title", "trainerId", "date"],
+  kurse: ["id", "title", "trainerId"],
   finanzen: ["id", "kundeId", "typ", "datum"],
 };
 

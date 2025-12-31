@@ -194,12 +194,24 @@ export async function writeDogtabsModules(modules, options = {}) {
   const conn = await pool.getConnection();
   try {
     const results = [];
-    results.push(await writeModule(conn, "kunden", modules.kunden, insertKunde));
-    results.push(await writeModule(conn, "hunde", modules.hunde, insertHund));
-    results.push(await writeModule(conn, "trainer", modules.trainer, insertTrainer));
-    results.push(await writeModule(conn, "kurse", modules.kurse, insertKurs));
-    results.push(await writeModule(conn, "finanzen", modules.finanzen, insertFinanz));
-    results.push(await writeModule(conn, "pension", modules.pension, insertPension));
+    if (modules.kunden) {
+      results.push(await writeModule(conn, "kunden", modules.kunden, insertKunde));
+    }
+    if (modules.hunde) {
+      results.push(await writeModule(conn, "hunde", modules.hunde, insertHund));
+    }
+    if (modules.trainer) {
+      results.push(await writeModule(conn, "trainer", modules.trainer, insertTrainer));
+    }
+    if (modules.kurse) {
+      results.push(await writeModule(conn, "kurse", modules.kurse, insertKurs));
+    }
+    if (modules.finanzen) {
+      results.push(await writeModule(conn, "finanzen", modules.finanzen, insertFinanz));
+    }
+    if (modules.pension) {
+      results.push(await writeModule(conn, "pension", modules.pension, insertPension));
+    }
     return results;
   } finally {
     conn.release();

@@ -316,6 +316,47 @@ h3,
   background: var(--color-paper);
 }
 
+.kunden-columns-config {
+  margin: 0.75rem 0;
+  padding: 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.75rem;
+  background: #fbf7e8;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  max-height: 240px;
+  overflow: auto;
+}
+
+.kunden-columns-title {
+  margin: 0;
+  font-weight: 600;
+  color: var(--color-brand-900);
+}
+
+.kunden-columns-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  color: var(--color-ink);
+}
+
+.kunden-columns-actions {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.kunden-columns-move {
+  min-width: 2.2rem;
+  justify-content: center;
+}
+
+.kunden-columns-reset {
+  margin-top: 0.25rem;
+}
+
 .hunde-list-scroll {
   max-height: 420px;
   overflow: auto;
