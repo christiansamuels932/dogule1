@@ -29,8 +29,7 @@
     "happy-dom": "^20.0.2"
   },
   "dependencies": {
-    "mariadb": "^3.4.0",
-    "xlsx": "^0.18.5"
+    "mariadb": "^3.4.0"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [

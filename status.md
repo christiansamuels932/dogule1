@@ -15,6 +15,29 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 # - - - - - - - - - - - - - - - - - - - -
 
+# Station 76 — Audit Remediation (XLSX Export)
+
+## Kontext
+
+- Branch: `feature/station76-ui-followup`.
+- Scope: fix CI `pnpm audit` failure caused by `xlsx` vulnerabilities while keeping XLSX export behavior.
+
+## Ergebnis (kurz)
+
+- Removed the `xlsx` dependency and replaced export logic with a minimal in-browser XLSX (OOXML + zip) writer in `modules/shared/utils/xlsxExport.js`.
+- XLSX exports for Kunden/Hunde still generate `.xlsx` files, now without vulnerable third-party dependencies.
+- `pnpm install` updated the lockfile to remove `xlsx` from dependencies.
+
+## Tests
+
+- Not run (dependency and helper refactor only).
+
+## Notizen
+
+- Audit failure details: `xlsx` reported high severity Prototype Pollution and ReDoS advisories; no patched versions available, so dependency was removed.
+
+# - - - - - - - - - - - - - - - - - - - -
+
 # Station 76 — MariaDB Performance & Index Validation (UI Follow-up + Export)
 
 ## Kontext
