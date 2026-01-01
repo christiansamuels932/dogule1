@@ -15,6 +15,58 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 # - - - - - - - - - - - - - - - - - - - -
 
+# Station 76.7 — NAS Manual Test + Battleplan Update
+
+## Kontext
+
+- Branch: `feature/station76.5-nas-deployment`.
+- Scope: validate NAS staging manual test pass with live API, and record battleplan updates for NAS autostart + role-based logins.
+
+## Ergebnis (kurz)
+
+- Confirmed NAS API was down (502); started `tools/server/apiServer.js` on NAS to restore data access.
+- Verified reverse proxy and local API health; full manual test pass on NAS staging completed.
+- Added battleplan notes: NAS autostart requirement for MariaDB + API server, and Trainer/Admin role-based login requirement for Kommunikation.
+
+## Tests
+
+- NAS local API: `curl http://127.0.0.1:5177/api/kunden` ✅
+- NAS reverse proxy: `curl https://4c31.synology.me:8443/api/kunden` ✅
+- Manual NAS staging test (Kunden/Hunde/Kurse/Trainer/Kalender/Finanzen/Waren + navigation) ✅
+
+## Notizen
+
+- API server must be running on NAS for the frontend to load data.
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 76.6 — Post-Remediation Verification
+
+## Kontext
+
+- Branch: `feature/station76.5-nas-deployment`.
+- Scope: verify Hunde `Geburtsdatum`/`Herkunft` UI rendering, confirm Kunden list column sorting, and re-run tests after XLSX dependency removal.
+
+## Ergebnis (kurz)
+
+- Verified Kunden → Hunde list shows `Geburtsdatum` values and `Herkunft` labels (not numeric codes).
+- Verified Hund detail view renders `Geburtsdatum` and `Herkunft` correctly.
+- Confirmed Kunden list column "Hunde, Name" is present and sortable.
+- `pnpm test` and `pnpm build` pass after XLSX removal.
+
+## Tests
+
+- Manual UI check: Kunden list → Kunde → Hunde list; Hund detail ✅
+- Manual UI check: Kunden list column "Hunde, Name" sortable ✅
+- `pnpm test` ✅
+- `pnpm build` ✅
+
+## Notizen
+
+- Manual verification only; no code changes.
+
+# - - - - - - - - - - - - - - - - - - - -
+
 # Station 76 — Audit Remediation (XLSX Export)
 
 ## Kontext

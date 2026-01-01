@@ -184,6 +184,7 @@ Scope
 
 - Deploy the MariaDB-backed app to NAS as a staging environment for manual testing.
 - Record environment configuration and deployment path.
+- Ensure NAS backend services autostart (MariaDB + API server) so staging survives reboots.
 
 NAS profile
 
@@ -313,6 +314,7 @@ Scope
 - Outlook calendar is source of truth: Dogule1 calendar mirrors Outlook entries (read-only).
 - Kurse are created as inventory/portfolio items and then distributed/assigned.
 - Birthday email automation (template + scheduling + opt-in rules).
+- Role-based logins for Trainer/Admin with Kommunikation tab access control.
 
 Deliverables
 
