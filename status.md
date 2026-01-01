@@ -1899,3 +1899,27 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 - NAS updates should avoid scp/rsync for repo changes; use `git pull` after merges.
 
 # - - - - - - - - - - - - - - - - - - - -
+
+# Station 76.10 — NAS Healthcheck Script
+
+## Kontext
+
+- Status: read-only (completed).
+- Branch: `feature/station76.6-nas-followup`.
+- Scope: add a lightweight boot-time healthcheck script for NAS API/MariaDB and log results to `api.log`.
+
+## Ergebnis (kurz)
+
+- Added `tools/ops/nas-api-healthcheck.sh` for socket + API checks.
+- `tools/ops/nas-api-server.sh` now triggers the healthcheck after starting the API.
+- Runbook updated with executable steps for the new healthcheck.
+
+## Tests
+
+- Not run (ops script only).
+
+## Notizen
+
+- Healthcheck uses `curl` and the MariaDB socket path to validate readiness.
+
+# - - - - - - - - - - - - - - - - - - - -
