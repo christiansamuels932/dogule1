@@ -1853,3 +1853,26 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 - API server must be running on NAS for the frontend to load data.
 
 # - - - - - - - - - - - - - - - - - - - -
+
+# Station 76.8 — NAS Autostart Follow-up
+
+## Kontext
+
+- Status: read-only (completed).
+- Branch: `feature/station76.6-nas-followup`.
+- Scope: make NAS staging self-starting by documenting API + MariaDB autostart steps and providing an API boot script.
+
+## Ergebnis (kurz)
+
+- Added NAS API boot script at `tools/ops/nas-api-server.sh` (waits for MariaDB socket, then starts API).
+- Updated NAS runbook with DSM Task Scheduler boot task instructions and MariaDB autostart checklist.
+
+## Tests
+
+- Not run (documentation + ops script only).
+
+## Notizen
+
+- Task Scheduler must run at boot to keep staging alive after NAS restarts.
+
+# - - - - - - - - - - - - - - - - - - - -

@@ -67,10 +67,23 @@ Steps:
    - DSM → Control Panel → Login Portal → Reverse Proxy → disable `dogule1-api`.
 4. (Optional) Close port 8443 in NAS firewall + router if no longer needed.
 
-Future Task — Persistent API Service (DSM Task Scheduler)
+Autostart — Persistent API Service (DSM Task Scheduler)
 
-- Create a boot-time task to start the API server automatically after NAS reboot.
-- Not implemented yet; schedule for follow-up.
+- Script: `/volume1/dogule1nasfolder/dogule1/tools/ops/nas-api-server.sh`
+- Ensure executable: `chmod +x /volume1/dogule1nasfolder/dogule1/tools/ops/nas-api-server.sh`
+- DSM → Control Panel → Task Scheduler → Create → Scheduled Task → User-defined script.
+  - User: `root` (recommended for consistent PATH) or `me` if PATH is set.
+  - Event: Boot-up.
+  - Run command: `/bin/sh /volume1/dogule1nasfolder/dogule1/tools/ops/nas-api-server.sh`
+- Verify after reboot:
+  - `curl http://127.0.0.1:5177/api/kunden` → 200
+  - `curl https://4c31.synology.me:8443/api/kunden` → 200
+  - `tail -n 50 /volume1/dogule1nasfolder/dogule1/api.log`
+
+Autostart — MariaDB Package
+
+- DSM Package Center → MariaDB 10 → ensure "Run at startup" is enabled.
+- Socket check: `/run/mysqld/mysqld10.sock` exists after boot.
 
 ---
 
