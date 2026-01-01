@@ -1876,3 +1876,26 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 - Task Scheduler must run at boot to keep staging alive after NAS restarts.
 
 # - - - - - - - - - - - - - - - - - - - -
+
+# Station 76.9 — NAS Git Deploy Key Workflow
+
+## Kontext
+
+- Status: read-only (completed).
+- Branch: `feature/station76.6-nas-followup`.
+- Scope: switch NAS updates to a GitHub Deploy Key workflow and document `git pull` deployment steps.
+
+## Ergebnis (kurz)
+
+- Added a detailed NAS git workflow in `NAS_STATION76_5_SETUP.md` (deploy key creation, remote config, pull-based updates).
+- Clarified that `git fetch` does not update the working tree; `git pull` is required for deployments.
+
+## Tests
+
+- Not run (documentation-only).
+
+## Notizen
+
+- NAS updates should avoid scp/rsync for repo changes; use `git pull` after merges.
+
+# - - - - - - - - - - - - - - - - - - - -
