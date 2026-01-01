@@ -67,10 +67,23 @@ Steps:
    - DSM → Control Panel → Login Portal → Reverse Proxy → disable `dogule1-api`.
 4. (Optional) Close port 8443 in NAS firewall + router if no longer needed.
 
-Future Task — Persistent API Service (DSM Task Scheduler)
+Autostart — Persistent API Service (DSM Task Scheduler)
 
-- Create a boot-time task to start the API server automatically after NAS reboot.
-- Not implemented yet; schedule for follow-up.
+- Script: `/volume1/dogule1nasfolder/dogule1/tools/ops/nas-api-server.sh`
+- Ensure executable: `chmod +x /volume1/dogule1nasfolder/dogule1/tools/ops/nas-api-server.sh`
+- DSM → Control Panel → Task Scheduler → Create → Scheduled Task → User-defined script.
+  - User: `root` (recommended for consistent PATH) or `me` if PATH is set.
+  - Event: Boot-up.
+  - Run command: `/bin/sh /volume1/dogule1nasfolder/dogule1/tools/ops/nas-api-server.sh`
+- Verify after reboot:
+  - `curl http://127.0.0.1:5177/api/kunden` → 200
+  - `curl https://4c31.synology.me:8443/api/kunden` → 200
+  - `tail -n 50 /volume1/dogule1nasfolder/dogule1/api.log`
+
+Autostart — MariaDB Package
+
+- DSM Package Center → MariaDB 10 → ensure "Run at startup" is enabled.
+- Socket check: `/run/mysqld/mysqld10.sock` exists after boot.
 
 ---
 
@@ -129,6 +142,44 @@ Manual Action Required / NAS Remote Access
   - Deploy the build to NAS.
   - Configure API server placement or reverse proxy (if required).
   - Verify access scope (LAN-only vs public).
+
+NAS Repo Update Workflow (Required)
+
+Goal: the NAS should never be updated via ad-hoc scp/rsync for code changes. Use a GitHub Deploy Key and standard `git pull`.
+
+One-time setup (NAS)
+
+- Create the key folder:
+  - `mkdir -p /volume1/dogule1nasfolder/dogule1/.ssh`
+  - `chmod 700 /volume1/dogule1nasfolder/dogule1/.ssh`
+- Generate a deploy key (no passphrase):
+  - `ssh-keygen -t ed25519 -C "dogule1-nas" -f /volume1/dogule1nasfolder/dogule1/.ssh/id_ed25519`
+- Print the public key:
+  - `cat /volume1/dogule1nasfolder/dogule1/.ssh/id_ed25519.pub`
+- Add the public key to GitHub:
+  - Repo → Settings → Deploy keys → Add deploy key.
+  - Title: `dogule1-nas` (suggested).
+  - Paste the public key (single line starting with `ssh-ed25519`).
+  - Read-only is acceptable.
+
+One-time setup (NAS git remote)
+
+- Set the SSH identity without ssh-agent:
+  - `export GIT_SSH_COMMAND="ssh -i /volume1/dogule1nasfolder/dogule1/.ssh/id_ed25519 -o IdentitiesOnly=yes"`
+- Point the repo to SSH remote:
+  - `cd /volume1/dogule1nasfolder/dogule1`
+  - `git remote set-url origin git@github.com:christiansamuels932/dogule1.git`
+- Verify access:
+  - `git fetch`
+
+Ongoing update workflow (NAS)
+
+- Always do a pull on the branch you deploy from:
+  - `cd /volume1/dogule1nasfolder/dogule1`
+  - `export GIT_SSH_COMMAND="ssh -i /volume1/dogule1nasfolder/dogule1/.ssh/id_ed25519 -o IdentitiesOnly=yes"`
+  - `git checkout <branch>`
+  - `git pull`
+- Note: `git fetch` downloads updates but does not update the working tree. Use `git pull` for actual deployment.
 
 Record updates here as steps are completed.
 

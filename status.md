@@ -1853,3 +1853,49 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 - API server must be running on NAS for the frontend to load data.
 
 # - - - - - - - - - - - - - - - - - - - -
+
+# Station 76.8 — NAS Autostart Follow-up
+
+## Kontext
+
+- Status: read-only (completed).
+- Branch: `feature/station76.6-nas-followup`.
+- Scope: make NAS staging self-starting by documenting API + MariaDB autostart steps and providing an API boot script.
+
+## Ergebnis (kurz)
+
+- Added NAS API boot script at `tools/ops/nas-api-server.sh` (waits for MariaDB socket, then starts API).
+- Updated NAS runbook with DSM Task Scheduler boot task instructions and MariaDB autostart checklist.
+
+## Tests
+
+- Not run (documentation + ops script only).
+
+## Notizen
+
+- Task Scheduler must run at boot to keep staging alive after NAS restarts.
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 76.9 — NAS Git Deploy Key Workflow
+
+## Kontext
+
+- Status: read-only (completed).
+- Branch: `feature/station76.6-nas-followup`.
+- Scope: switch NAS updates to a GitHub Deploy Key workflow and document `git pull` deployment steps.
+
+## Ergebnis (kurz)
+
+- Added a detailed NAS git workflow in `NAS_STATION76_5_SETUP.md` (deploy key creation, remote config, pull-based updates).
+- Clarified that `git fetch` does not update the working tree; `git pull` is required for deployments.
+
+## Tests
+
+- Not run (documentation-only).
+
+## Notizen
+
+- NAS updates should avoid scp/rsync for repo changes; use `git pull` after merges.
+
+# - - - - - - - - - - - - - - - - - - - -
