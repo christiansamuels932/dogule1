@@ -208,6 +208,44 @@ Exit criteria
 
 - NAS staging environment is live and stable for Station 77 manual tests.
 
+Station 76.7 — Contabo VPS Setup (Production-Grade Hosting)
+
+Branch: `feature/station76.7-contabo-vps-setup`
+
+Scope
+
+- Provision a Contabo VPS and migrate hosting from NAS to VPS for stable, self-running deployment.
+- Establish reproducible setup steps (OS hardening, users, firewall, SSH, domain/SSL, services).
+- Deploy MariaDB + Node API + static frontend with automatic startup and monitoring basics.
+- Document a step-by-step operator runbook with copy/paste commands and verification checks.
+- Keep NAS as optional backup/staging; VPS becomes the primary always-on host.
+
+Deliverables
+
+- `CONTABO_VPS_SETUP.md` with:
+  - VPS spec (region, plan, OS, IPs).
+  - SSH access steps + key management.
+  - Firewall rules and basic hardening.
+  - MariaDB install/config + schema load + import flow.
+  - Node API service (systemd unit + env file).
+  - Static frontend hosting (nginx or Caddy) with `/api` reverse proxy.
+  - TLS/HTTPS setup (Let's Encrypt or Caddy auto TLS).
+  - Backup/restore notes and update workflow (`git pull`, `pnpm build`, deploy).
+  - Health checks and a rollback plan.
+- `status.md` entry confirming setup + smoke tests.
+
+Validation
+
+- SSH login works with keys only.
+- `systemctl status` shows MariaDB + API running after reboot.
+- `/api/kunden` responds 200 on the public domain.
+- Frontend loads and CRUD works against MariaDB.
+
+Exit criteria
+
+- VPS is the primary deployment target and survives reboot without manual steps.
+- Documented runbook is verified end-to-end.
+
 Station 77 — Manual Test Round 1 (Baseline)
 
 Branch: `feature/station77-manual-test-1`

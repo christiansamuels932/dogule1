@@ -1923,3 +1923,26 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 - Healthcheck uses `curl` and the MariaDB socket path to validate readiness.
 
 # - - - - - - - - - - - - - - - - - - - -
+
+# Station 76.11 — Contabo VPS Setup (Battleplan Added)
+
+## Kontext
+
+- Status: read-only (completed).
+- Branch: `feature/station76.6-nas-followup`.
+- Scope: add a new battleplan station for migrating hosting from NAS to Contabo VPS with production-grade setup and step-by-step operator runbook.
+
+## Ergebnis (kurz)
+
+- Added Station 76.7 “Contabo VPS Setup (Production-Grade Hosting)” to `BATTLEPLAN_STATIONS_71_PLUS.md`.
+- Station scope includes VPS provisioning, OS hardening, firewall, MariaDB + Node API services, static hosting with reverse proxy, TLS, backup/rollback, and verified runbook.
+
+## Tests
+
+- Not run (documentation-only).
+
+## Notizen
+
+- Next agent should create `CONTABO_VPS_SETUP.md` and execute the runbook on the VPS.
+
+# - - - - - - - - - - - - - - - - - - - -
