@@ -1946,3 +1946,28 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 - Next agent should create `CONTABO_VPS_SETUP.md` and execute the runbook on the VPS.
 
 # - - - - - - - - - - - - - - - - - - - -
+
+# Station 76.12 — Handover Notes (Contabo VPS)
+
+## Kontext
+
+- Status: read-only (completed).
+- Branch: `feature/station76.6-nas-followup`.
+- Scope: record handover notes for the Contabo VPS station so a new agent can continue without context loss.
+
+## Ergebnis (kurz)
+
+- New battleplan entry: Station 76.7 “Contabo VPS Setup (Production-Grade Hosting)” in `BATTLEPLAN_STATIONS_71_PLUS.md`.
+- `status.md` Station 76.11 notes that the runbook must be created and executed.
+- Next deliverable: `CONTABO_VPS_SETUP.md` with full provisioning + service setup steps.
+- VPS work should include: SSH keys only, firewall hardening, MariaDB + API systemd units, static hosting with reverse proxy, TLS, backups, and reboot validation.
+
+## Tests
+
+- Not run (handover note only).
+
+## Notizen
+
+- Use this as the single source of truth for the next agent’s kickoff.
+
+# - - - - - - - - - - - - - - - - - - - -
