@@ -5,6 +5,7 @@ ROOT="/volume1/dogule1nasfolder/dogule1"
 LOG="$ROOT/api.log"
 SOCKET="${DOGULE1_MARIADB_SOCKET:-/run/mysqld/mysqld10.sock}"
 NODE_BIN="${NODE_BIN:-$(command -v node || true)}"
+HEALTHCHECK="$ROOT/tools/ops/nas-api-healthcheck.sh"
 
 if pgrep -f "tools/server/apiServer.js" >/dev/null 2>&1; then
   exit 0
@@ -29,3 +30,7 @@ if [ -n "$SOCKET" ]; then
 fi
 
 nohup "$NODE_BIN" tools/server/apiServer.js >> "$LOG" 2>&1 &
+
+if [ -x "$HEALTHCHECK" ]; then
+  nohup /bin/sh "$HEALTHCHECK" >> "$LOG" 2>&1 &
+fi

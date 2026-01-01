@@ -70,7 +70,9 @@ Steps:
 Autostart — Persistent API Service (DSM Task Scheduler)
 
 - Script: `/volume1/dogule1nasfolder/dogule1/tools/ops/nas-api-server.sh`
+- Healthcheck script (optional): `/volume1/dogule1nasfolder/dogule1/tools/ops/nas-api-healthcheck.sh`
 - Ensure executable: `chmod +x /volume1/dogule1nasfolder/dogule1/tools/ops/nas-api-server.sh`
+- Ensure executable: `chmod +x /volume1/dogule1nasfolder/dogule1/tools/ops/nas-api-healthcheck.sh`
 - DSM → Control Panel → Task Scheduler → Create → Scheduled Task → User-defined script.
   - User: `root` (recommended for consistent PATH) or `me` if PATH is set.
   - Event: Boot-up.

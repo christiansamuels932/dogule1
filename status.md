@@ -1899,3 +1899,75 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 - NAS updates should avoid scp/rsync for repo changes; use `git pull` after merges.
 
 # - - - - - - - - - - - - - - - - - - - -
+
+# Station 76.10 — NAS Healthcheck Script
+
+## Kontext
+
+- Status: read-only (completed).
+- Branch: `feature/station76.6-nas-followup`.
+- Scope: add a lightweight boot-time healthcheck script for NAS API/MariaDB and log results to `api.log`.
+
+## Ergebnis (kurz)
+
+- Added `tools/ops/nas-api-healthcheck.sh` for socket + API checks.
+- `tools/ops/nas-api-server.sh` now triggers the healthcheck after starting the API.
+- Runbook updated with executable steps for the new healthcheck.
+
+## Tests
+
+- Not run (ops script only).
+
+## Notizen
+
+- Healthcheck uses `curl` and the MariaDB socket path to validate readiness.
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 76.11 — Contabo VPS Setup (Battleplan Added)
+
+## Kontext
+
+- Status: read-only (completed).
+- Branch: `feature/station76.6-nas-followup`.
+- Scope: add a new battleplan station for migrating hosting from NAS to Contabo VPS with production-grade setup and step-by-step operator runbook.
+
+## Ergebnis (kurz)
+
+- Added Station 76.7 “Contabo VPS Setup (Production-Grade Hosting)” to `BATTLEPLAN_STATIONS_71_PLUS.md`.
+- Station scope includes VPS provisioning, OS hardening, firewall, MariaDB + Node API services, static hosting with reverse proxy, TLS, backup/rollback, and verified runbook.
+
+## Tests
+
+- Not run (documentation-only).
+
+## Notizen
+
+- Next agent should create `CONTABO_VPS_SETUP.md` and execute the runbook on the VPS.
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 76.12 — Handover Notes (Contabo VPS)
+
+## Kontext
+
+- Status: read-only (completed).
+- Branch: `feature/station76.6-nas-followup`.
+- Scope: record handover notes for the Contabo VPS station so a new agent can continue without context loss.
+
+## Ergebnis (kurz)
+
+- New battleplan entry: Station 76.7 “Contabo VPS Setup (Production-Grade Hosting)” in `BATTLEPLAN_STATIONS_71_PLUS.md`.
+- `status.md` Station 76.11 notes that the runbook must be created and executed.
+- Next deliverable: `CONTABO_VPS_SETUP.md` with full provisioning + service setup steps.
+- VPS work should include: SSH keys only, firewall hardening, MariaDB + API systemd units, static hosting with reverse proxy, TLS, backups, and reboot validation.
+
+## Tests
+
+- Not run (handover note only).
+
+## Notizen
+
+- Use this as the single source of truth for the next agent’s kickoff.
+
+# - - - - - - - - - - - - - - - - - - - -
