@@ -15,61 +15,11 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 # - - - - - - - - - - - - - - - - - - - -
 
-# Station 76.7 — NAS Manual Test + Battleplan Update
-
-## Kontext
-
-- Branch: `feature/station76.5-nas-deployment`.
-- Scope: validate NAS staging manual test pass with live API, and record battleplan updates for NAS autostart + role-based logins.
-
-## Ergebnis (kurz)
-
-- Confirmed NAS API was down (502); started `tools/server/apiServer.js` on NAS to restore data access.
-- Verified reverse proxy and local API health; full manual test pass on NAS staging completed.
-- Added battleplan notes: NAS autostart requirement for MariaDB + API server, and Trainer/Admin role-based login requirement for Kommunikation.
-
-## Tests
-
-- NAS local API: `curl http://127.0.0.1:5177/api/kunden` ✅
-- NAS reverse proxy: `curl https://4c31.synology.me:8443/api/kunden` ✅
-- Manual NAS staging test (Kunden/Hunde/Kurse/Trainer/Kalender/Finanzen/Waren + navigation) ✅
-
-## Notizen
-
-- API server must be running on NAS for the frontend to load data.
-
-# - - - - - - - - - - - - - - - - - - - -
-
-# Station 76.6 — Post-Remediation Verification
-
-## Kontext
-
-- Branch: `feature/station76.5-nas-deployment`.
-- Scope: verify Hunde `Geburtsdatum`/`Herkunft` UI rendering, confirm Kunden list column sorting, and re-run tests after XLSX dependency removal.
-
-## Ergebnis (kurz)
-
-- Verified Kunden → Hunde list shows `Geburtsdatum` values and `Herkunft` labels (not numeric codes).
-- Verified Hund detail view renders `Geburtsdatum` and `Herkunft` correctly.
-- Confirmed Kunden list column "Hunde, Name" is present and sortable.
-- `pnpm test` and `pnpm build` pass after XLSX removal.
-
-## Tests
-
-- Manual UI check: Kunden list → Kunde → Hunde list; Hund detail ✅
-- Manual UI check: Kunden list column "Hunde, Name" sortable ✅
-- `pnpm test` ✅
-- `pnpm build` ✅
-
-## Notizen
-
-- Manual verification only; no code changes.
-
-# - - - - - - - - - - - - - - - - - - - -
-
 # Station 76 — Audit Remediation (XLSX Export)
 
 ## Kontext
+
+- Status: read-only (completed).
 
 - Branch: `feature/station76-ui-followup`.
 - Scope: fix CI `pnpm audit` failure caused by `xlsx` vulnerabilities while keeping XLSX export behavior.
@@ -93,6 +43,8 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 # Station 76 — MariaDB Performance & Index Validation (UI Follow-up + Export)
 
 ## Kontext
+
+- Status: read-only (completed).
 
 - Branch: `feature/station75-dogtabs-ingestion` (follow-up changes captured here).
 - Scope: complete Station-76 manual UI follow-ups, add Hunde Herkunft enum + form fields, add Kunden/Hunde XLSX exports, and add Kunden list column controls with “Hunde, Name” visibility.
@@ -125,6 +77,8 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 # Station 76 — MariaDB Performance & Index Validation
 
 ## Kontext
+
+- Status: read-only (completed).
 
 - Branch: `feature/station76-mariadb-performance`.
 - Scope: define thresholds, enumerate adapter SQL, run EXPLAIN + timed baselines, UI N+1 sanity check, and document findings in `MARIADB_PERF_REPORT.md`.
@@ -166,6 +120,8 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 ## Kontext
 
+- Status: read-only (completed).
+
 - Branch: `station71`.
 - Scope: visual cohesion pass, standardized button spacing, and list/detail refinements for Kunden/Hunde/Kurse/Trainer; no backend changes.
 
@@ -192,6 +148,8 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 ## Kontext
 
+- Status: read-only (completed).
+
 - Branch: `feature/station72-alpha-closeout`.
 - Scope: freeze Alpha scope, define Beta entry/exit criteria, and standardize manual test issue logging. Documentation only.
 
@@ -209,6 +167,8 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 # Station 73 — DogTabs Data Inventory & Mapping Plan
 
 ## Kontext
+
+- Status: read-only (completed).
 
 - Branch: `feature/station73-dogtabs-inventory`.
 - Scope: inventory DogTabs legacy capture (read-only), document file formats/counts, and define a mapping plan to Dogule1 schema.
@@ -240,6 +200,8 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 # Station 74 — MariaDB Schema & Adapter Implementation
 
 ## Kontext
+
+- Status: read-only (completed).
 
 - Branch: `feature/station74-mariadb-schema-adapter`.
 - Scope: implement MariaDB schema + adapter, switch core CRUD to HTTP-backed API, and hard-require MariaDB for Beta usage.
@@ -275,6 +237,8 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 # Station 75 — DogTabs Data Ingestion Pipeline
 
 ## Kontext
+
+- Status: read-only (completed).
 
 - Branch: `feature/station75-dogtabs-ingestion`.
 - Scope: DogTabs ingestion + MariaDB wiring + manual-test preparation (Kunden → Hunde → Kurse).
@@ -316,6 +280,8 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 ## Kontext
 
+- Status: read-only (completed).
+
 - Branch: `from-alpha-to-beta-planning`.
 - Scope: consolidate current docs (excluding `status.md`), archive legacy MDs, and define the Alpha→Beta battleplan with early UI preview pass.
 
@@ -338,6 +304,8 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 # Station 70 — Storage & Security Hardening Pass
 
 ## Kontext
+
+- Status: read-only (completed).
 
 - Branch: `70`.
 - Scope: storage failure-injection + restore drill, audit/log integrity check, secret rotation drill, and permission/rate-limit review after integrations.
@@ -376,6 +344,8 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 ## Kontext
 
+- Status: read-only (completed).
+
 - Branch: `67x`.
 - Scope: remove email feature across Kommunikation (UI, API, storage validators, tests) and delete email/Outlook planning from governance/baseline/DoR documents; retain historical logs.
 
@@ -393,6 +363,8 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 # Station 67K — Infochannel with Confirmation Flow
 
 ## Kontext
+
+- Status: read-only (completed).
 
 - Branch: `feature/station67k-infochannel-confirmation`.
 - Scope: admin-only Infochannel publish, trainer confirmation flow, SLA clock + reminders/escalations, full audit trail, rate limits, and UI wiring; no comments/attachments/edits after send.
@@ -418,6 +390,8 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 ## Kontext
 
+- Status: read-only (completed).
+
 - Branch: `feature/station67e-email-send-mvp`.
 - Scope: compose→send flow in Kommunikation → Emails, Outlook send connector (send-only), status surfaced, abuse thresholds + rate limits, audit logging, kill switch + SPF/DKIM/DMARC alignment plan docs.
 
@@ -441,6 +415,8 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 ## Kontext
 
+- Status: read-only (completed).
+
 - Branch: `feature/station66r-groupchat-retention`.
 - Scope: enforce deterministic retention for the global groupchat with pinned cutoff pagination, logical read-marker clamping, gated server-side pruning, and minimal UI notices; no polling/push, no moderation UI, no migrations.
 
@@ -463,6 +439,8 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 # Station 65 — Groupchat Core (Step 2 — API & UI Wiring)
 
 ## Kontext
+
+- Status: read-only (completed).
 
 - Branch: `feature/station65-groupchat-core`.
 - Scope: Expose SAL-backed global groupchat via HTTP-style handlers and wire Kommunikation → Chats UI (list badge/preview, detail view, composer with optimistic send/retry, read marker update, offline handling). No polling/push.
@@ -489,6 +467,8 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 ## Kontext
 
+- Status: read-only (completed).
+
 - Branch: `feature/station65-groupchat-core`.
 - Scope: Storage + SAL for global group chat (room/message/read marker/dedupe entities, authz, rate limits, audit hooks, ordering/pagination). UI remains untouched.
 
@@ -511,6 +491,8 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 # Station 64 — Kommunikation Skeleton (Abgeschlossen)
 
 ## Kontext
+
+- Status: read-only (completed).
 
 - Branch: `feature/station64-kommunikation-skeleton`.
 - Scope: read-only Kommunikation shell with hash-based tabs (Chats, Infochannel, Emails, System), deterministic state machine (loading/empty/error/offline), deny-by-default authz on view actions, SAL-based offline detection only, navigation/view logging without sensitive payloads. No send/notifications/migrations.
@@ -535,6 +517,8 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 # Station 63 — Real Storage Core Entities (Abgeschlossen)
 
 ## Kontext
+
+- Status: read-only (completed).
 
 - Branch: `feature/station63-storage-layer`.
 - Scope: implement real-mode storage + audit chain for Kunden/Hunde/Trainer/Kurse with schemaVersion=1 validation, checksum-wrapped JSON files, FK checks (Hund→Kunde, Kurs→Trainer), fail-fast storage root, and contract-first logging/alerts.
@@ -561,6 +545,8 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 ## Kontext
 
+- Status: read-only (completed).
+
 - Branch: `feature/station62-logging-rate-alerts`.
 - Scope: Closing summary after Steps 1–2E delivered (schema, logger, alerts, rate limits, health endpoints).
 
@@ -582,6 +568,8 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 # Station 62 — Logging, Rate Limits, Alerts (Step 2E — Health Endpoints)
 
 ## Kontext
+
+- Status: read-only (completed).
 
 - Branch: `feature/station62-logging-rate-alerts`.
 - Scope: add `/healthz` (always 200 ok) and `/readyz` (200 ok vs 503 not_ready) handlers with internal readiness checks; no external deps.
@@ -606,6 +594,8 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 ## Kontext
 
+- Status: read-only (completed).
+
 - Branch: `feature/station62-logging-rate-alerts`.
 - Scope: in-memory fixed-window rate limit primitive + rate-limit hit logging helper; no concrete limits yet.
 
@@ -628,6 +618,8 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 # Station 62 — Logging, Rate Limits, Alerts (Step 2C — Alert Signals)
 
 ## Kontext
+
+- Status: read-only (completed).
 
 - Branch: `feature/station62-logging-rate-alerts`.
 - Scope: alert wrapper over central logger with throttling; no new dependencies or schema changes.
@@ -652,6 +644,8 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 ## Kontext
 
+- Status: read-only (completed).
+
 - Branch: `feature/station62-logging-rate-alerts`.
 - Scope: central JSONL logger with schema validation + fail-fast/dev-test vs drop-once-in-prod behavior; no new dependencies.
 
@@ -674,6 +668,8 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 # Station 62 — Logging, Rate Limits, Alerts (Step 2A — Schema Validation Loader)
 
 ## Kontext
+
+- Status: read-only (completed).
 
 - Branch: `feature/station62-logging-rate-alerts`.
 - Scope: runtime loader + validator for log/alert schema (no UI/storage changes); no new dependencies added; ajv absent, so minimal in-repo validator used.
@@ -699,6 +695,8 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 ## Kontext
 
+- Status: read-only (completed).
+
 - Branch: `feature/station62-logging-rate-alerts`.
 - Scope: define canonical logging/alert event schema and JSON Schema; boundaries: no UI, no migrations, no storage writes beyond logs.
 
@@ -721,6 +719,8 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 ## Kontext
 
+- Status: read-only (completed).
+
 - Zeitraum: Phase 1 Baseline bis Kurs-Finanzflächen.
 - Branches/PRs: diverse, bereits gemergt; keine offenen PRs mehr aus dieser Phase.
 - Scope: Tooling, Router/Layout, Shared Components, zentrale Mock-API, CRUD für Kunden/Hunde/Kurse, erste Finanzen-Ansichten, frühe Verknüpfungen (Kunden↔Hunde↔Kurse), Build/NAS-Vorbereitung.
@@ -741,6 +741,8 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 # Station 58 — Storage Access Layer Architecture (E3)
 
 ## Kontext
+
+- Status: read-only (completed).
 
 - Branch: `feature/station57-authorization-matrix`.
 - Ziel: Architekturplan für die Storage Access Layer (SAL), dual-mode (mock/real), inkl. AuthZ/Audit-Anforderungen, Migrationsreihenfolge, Storage-Layout, Contract-Tests und Ownership-Tabelle. Keine Code-/Storage-Änderungen.
@@ -769,6 +771,8 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 ## Kontext
 
+- Status: read-only (completed).
+
 - Branch: `feature/station59-auth-sessions`.
 - Ziel: Auth-/Session-MVP mit lokalem Login (`admin|staff|trainer`), PBKDF2-Hashing, Access/Refresh-Tokens, Lockout, Logout/Revoke, Admin-2FA-Flag (stub), Feature-Flagging; Audit-/AuthZ-Aktions-IDs fest verdrahtet in Baseline/Matrix.
 
@@ -794,6 +798,8 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 # Station 57 — Authorization Matrix & Audit Plan (F2, F4)
 
 ## Kontext
+
+- Status: read-only (completed).
 
 - Branch: `feature/station57-authorization-matrix`.
 - Ziel: Station-57 Planung/Dokumentation für Rollen×Aktionen, Audit-/Alert-Konzept, tamper-evidente Logs; erfüllt gleichzeitig die ausstehende Station-52 Security-Baseline-Anforderung.
@@ -823,6 +829,8 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 ## Kontext
 
+- Status: read-only (completed).
+
 - Phase-1 Abschluss: Vereinheitlichung und Hardening der Basis.
 - Scope: UI/ID-Regeln angleichen, Vite-Build stabilisieren, Router/Layout finalisieren, Mock-DB zentralisieren.
 
@@ -847,6 +855,8 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 ## Kontext
 
+- Status: read-only (completed).
+
 - Ziel: Pflicht-Checkliste für Phase-A-Module etablieren.
 - Artefakt: `PHASEA_SELFTEST_CHECKLIST.md` erstellt und im MASTER verankert.
 
@@ -866,6 +876,8 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 # Station 20 — Dashboard Phase A
 
 ## Kontext
+
+- Status: read-only (completed).
 
 - Ziel: Dashboard auf zentrale Mock-API umstellen, Phase-A-Ready.
 
@@ -892,6 +904,8 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 ## Kontext
 
+- Status: read-only (completed).
+
 - Branch: `feature/station24-trainer`
 - Ziel: Trainer-Modul Phase-A-fertig (CRUD, Validierung, Shared Components).
 
@@ -917,6 +931,8 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 ## Kontext
 
+- Status: read-only (completed).
+
 - Branch: `feature/station25-finanzen`
 - Ziel: Phase-A-Skelett für Finanzen (ohne CRUD/Deletes, vorbereitet für Station 27).
 
@@ -941,6 +957,8 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 # Station 27 — Finanzen Single-Module Completion (Phase A)
 
 ## Kontext
+
+- Status: read-only (completed).
 
 - Branch: `feature/station27-finanzen`
 - Ziel: Finanzen-CRUD komplettieren.
@@ -968,6 +986,8 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 ## Kontext
 
+- Status: read-only (completed).
+
 - Branch: `feature/station28-waren`
 - Ziel: Waren-CRUD Phase-A-fertig (keine Relationen).
 
@@ -992,6 +1012,8 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 ## Kontext
 
+- Status: read-only (completed).
+
 - Branch: `feature/station29-kunden-hunde`
 - Ziel: Bidirektionale Navigation Kunden↔Hunde, FK-Sicherung.
 
@@ -1015,6 +1037,8 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 # Station 30 — Connect Kunden ↔ Kurse (Hunde-basiert)
 
 ## Kontext
+
+- Status: read-only (completed).
 
 - Branch: `feature/station30-kunden-kurse`
 - Ziel: Teilnehmermodell auf Hunde-only, abgeleitete Kundenanzeigen.
@@ -1041,6 +1065,8 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 ## Kontext
 
+- Status: read-only (completed).
+
 - Branch: `feature/station31-hunde-kurse`
 - Ziel: Kurse in Hundedetail, Hunde in Kursdetail; Besitzerinfos konsistent.
 
@@ -1063,6 +1089,8 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 # Station 32 — Connect Kurse ↔ Trainer
 
 ## Kontext
+
+- Status: read-only (completed).
 
 - Branch: `feature/station31-hunde-kurse` (fortgeführt)
 - Ziel: Trainer-Zuweisung validieren, Kurse ↔ Trainer Navigation, Delete-Guards.
@@ -1088,6 +1116,8 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 ## Kontext
 
+- Status: read-only (completed).
+
 - Branch: `feature/station31-hunde-kurse`
 - Ziel: CI-Build-Fix nach fehlendem Export und FK-Check.
 
@@ -1110,6 +1140,8 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 # Station 33 — Connect Kurse ↔ Kalender
 
 ## Kontext
+
+- Status: read-only (completed).
 
 - Branch: `feature/station33-kurse-kalender`
 - Ziel: Kalender-Ereignisse strikt aus Kursen ableiten/synchronisieren.
@@ -1135,6 +1167,8 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 ## Kontext
 
+- Status: read-only (completed).
+
 - Branch: `feature/station35-trainer-finanzen`
 - Ziel: Trainer-Metadaten in Finanzen (read-only), optional `kursId` in Zahlungen, keine Schemaerweiterung darüber hinaus.
 
@@ -1159,6 +1193,8 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 ## Kontext
 
+- Status: read-only (completed).
+
 - Branch: `feature/station35-trainer-finanzen`
 - Ziel: Lint-Fehler (unused helper) beheben.
 
@@ -1181,6 +1217,8 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 # Station 36 — Connect Trainer ↔ Kalender (Derivation-Only)
 
 ## Kontext
+
+- Status: read-only (completed).
 
 - Branch: `feature/station35-trainer-finanzen` (weitergeführt für Station 36)
 - Ziel: Trainerdaten nur abgeleitet in Kalenderoberflächen anzeigen, keine Schema-/Persistenzänderungen.
@@ -1230,6 +1268,8 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 ## Kontext
 
+- Status: read-only (completed).
+
 - Branch: `feature/station35-trainer-finanzen` (weitergeführt für Station 37).
 - Ziel: Alpha-Assembly vorbereiten ohne Scope-Erweiterung; Plan/Doku ergänzen, UX-Konsistenz prüfen, kleine UI-Korrekturen.
 - Grenzen: Kommunikation bleibt Placeholder, Waren ↔ Finanzen nicht verknüpft, keine automatischen Kurs/Waren-Umsätze in Finanzen.
@@ -1260,6 +1300,8 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 ## Kontext
 
+- Status: read-only (completed).
+
 - Branch: `feature/station38-alpha-test-script` (ab Station-37-Stand fortgeführt).
 - Ziel: Deterministisches, schrittweises Alpha-Testskript erstellen, das alle Module (Phase A) und Verknüpfungen (Phase B) abdeckt und bekannte Nicht-Ziele dokumentiert.
 - Artefakte: `ALPHA_TEST_SCRIPT.md` (vollständiges Skript mit Aktionen/Erwartungen/Konsolen-Checks).
@@ -1287,6 +1329,8 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 # Station 39 — Alpha Hardening (Failure Inventory)
 
 ## Kontext
+
+- Status: read-only (completed).
 
 - Branch: `feature/station39-alpha-hardening`.
 - Ziel: Alpha-Testskript vollständig ausführen (ohne Codeänderungen), Abweichungen in `STATION39_FAILURE_INVENTORY.txt` dokumentieren.
@@ -1320,6 +1364,8 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 # Station 40 — NAS Build Preparation (Completed)
 
 ## Kontext
+
+- Status: read-only (completed).
 
 - Branch: `feature/station40-nas-deployment` @ commit `0763e90f77a81abc97b245310eca260fd3119db7`.
 - Ziel: NAS-Build vorbereiten, Validierungssequenz erneut ausführen, statisches Hosting prüfen.
@@ -1358,6 +1404,8 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 ## Kontext
 
+- Status: read-only (completed).
+
 - Branch: `feature/station41-nas-deployment` @ commit `0763e90f77a81abc97b245310eca260fd3119db7`.
 - Ziel: NAS Deployment des Alpha-Builds durchführen und verifizieren.
 
@@ -1386,6 +1434,8 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 ## Kontext
 
+- Status: read-only (completed).
+
 - Branch: `feature/station41.1-status-log-fix`.
 - Ziel: Vollständige Stationshistorie in `status.md` wiederherstellen und Guardrail-Instruktion ergänzen, damit keine Stationseinträge mehr überschrieben/entfernt werden.
 
@@ -1407,6 +1457,8 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 # Station 42 — NAS Smoke Test
 
 ## Kontext
+
+- Status: read-only (completed).
 
 - Branch: `feature/station42-nas-smoketest`.
 - Ziel: Formale NAS-Smoketest-Abnahme des statischen Builds (HTTP, keine Codeänderungen), Protokollierung in `NAS_SMOKE_TEST_REPORT.md` und `status.md`.
@@ -1435,6 +1487,8 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 ## Kontext
 
+- Status: read-only (completed).
+
 - Branch: `feature/station50-governance`.
 - Ziel: Governance und DoR-Artefakte für Stationen 50–70 erstellen (nur Dokumentation, keine Builds/Tests).
 
@@ -1456,6 +1510,8 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 # Station 51 — Storage Baseline V2 Formalization
 
 ## Kontext
+
+- Status: read-only (completed).
 
 - Branch: `feature/station51-storage-baseline`.
 - Ziel: Speicher-Baseline V2 dokumentieren (Schemas, IDs, PII/Residency, Integrität, Migration).
@@ -1479,6 +1535,8 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 # Station 52 — Migration & Integrity Tooling Plan (Phase E2)
 
 ## Kontext
+
+- Status: read-only (completed).
 
 - Branch: `feature/station52-migration-tooling-plan`.
 - PR: https://github.com/christiansamuels932/dogule1/pull/58
@@ -1505,6 +1563,8 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 ## Kontext
 
+- Status: read-only (completed).
+
 - Branch: `feature/station54-storage-adapters-checksums`.
 - PR: https://github.com/christiansamuels932/dogule1/pull/60
 - Ziel: Implementierungs-Layout für Storage-Adapter und Checksumms festlegen (Candidate-Only), keine Runtime-/Storage-Schreiboperationen.
@@ -1527,6 +1587,8 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 # Station 55 — Integrity Scanner & CI Integration (Phase E2c)
 
 ## Kontext
+
+- Status: read-only (completed).
 
 - Branch: `feature/station55-integrity-scanner-plan`.
 - PR: https://github.com/christiansamuels932/dogule1/pull/61
@@ -1552,6 +1614,8 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 # Station 53–55 — Migration Tooling Execution (Dry-Run, Migrate, Scan)
 
 ## Kontext
+
+- Status: read-only (completed).
 
 - Branch: `53-55-Code`
 - Ziel: Station-53–55 Tooling tatsächlich ausführen/härten (Dry-Run + Migrate + Scan) mit deterministischen Outputs, Atomik via Temp-Root→Rename, Checksum/Merkle, Registry-gestützte FK-Rewrites.
@@ -1593,6 +1657,8 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 ## Kontext
 
+- Status: read-only (completed).
+
 - Branch: `53-55-Code`.
 - Hintergrund: Stationen 53–55 waren zuvor nur geplant, nicht ausgeführt; dieser Eintrag dokumentiert die nachgeholte Ausführung/Härtung. Guardrail: Keine künftige Station darf als erledigt gelten, ohne tatsächliche Ausführung + Status-Log.
 - Legacy-Quelle: Option A (Mock-DB als Legacy). Mappings deterministisch aus Mock-IDs abgeleitet.
@@ -1633,6 +1699,8 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 ## Kontext
 
+- Status: read-only (completed).
+
 - Branch: `53-55-Code`.
 - Ziel: End-to-end Rehearsal der Station-53–55 Toolchain (dry-run → migrate → scan, Checksums/Merkle, FK/Invariant/PII), Determinismusbeweis, Rollback-Drill, Playbook-Aktualisierung.
 - Inputs: Mock-DB (`modules/shared/api/db/index.js`) + Registries (`migration/mapping/*.json`) fixiert; Candidate-Root `storage_candidate/v1/`; `MIGRATE_RUN_ID=run-local`.
@@ -1667,6 +1735,8 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 ## Kontext
 
+- Status: read-only (completed).
+
 - Branch: `feature/station61-legacy-capture`.
 - Scope: Station 61 forensic capture of DogTabs legacy data; freeze raw inputs only (no parsing/mapping/cleanup).
 
@@ -1692,6 +1762,8 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 # Station 76.5 — NAS Deployment (Staging for Manual Test)
 
 ## Kontext
+
+- Status: read-only (completed).
 
 - Branch: `feature/station76.5-nas-deployment`.
 - Scope: deploy MariaDB-backed app to NAS, expose public staging, and validate readiness for Station 77 manual tests.
@@ -1723,5 +1795,61 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 - Rollback procedure documented in `NAS_STATION76_5_SETUP.md` (stop API, clear staging folder, disable proxy/close port).
 - Station 77 prerequisite met: NAS staging environment is live and stable.
 - Future task logged: add persistent boot-time API service via DSM Task Scheduler (not implemented yet).
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 76.6 — Post-Remediation Verification
+
+## Kontext
+
+- Status: read-only (completed).
+
+- Branch: `feature/station76.5-nas-deployment`.
+- Scope: verify Hunde `Geburtsdatum`/`Herkunft` UI rendering, confirm Kunden list column sorting, and re-run tests after XLSX dependency removal.
+
+## Ergebnis (kurz)
+
+- Verified Kunden → Hunde list shows `Geburtsdatum` values and `Herkunft` labels (not numeric codes).
+- Verified Hund detail view renders `Geburtsdatum` and `Herkunft` correctly.
+- Confirmed Kunden list column "Hunde, Name" is present and sortable.
+- `pnpm test` and `pnpm build` pass after XLSX removal.
+
+## Tests
+
+- Manual UI check: Kunden list → Kunde → Hunde list; Hund detail ✅
+- Manual UI check: Kunden list column "Hunde, Name" sortable ✅
+- `pnpm test` ✅
+- `pnpm build` ✅
+
+## Notizen
+
+- Manual verification only; no code changes.
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 76.7 — NAS Manual Test + Battleplan Update
+
+## Kontext
+
+- Status: read-only (completed).
+
+- Branch: `feature/station76.5-nas-deployment`.
+- Scope: validate NAS staging manual test pass with live API, and record battleplan updates for NAS autostart + role-based logins.
+
+## Ergebnis (kurz)
+
+- Confirmed NAS API was down (502); started `tools/server/apiServer.js` on NAS to restore data access.
+- Verified reverse proxy and local API health; full manual test pass on NAS staging completed.
+- Added battleplan notes: NAS autostart requirement for MariaDB + API server, and Trainer/Admin role-based login requirement for Kommunikation.
+
+## Tests
+
+- NAS local API: `curl http://127.0.0.1:5177/api/kunden` ✅
+- NAS reverse proxy: `curl https://4c31.synology.me:8443/api/kunden` ✅
+- Manual NAS staging test (Kunden/Hunde/Kurse/Trainer/Kalender/Finanzen/Waren + navigation) ✅
+
+## Notizen
+
+- API server must be running on NAS for the frontend to load data.
 
 # - - - - - - - - - - - - - - - - - - - -
