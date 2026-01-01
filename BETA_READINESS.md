@@ -1,39 +1,44 @@
 # Beta Readiness Gate
 
-This document defines the Alpha feature freeze, Beta readiness criteria, and a standardized manual test issue log template for Dogule1.
+This document defines the Alpha freeze rules, Beta entry/exit criteria, and the manual test issue log template for Dogule1.
 
 ## Alpha feature freeze (done for Alpha)
 
 - Core modules with CRUD: Dashboard, Kunden, Hunde, Kurse, Trainer, Kalender, Finanzen, Waren.
 - Kommunikation: Groupchat (global room), Infochannel (admin publish, trainer confirmations), system tab placeholder.
-- Storage: real-mode file storage for core entities with checksum + audit chain; mock storage remains for Alpha UI flows.
-- Tooling: migration dry-run/migrate/scan toolchain for candidate storage; checksums/Merkle and reports.
 - UI: visual cohesion pass across lists/details and shared styles (Station 71).
+- Allowed during freeze: bugfixes, perf, stability.
+- Forbidden during freeze: new features or scope expansion.
 
-## Deferred to Beta
+## Deferred to Beta (planned scope)
 
-- DogTabs ingestion: inventory, mapping, and execution on real legacy data.
-- MariaDB-only backend: schema + adapter, deprecate file/mock paths for Beta runtime.
-- Performance validation for 1500-customer dataset and baseline thresholds.
-- Expanded entity fields required by client (address, Ausweis-ID, status, photo reference, rasse, geburtsdatum, etc.).
-- Communications enhancements beyond current Groupchat/Infochannel scope (no email; email was removed).
-- Full manual test cycle on real data (baseline + post-fix retest) and issue remediation.
+- DogTabs ingestion: inventory, mapping, deterministic import.
+- MariaDB-only backend: schema + adapter, no mockdata runtime paths.
+- Performance baselines for 1500+ Kunden (Kunden/Hunde/Kurse lists).
+- Structural UI for large datasets (filters/pagination/columns/sorting).
+- Kurse catalogue system (catalogue-backed course selection).
+- Accounts & roles (trainer/admin logins, RBAC).
+- Billing from Kurse (Rechnungen generation with linkage).
+- Zertifikate module (Kunde/Hund/Kurs + document output).
+- Automation (birthday email + optional certificate delivery).
+- Contabo VPS production deployment and verification.
 
 ## Beta entry criteria
 
-- Alpha scope explicitly frozen (this document) and approved.
-- DogTabs data inventory and mapping plan completed.
-- MariaDB schema + adapter implemented with CRUD parity.
-- Migration tooling ready to ingest DogTabs data into MariaDB.
-- Manual test issue log format agreed and ready for use.
+- Alpha Freeze rules documented and agreed.
+- DogTabs inventory + mapping completed.
+- MariaDB finalized as sole backend.
+- Ingestion pipeline ready (dry-run + idempotent import).
+- Manual test issue log format agreed and ready.
 
 ## Beta exit criteria
 
-- DogTabs data ingested into MariaDB with validation, FK checks, and deterministic mapping.
-- Performance meets defined baseline thresholds for 1500-customer dataset.
-- Required expanded fields implemented and validated.
-- Manual test cycle completed: baseline, fixes, and retest; all blocking issues resolved.
-- Documentation updated: status log, readiness summary, and known risks/assumptions.
+- DogTabs data ingested into MariaDB with validation and deterministic mappings.
+- Performance baselines recorded and acceptable (no major regressions).
+- Feature completion (catalogue, accounts/roles, billing, certificates, automation).
+- Manual test cycle complete: baseline -> fixes -> regression; no P0/P1 issues.
+- Contabo VPS deployment verified and stable.
+- Documentation updated with sign-off and known risks.
 
 ## Manual test issue log template
 

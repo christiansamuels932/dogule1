@@ -8,7 +8,7 @@ Purpose
 Source References
 
 - `BATTLEPLAN_STATIONS_71_PLUS.md` (Station 76.5 scope/exit criteria).
-- `archived-mds/archived-NAS_ALPHA_DEPLOY.md` (historical NAS deployment pattern).
+- `archive/archived-mds/archived-NAS_ALPHA_DEPLOY.md` (historical NAS deployment pattern).
 
 Current State (before Station 76.5)
 
