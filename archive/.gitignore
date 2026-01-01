@@ -1,0 +1,6 @@
+# Ignore non-doc artifacts in archive; keep docs tracked.
+*
+!.gitignore
+!**/*.md
+!**/*.txt
+!*/

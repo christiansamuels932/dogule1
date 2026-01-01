@@ -151,7 +151,7 @@ Dieses Dokument definiert Phasen, Stationen und deren Akzeptanzkriterien. Govern
 
 ## Purpose
 
-Dogule1 ist eine modulare Verwaltungs-App für Hundeschulen. Die Anwendung liefert ein konsistentes Dashboard mit eigenständigen Modulen für Kommunikation, Kunden, Hunde, Kurse, Trainer, Kalender, Finanzen und Waren. Ziel ist eine lokale Alpha-Version (V0.1), die später auf einen NAS-Server ausgerollt wird und schließlich in einen produktiven Kundentest übergeht.
+Dogule1 ist eine modulare Verwaltungs-App für Hundeschulen. Die Anwendung liefert ein konsistentes Dashboard mit eigenständigen Modulen für Kommunikation, Kunden, Hunde, Kurse, Trainer, Kalender, Finanzen und Waren. Ziel ist eine lokale Alpha-Version (V0.1), die später auf einen Contabo VPS ausgerollt wird und schließlich in einen produktiven Kundentest übergeht.
 
 ## Core Principles
 
@@ -184,7 +184,7 @@ Dogule1 ist eine modulare Verwaltungs-App für Hundeschulen. Die Anwendung liefe
 - Module müssen beim Mount scrollen, Container säubern und konsistente Fehler-/Leermeldungen anzeigen.
 - Beziehungen zwischen Modulen folgen der Moduleoverview-Grafik (z. B. Kunden ↔ Hunde ↔ Kurse, Kurse ↔ Trainer ↔ Kalender, Finanzen ↔ Waren).
 - Jede Entität zeigt ihre ID in Detail-/Formansichten und bietet einen abgesicherten „ID manuell ändern“-Toggle.
-- NAS-Builds nutzen den Vite-Output (`pnpm build` → `dist/` mit relativen Pfaden), damit die Anwendung als reine statische Seite laufen kann.
+- VPS-Deployments nutzen den Vite-Output (`pnpm build` → `dist/` mit relativen Pfaden), damit die Anwendung als statische Seite hinter einem Webserver laufen kann.
 
 ### Canonical Repository Layout
 
@@ -241,7 +241,7 @@ Der vollständige Entitäts-/Beziehungsplan steht in `DOMAIN_MODEL.md` und über
 - **Target Environment:** Desktop-first, Chrome + Edge (jeweils aktuelle Version); Mobile-Support wird später adressiert.
 - **Data Scale:** Eine einzelne Hundeschule mit ca. 200–500 Kunden, 200–500 Hunden und 50–150 Kursen.
 - **Usage Model:** Lokale Single-User-Verwaltung in V0.1, keine Concurrency-Garantien.
-- **NAS Expectations:** Einfache File-basierte Bereitstellung; manuelles Backup/Restore des `dist/`-Ordners reicht für die Alpha.
+- **VPS Expectations:** Statische Auslieferung der `dist/`-Assets; Backups via `dist/` + DB-Dump reichen für Alpha/Staging.
 
 - **Testing & CI:** Stations, die Routing, Modulverhalten oder Datenstruktur anfassen, müssen Vitest-Coverage (router/hash parsing, initModule-Verhalten, Mock-DB-Integrität) liefern. CI (GitHub Actions) führt `pnpm lint`, `pnpm build`, `pnpm test` aus.
 - **Local Pflichtläufe:** Nach jeder Codeänderung sind lokal mindestens `pnpm lint`, `pnpm test` und `pnpm build` auszuführen, bevor Übergaben/Commits erfolgen. Vor Abschluss jeder Station und jedes Moduls führen Planner und Builder diese Checks gemeinsam aus, ergänzt um einen manuellen UI-Funktionstest der betroffenen Flows.
@@ -346,7 +346,7 @@ Die Beziehungen aus der Core Module Map sind in den Phasen 1 und A **nur logisch
 18. **Station 18 – Status Quo Cleaning Up**
     - Dashboard/Kunden/Hunde/Kurse vereinheitlicht.
     - ID/Code-Regeln dokumentiert (`id` fix, `code` editierbar).
-    - Vite-Build + NAS-Platzhalter vorbereitet.  
+    - Vite-Build + VPS-Deployment vorbereitet.  
       18.1. **Station 18.1 – Router Stabilization**
     - Clean Hash Router final in `apps/web/index.html`.
     - `import.meta.glob` als einzige Modullade-Strategie.
@@ -465,11 +465,11 @@ Die Beziehungen aus der Core Module Map sind in den Phasen 1 und A **nur logisch
 38. **Station 38 – Local Alpha Test Script**
 39. **Station 39 – Local Alpha Hardening**
 
-### Phase D — NAS Deployment
+### Phase D — VPS Deployment
 
-40. **Station 40 – NAS Build Preparation**
-41. **Station 41 – NAS Deployment**
-42. **Station 42 – NAS Smoke Test**
+40. **Station 40 – VPS Build Preparation**
+41. **Station 41 – VPS Deployment**
+42. **Station 42 – VPS Smoke Test**
 
 ---
 
@@ -505,7 +505,7 @@ Version 0 – first baseline; created in Station 57, covering the Station-52 sec
 
 ## Scope & Principles
 
-- Applies to all web modules (Dashboard, Kunden, Hunde, Kurse, Trainer, Kommunikation, Kalender, Finanzen, Waren, Imports, Backups/Config, future NAS/ops surfaces).
+- Applies to all web modules (Dashboard, Kunden, Hunde, Kurse, Trainer, Kommunikation, Kalender, Finanzen, Waren, Imports, Backups/Config, future VPS/ops surfaces).
 - Roles: `admin`, `staff`, `trainer`, plus pseudo-roles `system` (jobs/cron/imports/integrations) and `unauthenticated` (not logged in).
 - Deny-by-default: any route/action without an explicit rule is denied. All sensitive actions require audit logging.
 - Stable action IDs (`module.action_verb`) are mandatory; see `SECURITY_AUTHORIZATION_MATRIX.md` for the source-of-truth matrix (machine-readable block governs CI coverage).
@@ -1098,7 +1098,7 @@ Constraints:
 
 ## 13. Operational Runbook & Report Retention
 
-- Operator role: Ops/Admin; required environment: dev, NAS-like before production.
+- Operator role: Ops/Admin; required environment: dev, VPS-like before production.
 - Reports stored under `storage_reports/<timestamp>/`: `dry-run.json`, `migration-summary.json`, `integrity-summary.json`, `checksum-report.json`; retain at least last 10 runs.
 - Status logging format: `## Tests` → migrated modules + integrity outcomes; `## Issues` → BLOCKER/WARNING summary.
 
@@ -1233,7 +1233,7 @@ Purpose: concrete path from current state to first public rollout, starting at S
 
 ## Purpose
 
-Dogule1 ist eine modulare Verwaltungs-App fuer Hundeschulen mit Dashboard und Modulen fuer Kommunikation, Kunden, Hunde, Kurse, Trainer, Kalender, Finanzen und Waren. Ziel ist eine lokale Alpha-Version (V0.1) mit spaeterem NAS-Rollout.
+Dogule1 ist eine modulare Verwaltungs-App fuer Hundeschulen mit Dashboard und Modulen fuer Kommunikation, Kunden, Hunde, Kurse, Trainer, Kalender, Finanzen und Waren. Ziel ist eine lokale Alpha-Version (V0.1) mit spaeterem VPS-Rollout (Contabo).
 
 ## Quick Start
 
