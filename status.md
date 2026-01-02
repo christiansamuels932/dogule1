@@ -31,7 +31,10 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 ## Tests
 
-- Not run (UI changes only).
+- Manual UI verification (large datasets):
+  - Kunden list controls (search/status/page size), sorting, pagination: ✅
+  - Hunde list controls (search/status/page size), sorting, pagination: ✅
+  - Kurse list controls (search/status/sort/dir/page size), pagination: ✅
 
 # - - - - - - - - - - - - - - - - - - - -
 
