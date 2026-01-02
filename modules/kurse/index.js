@@ -1138,10 +1138,274 @@ async function populateCourses(container) {
       return;
     }
 
-    courses.forEach((course) => {
-      const listItem = createCourseListItem(course, { hundeById, kundenById });
-      if (listItem) container.appendChild(listItem);
+    const searchState = {
+      query: "",
+    };
+    const filterState = {
+      status: "all",
+    };
+    const sortState = {
+      key: "status",
+      direction: "asc",
+    };
+    const paginationState = {
+      page: 1,
+      pageSize: 25,
+    };
+    const controlsWrap = document.createElement("div");
+    controlsWrap.className = "list-controls";
+    const searchRow = createFormRow({
+      id: "kurse-search",
+      label: "Suche",
+      placeholder: "Titel, Code, Trainer ...",
+      value: "",
+      required: false,
     });
+    const searchInput = searchRow.querySelector("input");
+    if (searchInput) {
+      searchInput.type = "search";
+      searchInput.addEventListener("input", (event) => {
+        searchState.query = event.target.value || "";
+        paginationState.page = 1;
+        renderList();
+      });
+    }
+    controlsWrap.appendChild(searchRow);
+    const statusRow = createFormRow({
+      id: "kurse-status-filter",
+      label: "Status",
+      control: "select",
+      options: [
+        { value: "all", label: "Alle", selected: true },
+        ...STATUS_OPTIONS.map((option) => ({ value: option.value, label: option.label })),
+      ],
+    });
+    const statusSelect = statusRow.querySelector("select");
+    if (statusSelect) {
+      statusSelect.addEventListener("change", (event) => {
+        filterState.status = event.target.value || "all";
+        paginationState.page = 1;
+        renderList();
+      });
+    }
+    controlsWrap.appendChild(statusRow);
+    const sortKeyRow = createFormRow({
+      id: "kurse-sort-key",
+      label: "Sortierung",
+      control: "select",
+      options: [
+        { value: "status", label: "Status", selected: true },
+        { value: "title", label: "Titel" },
+        { value: "code", label: "Code" },
+        { value: "trainer", label: "Trainer" },
+        { value: "createdAt", label: "Erstellt am" },
+      ],
+    });
+    const sortKeySelect = sortKeyRow.querySelector("select");
+    if (sortKeySelect) {
+      sortKeySelect.addEventListener("change", (event) => {
+        sortState.key = event.target.value || "status";
+        paginationState.page = 1;
+        renderList();
+      });
+    }
+    controlsWrap.appendChild(sortKeyRow);
+    const sortDirRow = createFormRow({
+      id: "kurse-sort-dir",
+      label: "Richtung",
+      control: "select",
+      options: [
+        { value: "asc", label: "Aufsteigend", selected: true },
+        { value: "desc", label: "Absteigend" },
+      ],
+    });
+    const sortDirSelect = sortDirRow.querySelector("select");
+    if (sortDirSelect) {
+      sortDirSelect.addEventListener("change", (event) => {
+        sortState.direction = event.target.value === "desc" ? "desc" : "asc";
+        renderList();
+      });
+    }
+    controlsWrap.appendChild(sortDirRow);
+    const pageSizeRow = createFormRow({
+      id: "kurse-page-size",
+      label: "Pro Seite",
+      control: "select",
+      options: [
+        { value: "25", label: "25", selected: true },
+        { value: "50", label: "50" },
+        { value: "100", label: "100" },
+      ],
+    });
+    const pageSizeSelect = pageSizeRow.querySelector("select");
+    if (pageSizeSelect) {
+      pageSizeSelect.addEventListener("change", (event) => {
+        const nextSize = Number(event.target.value) || 25;
+        paginationState.pageSize = nextSize;
+        paginationState.page = 1;
+        renderList();
+      });
+    }
+    controlsWrap.appendChild(pageSizeRow);
+    container.appendChild(controlsWrap);
+
+    const listHost = document.createElement("div");
+    listHost.className = "kurse-list";
+    container.appendChild(listHost);
+
+    const pagination = document.createElement("div");
+    pagination.className = "list-pagination";
+    const paginationInfo = document.createElement("div");
+    paginationInfo.className = "list-pagination__info";
+    const paginationActions = document.createElement("div");
+    paginationActions.className = "list-pagination__actions";
+    const prevBtn = createButton({ label: "Zurück", variant: "secondary" });
+    prevBtn.type = "button";
+    const pageLabel = document.createElement("span");
+    pageLabel.className = "list-pagination__page";
+    const nextBtn = createButton({ label: "Weiter", variant: "secondary" });
+    nextBtn.type = "button";
+    prevBtn.addEventListener("click", () => {
+      if (paginationState.page > 1) {
+        paginationState.page -= 1;
+        renderList();
+      }
+    });
+    nextBtn.addEventListener("click", () => {
+      paginationState.page += 1;
+      renderList();
+    });
+    paginationActions.append(prevBtn, pageLabel, nextBtn);
+    pagination.append(paginationInfo, paginationActions);
+    container.appendChild(pagination);
+
+    function normalizeSearch(value) {
+      return String(value || "")
+        .trim()
+        .toLowerCase();
+    }
+
+    function matchesSearch(course, query) {
+      if (!query) return true;
+      const haystack = [
+        course.code,
+        course.title,
+        course.trainerName,
+        course.trainerCode,
+        course.status,
+        course.location,
+      ]
+        .filter(Boolean)
+        .map(normalizeSearch)
+        .join(" ");
+      return haystack.includes(query);
+    }
+
+    function matchesFilters(course) {
+      if (filterState.status === "all") return true;
+      return normalizeSearch(course.status) === filterState.status;
+    }
+
+    function buildStatusSortKey(course) {
+      const normalized = normalizeSearch(course.status);
+      const order = {
+        geplant: 0,
+        offen: 1,
+        ausgebucht: 2,
+        abgesagt: 3,
+      };
+      const rank = order[normalized] ?? 9;
+      const title = normalizeSearch(course.title);
+      return `${String(rank).padStart(2, "0")}|${title}`;
+    }
+
+    function getSortValue(course) {
+      switch (sortState.key) {
+        case "title":
+          return normalizeSearch(course.title);
+        case "code":
+          return normalizeSearch(course.code);
+        case "trainer":
+          return normalizeSearch(course.trainerName || course.trainerCode);
+        case "createdAt": {
+          const date = new Date(course.createdAt || "");
+          return Number.isNaN(date.getTime()) ? "" : date.toISOString();
+        }
+        case "status":
+        default:
+          return buildStatusSortKey(course);
+      }
+    }
+
+    function getDisplayRows() {
+      const query = normalizeSearch(searchState.query);
+      const filtered = courses.filter(
+        (course) => matchesSearch(course, query) && matchesFilters(course)
+      );
+      if (!filtered.length) return [];
+      return filtered
+        .map((course, index) => ({ course, index }))
+        .sort((a, b) => {
+          const aValue = getSortValue(a.course);
+          const bValue = getSortValue(b.course);
+          const compare = String(aValue).localeCompare(String(bValue), "de", {
+            sensitivity: "base",
+          });
+          if (compare !== 0) {
+            return sortState.direction === "asc" ? compare : -compare;
+          }
+          return a.index - b.index;
+        })
+        .map(({ course }) => course);
+    }
+
+    function getPagedRows(rows) {
+      const total = rows.length;
+      const pageSize = paginationState.pageSize;
+      const totalPages = Math.max(1, Math.ceil(total / pageSize));
+      if (paginationState.page > totalPages) paginationState.page = totalPages;
+      if (paginationState.page < 1) paginationState.page = 1;
+      if (!total) {
+        return { rows: [], total, totalPages, startIndex: 0, endIndex: 0 };
+      }
+      const startIndex = (paginationState.page - 1) * pageSize;
+      const endIndex = Math.min(startIndex + pageSize, total);
+      return {
+        rows: rows.slice(startIndex, endIndex),
+        total,
+        totalPages,
+        startIndex,
+        endIndex,
+      };
+    }
+
+    function renderPagination(rows = getDisplayRows()) {
+      const { total, totalPages, startIndex, endIndex } = getPagedRows(rows);
+      const startLabel = total ? startIndex + 1 : 0;
+      const endLabel = total ? endIndex : 0;
+      paginationInfo.textContent = `Zeige ${startLabel}\u2013${endLabel} von ${total}`;
+      pageLabel.textContent = `Seite ${paginationState.page} von ${totalPages}`;
+      prevBtn.disabled = !total || paginationState.page <= 1;
+      nextBtn.disabled = !total || paginationState.page >= totalPages;
+    }
+
+    function renderList() {
+      listHost.innerHTML = "";
+      const rows = getDisplayRows();
+      const { rows: pageRows } = getPagedRows(rows);
+      if (!pageRows.length) {
+        listHost.appendChild(createNotice("Keine Treffer.", { variant: "info" }));
+        renderPagination(rows);
+        return;
+      }
+      pageRows.forEach((course) => {
+        const listItem = createCourseListItem(course, { hundeById, kundenById });
+        if (listItem) listHost.appendChild(listItem);
+      });
+      renderPagination(rows);
+    }
+
+    renderList();
   } catch (error) {
     console.error("[KURSE_ERR_LIST_FETCH]", error);
     container.innerHTML = "";

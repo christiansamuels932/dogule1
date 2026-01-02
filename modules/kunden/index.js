@@ -328,6 +328,13 @@ async function renderList(root) {
     const searchState = {
       query: "",
     };
+    const filterState = {
+      status: "all",
+    };
+    const paginationState = {
+      page: 1,
+      pageSize: 50,
+    };
     const searchRow = createFormRow({
       id: "kunden-search",
       label: "Suche",
@@ -340,10 +347,55 @@ async function renderList(root) {
       searchInput.type = "search";
       searchInput.addEventListener("input", (event) => {
         searchState.query = event.target.value || "";
+        paginationState.page = 1;
         renderRows();
       });
     }
-    listBody.appendChild(searchRow);
+    const controlsWrap = document.createElement("div");
+    controlsWrap.className = "list-controls";
+    controlsWrap.appendChild(searchRow);
+    const statusRow = createFormRow({
+      id: "kunden-status-filter",
+      label: "Status",
+      control: "select",
+      options: [
+        { value: "all", label: "Alle", selected: true },
+        { value: "aktiv", label: "Aktiv" },
+        { value: "passiv", label: "Passiv" },
+        { value: "deaktiviert", label: "Deaktiviert" },
+      ],
+    });
+    const statusSelect = statusRow.querySelector("select");
+    if (statusSelect) {
+      statusSelect.addEventListener("change", (event) => {
+        filterState.status = event.target.value || "all";
+        paginationState.page = 1;
+        renderRows();
+      });
+    }
+    controlsWrap.appendChild(statusRow);
+    const pageSizeRow = createFormRow({
+      id: "kunden-page-size",
+      label: "Pro Seite",
+      control: "select",
+      options: [
+        { value: "25", label: "25" },
+        { value: "50", label: "50", selected: true },
+        { value: "100", label: "100" },
+        { value: "200", label: "200" },
+      ],
+    });
+    const pageSizeSelect = pageSizeRow.querySelector("select");
+    if (pageSizeSelect) {
+      pageSizeSelect.addEventListener("change", (event) => {
+        const nextSize = Number(event.target.value) || 50;
+        paginationState.pageSize = nextSize;
+        paginationState.page = 1;
+        renderRows();
+      });
+    }
+    controlsWrap.appendChild(pageSizeRow);
+    listBody.appendChild(controlsWrap);
     if (hundeLoadFailed) {
       listBody.appendChild(
         createNotice("Hunde konnten nicht geladen werden. Die Spalte Hunde bleibt leer.", {
@@ -373,6 +425,30 @@ async function renderList(root) {
     const thead = document.createElement("thead");
     const headerRow = document.createElement("tr");
     const tbody = document.createElement("tbody");
+    const pagination = document.createElement("div");
+    pagination.className = "list-pagination";
+    const paginationInfo = document.createElement("div");
+    paginationInfo.className = "list-pagination__info";
+    const paginationActions = document.createElement("div");
+    paginationActions.className = "list-pagination__actions";
+    const prevBtn = createButton({ label: "Zurück", variant: "secondary" });
+    prevBtn.type = "button";
+    const pageLabel = document.createElement("span");
+    pageLabel.className = "list-pagination__page";
+    const nextBtn = createButton({ label: "Weiter", variant: "secondary" });
+    nextBtn.type = "button";
+    prevBtn.addEventListener("click", () => {
+      if (paginationState.page > 1) {
+        paginationState.page -= 1;
+        renderRows();
+      }
+    });
+    nextBtn.addEventListener("click", () => {
+      paginationState.page += 1;
+      renderRows();
+    });
+    paginationActions.append(prevBtn, pageLabel, nextBtn);
+    pagination.append(paginationInfo, paginationActions);
 
     const columnDefinitions = {
       status: {
@@ -467,6 +543,11 @@ async function renderList(root) {
       return haystack.includes(query);
     }
 
+    function matchesFilters(kunde) {
+      if (filterState.status === "all") return true;
+      return normalizeSearch(kunde.status) === filterState.status;
+    }
+
     function renderColumnControls() {
       columnControls.innerHTML = "";
       const title = document.createElement("p");
@@ -551,7 +632,9 @@ async function renderList(root) {
 
     function getDisplayRows() {
       const query = normalizeSearch(searchState.query);
-      const filtered = kunden.filter((kunde) => matchesSearch(kunde, query));
+      const filtered = kunden.filter(
+        (kunde) => matchesSearch(kunde, query) && matchesFilters(kunde)
+      );
       if (!filtered.length) return [];
       const column = columnDefinitions[sortState.key] || columnDefinitions.status;
       const getValue = column?.sortValue || column?.value;
@@ -567,6 +650,36 @@ async function renderList(root) {
           return a.index - b.index;
         })
         .map(({ kunde }) => kunde);
+    }
+
+    function getPagedRows(rows) {
+      const total = rows.length;
+      const pageSize = paginationState.pageSize;
+      const totalPages = Math.max(1, Math.ceil(total / pageSize));
+      if (paginationState.page > totalPages) paginationState.page = totalPages;
+      if (paginationState.page < 1) paginationState.page = 1;
+      if (!total) {
+        return { rows: [], total, totalPages, startIndex: 0, endIndex: 0 };
+      }
+      const startIndex = (paginationState.page - 1) * pageSize;
+      const endIndex = Math.min(startIndex + pageSize, total);
+      return {
+        rows: rows.slice(startIndex, endIndex),
+        total,
+        totalPages,
+        startIndex,
+        endIndex,
+      };
+    }
+
+    function renderPagination(rows = getDisplayRows()) {
+      const { total, totalPages, startIndex, endIndex } = getPagedRows(rows);
+      const startLabel = total ? startIndex + 1 : 0;
+      const endLabel = total ? endIndex : 0;
+      paginationInfo.textContent = `Zeige ${startLabel}\u2013${endLabel} von ${total}`;
+      pageLabel.textContent = `Seite ${paginationState.page} von ${totalPages}`;
+      prevBtn.disabled = !total || paginationState.page <= 1;
+      nextBtn.disabled = !total || paginationState.page >= totalPages;
     }
 
     function renderHeader() {
@@ -599,7 +712,8 @@ async function renderList(root) {
       tbody.innerHTML = "";
       const columns = getOrderedColumns();
       const rows = getDisplayRows();
-      if (!rows.length) {
+      const { rows: pageRows } = getPagedRows(rows);
+      if (!pageRows.length) {
         const row = document.createElement("tr");
         row.className = "kunden-list-row";
         const cell = document.createElement("td");
@@ -607,10 +721,11 @@ async function renderList(root) {
         cell.textContent = "Keine Treffer.";
         row.appendChild(cell);
         tbody.appendChild(row);
+        renderPagination(rows);
         return;
       }
 
-      rows.forEach((kunde) => {
+      pageRows.forEach((kunde) => {
         const row = document.createElement("tr");
         row.className = "kunden-list-row";
         columns.forEach((column) => {
@@ -629,12 +744,14 @@ async function renderList(root) {
         });
         tbody.appendChild(row);
       });
+      renderPagination(rows);
     }
 
     thead.appendChild(headerRow);
     table.append(thead, tbody);
     tableWrapper.appendChild(table);
     listBody.appendChild(tableWrapper);
+    listBody.appendChild(pagination);
     renderColumnControls();
     renderHeader();
     renderRows();

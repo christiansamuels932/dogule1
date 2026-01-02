@@ -15,6 +15,26 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 # - - - - - - - - - - - - - - - - - - - -
 
+# Station 79 — Structural UI for Large Datasets
+
+## Kontext
+
+- Status: read-only (completed).
+- Branch: `feature/station79-structural-ui`.
+- Scope: filters, sorting, pagination, and column controls for large datasets (1500+ Kunden).
+
+## Ergebnis (kurz)
+
+- Added list control rows (search, status filter, page size) and pagination for Kunden and Hunde tables.
+- Added search, status filter, sorting controls, and pagination for Kurse list; list now renders per-page for large datasets.
+- Shared list-controls + pagination styling added in `modules/shared/shared.css`.
+
+## Tests
+
+- Not run (UI changes only).
+
+# - - - - - - - - - - - - - - - - - - - -
+
 # Station 78 — Fix Round 1
 
 ## Kontext
