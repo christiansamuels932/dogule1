@@ -15,6 +15,42 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 # - - - - - - - - - - - - - - - - - - - -
 
+# Station 77 — Manual Test Round 1 (Baseline)
+
+## Kontext
+
+- Status: read-only (completed).
+- Branch: `feature/station77-manual-test-1`.
+- Scope: manual E2E test pass (Kunden/Hunde/Kurse) on local MariaDB + API; NAS is out of scope.
+
+## Ergebnis (kurz)
+
+- Completed manual baseline test for Kunden, Hunde, and Kurse on local MariaDB + API + Vite dev.
+- No issues observed; results recorded in `MANUAL_TEST_REPORT_1.md`.
+- Replaced Kurse dataset with unique entries from `DogTabs Data/Kurse Catalogue.txt` (64 rows) and anchored to a placeholder trainer (`Kurse Katalog`).
+
+## Tests
+
+- Manual UI checks:
+  - Kunden list/search/detail/edit: ✅
+  - Hunde list/search/detail/edit: ✅
+  - Kurse list/detail/create/edit: ✅
+- Data load verification:
+  - `SELECT COUNT(*) FROM kurse;` → 64
+
+## Notizen
+
+- Local start commands:
+  - `sudo systemctl start mariadb`
+  - `DOGULE1_STORAGE_MODE=mariadb DOGULE1_MARIADB_SOCKET=/run/mysqld/mysqld.sock DOGULE1_MARIADB_USER=ran node tools/server/apiServer.js`
+  - `DOGULE1_STORAGE_MODE=mariadb DOGULE1_MARIADB_SOCKET=/run/mysqld/mysqld.sock DOGULE1_MARIADB_USER=ran pnpm dev`
+- If Vite starts without `DOGULE1_MARIADB_SOCKET`, it will try the local socket and the UI will show `Fehler beim Laden der Daten`.
+- Kurse reload flow:
+  - Initial load failed due to `fk_kurse_trainer` constraint when `trainer_id` was blank.
+  - Inserted placeholder trainer `00000000-0000-0000-0000-000000000000` (`Kurse Katalog`) and reloaded 64 unique titles.
+
+# - - - - - - - - - - - - - - - - - - - -
+
 # Station 76 — Audit Remediation (XLSX Export)
 
 ## Kontext
@@ -1969,5 +2005,28 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 ## Notizen
 
 - Use this as the single source of truth for the next agent’s kickoff.
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 76.13 — Contabo VPS Runbook Draft
+
+## Kontext
+
+- Status: read-only (completed).
+- Branch: `feature/station76.7-contabo-runbook`.
+- Scope: draft a step-by-step Contabo VPS runbook aligned with battleplan and NAS learnings; documentation only (no VPS execution).
+
+## Ergebnis (kurz)
+
+- Expanded `CONTABO_VPS_SETUP.md` with DNS cutover, deploy key setup, SSH service reload fixes, MariaDB backup/restore hardening, and explicit `DOGULE1_REQUIRE_MARIADB` config.
+- Runbook now includes VPS verification, update workflow, backups, rollback, and reboot validation in one linear checklist.
+
+## Tests
+
+- Not run (documentation-only).
+
+## Notizen
+
+- VPS execution and validation are still pending; this entry only covers the runbook update.
 
 # - - - - - - - - - - - - - - - - - - - -
