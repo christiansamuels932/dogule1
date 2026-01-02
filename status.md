@@ -15,6 +15,25 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 # - - - - - - - - - - - - - - - - - - - -
 
+# Station 80 — Kurse Catalogue System
+
+## Kontext
+
+- Status: read-only (completed).
+- Branch: `feature/station80-kurse-catalogue`.
+- Scope: import/normalize `Kurse Catalogue.txt`, enforce catalogue selection for Kurs creation/editing.
+
+## Ergebnis (kurz)
+
+- Added shared catalogue list from `DogTabs Data/Kurse Catalogue.txt` in `modules/shared/data/kurseCatalogue.js` (64 unique entries).
+- Kurse form now requires selecting a course from the catalogue; Kurstitel is read-only and synced to the selection.
+
+## Tests
+
+- Not run (UI/data wiring only).
+
+# - - - - - - - - - - - - - - - - - - - -
+
 # Station 79 — Structural UI for Large Datasets
 
 ## Kontext

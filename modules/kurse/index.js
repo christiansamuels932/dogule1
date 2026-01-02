@@ -33,6 +33,7 @@ import {
   listTrainer,
 } from "../shared/api/index.js";
 import { runIntegrityCheck } from "../shared/api/db/integrityCheck.js";
+import { KURSE_CATALOGUE } from "../shared/data/kurseCatalogue.js";
 
 let kursCache = [];
 let trainerCache = [];
@@ -948,6 +949,7 @@ async function renderForm(section, view, id) {
   }
   const selectedHundIds = Array.isArray(existing?.hundIds) ? existing.hundIds : [];
   let isCodeOverrideEnabled = false;
+  const catalogueOptions = buildCatalogueOptions(KURSE_CATALOGUE, existing?.title ?? "");
   const fields = buildFormFields(existing, {
     defaultCode: kursCodeValue,
     trainerOptions,
@@ -955,6 +957,7 @@ async function renderForm(section, view, id) {
       (existing?.trainerId && findTrainerById(existing.trainerId, trainerList)?.name) ||
       existing?.trainerName ||
       "",
+    catalogueOptions,
   });
   const refs = {};
   fields.forEach((field) => {
@@ -1019,6 +1022,21 @@ async function renderForm(section, view, id) {
     };
     trainerIdRef.input.addEventListener("change", syncTrainerName);
     syncTrainerName();
+  }
+
+  const catalogueRef = refs.catalogueTitle;
+  const titleRef = refs.title;
+  if (titleRef?.input) {
+    titleRef.input.readOnly = true;
+    titleRef.input.setAttribute("aria-readonly", "true");
+  }
+  if (catalogueRef?.input && titleRef?.input) {
+    const syncTitleFromCatalogue = () => {
+      const selected = catalogueRef.input.value || "";
+      titleRef.input.value = selected ? selected : "";
+    };
+    catalogueRef.input.addEventListener("change", syncTitleFromCatalogue);
+    syncTitleFromCatalogue();
   }
 
   const hundeRow = createHundSearchField({
@@ -1659,11 +1677,23 @@ function formatDateTime(value) {
 
 function buildFormFields(
   existing = {},
-  { defaultCode = "", trainerOptions = [], trainerNameValue = "" } = {}
+  { defaultCode = "", trainerOptions = [], trainerNameValue = "", catalogueOptions = [] } = {}
 ) {
   const statusValue = existing?.status ?? "geplant";
   const levelValue = existing?.level ?? "";
   return [
+    {
+      name: "catalogueTitle",
+      value: existing?.title ?? "",
+      config: {
+        id: "kurs-catalogue",
+        label: "Kurskatalog",
+        control: "select",
+        required: true,
+        describedByText: "Bitte Kurs aus dem Katalog auswählen. Titel wird übernommen.",
+        options: catalogueOptions,
+      },
+    },
     {
       name: "kursId",
       value: existing?.id ?? "",
@@ -1692,10 +1722,11 @@ function buildFormFields(
     {
       name: "title",
       value: existing?.title ?? "",
+      readOnly: true,
       config: {
         id: "kurs-title",
         label: "Kurstitel",
-        placeholder: "z. B. Welpentraining Kompakt",
+        placeholder: "Wird aus dem Katalog übernommen",
         required: false,
       },
     },
@@ -2107,11 +2138,31 @@ function collectFormValues(refs) {
   return values;
 }
 
+function buildCatalogueOptions(items = [], selectedTitle = "") {
+  const options = (Array.isArray(items) ? items : []).map((item) => ({
+    value: item.title,
+    label: `${item.id} · ${item.title}`,
+    selected: item.title === selectedTitle,
+  }));
+  if (!options.some((option) => option.value === "")) {
+    options.unshift({ value: "", label: "Bitte wählen", selected: !selectedTitle });
+  }
+  return options;
+}
+
 function validate(values = {}, { trainers = [] } = {}) {
   const safeValues = { ...values };
   safeValues.kursCode = ensureString(values.kursCode).trim();
   safeValues.hundIds = ensureArray(values.hundIds);
   const errors = {};
+  const catalogueTitle = ensureString(values.catalogueTitle).trim();
+  const catalogueTitles = new Set((KURSE_CATALOGUE || []).map((item) => item.title));
+  if (!catalogueTitle) {
+    errors.catalogueTitle = "Bitte Kurs aus dem Katalog wählen.";
+  } else if (!catalogueTitles.has(catalogueTitle)) {
+    errors.catalogueTitle = "Gewählter Katalogeintrag ist ungültig.";
+  }
+  safeValues.title = catalogueTitle || ensureString(values.title, "");
   const trainerId = ensureString(values.trainerId).trim();
   const trainerIds = Array.isArray(trainers) ? trainers.map((trainer) => trainer.id) : [];
   if (!trainerId) {
