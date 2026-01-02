@@ -41,6 +41,18 @@ Verification
 - `ping -c 2 VPS_IPV4`
 - `ssh root@VPS_IPV4 'hostnamectl'`
 
+DNS + domain cutover (point DOMAIN to VPS)
+
+Update DNS records at your registrar:
+
+- `A` record: `DOMAIN -> VPS_IPV4`
+- `AAAA` record: `DOMAIN -> VPS_IPV6` (if IPv6 is used)
+
+Verification
+
+- `dig +short A DOMAIN`
+- `dig +short AAAA DOMAIN`
+
 Initial login + user setup (create non-root user, sudo, disable password auth)
 
 Commands (run from local machine)
@@ -59,13 +71,13 @@ exit
 Install the SSH key explicitly (from local machine).
 
 ```bash
-ssh-copy-id -i ~/.ssh/DOMAIN_ed25519 SSH_USER@VPS_IPV4
+ssh-copy-id -i ~/.ssh/DOMAIN_ed25519.pub SSH_USER@VPS_IPV4
 ```
 
 Disable password authentication (temporary; root login still allowed until SSH hardening section).
 
 ```bash
-ssh root@VPS_IPV4 "sed -i 's/^#PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config && sed -i 's/^PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config && systemctl reload sshd"
+ssh root@VPS_IPV4 "sed -i 's/^#PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config && sed -i 's/^PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config && systemctl reload ssh"
 ```
 
 Verification (from local machine)
@@ -86,7 +98,7 @@ sudo sed -i 's/^PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config
 sudo sed -i 's/^#PasswordAuthentication.*/PasswordAuthentication no/' /etc/ssh/sshd_config
 sudo sed -i 's/^PasswordAuthentication.*/PasswordAuthentication no/' /etc/ssh/sshd_config
 sudo sed -i 's/^#PubkeyAuthentication.*/PubkeyAuthentication yes/' /etc/ssh/sshd_config
-sudo systemctl reload sshd
+sudo systemctl reload ssh
 exit
 ```
 
@@ -221,6 +233,26 @@ Node API deployment as systemd service (working directory, env file path, ExecSt
 
 Create deploy directories and sync runtime (repo source separate from runtime)
 
+Create a VPS deploy key (read-only) and add it to the repo host
+
+```bash
+ssh SSH_USER@VPS_IPV4
+ssh-keygen -t ed25519 -C "dogule1-vps" -f /home/SSH_USER/.ssh/dogule1_vps -N ""
+cat /home/SSH_USER/.ssh/dogule1_vps.pub
+```
+
+Add the public key as a read-only deploy key for `REPO_SSH_URL`, then configure SSH to use it:
+
+```bash
+ssh SSH_USER@VPS_IPV4
+cat >/home/SSH_USER/.ssh/config <<'SSHCFG'
+Host github.com
+  IdentityFile /home/SSH_USER/.ssh/dogule1_vps
+  IdentitiesOnly yes
+SSHCFG
+chmod 600 /home/SSH_USER/.ssh/config
+```
+
 ```bash
 ssh SSH_USER@VPS_IPV4
 sudo mkdir -p /opt/dogule1/src /opt/dogule1/app
@@ -242,6 +274,7 @@ sudo mkdir -p /etc/dogule1
 sudo tee /etc/dogule1/api.env >/dev/null <<'ENV'
 NODE_ENV=production
 DOGULE1_STORAGE_MODE=mariadb
+DOGULE1_REQUIRE_MARIADB=1
 DOGULE1_MARIADB_HOST=127.0.0.1
 DOGULE1_MARIADB_DB=dogule1
 DOGULE1_MARIADB_USER=dogule1_app
@@ -463,7 +496,7 @@ Backup commands
 ```bash
 ssh SSH_USER@VPS_IPV4
 sudo mkdir -p /var/backups/dogule1
-mariadb-dump dogule1 > /var/backups/dogule1/dogule1-$(date +%F).sql
+sudo mariadb-dump dogule1 > /var/backups/dogule1/dogule1-$(date +%F).sql
 sudo tar -czf /var/backups/dogule1/dogule1-dist-$(date +%F).tar.gz -C /var/www dogule1
 sudo tar -czf /var/backups/dogule1/dogule1-config-$(date +%F).tar.gz /etc/nginx/sites-available/dogule1 /etc/dogule1
 ```
@@ -474,7 +507,7 @@ Restore commands
 
 ```bash
 ssh SSH_USER@VPS_IPV4
-mariadb dogule1 < /var/backups/dogule1/dogule1-YYYY-MM-DD.sql
+sudo mariadb dogule1 < /var/backups/dogule1/dogule1-YYYY-MM-DD.sql
 sudo rm -rf /var/www/dogule1
 sudo tar -xzf /var/backups/dogule1/dogule1-dist-YYYY-MM-DD.tar.gz -C /var/www
 sudo systemctl restart dogule1-api
@@ -488,7 +521,7 @@ Rollback steps
 ```bash
 ssh SSH_USER@VPS_IPV4
 sudo systemctl stop dogule1-api
-mariadb dogule1 < /var/backups/dogule1/dogule1-YYYY-MM-DD.sql
+sudo mariadb dogule1 < /var/backups/dogule1/dogule1-YYYY-MM-DD.sql
 sudo rm -rf /var/www/dogule1
 sudo tar -xzf /var/backups/dogule1/dogule1-dist-YYYY-MM-DD.tar.gz -C /var/www
 sudo systemctl start dogule1-api
