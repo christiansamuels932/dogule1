@@ -15,6 +15,28 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 # - - - - - - - - - - - - - - - - - - - -
 
+# Station 78 — Fix Round 1
+
+## Kontext
+
+- Status: read-only (completed).
+- Branch: `feature/station78-fix-round-1`.
+- Scope: fix only issues from Station 77.
+
+## Ergebnis (kurz)
+
+- No issues reported in Station 77; no fixes required.
+
+## Tests
+
+- Not run (no changes).
+
+## Notizen
+
+- Station 77 completed with no issues logged; Station 78 closed without changes.
+
+# - - - - - - - - - - - - - - - - - - - -
+
 # Station 77 — Manual Test Round 1 (Baseline)
 
 ## Kontext
@@ -26,7 +48,7 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 ## Ergebnis (kurz)
 
 - Completed manual baseline test for Kunden, Hunde, and Kurse on local MariaDB + API + Vite dev.
-- No issues observed; results recorded in `MANUAL_TEST_REPORT_1.md`.
+- No issues observed; manual test results captured below.
 - Replaced Kurse dataset with unique entries from `DogTabs Data/Kurse Catalogue.txt` (64 rows) and anchored to a placeholder trainer (`Kurse Katalog`).
 
 ## Tests
@@ -37,6 +59,22 @@ Branching rule: each station must be developed on its dedicated branch; if the e
   - Kurse list/detail/create/edit: ✅
 - Data load verification:
   - `SELECT COUNT(*) FROM kurse;` → 64
+
+## Manual Test Report 1
+
+- Run: 2026-01-02
+- Scope: Kunden, Hunde, Kurse (manual E2E baseline)
+- Environment: local MariaDB + API + Vite dev
+- Setup:
+  - Storage mode: mariadb
+  - MariaDB socket: /run/mysqld/mysqld.sock
+  - API server: http://localhost:5177
+  - UI dev: http://localhost:5173
+- Results:
+  - Kunden: list, search, detail, edit/save -> pass
+  - Hunde: list, search, detail, edit/save -> pass
+  - Kurse: list, detail, create/edit -> pass
+- Issues: none observed
 
 ## Notizen
 
