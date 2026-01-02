@@ -30,7 +30,8 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 ## Tests
 
-- Not run (UI/data wiring only).
+- Manual UI verification:
+  - Kurse form requires catalogue selection and title sync: ✅
 
 # - - - - - - - - - - - - - - - - - - - -
 
