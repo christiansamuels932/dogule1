@@ -116,6 +116,13 @@ async function populateHundeTable(cardElement) {
     const searchState = {
       query: "",
     };
+    const filterState = {
+      status: "all",
+    };
+    const paginationState = {
+      page: 1,
+      pageSize: 50,
+    };
     const searchRow = createFormRow({
       id: "hunde-search",
       label: "Suche",
@@ -128,10 +135,55 @@ async function populateHundeTable(cardElement) {
       searchInput.type = "search";
       searchInput.addEventListener("input", (event) => {
         searchState.query = event.target.value || "";
+        paginationState.page = 1;
         renderRows();
       });
     }
-    body.appendChild(searchRow);
+    const controlsWrap = document.createElement("div");
+    controlsWrap.className = "list-controls";
+    controlsWrap.appendChild(searchRow);
+    const statusRow = createFormRow({
+      id: "hunde-status-filter",
+      label: "Status",
+      control: "select",
+      options: [
+        { value: "all", label: "Alle", selected: true },
+        { value: "aktiv", label: "Aktiv" },
+        { value: "passiv", label: "Passiv" },
+        { value: "deaktiviert", label: "Deaktiviert" },
+      ],
+    });
+    const statusSelect = statusRow.querySelector("select");
+    if (statusSelect) {
+      statusSelect.addEventListener("change", (event) => {
+        filterState.status = event.target.value || "all";
+        paginationState.page = 1;
+        renderRows();
+      });
+    }
+    controlsWrap.appendChild(statusRow);
+    const pageSizeRow = createFormRow({
+      id: "hunde-page-size",
+      label: "Pro Seite",
+      control: "select",
+      options: [
+        { value: "25", label: "25" },
+        { value: "50", label: "50", selected: true },
+        { value: "100", label: "100" },
+        { value: "200", label: "200" },
+      ],
+    });
+    const pageSizeSelect = pageSizeRow.querySelector("select");
+    if (pageSizeSelect) {
+      pageSizeSelect.addEventListener("change", (event) => {
+        const nextSize = Number(event.target.value) || 50;
+        paginationState.pageSize = nextSize;
+        paginationState.page = 1;
+        renderRows();
+      });
+    }
+    controlsWrap.appendChild(pageSizeRow);
+    body.appendChild(controlsWrap);
     const tableWrapper = document.createElement("div");
     tableWrapper.className = "hunde-list-scroll";
     const table = document.createElement("table");
@@ -139,6 +191,30 @@ async function populateHundeTable(cardElement) {
     const thead = document.createElement("thead");
     const headerRow = document.createElement("tr");
     const tbody = document.createElement("tbody");
+    const pagination = document.createElement("div");
+    pagination.className = "list-pagination";
+    const paginationInfo = document.createElement("div");
+    paginationInfo.className = "list-pagination__info";
+    const paginationActions = document.createElement("div");
+    paginationActions.className = "list-pagination__actions";
+    const prevBtn = createButton({ label: "Zurück", variant: "secondary" });
+    prevBtn.type = "button";
+    const pageLabel = document.createElement("span");
+    pageLabel.className = "list-pagination__page";
+    const nextBtn = createButton({ label: "Weiter", variant: "secondary" });
+    nextBtn.type = "button";
+    prevBtn.addEventListener("click", () => {
+      if (paginationState.page > 1) {
+        paginationState.page -= 1;
+        renderRows();
+      }
+    });
+    nextBtn.addEventListener("click", () => {
+      paginationState.page += 1;
+      renderRows();
+    });
+    paginationActions.append(prevBtn, pageLabel, nextBtn);
+    pagination.append(paginationInfo, paginationActions);
 
     const columns = [
       {
@@ -197,6 +273,11 @@ async function populateHundeTable(cardElement) {
       return haystack.includes(query);
     }
 
+    function matchesFilters(hund) {
+      if (filterState.status === "all") return true;
+      return normalizeSearch(hund.status) === filterState.status;
+    }
+
     function updateHeaderState() {
       headerRow.querySelectorAll("th").forEach((th) => {
         const key = th.dataset.sortKey;
@@ -217,7 +298,7 @@ async function populateHundeTable(cardElement) {
 
     function getDisplayRows() {
       const query = normalizeSearch(searchState.query);
-      const filtered = hunde.filter((hund) => matchesSearch(hund, query));
+      const filtered = hunde.filter((hund) => matchesSearch(hund, query) && matchesFilters(hund));
       if (!filtered.length) return [];
       const column = columns.find((col) => col.key === sortState.key) || columns[0];
       const getValue = column?.sortValue || column?.value;
@@ -235,10 +316,41 @@ async function populateHundeTable(cardElement) {
         .map(({ hund }) => hund);
     }
 
+    function getPagedRows(rows) {
+      const total = rows.length;
+      const pageSize = paginationState.pageSize;
+      const totalPages = Math.max(1, Math.ceil(total / pageSize));
+      if (paginationState.page > totalPages) paginationState.page = totalPages;
+      if (paginationState.page < 1) paginationState.page = 1;
+      if (!total) {
+        return { rows: [], total, totalPages, startIndex: 0, endIndex: 0 };
+      }
+      const startIndex = (paginationState.page - 1) * pageSize;
+      const endIndex = Math.min(startIndex + pageSize, total);
+      return {
+        rows: rows.slice(startIndex, endIndex),
+        total,
+        totalPages,
+        startIndex,
+        endIndex,
+      };
+    }
+
+    function renderPagination(rows = getDisplayRows()) {
+      const { total, totalPages, startIndex, endIndex } = getPagedRows(rows);
+      const startLabel = total ? startIndex + 1 : 0;
+      const endLabel = total ? endIndex : 0;
+      paginationInfo.textContent = `Zeige ${startLabel}\u2013${endLabel} von ${total}`;
+      pageLabel.textContent = `Seite ${paginationState.page} von ${totalPages}`;
+      prevBtn.disabled = !total || paginationState.page <= 1;
+      nextBtn.disabled = !total || paginationState.page >= totalPages;
+    }
+
     function renderRows() {
       tbody.innerHTML = "";
       const rows = getDisplayRows();
-      if (!rows.length) {
+      const { rows: pageRows } = getPagedRows(rows);
+      if (!pageRows.length) {
         const row = document.createElement("tr");
         row.className = "hunde-list-row";
         const cell = document.createElement("td");
@@ -246,10 +358,11 @@ async function populateHundeTable(cardElement) {
         cell.textContent = "Keine Treffer.";
         row.appendChild(cell);
         tbody.appendChild(row);
+        renderPagination(rows);
         return;
       }
 
-      rows.forEach((hund) => {
+      pageRows.forEach((hund) => {
         const row = document.createElement("tr");
         row.className = "hunde-list-row";
         columns.forEach((column) => {
@@ -268,6 +381,7 @@ async function populateHundeTable(cardElement) {
         });
         tbody.appendChild(row);
       });
+      renderPagination(rows);
     }
 
     columns.forEach((column) => {
@@ -295,6 +409,7 @@ async function populateHundeTable(cardElement) {
     table.append(thead, tbody);
     tableWrapper.appendChild(table);
     body.appendChild(tableWrapper);
+    body.appendChild(pagination);
     updateHeaderState();
     renderRows();
     return async () => {
