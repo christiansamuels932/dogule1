@@ -23,6 +23,14 @@ const USERS = [
       "pbkdf2$sha256$120000$BJESFsjzmHdkzaV5sQbg5w==$Jusw6IPvULL4YACbJ4XpDY9sdMe6jX5g1PXvjX807P4=",
     requires2fa: false,
   },
+  {
+    id: "user-developer",
+    username: "developer",
+    role: "developer",
+    passwordHash:
+      "pbkdf2$sha-256$120000$1MgunOkUCaVb2VRvmZtHPA==$+s2yKLLBnaQyf3DSeNbZNNp6HBIngvvdfhx8FXzWACw=",
+    requires2fa: false,
+  },
 ];
 
 export function createUserStore(seed = USERS) {
@@ -31,6 +39,14 @@ export function createUserStore(seed = USERS) {
   return {
     getUserByUsername: (username) => byUsername.get(username),
     getUserById: (id) => byId.get(id),
+    hasUser: (username) => byUsername.has(username),
+    addUser: (user) => {
+      if (!user?.id || !user?.username) return false;
+      if (byUsername.has(user.username) || byId.has(user.id)) return false;
+      byUsername.set(user.username, user);
+      byId.set(user.id, user);
+      return true;
+    },
   };
 }
 

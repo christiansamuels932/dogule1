@@ -92,6 +92,7 @@ export function createCoreApiRouter(options = {}) {
       mode: options.mode || "mariadb",
       ...options.storageOptions,
     });
+  const afterCreate = options.afterCreate;
 
   async function handle(req, res) {
     const reqUrl = req?.url || "";
@@ -121,7 +122,10 @@ export function createCoreApiRouter(options = {}) {
       }
       if (method === "POST" && !id) {
         const created = await adapter.create(body, { requestId });
-        jsonResponse(res, 201, created);
+        const enriched = afterCreate
+          ? await afterCreate({ entity: storageEntity, record: created, req, requestId })
+          : created;
+        jsonResponse(res, 201, enriched || created);
         return true;
       }
       if (method === "GET" && id) {

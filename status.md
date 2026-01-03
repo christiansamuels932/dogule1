@@ -15,6 +15,32 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 # - - - - - - - - - - - - - - - - - - - -
 
+# Station 81 — Accounts & Roles
+
+## Kontext
+
+- Status: read-only (completed).
+- Branch: `feature/station81-accounts-roles`.
+- Scope: add login flow, developer super-login, trainer auto-login on create, and RBAC enforcement for modules.
+
+## Ergebnis (kurz)
+
+- Added auth UI module and header login/logout display with route guarding for unauthenticated users.
+- Implemented auth API endpoints (`/api/auth/login|refresh|logout|me`) and enforced access tokens for core API routes.
+- Added RBAC rules for modules and API reads/writes; trainer role is restricted to Kurse/Kalender/Kommunikation in the UI and read-only for core data except Kurse/Kalender writes.
+- Added developer seed user and auto-provisioned trainer logins on create (default password `trainerpass`), surfaced in Trainer create notices.
+
+## Tests
+
+- Not run (manual login checks pending).
+
+## Notizen
+
+- Default logins (seeded): `admin/adminpass`, `staff/staffpass`, `trainer/trainerpass`, `developer/devpass`.
+- New trainer logins are auto-provisioned with password `trainerpass` and shown in the create success notice.
+
+# - - - - - - - - - - - - - - - - - - - -
+
 # Station 80 — Kurse Catalogue System
 
 ## Kontext
