@@ -32,7 +32,11 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 ## Tests
 
-- Not run (manual login checks pending).
+- Manual login checks:
+  - Admin (`admin/adminpass`) full access: ✅
+  - Trainer (`trainer/trainerpass`) restricted access: ✅
+  - Developer (`developer/devpass`) full access: ✅
+  - Trainer creation shows login credentials: ✅
 
 ## Notizen
 
