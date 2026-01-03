@@ -915,6 +915,14 @@ async function handleCreateSubmit(event, { refs, submit, defaultCode, statusSlot
       statusSlot.appendChild(
         createNotice("Trainer wurde erstellt.", { variant: "ok", role: "status" })
       );
+      if (created.login?.username) {
+        statusSlot.appendChild(
+          createNotice(
+            `Login erstellt: ${created.login.username} / ${created.login.tempPassword || ""}`.trim(),
+            { variant: "info", role: "status" }
+          )
+        );
+      }
     }
     window.location.hash = `#/trainer/${created.id}`;
   } catch (error) {

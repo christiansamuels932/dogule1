@@ -1,10 +1,18 @@
 // Simple hash-based router for Dogule1
-/* globals window, document, console, DOMParser, requestAnimationFrame */
+/* globals window, document, console, DOMParser, requestAnimationFrame, fetch */
 import "../../modules/shared/shared.css";
 import "../../modules/shared/layout.css";
 import layoutHtml from "../../modules/shared/layout.html?raw";
 import templatesHtml from "../../modules/shared/components/templates.html?raw";
 import { runIntegrityCheck } from "../../modules/shared/api/db/integrityCheck.js";
+import {
+  getSession,
+  clearSession,
+  syncWindowAuth,
+  getAllowedNavModules,
+  getDefaultModuleForRole,
+} from "../../modules/shared/auth/client.js";
+import { isModuleAllowed, normalizeRole } from "../../modules/shared/auth/rbac.js";
 
 import { getRouteInfoFromHash } from "./routerUtils.js";
 
@@ -80,10 +88,87 @@ function setActiveLink(route) {
   });
 }
 
+function updateNavVisibility(role) {
+  const links = document.querySelectorAll("a.nav__link[data-route]");
+  const allowed = getAllowedNavModules(role);
+  links.forEach((link) => {
+    const isAllowed = allowed.includes(link.dataset.route);
+    link.hidden = !isAllowed;
+    link.setAttribute("aria-hidden", isAllowed ? "false" : "true");
+  });
+}
+
+async function handleLogout(session) {
+  if (!session?.refreshToken) {
+    clearSession();
+    window.location.hash = "#/auth";
+    return;
+  }
+  try {
+    await fetch("/api/auth/logout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ refreshToken: session.refreshToken }),
+    });
+  } catch (error) {
+    console.warn("[AUTH_LOGOUT_FAILED]", error);
+  } finally {
+    clearSession();
+    window.location.hash = "#/auth";
+  }
+}
+
+function updateAuthHeader(session) {
+  syncWindowAuth(session);
+  const host = document.getElementById("dogule-auth");
+  if (!host) return;
+  host.innerHTML = "";
+  if (!session?.user) {
+    const loginBtn = document.createElement("button");
+    loginBtn.type = "button";
+    loginBtn.className = "dogule-auth__btn";
+    loginBtn.textContent = "Anmelden";
+    loginBtn.addEventListener("click", () => {
+      window.location.hash = "#/auth";
+    });
+    host.appendChild(loginBtn);
+    return;
+  }
+
+  const name = document.createElement("span");
+  name.className = "dogule-auth__user";
+  name.textContent = session.user.username || session.user.id || "User";
+  const role = document.createElement("span");
+  role.className = "dogule-auth__role";
+  role.textContent = session.user.role || "";
+  const logoutBtn = document.createElement("button");
+  logoutBtn.type = "button";
+  logoutBtn.className = "dogule-auth__btn";
+  logoutBtn.textContent = "Abmelden";
+  logoutBtn.addEventListener("click", () => handleLogout(session));
+  host.append(name, role, logoutBtn);
+}
+
 async function handleNavigation() {
   const hash = window.location.hash || "";
   const routeInfo = getRouteInfoFromHash(hash);
   window.__DOGULE_ROUTE__ = routeInfo;
+  const session = getSession();
+  const role = normalizeRole(session?.user?.role);
+  updateAuthHeader(session);
+  updateNavVisibility(role);
+
+  if (!session?.user?.role && routeInfo.module !== "auth") {
+    window.location.hash = "#/auth";
+    return;
+  }
+  if (session?.user?.role && routeInfo.module !== "auth") {
+    if (!isModuleAllowed(role, routeInfo.module)) {
+      const fallback = getDefaultModuleForRole(role);
+      window.location.hash = `#/${fallback}`;
+      return;
+    }
+  }
   await loadAndRender(routeInfo);
 }
 

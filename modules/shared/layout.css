@@ -11,9 +11,54 @@
   padding: 1.1rem 1.5rem;
 }
 
+.dogule-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.dogule-header-bar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
 .dogule-header-title {
   font-size: 1.35rem;
   font-weight: 600;
+}
+
+.dogule-auth {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  margin-top: -0.35rem;
+}
+
+.dogule-auth__user {
+  font-weight: 600;
+}
+
+.dogule-auth__role {
+  opacity: 0.75;
+}
+
+.dogule-auth__btn {
+  border: 1px solid rgba(255, 253, 246, 0.6);
+  color: var(--color-paper);
+  background: transparent;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.dogule-auth__btn:hover,
+.dogule-auth__btn:focus-visible {
+  background: rgba(255, 253, 246, 0.2);
 }
 
 .dogule-nav a {

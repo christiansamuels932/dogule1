@@ -1,4 +1,5 @@
 /* global fetch, window */
+import { getAuthHeaders } from "../auth/client.js";
 
 function resolveApiMode() {
   if (typeof window !== "undefined" && typeof window.DOGULE1_API_MODE === "string") {
@@ -40,10 +41,12 @@ function resolveBase() {
 }
 
 async function doFetch(path, options = {}) {
+  const authHeaders = options.authHeaders || {};
   const res = await fetch(`${resolveBase()}${path}`, {
     method: options.method || "GET",
     headers: {
       "Content-Type": "application/json",
+      ...authHeaders,
       ...(options.headers || {}),
     },
     body: options.body ? JSON.stringify(options.body) : undefined,
@@ -60,21 +63,21 @@ async function doFetch(path, options = {}) {
 }
 
 export async function httpList(entity) {
-  return doFetch(`/${entity}`, { method: "GET" });
+  return doFetch(`/${entity}`, { method: "GET", authHeaders: getAuthHeaders() });
 }
 
 export async function httpGet(entity, id) {
-  return doFetch(`/${entity}/${id}`, { method: "GET" });
+  return doFetch(`/${entity}/${id}`, { method: "GET", authHeaders: getAuthHeaders() });
 }
 
 export async function httpCreate(entity, data) {
-  return doFetch(`/${entity}`, { method: "POST", body: data });
+  return doFetch(`/${entity}`, { method: "POST", body: data, authHeaders: getAuthHeaders() });
 }
 
 export async function httpUpdate(entity, id, data) {
-  return doFetch(`/${entity}/${id}`, { method: "PUT", body: data });
+  return doFetch(`/${entity}/${id}`, { method: "PUT", body: data, authHeaders: getAuthHeaders() });
 }
 
 export async function httpDelete(entity, id) {
-  return doFetch(`/${entity}/${id}`, { method: "DELETE" });
+  return doFetch(`/${entity}/${id}`, { method: "DELETE", authHeaders: getAuthHeaders() });
 }

@@ -1,4 +1,5 @@
 /* global fetch, URLSearchParams, window */
+import { getSession } from "../../shared/auth/client.js";
 const BASE = "/api/kommunikation/infochannel";
 
 function buildError(code, message, details) {
@@ -13,6 +14,10 @@ function buildAuthHeaders() {
   const actor = window.__DOGULE_ACTOR__ || {};
   const authz = window.__DOGULE_AUTHZ__?.allowedActions;
   const headers = {};
+  const session = getSession();
+  if (session?.accessToken) {
+    headers.Authorization = `Bearer ${session.accessToken}`;
+  }
   if (actor.id) headers["x-dogule-actor-id"] = actor.id;
   if (actor.role) headers["x-dogule-actor-role"] = actor.role;
   if (Array.isArray(authz) && authz.length) {

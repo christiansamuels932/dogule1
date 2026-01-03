@@ -65,7 +65,10 @@ const server = http.createServer(async (req, res) => {
       res.setHeader("Access-Control-Allow-Origin", origin);
       res.setHeader("Vary", "Origin");
       res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS");
-      res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+      res.setHeader(
+        "Access-Control-Allow-Headers",
+        "Content-Type, Authorization, x-dogule-actor-id, x-dogule-actor-role, x-dogule-authz, x-dogule-access-token"
+      );
     }
     if (req.method === "OPTIONS") {
       res.statusCode = 204;
