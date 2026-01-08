@@ -14,7 +14,7 @@ const DEFAULT_LOCKOUT = {
 };
 
 const DEFAULT_TOKENS = {
-  accessTtlMs: 15 * 60 * 1000,
+  accessTtlMs: 24 * 60 * 60 * 1000,
   refreshTtlMs: 7 * 24 * 60 * 60 * 1000,
 };
 

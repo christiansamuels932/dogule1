@@ -1769,7 +1769,7 @@ function renderFinanzOverview(finanzen = [], hasError = false) {
     appendSharedEmptyState(body);
   } else {
     const payments = finanzen
-      .filter((entry) => entry.typ === "zahlung")
+      .filter((entry) => entry.typ === "bezahlt")
       .slice()
       .reverse();
     const latest = payments.length ? payments[payments.length - 1] : null;
@@ -1861,7 +1861,7 @@ function renderZahlungshistorie(finanzen = [], hasError = false) {
   if (hasError) {
     showErrorNotice(body);
   } else {
-    const payments = finanzen.filter((entry) => entry.typ === "zahlung");
+    const payments = finanzen.filter((entry) => entry.typ === "bezahlt");
     if (!payments.length) {
       appendSharedEmptyState(body);
     } else {

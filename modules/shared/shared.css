@@ -273,7 +273,18 @@ h3,
 .finanzen-list-actions {
   display: flex;
   justify-content: flex-end;
+  gap: 0.5rem;
   margin-bottom: 0.5rem;
+}
+
+.finanzen-form__actions,
+.finanzen-detail__actions,
+.finanzen-delete__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  justify-content: flex-end;
+  margin-top: 0.5rem;
 }
 
 .finanzen-table {

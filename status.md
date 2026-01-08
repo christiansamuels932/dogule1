@@ -1,3 +1,14 @@
+Quick start (manual):
+
+- `sudo systemctl start mariadb && sudo systemctl status mariadb`
+- `DOGULE1_STORAGE_MODE=mariadb DOGULE1_MARIADB_SOCKET=/run/mysqld/mysqld.sock DOGULE1_MARIADB_USER=ran node tools/server/apiServer.js`
+- `DOGULE1_STORAGE_MODE=mariadb DOGULE1_MARIADB_SOCKET=/run/mysqld/mysqld.sock DOGULE1_MARIADB_USER=ran pnpm dev`
+
+Quick stop (manual):
+
+- `pkill -f "tools/server/apiServer.js|vite dev|pnpm dev|vite" 2>/dev/null || true`
+- `sudo systemctl stop mariadb`
+
 This document is the authoritative status log for Dogule1 (replaces dogule1_status.md). Station suffix legend: `R` = lifecycle/retention, `K` = Kommunikation, `E` = Email/Outlook line.
 Every station block is wrapped by a visual bracket line: `# - - - - - - - - - - - - - - - - - - - -` before and after.
 Each station block uses this structure (read-only):
@@ -12,6 +23,54 @@ Each station block uses this structure (read-only):
 - READ-ONLY INSTRUCTIONS: All stations (including historical ones) must stay logged in this file; never replace or truncate existing entries when adding new stations. If a truncation occurs, restore the full history before adding new content (the Station 39–41 overwrite was fixed by restoring Stations 1–38 and reappending 39–41).
 
 Branching rule: each station must be developed on its dedicated branch; if the expected branch does not exist yet, create a new one before starting the station.
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 82 — Billing from Kurse
+
+## Kontext
+
+- Status: read-only (completed).
+- Branch: `feature/station82`.
+- Scope: Rechnungen from Kurse/Kunde; OR/MWST-required fields; Rechnungsverlauf (history) in Finanzen.
+
+## Ergebnis (kurz)
+
+- Finanzen UI refocused to Rechnungen: list columns, detail view, and Rechnung form (Status, Zeitraum, MWST, Zahlungsdaten).
+- Rechnung data model added to `zahlungen` (API defaults + MariaDB schema + adapter mapping).
+- Auto-generated Rechnungsnummer format `YYMMDD-###` when Rechnungsdatum is set (manual override supported).
+- Kurs linkage added in Rechnung form with auto-fill for Beschreibung/Total/Leistungsdatum.
+- Filter layout aligned to list-controls style; “Neue Rechnung” visible even when no entries.
+- Access token TTL increased to 24h (refresh remains 7 days).
+- Kunden selector now refreshes when cached data is empty, so failed loads don't leave the form without options.
+- Rechnung form simplified: removed Währung/Steuerbefreiung/Zahlungsbedingungen/Empfänger/QR/MWST-Hinweis/Kontakt fields, combined Leistungsdatum, MWST-Betrag auto-calculated, Total auto-calculated (now last field), and Zahlungsfrist is now days (default 30).
+- Kurse form updated to new fields (Trainer, Abo-Form, Alter Hund, Preis, Aufbauend, Notizen) and Status = Aktiv/Deaktiviert; multi-trainer support added via `trainer_ids` (primary remains `trainer_id`).
+- Kurse list cards reduced to Code/Name/Trainer/Alter Hund/Preis; detail view now matches Kunden detail layout.
+- Outlook mirror row removed from Kurse UI.
+- Live MariaDB Kurse reintroduced (KS-001..KS-013) from the curated list.
+
+## Tests
+
+- Manual UI flow (logged-in):
+  - Rechnung create/save works after DB schema update: ✅
+  - Rechnung form order, Kunde selection, Kurs auto-fill, and MWST/Total auto-calc: ✅
+  - Kurse list/detail/form layout with new fields: not run (visual check pending).
+- MariaDB schema update (manual, not yet scripted):
+  - `ALTER TABLE zahlungen ADD COLUMN ...` applied locally to add Rechnung fields.
+  - `ALTER TABLE kurse ADD COLUMN trainer_ids ...; ALTER TABLE kurse ADD COLUMN abo_form ...; ALTER TABLE kurse MODIFY price ...` applied locally for Kurse fields.
+- MariaDB data load (manual):
+  - `INSERT INTO kurse ...` (KS-001..KS-013) ✅
+  - `SELECT code, title, trainer_name, status, abo_form, alter_hund, aufbauend, price FROM kurse ORDER BY code;` ✅
+
+## Issues
+
+- Auth tokens expire; now 24h, but re-login still required when expired.
+
+## Notizen
+
+- Running services required: MariaDB, API server, Vite dev; login required for API access.
+- Kurse list reintroduced in live MariaDB; multi-trainer IDs stored in `kurse.trainer_ids` while `trainer_id` remains required.
+- Manual UI check still needed for Kurse list/detail/form with multi-trainer select and new fields.
 
 # - - - - - - - - - - - - - - - - - - - -
 

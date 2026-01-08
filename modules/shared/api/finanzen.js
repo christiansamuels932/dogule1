@@ -13,6 +13,24 @@ const EDITABLE_DEFAULTS = {
   betrag: 0,
   datum: "",
   beschreibung: "",
+  leistungVon: "",
+  leistungBis: "",
+  waehrung: "CHF",
+  nettoBetrag: 0,
+  mwstSatz: 0,
+  mwstBetrag: 0,
+  mwstHinweis: "",
+  steuerbefreiungHinweis: "",
+  zahlungsfrist: "",
+  zahlungsbedingungen: "",
+  iban: "",
+  kontaktEmail: "",
+  kontaktTelefon: "",
+  issuerName: "",
+  issuerAdresse: "",
+  empfaengerName: "",
+  empfaengerAdresse: "",
+  qrPayload: "",
 };
 
 const ensureEditableDefaults = (payload = {}) => ({
@@ -26,6 +44,7 @@ const ensureFinanzShape = (entry = {}) => ({
   updatedAt: "",
   ...EDITABLE_DEFAULTS,
   ...entry,
+  kundeId: entry.kundeId || entry.kundenId || "",
 });
 
 export async function listFinanzen(options) {

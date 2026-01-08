@@ -35,6 +35,16 @@ function assertOptionalNumber(value, field) {
   }
 }
 
+function assertOptionalStringOrNumber(value, field) {
+  if (value === undefined || value === null) return;
+  if (typeof value === "string") return;
+  if (typeof value === "number" && !Number.isNaN(value)) return;
+  throw new StorageError(
+    STORAGE_ERROR_CODES.SCHEMA_VALIDATION_FAILED,
+    `${field} must be a string or number`
+  );
+}
+
 function assertNullOrNumber(value, field) {
   if (value === null) return;
   assertOptionalNumber(value, field);
@@ -190,6 +200,9 @@ export function validateKurs(record) {
     "endTime",
     "location",
     "status",
+    "aboForm",
+    "alterHund",
+    "aufbauend",
     "capacity",
     "bookedCount",
     "level",
@@ -214,15 +227,29 @@ export function validateKurs(record) {
   assertString(record.title, "kurse.title");
   assertString(record.trainerName, "kurse.trainerName");
   assertUuid(record.trainerId, "kurse.trainerId");
+  if (record.trainerIds !== undefined && record.trainerIds !== null) {
+    if (!Array.isArray(record.trainerIds)) {
+      throw new StorageError(
+        STORAGE_ERROR_CODES.SCHEMA_VALIDATION_FAILED,
+        "kurse.trainerIds must be an array"
+      );
+    }
+    record.trainerIds.forEach((id, idx) => {
+      assertString(id, `kurse.trainerIds[${idx}]`);
+    });
+  }
   assertOptionalString(record.date, "kurse.date");
   assertOptionalString(record.startTime, "kurse.startTime");
   assertOptionalString(record.endTime, "kurse.endTime");
   assertOptionalString(record.location, "kurse.location");
   assertOptionalString(record.status, "kurse.status");
+  assertOptionalString(record.aboForm, "kurse.aboForm");
+  assertOptionalString(record.alterHund, "kurse.alterHund");
+  assertOptionalString(record.aufbauend, "kurse.aufbauend");
   assertOptionalNumber(record.capacity, "kurse.capacity");
   assertOptionalNumber(record.bookedCount, "kurse.bookedCount");
   assertOptionalString(record.level, "kurse.level");
-  assertOptionalNumber(record.price, "kurse.price");
+  assertOptionalStringOrNumber(record.price, "kurse.price");
   assertOptionalString(record.notes, "kurse.notes");
   if (!Array.isArray(record.hundIds)) {
     throw new StorageError(
