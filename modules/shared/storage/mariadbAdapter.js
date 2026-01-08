@@ -159,15 +159,23 @@ function mapKursRow(row) {
     title: row.title,
     trainerName: row.trainer_name,
     trainerId: row.trainer_id,
+    trainerIds: (() => {
+      const parsed = parseJson(row.trainer_ids, []);
+      if (Array.isArray(parsed) && parsed.length) return parsed;
+      return row.trainer_id ? [row.trainer_id] : [];
+    })(),
     date: row.date,
     startTime: row.start_time,
     endTime: row.end_time,
     location: row.location,
     status: row.status,
+    aboForm: row.abo_form,
+    alterHund: row.alter_hund,
+    aufbauend: row.aufbauend,
     capacity: toNumber(row.capacity, 0),
     bookedCount: toNumber(row.booked_count, 0),
     level: row.level,
-    price: toNumber(row.price, 0),
+    price: row.price === null || row.price === undefined ? "" : String(row.price),
     notes: row.notes,
     hundIds: parseJson(row.hund_ids, []),
     kundenIds: parseJson(row.kunden_ids, []),
@@ -216,6 +224,24 @@ function mapFinanzRow(row) {
     betrag: toNumber(row.betrag, 0),
     datum: row.datum,
     beschreibung: row.beschreibung,
+    leistungVon: row.leistung_von,
+    leistungBis: row.leistung_bis,
+    waehrung: row.waehrung,
+    nettoBetrag: toNumber(row.netto_betrag, 0),
+    mwstSatz: toNumber(row.mwst_satz, 0),
+    mwstBetrag: toNumber(row.mwst_betrag, 0),
+    mwstHinweis: row.mwst_hinweis,
+    steuerbefreiungHinweis: row.steuerbefreiung_hinweis,
+    zahlungsfrist: row.zahlungsfrist,
+    zahlungsbedingungen: row.zahlungsbedingungen,
+    iban: row.iban,
+    kontaktEmail: row.kontakt_email,
+    kontaktTelefon: row.kontakt_telefon,
+    issuerName: row.issuer_name,
+    issuerAdresse: row.issuer_adresse,
+    empfaengerName: row.empfaenger_name,
+    empfaengerAdresse: row.empfaenger_adresse,
+    qrPayload: row.qr_payload,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     schemaVersion: row.schema_version,
@@ -328,21 +354,37 @@ function normalizeTrainer(data = {}, existing) {
 
 function normalizeKurs(data = {}, existing) {
   const createdAt = existing?.createdAt || data.createdAt || nowIso();
+  const normalizeTrainerIds = (ids, fallbackId) => {
+    const normalized = toArrayValue(ids)
+      .map((entry) => toStringValue(entry))
+      .filter(Boolean);
+    if (fallbackId && !normalized.includes(fallbackId)) {
+      normalized.unshift(fallbackId);
+    }
+    return normalized;
+  };
   return {
     id: data.id || existing?.id || uuidv7(),
     code: toStringValue(data.code ?? existing?.code),
     title: toStringValue(data.title ?? existing?.title),
     trainerName: toStringValue(data.trainerName ?? existing?.trainerName),
     trainerId: toStringValue(data.trainerId ?? existing?.trainerId),
+    trainerIds: normalizeTrainerIds(
+      data.trainerIds ?? existing?.trainerIds ?? [],
+      toStringValue(data.trainerId ?? existing?.trainerId)
+    ),
     date: toStringValue(data.date ?? existing?.date),
     startTime: toStringValue(data.startTime ?? existing?.startTime),
     endTime: toStringValue(data.endTime ?? existing?.endTime),
     location: toStringValue(data.location ?? existing?.location),
     status: toStringValue(data.status ?? existing?.status),
+    aboForm: toStringValue(data.aboForm ?? existing?.aboForm),
+    alterHund: toStringValue(data.alterHund ?? existing?.alterHund),
+    aufbauend: toStringValue(data.aufbauend ?? existing?.aufbauend),
     capacity: toNumber(data.capacity ?? existing?.capacity ?? 0, 0),
     bookedCount: toNumber(data.bookedCount ?? existing?.bookedCount ?? 0, 0),
     level: toStringValue(data.level ?? existing?.level),
-    price: toNumber(data.price ?? existing?.price ?? 0, 0),
+    price: toStringValue(data.price ?? existing?.price),
     notes: toStringValue(data.notes ?? existing?.notes),
     hundIds: toArrayValue(data.hundIds ?? existing?.hundIds),
     kundenIds: toArrayValue(data.kundenIds ?? existing?.kundenIds),
@@ -391,6 +433,26 @@ function normalizeFinanz(data = {}, existing) {
     betrag: toNumber(data.betrag ?? existing?.betrag ?? 0, 0),
     datum: toStringValue(data.datum ?? existing?.datum),
     beschreibung: toStringValue(data.beschreibung ?? existing?.beschreibung),
+    leistungVon: toStringValue(data.leistungVon ?? existing?.leistungVon),
+    leistungBis: toStringValue(data.leistungBis ?? existing?.leistungBis),
+    waehrung: toStringValue(data.waehrung ?? existing?.waehrung ?? "CHF"),
+    nettoBetrag: toNumber(data.nettoBetrag ?? existing?.nettoBetrag ?? 0, 0),
+    mwstSatz: toNumber(data.mwstSatz ?? existing?.mwstSatz ?? 0, 0),
+    mwstBetrag: toNumber(data.mwstBetrag ?? existing?.mwstBetrag ?? 0, 0),
+    mwstHinweis: toStringValue(data.mwstHinweis ?? existing?.mwstHinweis),
+    steuerbefreiungHinweis: toStringValue(
+      data.steuerbefreiungHinweis ?? existing?.steuerbefreiungHinweis
+    ),
+    zahlungsfrist: toStringValue(data.zahlungsfrist ?? existing?.zahlungsfrist),
+    zahlungsbedingungen: toStringValue(data.zahlungsbedingungen ?? existing?.zahlungsbedingungen),
+    iban: toStringValue(data.iban ?? existing?.iban),
+    kontaktEmail: toStringValue(data.kontaktEmail ?? existing?.kontaktEmail),
+    kontaktTelefon: toStringValue(data.kontaktTelefon ?? existing?.kontaktTelefon),
+    issuerName: toStringValue(data.issuerName ?? existing?.issuerName),
+    issuerAdresse: toStringValue(data.issuerAdresse ?? existing?.issuerAdresse),
+    empfaengerName: toStringValue(data.empfaengerName ?? existing?.empfaengerName),
+    empfaengerAdresse: toStringValue(data.empfaengerAdresse ?? existing?.empfaengerAdresse),
+    qrPayload: toStringValue(data.qrPayload ?? existing?.qrPayload),
     createdAt,
     updatedAt: nowIso(),
     schemaVersion: Number(data.schemaVersion ?? existing?.schemaVersion ?? 1),
@@ -768,11 +830,15 @@ export function createMariaDbAdapter(options = {}) {
       record.title,
       record.trainerName,
       record.trainerId,
+      toJson(record.trainerIds),
       record.date,
       record.startTime,
       record.endTime,
       record.location,
       record.status,
+      record.aboForm,
+      record.alterHund,
+      record.aufbauend,
       record.capacity,
       record.bookedCount,
       record.level,
@@ -794,7 +860,7 @@ export function createMariaDbAdapter(options = {}) {
     ];
     try {
       await pool.query(
-        "INSERT INTO kurse (id, code, title, trainer_name, trainer_id, date, start_time, end_time, location, status, capacity, booked_count, level, price, notes, hund_ids, kunden_ids, outlook_event_id, outlook_date, outlook_start, outlook_end, outlook_location, inventory_flag, portfolio_flag, created_at, updated_at, schema_version, version) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO kurse (id, code, title, trainer_name, trainer_id, trainer_ids, date, start_time, end_time, location, status, abo_form, alter_hund, aufbauend, capacity, booked_count, level, price, notes, hund_ids, kunden_ids, outlook_event_id, outlook_date, outlook_start, outlook_end, outlook_location, inventory_flag, portfolio_flag, created_at, updated_at, schema_version, version) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         params
       );
       return record;
@@ -813,11 +879,15 @@ export function createMariaDbAdapter(options = {}) {
         record.title,
         record.trainerName,
         record.trainerId,
+        toJson(record.trainerIds),
         record.date,
         record.startTime,
         record.endTime,
         record.location,
         record.status,
+        record.aboForm,
+        record.alterHund,
+        record.aufbauend,
         record.capacity,
         record.bookedCount,
         record.level,
@@ -838,7 +908,7 @@ export function createMariaDbAdapter(options = {}) {
         record.id,
       ];
       await pool.query(
-        "UPDATE kurse SET code=?, title=?, trainer_name=?, trainer_id=?, date=?, start_time=?, end_time=?, location=?, status=?, capacity=?, booked_count=?, level=?, price=?, notes=?, hund_ids=?, kunden_ids=?, outlook_event_id=?, outlook_date=?, outlook_start=?, outlook_end=?, outlook_location=?, inventory_flag=?, portfolio_flag=?, updated_at=?, schema_version=?, version=? WHERE id=?",
+        "UPDATE kurse SET code=?, title=?, trainer_name=?, trainer_id=?, trainer_ids=?, date=?, start_time=?, end_time=?, location=?, status=?, abo_form=?, alter_hund=?, aufbauend=?, capacity=?, booked_count=?, level=?, price=?, notes=?, hund_ids=?, kunden_ids=?, outlook_event_id=?, outlook_date=?, outlook_start=?, outlook_end=?, outlook_location=?, inventory_flag=?, portfolio_flag=?, updated_at=?, schema_version=?, version=? WHERE id=?",
         params
       );
       return record;
@@ -991,6 +1061,24 @@ export function createMariaDbAdapter(options = {}) {
       record.betrag,
       record.datum,
       record.beschreibung,
+      record.leistungVon,
+      record.leistungBis,
+      record.waehrung,
+      record.nettoBetrag,
+      record.mwstSatz,
+      record.mwstBetrag,
+      record.mwstHinweis,
+      record.steuerbefreiungHinweis,
+      record.zahlungsfrist,
+      record.zahlungsbedingungen,
+      record.iban,
+      record.kontaktEmail,
+      record.kontaktTelefon,
+      record.issuerName,
+      record.issuerAdresse,
+      record.empfaengerName,
+      record.empfaengerAdresse,
+      record.qrPayload,
       record.createdAt,
       record.updatedAt,
       record.schemaVersion,
@@ -998,7 +1086,7 @@ export function createMariaDbAdapter(options = {}) {
     ];
     try {
       await pool.query(
-        "INSERT INTO zahlungen (id, code, kunde_id, kurs_id, trainer_id, typ, betrag, datum, beschreibung, created_at, updated_at, schema_version, version) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO zahlungen (id, code, kunde_id, kurs_id, trainer_id, typ, betrag, datum, beschreibung, leistung_von, leistung_bis, waehrung, netto_betrag, mwst_satz, mwst_betrag, mwst_hinweis, steuerbefreiung_hinweis, zahlungsfrist, zahlungsbedingungen, iban, kontakt_email, kontakt_telefon, issuer_name, issuer_adresse, empfaenger_name, empfaenger_adresse, qr_payload, created_at, updated_at, schema_version, version) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         params
       );
       return record;
@@ -1026,13 +1114,31 @@ export function createMariaDbAdapter(options = {}) {
         record.betrag,
         record.datum,
         record.beschreibung,
+        record.leistungVon,
+        record.leistungBis,
+        record.waehrung,
+        record.nettoBetrag,
+        record.mwstSatz,
+        record.mwstBetrag,
+        record.mwstHinweis,
+        record.steuerbefreiungHinweis,
+        record.zahlungsfrist,
+        record.zahlungsbedingungen,
+        record.iban,
+        record.kontaktEmail,
+        record.kontaktTelefon,
+        record.issuerName,
+        record.issuerAdresse,
+        record.empfaengerName,
+        record.empfaengerAdresse,
+        record.qrPayload,
         record.updatedAt,
         record.schemaVersion,
         record.version,
         record.id,
       ];
       await pool.query(
-        "UPDATE zahlungen SET code=?, kunde_id=?, kurs_id=?, trainer_id=?, typ=?, betrag=?, datum=?, beschreibung=?, updated_at=?, schema_version=?, version=? WHERE id=?",
+        "UPDATE zahlungen SET code=?, kunde_id=?, kurs_id=?, trainer_id=?, typ=?, betrag=?, datum=?, beschreibung=?, leistung_von=?, leistung_bis=?, waehrung=?, netto_betrag=?, mwst_satz=?, mwst_betrag=?, mwst_hinweis=?, steuerbefreiung_hinweis=?, zahlungsfrist=?, zahlungsbedingungen=?, iban=?, kontakt_email=?, kontakt_telefon=?, issuer_name=?, issuer_adresse=?, empfaenger_name=?, empfaenger_adresse=?, qr_payload=?, updated_at=?, schema_version=?, version=? WHERE id=?",
         params
       );
       return record;

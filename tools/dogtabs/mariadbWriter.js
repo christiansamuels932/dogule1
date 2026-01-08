@@ -119,18 +119,22 @@ function insertTrainer(conn, record) {
 
 function insertKurs(conn, record) {
   return conn.query(
-    "INSERT INTO kurse (id, code, title, trainer_name, trainer_id, date, start_time, end_time, location, status, capacity, booked_count, level, price, notes, hund_ids, kunden_ids, outlook_event_id, outlook_date, outlook_start, outlook_end, outlook_location, inventory_flag, portfolio_flag, created_at, updated_at, schema_version, version) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+    "INSERT INTO kurse (id, code, title, trainer_name, trainer_id, trainer_ids, date, start_time, end_time, location, status, abo_form, alter_hund, aufbauend, capacity, booked_count, level, price, notes, hund_ids, kunden_ids, outlook_event_id, outlook_date, outlook_start, outlook_end, outlook_location, inventory_flag, portfolio_flag, created_at, updated_at, schema_version, version) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
     [
       record.id,
       record.code,
       record.title,
       record.trainerName,
       record.trainerId,
+      toJson(record.trainerIds),
       record.date,
       record.startTime,
       record.endTime,
       record.location,
       record.status,
+      record.aboForm,
+      record.alterHund,
+      record.aufbauend,
       record.capacity,
       record.bookedCount,
       record.level,

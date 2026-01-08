@@ -4,7 +4,7 @@ import { isHttpMode, httpList, httpGet, httpCreate, httpUpdate, httpDelete } fro
 import { removeKalenderEventByKursId, upsertKalenderEventForKurs } from "./kalender.js";
 
 const TABLE = "kurse";
-const DEFAULT_STATUS = "geplant";
+const DEFAULT_STATUS = "aktiv";
 const LEGACY_CODE_KEY = "kursId";
 const TRAINER_ERROR_CODE = "KURS_TRAINER_INVALID";
 
@@ -13,20 +13,24 @@ const EDITABLE_DEFAULTS = {
   title: "",
   trainerName: "",
   trainerId: "",
+  trainerIds: [],
   date: "",
   startTime: "",
   endTime: "",
   location: "",
   status: DEFAULT_STATUS,
+  aboForm: "",
+  alterHund: "",
+  aufbauend: "",
   capacity: 0,
   bookedCount: 0,
   level: "",
-  price: 0,
+  price: "",
   notes: "",
   hundIds: [],
 };
 
-const NUMBER_FIELDS = new Set(["capacity", "bookedCount", "price"]);
+const NUMBER_FIELDS = new Set(["capacity", "bookedCount"]);
 
 let kursSequence = db[TABLE]?.length ?? 0;
 
@@ -39,6 +43,18 @@ const normalizeIdArray = (value = []) => {
   }
   if (typeof value === "string" && value.trim()) return [value.trim()];
   return [];
+};
+
+const normalizeTrainerIds = (payload = {}) => {
+  const trainerId = (payload.trainerId || "").trim();
+  const trainerIds = normalizeIdArray(payload.trainerIds || []);
+  if (trainerId && !trainerIds.includes(trainerId)) {
+    trainerIds.unshift(trainerId);
+  }
+  if (!trainerId && trainerIds.length) {
+    return { trainerId: trainerIds[0], trainerIds };
+  }
+  return { trainerId, trainerIds };
 };
 
 const ensureParticipantIntegrity = (payload = {}) => {
@@ -58,22 +74,30 @@ const ensureParticipantIntegrity = (payload = {}) => {
 };
 
 const ensureTrainerIntegrity = (payload = {}) => {
-  const trainerId = (payload.trainerId || "").trim();
+  const normalized = normalizeTrainerIds(payload);
+  const trainerId = normalized.trainerId;
+  const trainerIds = normalized.trainerIds;
   if (!trainerId) {
     const error = new Error("Trainer ist erforderlich");
     error.code = TRAINER_ERROR_CODE;
     throw error;
   }
-  const trainer = Array.isArray(db.trainer)
-    ? db.trainer.find((entry) => entry.id === trainerId)
-    : null;
+  const trainerList = Array.isArray(db.trainer) ? db.trainer : [];
+  const trainer = trainerList.find((entry) => entry.id === trainerId) || null;
   if (!trainer) {
     const error = new Error(`Trainer ${trainerId} existiert nicht`);
     error.code = TRAINER_ERROR_CODE;
     throw error;
   }
+  const missing = trainerIds.filter((id) => !trainerList.some((entry) => entry.id === id));
+  if (missing.length) {
+    const error = new Error(`Trainer ${missing.join(", ")} existiert nicht`);
+    error.code = TRAINER_ERROR_CODE;
+    throw error;
+  }
   return {
     trainerId,
+    trainerIds,
     trainerName: trainer.name || payload.trainerName || trainerId,
   };
 };
@@ -104,11 +128,12 @@ const ensureEditableDefaults = (payload = {}) => {
   normalized.status = payload.status?.trim?.() ? payload.status : DEFAULT_STATUS;
   normalized.capacity = sanitizeNumber(payload.capacity, EDITABLE_DEFAULTS.capacity);
   normalized.bookedCount = sanitizeNumber(payload.bookedCount, EDITABLE_DEFAULTS.bookedCount);
-  normalized.price = sanitizeNumber(payload.price, EDITABLE_DEFAULTS.price);
+  normalized.price = payload.price ?? EDITABLE_DEFAULTS.price;
   const participants = ensureParticipantIntegrity(normalized);
   normalized.hundIds = participants.hundIds;
   const trainerIntegrity = ensureTrainerIntegrity(normalized);
   normalized.trainerId = trainerIntegrity.trainerId;
+  normalized.trainerIds = trainerIntegrity.trainerIds;
   normalized.trainerName = trainerIntegrity.trainerName;
   return normalized;
 };
@@ -122,6 +147,14 @@ const sanitizeUpdatePayload = (payload = {}) => {
       patch[key] = sanitizeNumber(normalized[key], EDITABLE_DEFAULTS[key]);
     } else if (key === "status") {
       patch[key] = normalized[key]?.trim?.() ? normalized[key] : DEFAULT_STATUS;
+    } else if (key === "price") {
+      patch[key] = normalized[key] ?? EDITABLE_DEFAULTS[key];
+    } else if (key === "trainerIds") {
+      const { trainerIds } = normalizeTrainerIds({
+        trainerId: normalized.trainerId ?? "",
+        trainerIds: normalized.trainerIds ?? [],
+      });
+      patch[key] = trainerIds;
     } else if (key === "code") {
       patch[key] = (normalized[key] || "").trim();
     } else if (key === "hundIds") {

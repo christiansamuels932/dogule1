@@ -310,7 +310,7 @@ function buildFinanzUebersichtSection(finanzen = [], hasError = false, { hasKund
       section.appendChild(card);
       return section;
     }
-    const payments = finanzen.filter((entry) => entry.typ === "zahlung");
+    const payments = finanzen.filter((entry) => entry.typ === "bezahlt");
     const latest = payments.length ? payments[payments.length - 1] : null;
     if (!latest && !finanzen.some((entry) => entry.typ === "offen")) {
       body.appendChild(createEmptyState("Keine Daten vorhanden.", ""));
@@ -457,7 +457,7 @@ function buildFinanzHistorieSection(finanzen = [], hasError = false, { hasKunde 
       return section;
     }
     const payments = finanzen
-      .filter((entry) => entry.typ === "zahlung")
+      .filter((entry) => entry.typ === "bezahlt")
       .slice()
       .reverse();
     if (!payments.length) {

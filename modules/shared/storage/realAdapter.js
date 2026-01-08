@@ -105,7 +105,10 @@ function normalizeHund(data = {}, existing) {
 
 async function ensureKundeExists(paths, kundenId, defaults) {
   try {
-    await loadEntity(paths, "kunden", kundenId, { logger: defaults.logger, alerter: defaults.alerter });
+    await loadEntity(paths, "kunden", kundenId, {
+      logger: defaults.logger,
+      alerter: defaults.alerter,
+    });
   } catch (error) {
     if (error instanceof StorageError && error.code === STORAGE_ERROR_CODES.NOT_FOUND) {
       throw new StorageError(
@@ -125,16 +128,19 @@ async function listEntities(paths, entity, defaults) {
     entries = await fs.readdir(dir);
   } catch (error) {
     if (error.code === "ENOENT") return [];
-    throw new StorageError(
-      STORAGE_ERROR_CODES.STORAGE_ERROR,
-      `Failed to list ${entity}`,
-      { cause: error }
-    );
+    throw new StorageError(STORAGE_ERROR_CODES.STORAGE_ERROR, `Failed to list ${entity}`, {
+      cause: error,
+    });
   }
-  const ids = entries.filter((name) => name.endsWith(".json")).map((name) => name.replace(/\.json$/, ""));
+  const ids = entries
+    .filter((name) => name.endsWith(".json"))
+    .map((name) => name.replace(/\.json$/, ""));
   const records = [];
   for (const id of ids) {
-    const loaded = await loadEntity(paths, entity, id, { logger: defaults.logger, alerter: defaults.alerter });
+    const loaded = await loadEntity(paths, entity, id, {
+      logger: defaults.logger,
+      alerter: defaults.alerter,
+    });
     records.push(loaded.data);
   }
   return records.sort((a, b) => a.id.localeCompare(b.id));
@@ -148,7 +154,10 @@ function buildCrudForKunden(defaults, options) {
   };
 
   const get = async (id) => {
-    const loaded = await loadEntity(paths, "kunden", id, { logger: defaults.logger, alerter: defaults.alerter });
+    const loaded = await loadEntity(paths, "kunden", id, {
+      logger: defaults.logger,
+      alerter: defaults.alerter,
+    });
     return loaded.data;
   };
 
@@ -183,7 +192,11 @@ function buildCrudForKunden(defaults, options) {
           "kunden",
           {
             actionId: writeContext.actionId,
-            actor: { type: writeContext.actorRole === "system" ? "system" : "user", id: writeContext.actorId, role: writeContext.actorRole },
+            actor: {
+              type: writeContext.actorRole === "system" ? "system" : "user",
+              id: writeContext.actorId,
+              role: writeContext.actorRole,
+            },
             target: { type: "kunden", id: record.id },
             requestId: writeContext.requestId || "storage-write",
             result: "success",
@@ -237,7 +250,11 @@ function buildCrudForKunden(defaults, options) {
           "kunden",
           {
             actionId: writeContext.actionId,
-            actor: { type: writeContext.actorRole === "system" ? "system" : "user", id: writeContext.actorId, role: writeContext.actorRole },
+            actor: {
+              type: writeContext.actorRole === "system" ? "system" : "user",
+              id: writeContext.actorId,
+              role: writeContext.actorRole,
+            },
             target: { type: "kunden", id },
             requestId: writeContext.requestId || "storage-write",
             result: "success",
@@ -286,7 +303,11 @@ function buildCrudForKunden(defaults, options) {
           "kunden",
           {
             actionId: writeContext.actionId,
-            actor: { type: writeContext.actorRole === "system" ? "system" : "user", id: writeContext.actorId, role: writeContext.actorRole },
+            actor: {
+              type: writeContext.actorRole === "system" ? "system" : "user",
+              id: writeContext.actorId,
+              role: writeContext.actorRole,
+            },
             target: { type: "kunden", id },
             requestId: writeContext.requestId || "storage-write",
             result: "success",
@@ -311,7 +332,10 @@ function buildCrudForHunde(defaults, options) {
   const list = async () => listEntities(paths, "hunde", defaults);
 
   const get = async (id) => {
-    const loaded = await loadEntity(paths, "hunde", id, { logger: defaults.logger, alerter: defaults.alerter });
+    const loaded = await loadEntity(paths, "hunde", id, {
+      logger: defaults.logger,
+      alerter: defaults.alerter,
+    });
     return loaded.data;
   };
 
@@ -347,7 +371,11 @@ function buildCrudForHunde(defaults, options) {
           "hunde",
           {
             actionId: writeContext.actionId,
-            actor: { type: writeContext.actorRole === "system" ? "system" : "user", id: writeContext.actorId, role: writeContext.actorRole },
+            actor: {
+              type: writeContext.actorRole === "system" ? "system" : "user",
+              id: writeContext.actorId,
+              role: writeContext.actorRole,
+            },
             target: { type: "hunde", id: record.id },
             requestId: writeContext.requestId || "storage-write",
             result: "success",
@@ -402,7 +430,11 @@ function buildCrudForHunde(defaults, options) {
           "hunde",
           {
             actionId: writeContext.actionId,
-            actor: { type: writeContext.actorRole === "system" ? "system" : "user", id: writeContext.actorId, role: writeContext.actorRole },
+            actor: {
+              type: writeContext.actorRole === "system" ? "system" : "user",
+              id: writeContext.actorId,
+              role: writeContext.actorRole,
+            },
             target: { type: "hunde", id },
             requestId: writeContext.requestId || "storage-write",
             result: "success",
@@ -451,7 +483,11 @@ function buildCrudForHunde(defaults, options) {
           "hunde",
           {
             actionId: writeContext.actionId,
-            actor: { type: writeContext.actorRole === "system" ? "system" : "user", id: writeContext.actorId, role: writeContext.actorRole },
+            actor: {
+              type: writeContext.actorRole === "system" ? "system" : "user",
+              id: writeContext.actorId,
+              role: writeContext.actorRole,
+            },
             target: { type: "hunde", id },
             requestId: writeContext.requestId || "storage-write",
             result: "success",
@@ -499,7 +535,16 @@ function normalizeKurs(data = {}, existing) {
   };
   const normalizeIds = (ids) => {
     if (!Array.isArray(ids)) return [];
-    return ids.map((entry) => (typeof entry === "string" ? entry.trim() : String(entry || ""))).filter(Boolean);
+    return ids
+      .map((entry) => (typeof entry === "string" ? entry.trim() : String(entry || "")))
+      .filter(Boolean);
+  };
+  const normalizeTrainerIds = (ids, fallbackId) => {
+    const normalized = normalizeIds(ids);
+    if (fallbackId && !normalized.includes(fallbackId)) {
+      normalized.unshift(fallbackId);
+    }
+    return normalized;
   };
   const base = {
     id,
@@ -507,15 +552,22 @@ function normalizeKurs(data = {}, existing) {
     title: data.title ?? existing?.title ?? "",
     trainerName: data.trainerName ?? existing?.trainerName ?? "",
     trainerId: data.trainerId ?? existing?.trainerId ?? "",
+    trainerIds: normalizeTrainerIds(
+      data.trainerIds ?? existing?.trainerIds ?? [],
+      data.trainerId ?? existing?.trainerId ?? ""
+    ),
     date: data.date ?? existing?.date ?? "",
     startTime: data.startTime ?? existing?.startTime ?? "",
     endTime: data.endTime ?? existing?.endTime ?? "",
     location: data.location ?? existing?.location ?? "",
     status: data.status ?? existing?.status ?? "",
+    aboForm: data.aboForm ?? existing?.aboForm ?? "",
+    alterHund: data.alterHund ?? existing?.alterHund ?? "",
+    aufbauend: data.aufbauend ?? existing?.aufbauend ?? "",
     capacity: toNumber(data.capacity ?? existing?.capacity ?? 0, 0),
     bookedCount: toNumber(data.bookedCount ?? existing?.bookedCount ?? 0, 0),
     level: data.level ?? existing?.level ?? "",
-    price: toNumber(data.price ?? existing?.price ?? 0, 0),
+    price: data.price ?? existing?.price ?? "",
     notes: data.notes ?? existing?.notes ?? "",
     hundIds: normalizeIds(data.hundIds ?? existing?.hundIds ?? []),
     schemaVersion: 1,
@@ -526,7 +578,10 @@ function normalizeKurs(data = {}, existing) {
 
 async function ensureTrainerExists(paths, trainerId, defaults) {
   try {
-    await loadEntity(paths, "trainer", trainerId, { logger: defaults.logger, alerter: defaults.alerter });
+    await loadEntity(paths, "trainer", trainerId, {
+      logger: defaults.logger,
+      alerter: defaults.alerter,
+    });
   } catch (error) {
     if (error instanceof StorageError && error.code === STORAGE_ERROR_CODES.NOT_FOUND) {
       throw new StorageError(
@@ -581,7 +636,11 @@ function buildCrudForTrainer(defaults, options) {
           "trainer",
           {
             actionId: writeContext.actionId,
-            actor: { type: writeContext.actorRole === "system" ? "system" : "user", id: writeContext.actorId, role: writeContext.actorRole },
+            actor: {
+              type: writeContext.actorRole === "system" ? "system" : "user",
+              id: writeContext.actorId,
+              role: writeContext.actorRole,
+            },
             target: { type: "trainer", id: record.id },
             requestId: writeContext.requestId || "storage-write",
             result: "success",
@@ -635,7 +694,11 @@ function buildCrudForTrainer(defaults, options) {
           "trainer",
           {
             actionId: writeContext.actionId,
-            actor: { type: writeContext.actorRole === "system" ? "system" : "user", id: writeContext.actorId, role: writeContext.actorRole },
+            actor: {
+              type: writeContext.actorRole === "system" ? "system" : "user",
+              id: writeContext.actorId,
+              role: writeContext.actorRole,
+            },
             target: { type: "trainer", id },
             requestId: writeContext.requestId || "storage-write",
             result: "success",
@@ -684,7 +747,11 @@ function buildCrudForTrainer(defaults, options) {
           "trainer",
           {
             actionId: writeContext.actionId,
-            actor: { type: writeContext.actorRole === "system" ? "system" : "user", id: writeContext.actorId, role: writeContext.actorRole },
+            actor: {
+              type: writeContext.actorRole === "system" ? "system" : "user",
+              id: writeContext.actorId,
+              role: writeContext.actorRole,
+            },
             target: { type: "trainer", id },
             requestId: writeContext.requestId || "storage-write",
             result: "success",
@@ -746,7 +813,11 @@ function buildCrudForKurse(defaults, options) {
           "kurse",
           {
             actionId: writeContext.actionId,
-            actor: { type: writeContext.actorRole === "system" ? "system" : "user", id: writeContext.actorId, role: writeContext.actorRole },
+            actor: {
+              type: writeContext.actorRole === "system" ? "system" : "user",
+              id: writeContext.actorId,
+              role: writeContext.actorRole,
+            },
             target: { type: "kurse", id: record.id },
             requestId: writeContext.requestId || "storage-write",
             result: "success",
@@ -801,7 +872,11 @@ function buildCrudForKurse(defaults, options) {
           "kurse",
           {
             actionId: writeContext.actionId,
-            actor: { type: writeContext.actorRole === "system" ? "system" : "user", id: writeContext.actorId, role: writeContext.actorRole },
+            actor: {
+              type: writeContext.actorRole === "system" ? "system" : "user",
+              id: writeContext.actorId,
+              role: writeContext.actorRole,
+            },
             target: { type: "kurse", id },
             requestId: writeContext.requestId || "storage-write",
             result: "success",
@@ -850,7 +925,11 @@ function buildCrudForKurse(defaults, options) {
           "kurse",
           {
             actionId: writeContext.actionId,
-            actor: { type: writeContext.actorRole === "system" ? "system" : "user", id: writeContext.actorId, role: writeContext.actorRole },
+            actor: {
+              type: writeContext.actorRole === "system" ? "system" : "user",
+              id: writeContext.actorId,
+              role: writeContext.actorRole,
+            },
             target: { type: "kurse", id },
             requestId: writeContext.requestId || "storage-write",
             result: "success",

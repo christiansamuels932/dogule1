@@ -1,5 +1,5 @@
 // Finanzen module – list/detail/create/edit/delete flows with mock API
-/* globals document, console, window, HTMLElement */
+/* globals document, console, window */
 import {
   listFinanzen,
   listFinanzenByKundeId,
@@ -18,6 +18,7 @@ import {
   createSectionHeader,
   createFormRow,
 } from "../shared/components/components.js";
+import { listKurse } from "../shared/api/kurse.js";
 
 let kundenMapCache = null;
 
@@ -48,7 +49,7 @@ export function initModule(container, routeInfo = {}) {
     section.className = "dogule-section finanzen-section";
     container.appendChild(section);
 
-    const heading = createMainHeading("Finanzen");
+    const heading = createMainHeading("Rechnungen");
     section.appendChild(heading);
 
     const contentHost = document.createElement("div");
@@ -59,7 +60,7 @@ export function initModule(container, routeInfo = {}) {
 
     async function loadFinanzen(activeMode = "list", activeDetailId = null, activeFilters = {}) {
       contentHost.innerHTML = "";
-      const loadingNotice = createNotice("Lade Finanzen...", { variant: "info", role: "status" });
+      const loadingNotice = createNotice("Lade Rechnungen...", { variant: "info", role: "status" });
       contentHost.appendChild(loadingNotice);
 
       try {
@@ -166,7 +167,7 @@ function renderSummaryCard(target, finanzen = []) {
     const list = document.createElement("dl");
     list.className = "finanzen-summary";
 
-    list.appendChild(createSummaryRow("Summe Zahlungen", sumZahlungen));
+    list.appendChild(createSummaryRow("Summe Bezahlt", sumZahlungen));
     list.appendChild(createSummaryRow("Summe Offen", sumOffen));
     list.appendChild(createSummaryRow("Saldo", saldo));
 
@@ -195,18 +196,23 @@ function sumByTyp(list, typ) {
     .reduce((acc, item) => acc + (Number(item?.betrag) || 0), 0);
 }
 
-function formatCurrency(value) {
-  const number = Number.isFinite(value) ? value : 0;
-  return `${number.toLocaleString("de-CH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} CHF`;
+function formatCurrency(value, currency = "CHF") {
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (trimmed && !Number.isFinite(Number(trimmed))) return trimmed;
+  }
+  const parsed = Number(value);
+  const number = Number.isFinite(parsed) ? parsed : 0;
+  const label = currency || "CHF";
+  return `${number.toLocaleString("de-CH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${label}`;
 }
 
-function renderListCard(target, finanzen = [], kundenMap = new Map(), relationMap = new Map()) {
+function renderListActions(target) {
   if (!target) return;
-
   const actions = document.createElement("div");
   actions.className = "finanzen-list-actions";
   const newButton = createButton({
-    label: "Neu",
+    label: "Neue Rechnung",
     variant: "primary",
     onClick: () => {
       window.location.hash = "#/finanzen/new";
@@ -214,10 +220,14 @@ function renderListCard(target, finanzen = [], kundenMap = new Map(), relationMa
   });
   actions.appendChild(newButton);
   target.appendChild(actions);
+}
+
+function renderListCard(target, finanzen = [], kundenMap = new Map(), relationMap = new Map()) {
+  if (!target) return;
 
   const fragment = createCard({
     eyebrow: "",
-    title: "Einträge",
+    title: "Rechnungsverlauf",
     body: "",
     footer: "",
   });
@@ -228,13 +238,21 @@ function renderListCard(target, finanzen = [], kundenMap = new Map(), relationMa
     table.className = "finanzen-table";
     const thead = document.createElement("thead");
     const headerRow = document.createElement("tr");
-    ["ID", "Code", "Kunde", "Trainer", "Typ", "Betrag", "Datum", "Beschreibung", ""].forEach(
-      (label) => {
-        const th = document.createElement("th");
-        th.textContent = label;
-        headerRow.appendChild(th);
-      }
-    );
+    [
+      "Rechnung",
+      "Kunde",
+      "Kurs",
+      "Status",
+      "Total",
+      "Rechnungsdatum",
+      "Leistungszeitraum",
+      "Fällig",
+      "",
+    ].forEach((label) => {
+      const th = document.createElement("th");
+      th.textContent = label;
+      headerRow.appendChild(th);
+    });
     thead.appendChild(headerRow);
     table.appendChild(thead);
 
@@ -244,24 +262,20 @@ function renderListCard(target, finanzen = [], kundenMap = new Map(), relationMa
       tr.className = "finanzen-table__row";
       const kundeLabel = formatKundeLabel(entry.kundeId, kundenMap);
       const relation = relationMap.get(entry.id) || {};
-      const trainerCell = createTrainerCell(relation, entry.kursId);
+      const kursLabel = formatKursLabel(relation.kurs);
       const cells = [
-        entry?.id || "–",
         entry?.code || "–",
         kundeLabel,
-        trainerCell,
-        formatTyp(entry?.typ),
-        formatCurrency(entry?.betrag),
+        kursLabel,
+        formatStatus(entry?.typ),
+        formatCurrency(entry?.betrag, entry?.waehrung),
         entry?.datum || "–",
-        entry?.beschreibung || "–",
+        formatLeistungszeitraum(entry?.leistungVon, entry?.leistungBis),
+        entry?.zahlungsfrist || "–",
       ];
-      cells.forEach((value, index) => {
+      cells.forEach((value) => {
         const td = document.createElement("td");
-        if (index === 3 && value instanceof HTMLElement) {
-          td.appendChild(value);
-        } else {
-          td.textContent = value;
-        }
+        td.textContent = value;
         tr.appendChild(td);
       });
       const actionTd = document.createElement("td");
@@ -296,43 +310,33 @@ function renderFilterCard(target, kundenMap = new Map(), filters = {}, reloadFn)
   const card = fragment.querySelector(".ui-card") || fragment.firstElementChild;
   const body = card?.querySelector(".ui-card__body");
   if (body) {
-    const form = document.createElement("div");
-    form.className = "finanzen-filters";
-
-    const kundeLabel = document.createElement("label");
-    kundeLabel.textContent = "Kunde";
-    kundeLabel.setAttribute("for", "finanzen-filter-kunde");
-    const kundeSelect = document.createElement("select");
-    kundeSelect.id = "finanzen-filter-kunde";
-    const allOption = document.createElement("option");
-    allOption.value = "";
-    allOption.textContent = "Alle Kunden";
-    kundeSelect.appendChild(allOption);
+    const kundeOptions = [{ value: "", label: "Alle Kunden", selected: !filters?.kundeId }];
     kundenMap.forEach((kunde, id) => {
-      const option = document.createElement("option");
-      option.value = id;
-      const label = formatKundeLabel(id, kundenMap);
-      option.textContent = label;
-      option.selected = filters?.kundeId === id;
-      kundeSelect.appendChild(option);
+      kundeOptions.push({
+        value: id,
+        label: formatKundeLabel(id, kundenMap),
+        selected: filters?.kundeId === id,
+      });
     });
+    const kundeRow = createFormRow({
+      id: "finanzen-filter-kunde",
+      label: "Kunde",
+      control: "select",
+      options: kundeOptions,
+    });
+    const kundeSelect = kundeRow.querySelector("select");
 
-    const typLabel = document.createElement("label");
-    typLabel.textContent = "Typ";
-    typLabel.setAttribute("for", "finanzen-filter-typ");
-    const typSelect = document.createElement("select");
-    typSelect.id = "finanzen-filter-typ";
-    [
-      { value: "", label: "Alle Typen" },
-      { value: "bezahlt", label: "Bezahlt" },
-      { value: "offen", label: "Offen" },
-    ].forEach(({ value, label }) => {
-      const option = document.createElement("option");
-      option.value = value;
-      option.textContent = label;
-      option.selected = (filters?.typ || "") === value;
-      typSelect.appendChild(option);
+    const statusRow = createFormRow({
+      id: "finanzen-filter-typ",
+      label: "Status",
+      control: "select",
+      options: [
+        { value: "", label: "Alle Status", selected: (filters?.typ || "") === "" },
+        { value: "bezahlt", label: "Bezahlt", selected: (filters?.typ || "") === "bezahlt" },
+        { value: "offen", label: "Offen", selected: (filters?.typ || "") === "offen" },
+      ],
     });
+    const typSelect = statusRow.querySelector("select");
 
     const applyFilters = () => {
       const nextFilters = {
@@ -348,11 +352,10 @@ function renderFilterCard(target, kundenMap = new Map(), filters = {}, reloadFn)
     typSelect.addEventListener("change", applyFilters);
 
     const controls = document.createElement("div");
-    controls.className = "finanzen-filters__controls";
-    controls.append(kundeLabel, kundeSelect, typLabel, typSelect);
-    form.appendChild(controls);
+    controls.className = "list-controls";
+    controls.append(kundeRow, statusRow);
     body.innerHTML = "";
-    body.appendChild(form);
+    body.appendChild(controls);
   }
   target.appendChild(card || fragment);
 }
@@ -373,7 +376,7 @@ function renderDetailCard(target, entry, kundenMap = new Map(), relation = {}) {
     list.className = "finanzen-detail";
 
     list.appendChild(createDetailRow("ID", entry.id || "–"));
-    list.appendChild(createDetailRow("Code", entry.code || "–"));
+    list.appendChild(createDetailRow("Rechnungsnummer", entry.code || "–"));
 
     const kundeRow = document.createElement("div");
     kundeRow.className = "finanzen-detail__row";
@@ -393,10 +396,25 @@ function renderDetailCard(target, entry, kundenMap = new Map(), relation = {}) {
     kundeRow.append(kundeTerm, kundeValue);
     list.appendChild(kundeRow);
 
-    list.appendChild(createDetailRow("Typ", formatTyp(entry.typ)));
-    list.appendChild(createDetailRow("Betrag", formatCurrency(entry.betrag)));
-    list.appendChild(createDetailRow("Datum", entry.datum || "–"));
+    list.appendChild(createDetailRow("Status", formatStatus(entry.typ)));
+    list.appendChild(createDetailRow("Rechnungsdatum", entry.datum || "–"));
+    list.appendChild(
+      createDetailRow(
+        "Leistungszeitraum",
+        formatLeistungszeitraum(entry.leistungVon, entry.leistungBis)
+      )
+    );
+    list.appendChild(createDetailRow("Total", formatCurrency(entry.betrag, entry.waehrung)));
+    list.appendChild(createDetailRow("Netto", formatCurrency(entry.nettoBetrag, entry.waehrung)));
+    list.appendChild(createDetailRow("MWST", formatMwstSummary(entry.mwstSatz, entry.mwstBetrag)));
     list.appendChild(createDetailRow("Beschreibung", entry.beschreibung || "–"));
+    list.appendChild(
+      createDetailRow("Zahlungsfrist", entry.zahlungsfrist ? `${entry.zahlungsfrist} Tage` : "–")
+    );
+    list.appendChild(createDetailRow("IBAN", entry.iban || "–"));
+    list.appendChild(
+      createDetailRow("Aussteller", buildIssuerSummary(entry.issuerName, entry.issuerAdresse))
+    );
 
     body.innerHTML = "";
     body.appendChild(list);
@@ -452,7 +470,7 @@ function renderTrainerCard(target, entry, relation = {}) {
   const { kurs, trainer } = relation;
   const fragment = createCard({
     eyebrow: "",
-    title: "Trainer (aus Kurs)",
+    title: "Kurs & Trainer",
     body: "",
     footer: "",
   });
@@ -464,17 +482,17 @@ function renderTrainerCard(target, entry, relation = {}) {
     body.innerHTML = "";
     if (!kurs) {
       body.appendChild(createNotice("Kurs nicht gefunden.", { variant: "warn", role: "status" }));
-    } else if (!trainer) {
-      body.appendChild(
-        createNotice("Kein Trainer zugewiesen.", { variant: "info", role: "status" })
-      );
     } else {
       const list = document.createElement("dl");
       list.className = "finanzen-trainer-detail";
-      list.appendChild(createDetailRow("Trainer-ID", trainer.id || "–"));
-      list.appendChild(createDetailRow("Trainer-Code", trainer.code || "–"));
-      list.appendChild(createDetailRow("Name", trainer.name || "Unbenannter Trainer"));
       list.appendChild(createDetailRow("Kurs", kurs.title || kurs.code || kurs.id || "–"));
+      list.appendChild(createDetailRow("Kursdatum", kurs.date || "–"));
+      list.appendChild(createDetailRow("Kurspreis", formatCurrency(kurs.price, "CHF")));
+      if (!trainer) {
+        list.appendChild(createDetailRow("Trainer", "Kein Trainer zugewiesen."));
+      } else {
+        list.appendChild(createDetailRow("Trainer", formatTrainerLabel(trainer)));
+      }
       body.appendChild(list);
     }
   }
@@ -512,34 +530,48 @@ function formatTrainerLabel(trainer) {
   return `${code} – ${name}`;
 }
 
-function createTrainerCell(relation = {}, kursId) {
-  if (!kursId) {
-    return "—";
-  }
-  const { kurs, trainer } = relation;
-  if (kursId && !kurs) {
-    return "Kurs nicht gefunden.";
-  }
-  if (kurs && !trainer) {
-    return "Kein Trainer zugewiesen.";
-  }
-  if (trainer) {
-    const wrapper = document.createElement("div");
-    wrapper.className = "finanzen-trainer-meta";
-    const link = document.createElement("a");
-    link.href = `#/trainer/${trainer.id}`;
-    link.textContent = formatTrainerLabel(trainer);
-    link.className = "ui-link";
-    wrapper.appendChild(link);
-    return wrapper;
-  }
-  return "—";
+function formatKursLabel(kurs) {
+  if (!kurs) return "–";
+  const title = kurs.title || kurs.code || kurs.id || "–";
+  const date = kurs.date ? ` (${kurs.date})` : "";
+  return `${title}${date}`;
 }
 
-function formatTyp(typ) {
+function formatLeistungszeitraum(start, end) {
+  if (!start && !end) return "–";
+  if (start && end && start !== end) return `${start} – ${end}`;
+  return start || end || "–";
+}
+
+function formatMwstSummary(satz, betrag, hinweis) {
+  if (!satz && !betrag && !hinweis) return "–";
+  const parsedSatz = Number(satz);
+  const parsedBetrag = Number(betrag);
+  const parts = [];
+  if (Number.isFinite(parsedSatz) && parsedSatz > 0) {
+    parts.push(`${parsedSatz.toFixed(1)} %`);
+  }
+  if (Number.isFinite(parsedBetrag) && parsedBetrag > 0) {
+    parts.push(`${parsedBetrag.toFixed(2)} CHF`);
+  }
+  if (hinweis) {
+    parts.push(hinweis);
+  }
+  return parts.join(" • ") || "–";
+}
+
+function buildIssuerSummary(name, adresse) {
+  const cleanedName = (name || "").trim();
+  const cleanedAdresse = (adresse || "").trim();
+  if (!cleanedName && !cleanedAdresse) return "–";
+  if (!cleanedName) return cleanedAdresse;
+  if (!cleanedAdresse) return cleanedName;
+  return `${cleanedName} — ${cleanedAdresse}`;
+}
+
+function formatStatus(typ) {
   if (!typ) return "–";
   const normalized = String(typ).toLowerCase();
-  if (normalized === "zahlung") return "Bezahlt";
   if (normalized === "bezahlt") return "Bezahlt";
   if (normalized === "offen") return "Offen";
   return typ;
@@ -562,6 +594,7 @@ async function renderByMode({
   if (effectiveMode === "create") {
     const form = await renderFormCard({
       kundenMap,
+      finanzen,
       mode: "create",
       onSave: async (payload, setError) => {
         try {
@@ -592,6 +625,7 @@ async function renderByMode({
     }
     const form = await renderFormCard({
       kundenMap,
+      finanzen,
       mode: "edit",
       entry,
       onSave: async (payload, setError) => {
@@ -631,11 +665,13 @@ async function renderByMode({
   }
 
   if (!Array.isArray(finanzen) || finanzen.length === 0) {
+    renderListActions(target);
     renderFilterCard(target, kundenMap, filters, (nextMode, nextFilters) =>
       reload(nextMode || "list", null, nextFilters)
     );
     target.appendChild(createEmptyState("Keine Daten vorhanden.", ""));
   } else {
+    renderListActions(target);
     renderSummaryCard(target, finanzen);
     renderFilterCard(target, kundenMap, filters, (nextMode, nextFilters) =>
       reload(nextMode || "list", null, nextFilters)
@@ -654,16 +690,20 @@ function buildCodeToggle(codeInput) {
   checkbox.id = "finanzen-code-toggle";
   const label = document.createElement("label");
   label.setAttribute("for", "finanzen-code-toggle");
-  label.textContent = "Code manuell bearbeiten";
+  label.textContent = "Nummer manuell bearbeiten";
 
   const setState = (enabled) => {
     if (enabled) {
       codeInput.removeAttribute("readonly");
       codeInput.removeAttribute("disabled");
+      codeInput.dataset.auto = "false";
       codeInput.focus();
     } else {
       codeInput.setAttribute("readonly", "true");
       codeInput.setAttribute("disabled", "true");
+      if (codeInput.dataset.auto !== "false") {
+        codeInput.dataset.auto = "true";
+      }
     }
   };
 
@@ -674,10 +714,10 @@ function buildCodeToggle(codeInput) {
   return wrapper;
 }
 
-async function renderFormCard({ kundenMap, mode, entry = {}, onSave, onCancel }) {
+async function renderFormCard({ kundenMap, finanzen = [], mode, entry = {}, onSave, onCancel }) {
   const fragment = createCard({
     eyebrow: "",
-    title: mode === "edit" ? "Buchung bearbeiten" : "Neue Buchung",
+    title: mode === "edit" ? "Rechnung bearbeiten" : "Neue Rechnung",
     body: "",
     footer: "",
   });
@@ -689,6 +729,17 @@ async function renderFormCard({ kundenMap, mode, entry = {}, onSave, onCancel })
 
   const form = document.createElement("form");
   form.className = "finanzen-form";
+
+  const kundeOptions = buildKundenOptions(kundenMap);
+  let kursOptions = [{ value: "", label: "Kein Kurs verknüpft" }];
+  let kursMap = new Map();
+  try {
+    const kurse = await listKurse();
+    kursMap = new Map((kurse || []).map((kurs) => [kurs.id, kurs]));
+    kursOptions = buildKursOptions(kurse);
+  } catch (error) {
+    console.error("FINANZEN_KURSE_LOAD_FAILED", error);
+  }
 
   const idRow = createFormRow({
     id: "finanzen-id",
@@ -705,31 +756,63 @@ async function renderFormCard({ kundenMap, mode, entry = {}, onSave, onCancel })
 
   const codeRow = createFormRow({
     id: "finanzen-code",
-    label: "Code",
+    label: "Rechnungsnummer",
     type: "text",
-    placeholder: "Optionaler Code",
+    placeholder: "YYMMDD-001",
   });
   const codeInput = codeRow.querySelector("input");
   codeInput.name = "code";
   codeInput.value = entry.code || "";
+  codeInput.dataset.auto = entry.code ? "false" : "true";
   form.appendChild(codeRow);
   const toggle = buildCodeToggle(codeInput);
   form.appendChild(toggle);
+  codeInput.addEventListener("input", () => {
+    codeInput.dataset.auto = "false";
+  });
+
+  const kundeSearchRow = createFormRow({
+    id: "finanzen-kunde-search",
+    label: "Kunde suchen",
+    placeholder: "Name, E-Mail, Ort ...",
+  });
+  const kundeSearchInput = kundeSearchRow.querySelector("input");
+  if (kundeSearchInput) {
+    kundeSearchInput.type = "search";
+  }
+  form.appendChild(kundeSearchRow);
 
   const kundeRow = createFormRow({
     id: "finanzen-kunde",
     label: "Kunde",
     control: "select",
-    options: buildKundenOptions(kundenMap),
+    options: kundeOptions,
   });
   const kundeSelect = kundeRow.querySelector("select");
   kundeSelect.name = "kundeId";
   kundeSelect.value = entry.kundeId || "";
   form.appendChild(kundeRow);
+  if (kundeSearchInput) {
+    kundeSearchInput.addEventListener("input", () => {
+      const options = filterKundenOptions(kundenMap, kundeSearchInput.value);
+      populateKundenSelect(kundeSelect, options, kundeSelect.value);
+    });
+  }
+
+  const kursRow = createFormRow({
+    id: "finanzen-kurs",
+    label: "Kurs",
+    control: "select",
+    options: kursOptions,
+  });
+  const kursSelect = kursRow.querySelector("select");
+  kursSelect.name = "kursId";
+  kursSelect.value = entry.kursId || "";
+  form.appendChild(kursRow);
 
   const typRow = createFormRow({
     id: "finanzen-typ",
-    label: "Typ",
+    label: "Status",
     control: "select",
     options: [
       { value: "", label: "Bitte auswählen" },
@@ -739,25 +822,12 @@ async function renderFormCard({ kundenMap, mode, entry = {}, onSave, onCancel })
   });
   const typSelect = typRow.querySelector("select");
   typSelect.name = "typ";
-  typSelect.value = normalizeTyp(entry.typ) || "";
+  typSelect.value = normalizeTyp(entry.typ) || "offen";
   form.appendChild(typRow);
-
-  const betragRow = createFormRow({
-    id: "finanzen-betrag",
-    label: "Betrag (CHF)",
-    type: "number",
-    placeholder: "z. B. 120",
-  });
-  const betragInput = betragRow.querySelector("input");
-  betragInput.name = "betrag";
-  betragInput.step = "0.01";
-  betragInput.min = "0";
-  betragInput.value = entry.betrag ?? "";
-  form.appendChild(betragRow);
 
   const datumRow = createFormRow({
     id: "finanzen-datum",
-    label: "Datum",
+    label: "Rechnungsdatum",
     type: "date",
   });
   const datumInput = datumRow.querySelector("input");
@@ -765,9 +835,59 @@ async function renderFormCard({ kundenMap, mode, entry = {}, onSave, onCancel })
   datumInput.value = entry.datum || "";
   form.appendChild(datumRow);
 
+  const leistungVonRow = createFormRow({
+    id: "finanzen-leistung-von",
+    label: "Leistungsdatum",
+    type: "date",
+  });
+  const leistungVonInput = leistungVonRow.querySelector("input");
+  leistungVonInput.name = "leistungVon";
+  leistungVonInput.value = entry.leistungVon || "";
+  form.appendChild(leistungVonRow);
+
+  const nettoRow = createFormRow({
+    id: "finanzen-netto",
+    label: "Netto",
+    type: "number",
+    placeholder: "z. B. 110",
+  });
+  const nettoInput = nettoRow.querySelector("input");
+  nettoInput.name = "nettoBetrag";
+  nettoInput.step = "0.01";
+  nettoInput.min = "0";
+  nettoInput.value = entry.nettoBetrag ?? "";
+  form.appendChild(nettoRow);
+
+  const mwstSatzRow = createFormRow({
+    id: "finanzen-mwst-satz",
+    label: "MWST-Satz (%)",
+    type: "number",
+    placeholder: "z. B. 8.1",
+  });
+  const mwstSatzInput = mwstSatzRow.querySelector("input");
+  mwstSatzInput.name = "mwstSatz";
+  mwstSatzInput.step = "0.1";
+  mwstSatzInput.min = "0";
+  mwstSatzInput.value = entry.mwstSatz ?? "";
+  form.appendChild(mwstSatzRow);
+
+  const mwstBetragRow = createFormRow({
+    id: "finanzen-mwst-betrag",
+    label: "MWST-Betrag",
+    type: "number",
+    placeholder: "z. B. 8.50",
+  });
+  const mwstBetragInput = mwstBetragRow.querySelector("input");
+  mwstBetragInput.name = "mwstBetrag";
+  mwstBetragInput.step = "0.01";
+  mwstBetragInput.min = "0";
+  mwstBetragInput.value = entry.mwstBetrag ?? "";
+  mwstBetragInput.readOnly = true;
+  form.appendChild(mwstBetragRow);
+
   const beschreibungRow = createFormRow({
     id: "finanzen-beschreibung",
-    label: "Beschreibung",
+    label: "Beschreibung der Leistung",
     control: "textarea",
     placeholder: "Optional",
   });
@@ -776,23 +896,151 @@ async function renderFormCard({ kundenMap, mode, entry = {}, onSave, onCancel })
   beschreibungInput.value = entry.beschreibung || "";
   form.appendChild(beschreibungRow);
 
+  const zahlungsfristRow = createFormRow({
+    id: "finanzen-zahlungsfrist",
+    label: "Zahlungsfrist (Tage)",
+    type: "number",
+    placeholder: "z. B. 30",
+  });
+  const zahlungsfristInput = zahlungsfristRow.querySelector("input");
+  zahlungsfristInput.name = "zahlungsfrist";
+  zahlungsfristInput.min = "0";
+  zahlungsfristInput.step = "1";
+  zahlungsfristInput.value = entry.zahlungsfrist || "30";
+  form.appendChild(zahlungsfristRow);
+
+  const ibanRow = createFormRow({
+    id: "finanzen-iban",
+    label: "IBAN",
+    type: "text",
+    placeholder: "CH..",
+  });
+  const ibanInput = ibanRow.querySelector("input");
+  ibanInput.name = "iban";
+  ibanInput.value = entry.iban || "";
+  form.appendChild(ibanRow);
+
+  const issuerNameRow = createFormRow({
+    id: "finanzen-issuer-name",
+    label: "Aussteller Name/Firma",
+    type: "text",
+  });
+  const issuerNameInput = issuerNameRow.querySelector("input");
+  issuerNameInput.name = "issuerName";
+  issuerNameInput.value = entry.issuerName || "";
+  form.appendChild(issuerNameRow);
+
+  const issuerAdresseRow = createFormRow({
+    id: "finanzen-issuer-adresse",
+    label: "Aussteller Adresse",
+    control: "textarea",
+    placeholder: "Strasse, PLZ Ort",
+  });
+  const issuerAdresseInput = issuerAdresseRow.querySelector("textarea");
+  issuerAdresseInput.name = "issuerAdresse";
+  issuerAdresseInput.value = entry.issuerAdresse || "";
+  form.appendChild(issuerAdresseRow);
+
+  const betragRow = createFormRow({
+    id: "finanzen-betrag",
+    label: "Total",
+    type: "number",
+    placeholder: "Automatisch berechnet",
+  });
+  const betragInput = betragRow.querySelector("input");
+  betragInput.name = "betrag";
+  betragInput.step = "0.01";
+  betragInput.min = "0";
+  betragInput.value = entry.betrag ?? "";
+  betragInput.readOnly = true;
+  form.appendChild(betragRow);
+
+  const applyAutoCode = () => {
+    if (codeInput.dataset.auto !== "true") return;
+    const nextCode = buildRechnungsnummer(datumInput.value, finanzen);
+    if (nextCode) {
+      codeInput.value = nextCode;
+    }
+  };
+
+  const formatMoneyValue = (value) => {
+    if (!Number.isFinite(value)) return "";
+    return value.toFixed(2);
+  };
+
+  const recalculateTotals = () => {
+    const nettoValue = Number.parseFloat(nettoInput.value);
+    if (!Number.isFinite(nettoValue)) {
+      mwstBetragInput.value = "";
+      betragInput.value = "";
+      return;
+    }
+    const satzValue = Number.parseFloat(mwstSatzInput.value);
+    const satz = Number.isFinite(satzValue) ? satzValue : 0;
+    const mwstValue = nettoValue * (satz / 100);
+    mwstBetragInput.value = formatMoneyValue(mwstValue);
+    betragInput.value = formatMoneyValue(nettoValue + mwstValue);
+  };
+
+  const applyKursDefaults = () => {
+    const kurs = kursMap.get(kursSelect.value);
+    if (!kurs) return;
+    if (!beschreibungInput.value && kurs.title) {
+      beschreibungInput.value = kurs.title;
+    }
+    const kursPrice = Number(kurs.price);
+    if ((!nettoInput.value || Number(nettoInput.value) === 0) && Number.isFinite(kursPrice)) {
+      nettoInput.value = String(kursPrice);
+    }
+    if (!leistungVonInput.value && kurs.date) {
+      leistungVonInput.value = kurs.date;
+    }
+    if (!datumInput.value && kurs.date) {
+      datumInput.value = kurs.date;
+      applyAutoCode();
+    }
+    recalculateTotals();
+  };
+
+  datumInput.addEventListener("change", applyAutoCode);
+  kursSelect.addEventListener("change", applyKursDefaults);
+  nettoInput.addEventListener("input", recalculateTotals);
+  mwstSatzInput.addEventListener("input", recalculateTotals);
+  applyAutoCode();
+  recalculateTotals();
+
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
     errorSlot.innerHTML = "";
+    applyAutoCode();
+    recalculateTotals();
     const payload = {
       code: codeInput.value || "",
       kundeId: kundeSelect.value || "",
+      kursId: kursSelect.value || null,
       typ: typSelect.value || "",
       betrag: Number.parseFloat(betragInput.value),
       datum: datumInput.value || "",
       beschreibung: beschreibungInput.value || "",
+      leistungVon: leistungVonInput.value || "",
+      leistungBis: leistungVonInput.value || "",
+      waehrung: "CHF",
+      nettoBetrag: safeNumber(nettoInput.value),
+      mwstSatz: safeNumber(mwstSatzInput.value),
+      mwstBetrag: safeNumber(mwstBetragInput.value),
+      zahlungsfrist: zahlungsfristInput.value || "",
+      iban: ibanInput.value || "",
+      issuerName: issuerNameInput.value || "",
+      issuerAdresse: issuerAdresseInput.value || "",
     };
 
     const missing = [];
     if (!payload.kundeId) missing.push("Kunde");
-    if (!payload.typ) missing.push("Typ");
-    if (!Number.isFinite(payload.betrag)) missing.push("Betrag");
-    if (!payload.datum) missing.push("Datum");
+    if (!payload.typ) missing.push("Status");
+    if (!Number.isFinite(payload.betrag)) missing.push("Total");
+    if (!payload.datum) missing.push("Rechnungsdatum");
+    if (!payload.beschreibung) missing.push("Beschreibung");
+    if (!payload.code) missing.push("Rechnungsnummer");
 
     if (missing.length) {
       errorSlot.appendChild(
@@ -847,10 +1095,60 @@ function buildKundenOptions(kundenMap = new Map()) {
   return options;
 }
 
+function filterKundenOptions(kundenMap = new Map(), query = "") {
+  const normalized = String(query || "")
+    .trim()
+    .toLowerCase();
+  if (!normalized) return buildKundenOptions(kundenMap);
+  const options = [{ value: "", label: "Bitte auswählen" }];
+  kundenMap.forEach((kunde, id) => {
+    const haystack = [
+      kunde?.code,
+      kunde?.name,
+      kunde?.vorname,
+      kunde?.nachname,
+      kunde?.email,
+      kunde?.telefon,
+      kunde?.adresse,
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+    if (haystack.includes(normalized)) {
+      options.push({ value: id, label: formatKundeLabel(id, kundenMap), selected: false });
+    }
+  });
+  return options;
+}
+
+function populateKundenSelect(select, options, selectedValue) {
+  if (!select) return;
+  select.innerHTML = "";
+  options.forEach((option) => {
+    const opt = document.createElement("option");
+    opt.value = option.value;
+    opt.textContent = option.label;
+    opt.selected = option.value === selectedValue;
+    select.appendChild(opt);
+  });
+}
+
+function buildKursOptions(kurse = []) {
+  const options = [{ value: "", label: "Kein Kurs verknüpft" }];
+  (kurse || []).forEach((kurs) => {
+    options.push({
+      value: kurs.id,
+      label: formatKursLabel(kurs),
+      selected: false,
+    });
+  });
+  return options;
+}
+
 function renderDeleteCard(target, entry) {
   const fragment = createCard({
     eyebrow: "",
-    title: "Buchung löschen?",
+    title: "Rechnung löschen?",
     body: "",
     footer: "",
   });
@@ -902,8 +1200,9 @@ function renderDeleteCard(target, entry) {
   target.appendChild(card || fragment);
 }
 
-async function getKundenMap() {
-  if (kundenMapCache) return kundenMapCache;
+async function getKundenMap({ force = false } = {}) {
+  const hasCache = kundenMapCache && kundenMapCache.size > 0;
+  if (hasCache && !force) return kundenMapCache;
   try {
     const kunden = await listKunden();
     const map = new Map();
@@ -916,8 +1215,7 @@ async function getKundenMap() {
     return kundenMapCache;
   } catch (error) {
     console.error("FINANZEN_KUNDEN_LOAD_FAILED", error);
-    kundenMapCache = new Map();
-    return kundenMapCache;
+    return kundenMapCache || new Map();
   }
 }
 
@@ -937,7 +1235,7 @@ async function loadData(filters = {}) {
   }
 
   if (!kundenMap || kundenMap.size === 0) {
-    kundenMap = await getKundenMap();
+    kundenMap = await getKundenMap({ force: true });
   }
 
   finanzen = finanzen.map((entry) => ({
@@ -988,6 +1286,34 @@ function focusHeading(scope) {
     heading.tabIndex = heading.tabIndex || -1;
     heading.focus();
   }
+}
+
+function safeNumber(value) {
+  const parsed = Number.parseFloat(value);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function buildRechnungsnummer(dateValue, finanzen = []) {
+  if (!dateValue) return "";
+  const parts = String(dateValue).split("-");
+  if (parts.length !== 3) return "";
+  const year = parts[0].slice(2);
+  const month = parts[1];
+  const day = parts[2];
+  if (!year || !month || !day) return "";
+  const prefix = `${year}${month}${day}`;
+  let max = 0;
+  (finanzen || []).forEach((entry) => {
+    const code = String(entry?.code || "");
+    const match = code.match(new RegExp(`^${prefix}-(\\d{3})$`));
+    if (!match) return;
+    const value = Number.parseInt(match[1], 10);
+    if (Number.isFinite(value) && value > max) {
+      max = value;
+    }
+  });
+  const next = max + 1;
+  return `${prefix}-${String(next).padStart(3, "0")}`;
 }
 
 function normalizeTyp(typ) {

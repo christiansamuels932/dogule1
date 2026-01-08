@@ -33,6 +33,14 @@ function ensureForeignKeys() {
         `[INTEGRITY][IC-32] Kurs ${kurs.id} references missing Trainer ${kurs.trainerId}`
       );
     }
+    if (Array.isArray(kurs.trainerIds)) {
+      const missing = kurs.trainerIds.filter((trainerId) => !exists("trainer", trainerId));
+      if (missing.length) {
+        throw new Error(
+          `[INTEGRITY][IC-32] Kurs ${kurs.id} references missing Trainer IDs: ${missing.join(", ")}`
+        );
+      }
+    }
   });
 
   db.kalender?.forEach((entry) => {
@@ -47,8 +55,9 @@ function ensureForeignKeys() {
   });
 
   db.zahlungen?.forEach((entry) => {
-    if (!exists("kunden", entry.kundenId)) {
-      throw new Error(`[INTEGRITY] Zahlung ${entry.id} references missing Kunde ${entry.kundenId}`);
+    const kundeId = entry.kundenId ?? entry.kundeId;
+    if (!exists("kunden", kundeId)) {
+      throw new Error(`[INTEGRITY] Zahlung ${entry.id} references missing Kunde ${kundeId}`);
     }
     if (entry.kursId && !exists("kurse", entry.kursId)) {
       throw new Error(`[INTEGRITY] Zahlung ${entry.id} references missing Kurs ${entry.kursId}`);
