@@ -1,4 +1,4 @@
-/* globals document, console, window */
+/* globals document, console, window, URLSearchParams */
 import {
   createCard,
   createNotice,
@@ -130,6 +130,18 @@ export async function createHundeDetailView(container, hundId) {
         window.location.hash = `#/hunde/${hund.id}/edit`;
       });
       actionsWrap.appendChild(editBtn);
+
+      const zertifikatBtn = createButton({ label: "Zertifikat erstellen", variant: "secondary" });
+      zertifikatBtn.type = "button";
+      zertifikatBtn.addEventListener("click", () => {
+        const params = new URLSearchParams();
+        params.set("hundId", hund.id);
+        if (kundeInfo?.id) {
+          params.set("kundeId", kundeInfo.id);
+        }
+        window.location.hash = `#/zertifikate/new?${params.toString()}`;
+      });
+      actionsWrap.appendChild(zertifikatBtn);
 
       const deleteBtn = createButton({ label: "Löschen", variant: "secondary" });
       deleteBtn.addEventListener("click", () =>

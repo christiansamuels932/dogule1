@@ -840,6 +840,7 @@ async function renderDetail(root, id) {
     { label: "ID", value: kunde.id },
     { label: "Kundencode", value: kunde.kundenCode },
     { label: "Name", value: formatFullName(kunde) },
+    { label: "Geschlecht", value: formatKundenGeschlecht(kunde.geschlecht) },
     { label: "E-Mail", value: kunde.email },
     { label: "Telefon", value: kunde.telefon },
     { label: "Adresse", value: kunde.adresse },
@@ -873,6 +874,14 @@ async function renderDetail(root, id) {
   editBtn.addEventListener("click", () => {
     window.location.hash = `#/kunden/${id}/edit`;
   });
+  const zertifikatBtn = createButton({
+    label: "Zertifikat erstellen",
+    variant: "secondary",
+  });
+  zertifikatBtn.type = "button";
+  zertifikatBtn.addEventListener("click", () => {
+    window.location.hash = `#/zertifikate/new?kundeId=${encodeURIComponent(id)}`;
+  });
   const deleteBtn = createButton({
     label: "Löschen",
     variant: "secondary",
@@ -887,7 +896,7 @@ async function renderDetail(root, id) {
   backBtn.addEventListener("click", () => {
     window.location.hash = "#/kunden";
   });
-  actionsWrap.append(editBtn, deleteBtn, backBtn);
+  actionsWrap.append(editBtn, zertifikatBtn, deleteBtn, backBtn);
   actionsBody.appendChild(actionsWrap);
   const actionStatus = document.createElement("div");
   actionStatus.className = "kunden-card-status";
@@ -1149,6 +1158,16 @@ async function renderForm(root, view, id) {
       ],
     },
     {
+      name: "geschlecht",
+      label: "Geschlecht",
+      control: "select",
+      options: [
+        { value: "", label: "Bitte wählen" },
+        { value: "weiblich", label: "Weiblich" },
+        { value: "männlich", label: "Männlich" },
+      ],
+    },
+    {
       name: "email",
       label: "E-Mail*",
       required: true,
@@ -1257,6 +1276,20 @@ async function renderForm(root, view, id) {
     refs[field.name] = { input: control, hint };
     form.appendChild(row);
   });
+
+  const vornameInput = refs.vorname?.input;
+  const geschlechtSelect = refs.geschlecht?.input;
+  if (vornameInput && geschlechtSelect) {
+    const syncGeschlecht = () => {
+      if (geschlechtSelect.value) return;
+      const inferred = inferGeschlechtFromVorname(vornameInput.value);
+      if (inferred) {
+        geschlechtSelect.value = inferred;
+      }
+    };
+    syncGeschlecht();
+    vornameInput.addEventListener("blur", syncGeschlecht);
+  }
 
   const hundeDrafts = [];
   if (mode === "create") {
@@ -1990,6 +2023,65 @@ function formatKundenStatus(status) {
   if (normalized === "deaktiviert") return "Deaktiviert";
   if (normalized === "passiv") return "Passiv";
   return status;
+}
+
+function formatKundenGeschlecht(geschlecht) {
+  const normalized = String(geschlecht || "")
+    .trim()
+    .toLowerCase();
+  if (!normalized) return "Unbekannt";
+  if (normalized === "weiblich") return "Weiblich";
+  if (normalized === "männlich") return "Männlich";
+  if (normalized === "unbekannt") return "Unbekannt";
+  return geschlecht;
+}
+
+const FEMALE_VORNAMEN = new Set([
+  "anna",
+  "andrea",
+  "lea",
+  "lara",
+  "laura",
+  "maria",
+  "marie",
+  "sara",
+  "sarah",
+  "julia",
+  "juliane",
+  "lena",
+  "eva",
+  "nina",
+  "sophie",
+  "sofie",
+  "luisa",
+]);
+
+const MALE_VORNAMEN = new Set([
+  "thomas",
+  "mark",
+  "marco",
+  "marcus",
+  "lukas",
+  "luca",
+  "jan",
+  "jonas",
+  "michael",
+  "peter",
+  "tim",
+  "timo",
+  "daniel",
+  "andreas",
+]);
+
+function inferGeschlechtFromVorname(vorname) {
+  const trimmed = String(vorname || "")
+    .trim()
+    .toLowerCase();
+  if (!trimmed) return "";
+  if (FEMALE_VORNAMEN.has(trimmed)) return "weiblich";
+  if (MALE_VORNAMEN.has(trimmed)) return "männlich";
+  if (trimmed.endsWith("a")) return "weiblich";
+  return "";
 }
 
 function formatBegleitpersonen(list = []) {

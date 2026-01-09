@@ -7,3 +7,4 @@ export * from "./hunde.js";
 export * from "./finanzen.js";
 export * from "./trainer.js";
 export * from "./kalender.js";
+export * from "./zertifikate.js";

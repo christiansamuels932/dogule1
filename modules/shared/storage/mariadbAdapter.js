@@ -51,6 +51,52 @@ function nowIso() {
   return new Date().toISOString();
 }
 
+const FEMALE_VORNAMEN = new Set([
+  "anna",
+  "andrea",
+  "lea",
+  "lara",
+  "laura",
+  "maria",
+  "marie",
+  "sara",
+  "sarah",
+  "julia",
+  "juliane",
+  "lena",
+  "eva",
+  "nina",
+  "sophie",
+  "sofie",
+  "luisa",
+]);
+
+const MALE_VORNAMEN = new Set([
+  "thomas",
+  "mark",
+  "marco",
+  "marcus",
+  "lukas",
+  "luca",
+  "jan",
+  "jonas",
+  "michael",
+  "peter",
+  "tim",
+  "timo",
+  "daniel",
+  "andreas",
+]);
+
+function inferGeschlechtFromVorname(vorname) {
+  const trimmed = toStringValue(vorname).trim().toLowerCase();
+  if (!trimmed) return "";
+  if (FEMALE_VORNAMEN.has(trimmed)) return "weiblich";
+  if (MALE_VORNAMEN.has(trimmed)) return "männlich";
+  if (trimmed.endsWith("a")) return "weiblich";
+  return "";
+}
+
 function resolveConfig(options = {}) {
   const env = options.env || process.env;
   const socketPath = options.socketPath || env.DOGULE1_MARIADB_SOCKET || DEFAULT_SOCKET_PATH;
@@ -87,6 +133,7 @@ function mapKundeRow(row) {
     code: row.code,
     vorname: row.vorname,
     nachname: row.nachname,
+    geschlecht: row.geschlecht,
     email: row.email,
     telefon: row.telefon,
     adresse: row.adresse,
@@ -137,6 +184,7 @@ function mapTrainerRow(row) {
     id: row.id,
     code: row.code,
     name: row.name,
+    titel: row.titel,
     email: row.email,
     telefon: row.telefon,
     notizen: row.notizen,
@@ -168,6 +216,7 @@ function mapKursRow(row) {
     startTime: row.start_time,
     endTime: row.end_time,
     location: row.location,
+    ort: row.ort,
     status: row.status,
     aboForm: row.abo_form,
     alterHund: row.alter_hund,
@@ -177,6 +226,8 @@ function mapKursRow(row) {
     level: row.level,
     price: row.price === null || row.price === undefined ? "" : String(row.price),
     notes: row.notes,
+    inhaltTheorie: row.inhalt_theorie,
+    inhaltPraxis: row.inhalt_praxis,
     hundIds: parseJson(row.hund_ids, []),
     kundenIds: parseJson(row.kunden_ids, []),
     outlookEventId: row.outlook_event_id,
@@ -267,13 +318,53 @@ function mapWarenRow(row) {
   };
 }
 
+function mapZertifikatRow(row) {
+  if (!row) return null;
+  return {
+    id: row.id,
+    code: row.code,
+    kundeId: row.kunde_id,
+    hundId: row.hund_id,
+    kursId: row.kurs_id,
+    kundeNameSnapshot: row.kunde_name_snapshot,
+    kundeGeschlechtSnapshot: row.kunde_geschlecht_snapshot,
+    hundNameSnapshot: row.hund_name_snapshot,
+    hundRasseSnapshot: row.hund_rasse_snapshot,
+    hundGeschlechtSnapshot: row.hund_geschlecht_snapshot,
+    kursTitelSnapshot: row.kurs_titel_snapshot,
+    kursDatumSnapshot: row.kurs_datum_snapshot,
+    kursOrtSnapshot: row.kurs_ort_snapshot,
+    kursInhaltTheorieSnapshot: row.kurs_inhalt_theorie_snapshot,
+    kursInhaltPraxisSnapshot: row.kurs_inhalt_praxis_snapshot,
+    ausstellungsdatum: row.ausstellungsdatum,
+    trainer1NameSnapshot: row.trainer1_name_snapshot,
+    trainer1TitelSnapshot: row.trainer1_titel_snapshot,
+    trainer2NameSnapshot: row.trainer2_name_snapshot,
+    trainer2TitelSnapshot: row.trainer2_titel_snapshot,
+    bemerkungen: row.bemerkungen,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    schemaVersion: row.schema_version,
+    version: row.version,
+  };
+}
+
 function normalizeKunde(data = {}, existing) {
   const createdAt = existing?.createdAt || data.createdAt || nowIso();
+  const shouldInfer =
+    data.geschlecht === undefined ||
+    data.geschlecht === null ||
+    String(data.geschlecht).trim() === "";
+  const existingGeschlecht = existing ? toStringValue(existing.geschlecht) : "";
+  const geschlecht = shouldInfer
+    ? existingGeschlecht || inferGeschlechtFromVorname(data.vorname ?? existing?.vorname)
+    : toStringValue(data.geschlecht);
   return {
     id: data.id || existing?.id || uuidv7(),
     code: toStringValue(data.code ?? existing?.code),
     vorname: toStringValue(data.vorname ?? existing?.vorname),
     nachname: toStringValue(data.nachname ?? existing?.nachname),
+    geschlecht,
     email: toStringValue(data.email ?? existing?.email),
     telefon: toStringValue(data.telefon ?? existing?.telefon),
     adresse: toStringValue(data.adresse ?? existing?.adresse),
@@ -334,6 +425,7 @@ function normalizeTrainer(data = {}, existing) {
     id: data.id || existing?.id || uuidv7(),
     code: toStringValue(data.code ?? existing?.code),
     name: toStringValue(data.name ?? existing?.name),
+    titel: toStringValue(data.titel ?? existing?.titel),
     email: toStringValue(data.email ?? existing?.email),
     telefon: toStringValue(data.telefon ?? existing?.telefon),
     notizen: toStringValue(data.notizen ?? existing?.notizen),
@@ -363,6 +455,10 @@ function normalizeKurs(data = {}, existing) {
     }
     return normalized;
   };
+  const ort = toStringValue(data.ort ?? data.location ?? existing?.ort ?? existing?.location);
+  const location = toStringValue(
+    data.location ?? data.ort ?? existing?.location ?? existing?.ort
+  );
   return {
     id: data.id || existing?.id || uuidv7(),
     code: toStringValue(data.code ?? existing?.code),
@@ -376,7 +472,8 @@ function normalizeKurs(data = {}, existing) {
     date: toStringValue(data.date ?? existing?.date),
     startTime: toStringValue(data.startTime ?? existing?.startTime),
     endTime: toStringValue(data.endTime ?? existing?.endTime),
-    location: toStringValue(data.location ?? existing?.location),
+    location,
+    ort,
     status: toStringValue(data.status ?? existing?.status),
     aboForm: toStringValue(data.aboForm ?? existing?.aboForm),
     alterHund: toStringValue(data.alterHund ?? existing?.alterHund),
@@ -386,6 +483,8 @@ function normalizeKurs(data = {}, existing) {
     level: toStringValue(data.level ?? existing?.level),
     price: toStringValue(data.price ?? existing?.price),
     notes: toStringValue(data.notes ?? existing?.notes),
+    inhaltTheorie: toStringValue(data.inhaltTheorie ?? existing?.inhaltTheorie),
+    inhaltPraxis: toStringValue(data.inhaltPraxis ?? existing?.inhaltPraxis),
     hundIds: toArrayValue(data.hundIds ?? existing?.hundIds),
     kundenIds: toArrayValue(data.kundenIds ?? existing?.kundenIds),
     outlookEventId: toStringValue(data.outlookEventId ?? existing?.outlookEventId),
@@ -478,6 +577,85 @@ function normalizeWaren(data = {}, existing) {
   };
 }
 
+function normalizeZertifikat(data = {}, existing) {
+  const createdAt = existing?.createdAt || data.createdAt || nowIso();
+  return {
+    id: data.id || existing?.id || uuidv7(),
+    code: toStringValue(data.code ?? existing?.code),
+    kundeId: toStringValue(data.kundeId ?? existing?.kundeId),
+    hundId: toStringValue(data.hundId ?? existing?.hundId),
+    kursId: toStringValue(data.kursId ?? existing?.kursId),
+    kundeNameSnapshot: toStringValue(data.kundeNameSnapshot ?? existing?.kundeNameSnapshot),
+    kundeGeschlechtSnapshot: toStringValue(
+      data.kundeGeschlechtSnapshot ?? existing?.kundeGeschlechtSnapshot
+    ),
+    hundNameSnapshot: toStringValue(data.hundNameSnapshot ?? existing?.hundNameSnapshot),
+    hundRasseSnapshot: toStringValue(data.hundRasseSnapshot ?? existing?.hundRasseSnapshot),
+    hundGeschlechtSnapshot: toStringValue(
+      data.hundGeschlechtSnapshot ?? existing?.hundGeschlechtSnapshot
+    ),
+    kursTitelSnapshot: toStringValue(data.kursTitelSnapshot ?? existing?.kursTitelSnapshot),
+    kursDatumSnapshot: toStringValue(data.kursDatumSnapshot ?? existing?.kursDatumSnapshot),
+    kursOrtSnapshot: toStringValue(data.kursOrtSnapshot ?? existing?.kursOrtSnapshot),
+    kursInhaltTheorieSnapshot: toStringValue(
+      data.kursInhaltTheorieSnapshot ?? existing?.kursInhaltTheorieSnapshot
+    ),
+    kursInhaltPraxisSnapshot: toStringValue(
+      data.kursInhaltPraxisSnapshot ?? existing?.kursInhaltPraxisSnapshot
+    ),
+    ausstellungsdatum: toStringValue(data.ausstellungsdatum ?? existing?.ausstellungsdatum),
+    trainer1NameSnapshot: toStringValue(
+      data.trainer1NameSnapshot ?? existing?.trainer1NameSnapshot
+    ),
+    trainer1TitelSnapshot: toStringValue(
+      data.trainer1TitelSnapshot ?? existing?.trainer1TitelSnapshot
+    ),
+    trainer2NameSnapshot:
+      data.trainer2NameSnapshot ?? existing?.trainer2NameSnapshot ?? null,
+    trainer2TitelSnapshot:
+      data.trainer2TitelSnapshot ?? existing?.trainer2TitelSnapshot ?? null,
+    bemerkungen: toStringValue(data.bemerkungen ?? existing?.bemerkungen),
+    createdAt,
+    updatedAt: nowIso(),
+    schemaVersion: Number(data.schemaVersion ?? existing?.schemaVersion ?? 1),
+    version: Number(data.version ?? existing?.version ?? 0),
+  };
+}
+
+function ensureRequiredFields(record, fields, message) {
+  const missing = fields.filter((field) => !toStringValue(record[field]).trim());
+  if (missing.length) {
+    throw new StorageError(STORAGE_ERROR_CODES.INVALID_DATA, message, { details: { missing } });
+  }
+}
+
+function ensureKursOrt(record) {
+  ensureRequiredFields(record, ["ort"], "Kurs Ort ist erforderlich");
+}
+
+function ensureZertifikatRequired(record) {
+  ensureRequiredFields(
+    record,
+    [
+      "kundeId",
+      "hundId",
+      "kursId",
+      "ausstellungsdatum",
+      "kursOrtSnapshot",
+      "trainer1NameSnapshot",
+      "kursInhaltTheorieSnapshot",
+      "kursInhaltPraxisSnapshot",
+    ],
+    "Zertifikat benötigt Kunde, Hund, Kurs, Ausstellungsdatum, Kurs Ort und Trainer"
+  );
+  if (!toStringValue(record.trainer1TitelSnapshot).trim()) {
+    throw new StorageError(STORAGE_ERROR_CODES.INVALID_DATA, "TRAINER_TITEL_REQUIRED");
+  }
+  if (record.trainer2NameSnapshot && !toStringValue(record.trainer2TitelSnapshot).trim()) {
+    throw new StorageError(STORAGE_ERROR_CODES.INVALID_DATA, "TRAINER_TITEL_REQUIRED");
+  }
+}
+
 async function fetchOne(pool, sql, params, mapper) {
   const rows = await pool.query(sql, params);
   if (!rows || rows.length === 0) return null;
@@ -530,6 +708,7 @@ export function createMariaDbAdapter(options = {}) {
       record.code,
       record.vorname,
       record.nachname,
+      record.geschlecht,
       record.email,
       record.telefon,
       record.adresse,
@@ -545,7 +724,7 @@ export function createMariaDbAdapter(options = {}) {
     ];
     try {
       await pool.query(
-        "INSERT INTO kunden (id, code, vorname, nachname, email, telefon, adresse, status, ausweis_id, foto_url, begleitpersonen, notizen, created_at, updated_at, schema_version, version) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO kunden (id, code, vorname, nachname, geschlecht, email, telefon, adresse, status, ausweis_id, foto_url, begleitpersonen, notizen, created_at, updated_at, schema_version, version) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         params
       );
       return record;
@@ -563,6 +742,7 @@ export function createMariaDbAdapter(options = {}) {
         record.code,
         record.vorname,
         record.nachname,
+        record.geschlecht,
         record.email,
         record.telefon,
         record.adresse,
@@ -577,7 +757,7 @@ export function createMariaDbAdapter(options = {}) {
         record.id,
       ];
       await pool.query(
-        "UPDATE kunden SET code=?, vorname=?, nachname=?, email=?, telefon=?, adresse=?, status=?, ausweis_id=?, foto_url=?, begleitpersonen=?, notizen=?, updated_at=?, schema_version=?, version=? WHERE id=?",
+        "UPDATE kunden SET code=?, vorname=?, nachname=?, geschlecht=?, email=?, telefon=?, adresse=?, status=?, ausweis_id=?, foto_url=?, begleitpersonen=?, notizen=?, updated_at=?, schema_version=?, version=? WHERE id=?",
         params
       );
       return record;
@@ -734,6 +914,7 @@ export function createMariaDbAdapter(options = {}) {
       record.id,
       record.code,
       record.name,
+      record.titel,
       record.email,
       record.telefon,
       record.notizen,
@@ -748,7 +929,7 @@ export function createMariaDbAdapter(options = {}) {
     ];
     try {
       await pool.query(
-        "INSERT INTO trainer (id, code, name, email, telefon, notizen, verfuegbarkeiten, ausbildungshistorie, stundenerfassung, lohnabrechnung, created_at, updated_at, schema_version, version) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO trainer (id, code, name, titel, email, telefon, notizen, verfuegbarkeiten, ausbildungshistorie, stundenerfassung, lohnabrechnung, created_at, updated_at, schema_version, version) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         params
       );
       return record;
@@ -770,6 +951,7 @@ export function createMariaDbAdapter(options = {}) {
       const params = [
         record.code,
         record.name,
+        record.titel,
         record.email,
         record.telefon,
         record.notizen,
@@ -783,7 +965,7 @@ export function createMariaDbAdapter(options = {}) {
         record.id,
       ];
       await pool.query(
-        "UPDATE trainer SET code=?, name=?, email=?, telefon=?, notizen=?, verfuegbarkeiten=?, ausbildungshistorie=?, stundenerfassung=?, lohnabrechnung=?, updated_at=?, schema_version=?, version=? WHERE id=?",
+        "UPDATE trainer SET code=?, name=?, titel=?, email=?, telefon=?, notizen=?, verfuegbarkeiten=?, ausbildungshistorie=?, stundenerfassung=?, lohnabrechnung=?, updated_at=?, schema_version=?, version=? WHERE id=?",
         params
       );
       return record;
@@ -824,6 +1006,7 @@ export function createMariaDbAdapter(options = {}) {
 
   async function createKurs(data = {}) {
     const record = normalizeKurs(data, null);
+    ensureKursOrt(record);
     const params = [
       record.id,
       record.code,
@@ -835,6 +1018,7 @@ export function createMariaDbAdapter(options = {}) {
       record.startTime,
       record.endTime,
       record.location,
+      record.ort,
       record.status,
       record.aboForm,
       record.alterHund,
@@ -844,6 +1028,8 @@ export function createMariaDbAdapter(options = {}) {
       record.level,
       record.price,
       record.notes,
+      record.inhaltTheorie,
+      record.inhaltPraxis,
       toJson(record.hundIds),
       toJson(record.kundenIds),
       record.outlookEventId,
@@ -860,7 +1046,7 @@ export function createMariaDbAdapter(options = {}) {
     ];
     try {
       await pool.query(
-        "INSERT INTO kurse (id, code, title, trainer_name, trainer_id, trainer_ids, date, start_time, end_time, location, status, abo_form, alter_hund, aufbauend, capacity, booked_count, level, price, notes, hund_ids, kunden_ids, outlook_event_id, outlook_date, outlook_start, outlook_end, outlook_location, inventory_flag, portfolio_flag, created_at, updated_at, schema_version, version) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO kurse (id, code, title, trainer_name, trainer_id, trainer_ids, date, start_time, end_time, location, ort, status, abo_form, alter_hund, aufbauend, capacity, booked_count, level, price, notes, inhalt_theorie, inhalt_praxis, hund_ids, kunden_ids, outlook_event_id, outlook_date, outlook_start, outlook_end, outlook_location, inventory_flag, portfolio_flag, created_at, updated_at, schema_version, version) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         params
       );
       return record;
@@ -874,6 +1060,7 @@ export function createMariaDbAdapter(options = {}) {
       const existing = await fetchOne(pool, "SELECT * FROM kurse WHERE id = ?", [id], mapKursRow);
       if (!existing) return null;
       const record = normalizeKurs({ ...existing, ...patch, id: existing.id }, existing);
+      ensureKursOrt(record);
       const params = [
         record.code,
         record.title,
@@ -884,6 +1071,7 @@ export function createMariaDbAdapter(options = {}) {
         record.startTime,
         record.endTime,
         record.location,
+        record.ort,
         record.status,
         record.aboForm,
         record.alterHund,
@@ -893,6 +1081,8 @@ export function createMariaDbAdapter(options = {}) {
         record.level,
         record.price,
         record.notes,
+        record.inhaltTheorie,
+        record.inhaltPraxis,
         toJson(record.hundIds),
         toJson(record.kundenIds),
         record.outlookEventId,
@@ -908,7 +1098,7 @@ export function createMariaDbAdapter(options = {}) {
         record.id,
       ];
       await pool.query(
-        "UPDATE kurse SET code=?, title=?, trainer_name=?, trainer_id=?, trainer_ids=?, date=?, start_time=?, end_time=?, location=?, status=?, abo_form=?, alter_hund=?, aufbauend=?, capacity=?, booked_count=?, level=?, price=?, notes=?, hund_ids=?, kunden_ids=?, outlook_event_id=?, outlook_date=?, outlook_start=?, outlook_end=?, outlook_location=?, inventory_flag=?, portfolio_flag=?, updated_at=?, schema_version=?, version=? WHERE id=?",
+        "UPDATE kurse SET code=?, title=?, trainer_name=?, trainer_id=?, trainer_ids=?, date=?, start_time=?, end_time=?, location=?, ort=?, status=?, abo_form=?, alter_hund=?, aufbauend=?, capacity=?, booked_count=?, level=?, price=?, notes=?, inhalt_theorie=?, inhalt_praxis=?, hund_ids=?, kunden_ids=?, outlook_event_id=?, outlook_date=?, outlook_start=?, outlook_end=?, outlook_location=?, inventory_flag=?, portfolio_flag=?, updated_at=?, schema_version=?, version=? WHERE id=?",
         params
       );
       return record;
@@ -1242,6 +1432,129 @@ export function createMariaDbAdapter(options = {}) {
     }
   }
 
+  async function listZertifikate() {
+    try {
+      return await listAll(pool, "SELECT * FROM zertifikate ORDER BY id", [], mapZertifikatRow);
+    } catch (error) {
+      throw toStorageError(error, "Failed to list zertifikate");
+    }
+  }
+
+  async function getZertifikat(id) {
+    try {
+      const record = await fetchOne(
+        pool,
+        "SELECT * FROM zertifikate WHERE id = ?",
+        [id],
+        mapZertifikatRow
+      );
+      if (!record) {
+        throw new StorageError(STORAGE_ERROR_CODES.NOT_FOUND, `zertifikate ${id} not found`);
+      }
+      return record;
+    } catch (error) {
+      throw toStorageError(error, `Failed to get zertifikate ${id}`);
+    }
+  }
+
+  async function createZertifikat(data = {}) {
+    const record = normalizeZertifikat(data, null);
+    ensureZertifikatRequired(record);
+    const params = [
+      record.id,
+      record.code,
+      record.kundeId,
+      record.hundId,
+      record.kursId,
+      record.kundeNameSnapshot,
+      record.kundeGeschlechtSnapshot,
+      record.hundNameSnapshot,
+      record.hundRasseSnapshot,
+      record.hundGeschlechtSnapshot,
+      record.kursTitelSnapshot,
+      record.kursDatumSnapshot,
+      record.kursOrtSnapshot,
+      record.kursInhaltTheorieSnapshot,
+      record.kursInhaltPraxisSnapshot,
+      record.ausstellungsdatum,
+      record.trainer1NameSnapshot,
+      record.trainer1TitelSnapshot,
+      record.trainer2NameSnapshot,
+      record.trainer2TitelSnapshot,
+      record.bemerkungen,
+      record.createdAt,
+      record.updatedAt,
+      record.schemaVersion,
+      record.version,
+    ];
+    try {
+      await pool.query(
+        "INSERT INTO zertifikate (id, code, kunde_id, hund_id, kurs_id, kunde_name_snapshot, kunde_geschlecht_snapshot, hund_name_snapshot, hund_rasse_snapshot, hund_geschlecht_snapshot, kurs_titel_snapshot, kurs_datum_snapshot, kurs_ort_snapshot, kurs_inhalt_theorie_snapshot, kurs_inhalt_praxis_snapshot, ausstellungsdatum, trainer1_name_snapshot, trainer1_titel_snapshot, trainer2_name_snapshot, trainer2_titel_snapshot, bemerkungen, created_at, updated_at, schema_version, version) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        params
+      );
+      return record;
+    } catch (error) {
+      throw toStorageError(error, "Failed to create zertifikate");
+    }
+  }
+
+  async function updateZertifikat(id, patch = {}) {
+    try {
+      const existing = await fetchOne(
+        pool,
+        "SELECT * FROM zertifikate WHERE id = ?",
+        [id],
+        mapZertifikatRow
+      );
+      if (!existing) return null;
+      const record = normalizeZertifikat({ ...existing, ...patch, id: existing.id }, existing);
+      ensureZertifikatRequired(record);
+      const params = [
+        record.code,
+        record.kundeId,
+        record.hundId,
+        record.kursId,
+        record.kundeNameSnapshot,
+        record.kundeGeschlechtSnapshot,
+        record.hundNameSnapshot,
+        record.hundRasseSnapshot,
+        record.hundGeschlechtSnapshot,
+        record.kursTitelSnapshot,
+        record.kursDatumSnapshot,
+        record.kursOrtSnapshot,
+        record.kursInhaltTheorieSnapshot,
+        record.kursInhaltPraxisSnapshot,
+        record.ausstellungsdatum,
+        record.trainer1NameSnapshot,
+        record.trainer1TitelSnapshot,
+        record.trainer2NameSnapshot,
+        record.trainer2TitelSnapshot,
+        record.bemerkungen,
+        record.updatedAt,
+        record.schemaVersion,
+        record.version,
+        record.id,
+      ];
+      await pool.query(
+        "UPDATE zertifikate SET code=?, kunde_id=?, hund_id=?, kurs_id=?, kunde_name_snapshot=?, kunde_geschlecht_snapshot=?, hund_name_snapshot=?, hund_rasse_snapshot=?, hund_geschlecht_snapshot=?, kurs_titel_snapshot=?, kurs_datum_snapshot=?, kurs_ort_snapshot=?, kurs_inhalt_theorie_snapshot=?, kurs_inhalt_praxis_snapshot=?, ausstellungsdatum=?, trainer1_name_snapshot=?, trainer1_titel_snapshot=?, trainer2_name_snapshot=?, trainer2_titel_snapshot=?, bemerkungen=?, updated_at=?, schema_version=?, version=? WHERE id=?",
+        params
+      );
+      return record;
+    } catch (error) {
+      throw toStorageError(error, `Failed to update zertifikate ${id}`);
+    }
+  }
+
+  async function deleteZertifikat(id) {
+    try {
+      await ensureExists(pool, "zertifikate", id);
+      await pool.query("DELETE FROM zertifikate WHERE id = ?", [id]);
+      return { ok: true, id };
+    } catch (error) {
+      throw toStorageError(error, `Failed to delete zertifikate ${id}`);
+    }
+  }
+
   return {
     kunden: {
       list: listKunden,
@@ -1292,6 +1605,14 @@ export function createMariaDbAdapter(options = {}) {
       create: createWaren,
       update: (arg) => updateWaren(arg?.id || arg, arg?.data || arg?.payload || arg?.data || arg),
       delete: deleteWaren,
+    },
+    zertifikate: {
+      list: listZertifikate,
+      get: getZertifikat,
+      create: createZertifikat,
+      update: (arg) =>
+        updateZertifikat(arg?.id || arg, arg?.data || arg?.payload || arg?.data || arg),
+      delete: deleteZertifikat,
     },
     pool,
   };

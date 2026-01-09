@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS kunden (
   code VARCHAR(64) NOT NULL DEFAULT '',
   vorname VARCHAR(128) NOT NULL DEFAULT '',
   nachname VARCHAR(128) NOT NULL DEFAULT '',
+  geschlecht VARCHAR(32) NULL,
   email VARCHAR(255) NOT NULL DEFAULT '',
   telefon VARCHAR(64) NOT NULL DEFAULT '',
   adresse VARCHAR(255) NOT NULL DEFAULT '',
@@ -61,6 +62,7 @@ CREATE TABLE IF NOT EXISTS trainer (
   id CHAR(36) NOT NULL,
   code VARCHAR(64) NOT NULL DEFAULT '',
   name VARCHAR(128) NOT NULL DEFAULT '',
+  titel VARCHAR(128) NULL,
   email VARCHAR(255) NOT NULL DEFAULT '',
   telefon VARCHAR(64) NOT NULL DEFAULT '',
   notizen TEXT NOT NULL,
@@ -87,6 +89,7 @@ CREATE TABLE IF NOT EXISTS kurse (
   start_time VARCHAR(16) NOT NULL DEFAULT '',
   end_time VARCHAR(16) NOT NULL DEFAULT '',
   location VARCHAR(255) NOT NULL DEFAULT '',
+  ort VARCHAR(255) NULL,
   status VARCHAR(32) NOT NULL DEFAULT '',
   abo_form VARCHAR(128) NOT NULL DEFAULT '',
   alter_hund VARCHAR(128) NOT NULL DEFAULT '',
@@ -204,6 +207,46 @@ CREATE TABLE IF NOT EXISTS waren (
   PRIMARY KEY (id),
   KEY idx_waren_kunde (kunden_id),
   CONSTRAINT fk_waren_kunde FOREIGN KEY (kunden_id) REFERENCES kunden(id)
+    ON DELETE RESTRICT
+    ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS zertifikate (
+  id CHAR(36) NOT NULL,
+  code VARCHAR(64) NOT NULL DEFAULT '',
+  kunde_id CHAR(36) NOT NULL,
+  hund_id CHAR(36) NOT NULL,
+  kurs_id CHAR(36) NOT NULL,
+  kunde_name_snapshot VARCHAR(255) NOT NULL DEFAULT '',
+  kunde_geschlecht_snapshot VARCHAR(32) NOT NULL DEFAULT '',
+  hund_name_snapshot VARCHAR(255) NOT NULL DEFAULT '',
+  hund_rasse_snapshot VARCHAR(255) NOT NULL DEFAULT '',
+  hund_geschlecht_snapshot VARCHAR(32) NOT NULL DEFAULT '',
+  kurs_titel_snapshot VARCHAR(255) NOT NULL DEFAULT '',
+  kurs_datum_snapshot VARCHAR(32) NOT NULL DEFAULT '',
+  kurs_ort_snapshot VARCHAR(255) NOT NULL DEFAULT '',
+  ausstellungsdatum VARCHAR(32) NOT NULL DEFAULT '',
+  trainer1_name_snapshot VARCHAR(255) NOT NULL DEFAULT '',
+  trainer1_titel_snapshot VARCHAR(255) NOT NULL DEFAULT '',
+  trainer2_name_snapshot VARCHAR(255) NULL,
+  trainer2_titel_snapshot VARCHAR(255) NULL,
+  bemerkungen TEXT NULL,
+  created_at VARCHAR(32) NOT NULL,
+  updated_at VARCHAR(32) NOT NULL,
+  schema_version INT NOT NULL DEFAULT 1,
+  version INT NOT NULL DEFAULT 0,
+  PRIMARY KEY (id),
+  UNIQUE KEY idx_zertifikate_code (code),
+  KEY idx_zertifikate_kunde (kunde_id),
+  KEY idx_zertifikate_hund (hund_id),
+  KEY idx_zertifikate_kurs (kurs_id),
+  CONSTRAINT fk_zertifikate_kunde FOREIGN KEY (kunde_id) REFERENCES kunden(id)
+    ON DELETE RESTRICT
+    ON UPDATE CASCADE,
+  CONSTRAINT fk_zertifikate_hund FOREIGN KEY (hund_id) REFERENCES hunde(id)
+    ON DELETE RESTRICT
+    ON UPDATE CASCADE,
+  CONSTRAINT fk_zertifikate_kurs FOREIGN KEY (kurs_id) REFERENCES kurse(id)
     ON DELETE RESTRICT
     ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

@@ -9,6 +9,7 @@ const LEGACY_AVAILABILITY_KEY = "verfuegbarkeit";
 const EDITABLE_DEFAULTS = {
   code: "",
   name: "",
+  titel: "",
   email: "",
   telefon: "",
   notizen: "",

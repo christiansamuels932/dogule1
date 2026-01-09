@@ -7,6 +7,7 @@ const TABLE = "kurse";
 const DEFAULT_STATUS = "aktiv";
 const LEGACY_CODE_KEY = "kursId";
 const TRAINER_ERROR_CODE = "KURS_TRAINER_INVALID";
+const ORT_ERROR_CODE = "KURS_ORT_INVALID";
 
 const EDITABLE_DEFAULTS = {
   code: "",
@@ -18,6 +19,7 @@ const EDITABLE_DEFAULTS = {
   startTime: "",
   endTime: "",
   location: "",
+  ort: "",
   status: DEFAULT_STATUS,
   aboForm: "",
   alterHund: "",
@@ -27,6 +29,8 @@ const EDITABLE_DEFAULTS = {
   level: "",
   price: "",
   notes: "",
+  inhaltTheorie: "",
+  inhaltPraxis: "",
   hundIds: [],
 };
 
@@ -125,6 +129,12 @@ const sanitizeNumber = (value, fallback = 0) => {
 
 const ensureEditableDefaults = (payload = {}) => {
   const normalized = { ...EDITABLE_DEFAULTS, ...normalizeCodePayload(payload) };
+  const ortValue =
+    payload.ort ?? payload.location ?? normalized.ort ?? normalized.location ?? "";
+  const locationValue =
+    payload.location ?? payload.ort ?? normalized.location ?? normalized.ort ?? "";
+  normalized.ort = typeof ortValue === "string" ? ortValue.trim() : ortValue;
+  normalized.location = typeof locationValue === "string" ? locationValue.trim() : locationValue;
   normalized.status = payload.status?.trim?.() ? payload.status : DEFAULT_STATUS;
   normalized.capacity = sanitizeNumber(payload.capacity, EDITABLE_DEFAULTS.capacity);
   normalized.bookedCount = sanitizeNumber(payload.bookedCount, EDITABLE_DEFAULTS.bookedCount);
@@ -138,6 +148,16 @@ const ensureEditableDefaults = (payload = {}) => {
   return normalized;
 };
 
+const ensureOrtRequired = (payload = {}) => {
+  const ortValue = (payload.ort || payload.location || "").toString().trim();
+  if (!ortValue) {
+    const error = new Error("Ort ist erforderlich");
+    error.code = ORT_ERROR_CODE;
+    throw error;
+  }
+  return ortValue;
+};
+
 const sanitizeUpdatePayload = (payload = {}) => {
   const normalized = normalizeCodePayload(payload);
   const patch = {};
@@ -148,6 +168,8 @@ const sanitizeUpdatePayload = (payload = {}) => {
     } else if (key === "status") {
       patch[key] = normalized[key]?.trim?.() ? normalized[key] : DEFAULT_STATUS;
     } else if (key === "price") {
+      patch[key] = normalized[key] ?? EDITABLE_DEFAULTS[key];
+    } else if (key === "location" || key === "ort") {
       patch[key] = normalized[key] ?? EDITABLE_DEFAULTS[key];
     } else if (key === "trainerIds") {
       const { trainerIds } = normalizeTrainerIds({
@@ -245,11 +267,9 @@ export async function createKurs(data = {}, options) {
   if (isHttpMode()) {
     return httpCreate("kurse", data);
   }
-  const record = await create(
-    TABLE,
-    { id: nextKursId(), ...ensureEditableDefaults(data) },
-    options
-  );
+  const normalized = ensureEditableDefaults(data);
+  ensureOrtRequired(normalized);
+  const record = await create(TABLE, { id: nextKursId(), ...normalized }, options);
   const shaped = ensureKursShape(record);
   await upsertKalenderEventForKurs(shaped, options);
   return shaped;
@@ -268,6 +288,11 @@ export async function updateKurs(id, data = {}, options) {
   const trainerIntegrity = ensureTrainerIntegrity({ ...existing, ...patch });
   patch.trainerId = trainerIntegrity.trainerId;
   patch.trainerName = trainerIntegrity.trainerName;
+  const resolvedOrt = ensureOrtRequired({ ...existing, ...patch });
+  patch.ort = resolvedOrt;
+  if (!patch.location) {
+    patch.location = resolvedOrt;
+  }
   const participants = ensureParticipantIntegrity({ ...existing, ...patch });
   patch.hundIds = participants.hundIds;
   const updated = await update(TABLE, id, patch, options);

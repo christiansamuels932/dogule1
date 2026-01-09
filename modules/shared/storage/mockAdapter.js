@@ -22,6 +22,13 @@ import {
   updateTrainer,
   deleteTrainer,
 } from "../api/trainer.js";
+import {
+  listZertifikate,
+  getZertifikat,
+  createZertifikat,
+  updateZertifikat,
+  deleteZertifikat,
+} from "../api/zertifikate.js";
 import { StorageError, STORAGE_ERROR_CODES } from "./errors.js";
 import { executeWriteContract } from "./writeContract.js";
 
@@ -174,6 +181,17 @@ export function createMockAdapter(options = {}) {
         create: (data, ctx) => createTrainer(data, ctx),
         update: (id, data, ctx) => updateTrainer(id, data, ctx),
         delete: (id, ctx) => deleteTrainer(id, ctx),
+      },
+      defaults
+    ),
+    zertifikate: buildEntityAdapter(
+      "zertifikate",
+      {
+        list: (ctx) => listZertifikate(ctx),
+        get: (id, ctx) => getZertifikat(id, ctx),
+        create: (data, ctx) => createZertifikat(data, ctx),
+        update: (id, data, ctx) => updateZertifikat(id, data, ctx),
+        delete: (id, ctx) => deleteZertifikat(id, ctx),
       },
       defaults
     ),
