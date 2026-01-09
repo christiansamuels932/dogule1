@@ -63,6 +63,7 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 - PNG background is user-managed and treated as source-of-truth; no repo-side image edits allowed.
 - `modules/zertifikate/certificatePdf.js` contains a read-only header note + filesystem read-only permissions to prevent accidental edits; log changes in `status.md` if modified.
+- Read-only file updated once for lint globals; status note recorded here per guardrail.
 
 # - - - - - - - - - - - - - - - - - - - -
 

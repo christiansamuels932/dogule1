@@ -1435,30 +1435,6 @@ function buildTrainerOptions(trainerList = [], existing = {}) {
   return options;
 }
 
-function buildTrainerMultiOptions(trainerList = [], selectedIds = [], fallback = {}) {
-  const selected = new Set(Array.isArray(selectedIds) ? selectedIds.filter(Boolean) : []);
-  const options = (Array.isArray(trainerList) ? trainerList : []).map((trainer) => {
-    const value = trainer?.value || trainer?.id || "";
-    const label = trainer?.label || formatTrainerLabel(trainer, "", value);
-    return {
-      value,
-      label,
-      selected: selected.has(value),
-    };
-  });
-  selected.forEach((trainerId) => {
-    if (options.some((option) => option.value === trainerId)) return;
-    const fallbackName =
-      Array.isArray(fallback?.names) && fallback.names[trainerId] ? fallback.names[trainerId] : "";
-    options.push({
-      value: trainerId,
-      label: formatTrainerLabel({ name: fallbackName }, "", trainerId),
-      selected: true,
-    });
-  });
-  return options;
-}
-
 function buildTrainerSelectOptions(options = [], selectedId = "") {
   const safeOptions = Array.isArray(options) ? options : [];
   const hasPlaceholder = safeOptions.some((opt) => opt.value === "");

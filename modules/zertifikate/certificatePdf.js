@@ -1,4 +1,5 @@
 // READ-ONLY: Zertifikate renderer is locked. If you edit this file, log a note in status.md.
+/* globals URL, Blob, window */
 const CERT_BG_URL = new URL(
   "../../Material/zertifikat_bg_a4_300dpi.png",
   import.meta.url

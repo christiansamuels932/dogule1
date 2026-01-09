@@ -1,4 +1,4 @@
-/* globals document, window */
+/* globals document, window, URLSearchParams, console */
 import {
   listZertifikate,
   getZertifikat,
@@ -115,6 +115,7 @@ async function renderListView(section) {
   try {
     zertifikate = await listZertifikate();
   } catch (error) {
+    console.error("[ZERTIFIKATE_LIST_FAIL]", error);
     body.innerHTML = "";
     body.appendChild(createNotice("Fehler beim Laden der Daten.", { variant: "warn", role: "alert" }));
     return;
@@ -224,6 +225,7 @@ async function renderDetailView(section, id) {
   try {
     zertifikat = await getZertifikat(id);
   } catch (error) {
+    console.error("[ZERTIFIKATE_DETAIL_LOAD_FAIL]", error);
     if (detailBody) {
       detailBody.innerHTML = "";
       detailBody.appendChild(
