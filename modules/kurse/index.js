@@ -268,6 +268,8 @@ async function renderDetail(section, id) {
       { label: "Preis", value: formatPrice(kurs.price) },
       { label: "Status", value: formatStatusLabel(kurs.status) },
       { label: "Notizen", value: kurs.notes },
+      { label: "Kursinhalt Theorie", value: kurs.inhaltTheorie },
+      { label: "Kursinhalt Praxis", value: kurs.inhaltPraxis },
       { label: "Erstellt am", value: formatDateTime(kurs.createdAt) },
       { label: "Aktualisiert am", value: formatDateTime(kurs.updatedAt) },
     ];
@@ -290,6 +292,14 @@ async function renderDetail(section, id) {
     editBtn.addEventListener("click", () => {
       window.location.hash = `#/kurse/${kurs.id}/edit`;
     });
+    const zertifikatBtn = createButton({
+      label: "Zertifikat erstellen",
+      variant: "secondary",
+    });
+    zertifikatBtn.type = "button";
+    zertifikatBtn.addEventListener("click", () => {
+      window.location.hash = `#/zertifikate/new?kursId=${encodeURIComponent(kurs.id)}`;
+    });
     const deleteBtn = createButton({
       label: "Kurs löschen",
       variant: "secondary",
@@ -304,7 +314,7 @@ async function renderDetail(section, id) {
     backBtn.addEventListener("click", () => {
       window.location.hash = "#/kurse";
     });
-    actionsWrap.append(editBtn, deleteBtn, backBtn);
+    actionsWrap.append(editBtn, zertifikatBtn, deleteBtn, backBtn);
     actionsBody.appendChild(actionsWrap);
     detailSection.appendChild(actionsCard);
 
@@ -1427,11 +1437,15 @@ function buildTrainerOptions(trainerList = [], existing = {}) {
 
 function buildTrainerMultiOptions(trainerList = [], selectedIds = [], fallback = {}) {
   const selected = new Set(Array.isArray(selectedIds) ? selectedIds.filter(Boolean) : []);
-  const options = (Array.isArray(trainerList) ? trainerList : []).map((trainer) => ({
-    value: trainer.id,
-    label: formatTrainerLabel(trainer, "", trainer.id),
-    selected: selected.has(trainer.id),
-  }));
+  const options = (Array.isArray(trainerList) ? trainerList : []).map((trainer) => {
+    const value = trainer?.value || trainer?.id || "";
+    const label = trainer?.label || formatTrainerLabel(trainer, "", value);
+    return {
+      value,
+      label,
+      selected: selected.has(value),
+    };
+  });
   selected.forEach((trainerId) => {
     if (options.some((option) => option.value === trainerId)) return;
     const fallbackName =
@@ -1452,6 +1466,16 @@ function buildTrainerSelectOptions(options = [], selectedId = "") {
     ? safeOptions
     : [{ value: "", label: "Bitte wählen" }, ...safeOptions];
   return base.map((opt) => ({
+    value: opt.value,
+    label: opt.label,
+    selected: opt.value === selectedId,
+  }));
+}
+
+function buildAdditionalTrainerOptions(options = [], selectedId = "") {
+  const safeOptions = Array.isArray(options) ? options : [];
+  const list = safeOptions.filter((opt) => opt.value !== "");
+  return [{ value: "", label: "Keiner" }, ...list].map((opt) => ({
     value: opt.value,
     label: opt.label,
     selected: opt.value === selectedId,
@@ -1501,6 +1525,7 @@ function buildFormFields(existing = {}, { defaultCode = "", trainerOptions = [] 
       ? [existingTrainerId]
       : [];
   const additionalTrainerIds = existingTrainerIds.filter((id) => id !== existingTrainerId);
+  const additionalTrainerId = additionalTrainerIds[0] || "";
   return [
     {
       name: "kursId",
@@ -1538,6 +1563,16 @@ function buildFormFields(existing = {}, { defaultCode = "", trainerOptions = [] 
       },
     },
     {
+      name: "ort",
+      value: existing?.ort ?? existing?.location ?? "",
+      config: {
+        id: "kurs-ort",
+        label: "Ort",
+        placeholder: "z. B. Platz Nord, Zürich",
+        required: true,
+      },
+    },
+    {
       name: "trainerId",
       value: existingTrainerId,
       config: {
@@ -1551,15 +1586,14 @@ function buildFormFields(existing = {}, { defaultCode = "", trainerOptions = [] 
     },
     {
       name: "trainerIds",
-      value: additionalTrainerIds,
-      multiple: true,
+      value: additionalTrainerId,
       config: {
         id: "kurs-trainer-ids",
         label: "Weitere Trainer",
         control: "select",
         required: false,
-        describedByText: "Mehrfachauswahl möglich.",
-        options: buildTrainerMultiOptions(trainerOptions, additionalTrainerIds),
+        describedByText: "Optional.",
+        options: buildAdditionalTrainerOptions(trainerOptions, additionalTrainerId),
       },
     },
     {
@@ -1631,6 +1665,26 @@ function buildFormFields(existing = {}, { defaultCode = "", trainerOptions = [] 
         placeholder: "Besondere Hinweise zum Ablauf",
       },
     },
+    {
+      name: "inhaltTheorie",
+      value: existing?.inhaltTheorie ?? "",
+      config: {
+        id: "kurs-inhalt-theorie",
+        label: "Kursinhalt Theorie",
+        control: "textarea",
+        placeholder: "Eine Zeile pro Bullet",
+      },
+    },
+    {
+      name: "inhaltPraxis",
+      value: existing?.inhaltPraxis ?? "",
+      config: {
+        id: "kurs-inhalt-praxis",
+        label: "Kursinhalt Praxis",
+        control: "textarea",
+        placeholder: "Eine Zeile pro Bullet",
+      },
+    },
   ];
 }
 
@@ -1669,10 +1723,16 @@ function validate(values = {}, { trainers = [] } = {}) {
   if (!safeValues.title) {
     errors.title = "Bitte Kursnamen eingeben.";
   }
+  safeValues.ort = ensureString(values.ort, "").trim();
+  if (!safeValues.ort) {
+    errors.ort = "Bitte Ort angeben.";
+  }
   const trainerId = ensureString(values.trainerId).trim();
   const trainerIds = Array.isArray(values.trainerIds)
     ? values.trainerIds.map((id) => ensureString(id).trim()).filter(Boolean)
-    : [];
+    : ensureString(values.trainerIds).trim()
+      ? [ensureString(values.trainerIds).trim()]
+      : [];
   const validTrainerIds = Array.isArray(trainers) ? trainers.map((trainer) => trainer.id) : [];
   if (!trainerId) {
     errors.trainerId = "Bitte Trainer auswählen.";
@@ -1712,13 +1772,17 @@ function buildPayload(values, trainerList = []) {
   const trainer = findTrainerById(values.trainerId, trainerList);
   const trainerIds = Array.isArray(values.trainerIds)
     ? values.trainerIds.map((id) => ensureString(id).trim()).filter(Boolean)
-    : [];
+    : ensureString(values.trainerIds).trim()
+      ? [ensureString(values.trainerIds).trim()]
+      : [];
   if (values.trainerId && !trainerIds.includes(values.trainerId)) {
     trainerIds.unshift(values.trainerId);
   }
   return {
     code: ensureString(values.kursCode, ""),
     title: ensureString(values.title, ""),
+    ort: ensureString(values.ort, ""),
+    location: ensureString(values.ort, ""),
     trainerName: trainer?.name || ensureString(values.trainerName, ""),
     trainerId: ensureString(values.trainerId, ""),
     trainerIds,
@@ -1728,6 +1792,8 @@ function buildPayload(values, trainerList = []) {
     aufbauend: ensureString(values.aufbauend, ""),
     price: ensureString(values.price, ""),
     notes: ensureString(values.notes, ""),
+    inhaltTheorie: ensureString(values.inhaltTheorie, ""),
+    inhaltPraxis: ensureString(values.inhaltPraxis, ""),
   };
 }
 

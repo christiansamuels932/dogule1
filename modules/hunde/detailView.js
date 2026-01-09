@@ -131,6 +131,18 @@ export async function createHundeDetailView(container, hundId) {
       });
       actionsWrap.appendChild(editBtn);
 
+      const zertifikatBtn = createButton({ label: "Zertifikat erstellen", variant: "secondary" });
+      zertifikatBtn.type = "button";
+      zertifikatBtn.addEventListener("click", () => {
+        const params = new URLSearchParams();
+        params.set("hundId", hund.id);
+        if (kundeInfo?.id) {
+          params.set("kundeId", kundeInfo.id);
+        }
+        window.location.hash = `#/zertifikate/new?${params.toString()}`;
+      });
+      actionsWrap.appendChild(zertifikatBtn);
+
       const deleteBtn = createButton({ label: "Löschen", variant: "secondary" });
       deleteBtn.addEventListener("click", () =>
         handleDeleteHund(container, hund.id, kundeInfo.id, deleteBtn)

@@ -329,10 +329,17 @@ async function renderDetail(section, id) {
     return;
   }
 
+  if (!trainer.titel) {
+    detailBody.appendChild(
+      createNotice("Titel fehlt. Für Zertifikate erforderlich.", { variant: "info" })
+    );
+  }
+
   const fields = [
     ["ID", trainer.id],
     ["Code", trainer.code || "—"],
     ["Name", trainer.name || "—"],
+    ["Titel", trainer.titel || "—"],
     ["Telefon", trainer.telefon || "—"],
     ["E-Mail", trainer.email || "—"],
     ["Ausbildungshistorie", trainer.ausbildungshistorie || trainer.ausbildung || "—"],
@@ -800,6 +807,17 @@ async function renderCreate(section) {
   nameInput.name = "name";
   refs.name = { input: nameInput, hint: nameRow.querySelector(".ui-form-row__hint") };
   form.appendChild(nameRow);
+
+  const titelRow = createFormRow({
+    id: "trainer-titel",
+    label: "Titel (für Zertifikate erforderlich)",
+    placeholder: "z. B. Dipl. Hundetrainer:in",
+    describedByText: "Für Zertifikate erforderlich.",
+  });
+  const titelInput = titelRow.querySelector("input");
+  titelInput.name = "titel";
+  refs.titel = { input: titelInput, hint: titelRow.querySelector(".ui-form-row__hint") };
+  form.appendChild(titelRow);
 
   const phoneRow = createFormRow({
     id: "trainer-telefon",
@@ -1458,6 +1476,18 @@ async function renderEdit(section, id) {
   nameInput.value = trainer.name || "";
   refs.name = { input: nameInput, hint: nameRow.querySelector(".ui-form-row__hint") };
   form.appendChild(nameRow);
+
+  const titelRow = createFormRow({
+    id: "trainer-titel",
+    label: "Titel (für Zertifikate erforderlich)",
+    placeholder: "z. B. Dipl. Hundetrainer:in",
+    describedByText: "Für Zertifikate erforderlich.",
+  });
+  const titelInput = titelRow.querySelector("input");
+  titelInput.name = "titel";
+  titelInput.value = trainer.titel || "";
+  refs.titel = { input: titelInput, hint: titelRow.querySelector(".ui-form-row__hint") };
+  form.appendChild(titelRow);
 
   const phoneRow = createFormRow({
     id: "trainer-telefon",

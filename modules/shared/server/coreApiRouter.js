@@ -49,7 +49,7 @@ function extractQuery(reqUrl) {
 function parsePath(reqUrl) {
   const path = reqUrl.split("?")[0];
   const match = path.match(
-    /^\/api\/(kunden|hunde|kurse|trainer|kalender|finanzen|waren)(?:\/(.+))?$/
+    /^\/api\/(kunden|hunde|kurse|trainer|kalender|finanzen|waren|zertifikate)(?:\/(.+))?$/
   );
   if (!match) return null;
   return { entity: match[1], id: match[2] || null };

@@ -319,7 +319,7 @@ export function createApiRouter(options = {}) {
     }
 
     const entityMatch = reqUrl.match(
-      /^\/api\/(kunden|hunde|kurse|trainer|kalender|finanzen|waren)(?:\/|$)/
+      /^\/api\/(kunden|hunde|kurse|trainer|kalender|finanzen|waren|zertifikate)(?:\/|$)/
     );
     if (entityMatch) {
       const entity = entityMatch[1];

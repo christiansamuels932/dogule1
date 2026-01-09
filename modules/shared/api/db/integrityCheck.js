@@ -71,6 +71,24 @@ function ensureForeignKeys() {
       );
     }
   });
+
+  db.zertifikate?.forEach((zertifikat) => {
+    if (!exists("kunden", zertifikat.kundeId)) {
+      throw new Error(
+        `[INTEGRITY] Zertifikat ${zertifikat.id} references missing Kunde ${zertifikat.kundeId}`
+      );
+    }
+    if (!exists("hunde", zertifikat.hundId)) {
+      throw new Error(
+        `[INTEGRITY] Zertifikat ${zertifikat.id} references missing Hund ${zertifikat.hundId}`
+      );
+    }
+    if (!exists("kurse", zertifikat.kursId)) {
+      throw new Error(
+        `[INTEGRITY] Zertifikat ${zertifikat.id} references missing Kurs ${zertifikat.kursId}`
+      );
+    }
+  });
 }
 
 export function runIntegrityCheck() {
@@ -84,6 +102,7 @@ export function runIntegrityCheck() {
   ensureUniqueIds("kalender", db.kalender);
   ensureUniqueIds("zahlungen", db.zahlungen);
   ensureUniqueIds("waren", db.waren);
+  ensureUniqueIds("zertifikate", db.zertifikate);
   ensureForeignKeys();
 }
 

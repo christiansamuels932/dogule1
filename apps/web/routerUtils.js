@@ -9,6 +9,7 @@ export const VALID_MODULES = new Set([
   "trainer",
   "finanzen",
   "waren",
+  "zertifikate",
 ]);
 
 export const DEFAULT_MODULE = "dashboard";

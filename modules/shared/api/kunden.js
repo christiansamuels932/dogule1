@@ -8,10 +8,66 @@ const EDITABLE_DEFAULTS = {
   code: "",
   vorname: "",
   nachname: "",
+  geschlecht: "",
   email: "",
   telefon: "",
   adresse: "",
   notizen: "",
+};
+
+const FEMALE_VORNAMEN = new Set([
+  "anna",
+  "andrea",
+  "lea",
+  "lara",
+  "laura",
+  "maria",
+  "marie",
+  "sara",
+  "sarah",
+  "julia",
+  "juliane",
+  "lena",
+  "eva",
+  "nina",
+  "sophie",
+  "sofie",
+  "luisa",
+]);
+
+const MALE_VORNAMEN = new Set([
+  "thomas",
+  "mark",
+  "marco",
+  "marcus",
+  "lukas",
+  "luca",
+  "jan",
+  "jonas",
+  "michael",
+  "peter",
+  "tim",
+  "timo",
+  "daniel",
+  "andreas",
+]);
+
+function inferGeschlechtFromVorname(vorname) {
+  const trimmed = typeof vorname === "string" ? vorname.trim().toLowerCase() : "";
+  if (!trimmed) return "";
+  if (FEMALE_VORNAMEN.has(trimmed)) return "weiblich";
+  if (MALE_VORNAMEN.has(trimmed)) return "männlich";
+  if (trimmed.endsWith("a")) return "weiblich";
+  return "";
+}
+
+const applyGeschlechtAutofill = (payload = {}) => {
+  if (payload.geschlecht !== undefined && payload.geschlecht !== null && payload.geschlecht !== "") {
+    return payload;
+  }
+  const inferred = inferGeschlechtFromVorname(payload.vorname);
+  if (!inferred) return payload;
+  return { ...payload, geschlecht: inferred };
 };
 
 const normalizeCodePayload = (payload = {}) => {
@@ -74,9 +130,13 @@ export async function getKunde(id, options) {
 
 export async function createKunde(data = {}, options) {
   if (isHttpMode()) {
-    return httpCreate("kunden", data);
+    return httpCreate("kunden", applyGeschlechtAutofill(data));
   }
-  const record = await create(TABLE, ensureEditableDefaults(data), options);
+  const record = await create(
+    TABLE,
+    ensureEditableDefaults(applyGeschlechtAutofill(data)),
+    options
+  );
   return ensureKundeShape(record);
 }
 

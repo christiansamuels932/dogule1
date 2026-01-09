@@ -26,6 +26,153 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 # - - - - - - - - - - - - - - - - - - - -
 
+# Station 83.5t — Zertifikate PDF Hybrid Renderer (PNG Overlay, Fine-Tuning)
+
+## Kontext
+
+- Status: completed (hybrid PNG overlay + iterative layout tuning).
+- Branch: `feature/station83-3-zertifikate-ui`.
+- Scope: replace HTML-flow PDF with PNG background + snapshot text overlays; repeated micro-layout adjustments to match canonical certificate; no PNG edits in repo (user-managed asset).
+- Preconditions: `Material/zertifikat_bg_a4_300dpi.png` provided/updated externally; Zertifikate snapshots required; Trainer titles enforced.
+
+## Ergebnis (kurz)
+
+- Replaced Zertifikat PDF export with hybrid PNG renderer: full-page A4 background + absolute overlay text from snapshot-only fields.
+- Centralized layout map for all overlay coordinates (percent-based), with controlled font sizing, line spacing, and overflow handling (wrap → shrink → truncate).
+- Participant sentence now fully rendered by Dogule (four lines): “Hiermit bestätigen wir, dass” + Kunde name + “mit dem” + Hund line; course participation sentence rendered as `am Kurs "<Kursname>" erfolgreich teilgenommen hat.`.
+- Added course title overlay above “Kursbestätigung” (blue, bold, larger) and aligned Kunde/Hund lines to the same visual axis.
+- Kursinhalt bullets repositioned for visual centering under headers; fixed line height + max lines; deterministic truncation for overflow.
+- Gratulation sentence now rendered fully by Dogule (gendered Hundeführer:in).
+- Ausstellungsdatum rendered as centered `Döttingen, DD.MM.YYYY` on the same axis as title/name.
+- Trainer blocks aligned and synchronized (baseline/spacing) with right column shifted for symmetry.
+- Added unobtrusive Zertifikat-ID footer (internal UUID) for authenticity verification.
+- `modules/zertifikate/certificatePdf.js` marked read-only via file permissions (`chmod 444`) to prevent accidental edits.
+
+## Tests
+
+- Manual verification (Zertifikat `Z-002`):
+  - Participant sentence (4 lines) renders cleanly; course sentence uses `am Kurs "<Kursname>" erfolgreich teilgenommen hat.` ✅
+  - Course title line above “Kursbestätigung” is blue, bold, and centered ✅
+  - Kursinhalt bullets align under headers, with stable wrapping/truncation ✅
+  - Gratulation sentence rendered by Dogule (gendered Hundeführer:in) ✅
+  - Date line centered as `Döttingen, DD.MM.YYYY` ✅
+  - Trainer blocks aligned and symmetric ✅
+  - Zertifikat-ID footer visible and unobtrusive ✅
+
+## Notizen
+
+- PNG background is user-managed and treated as source-of-truth; no repo-side image edits allowed.
+- `modules/zertifikate/certificatePdf.js` contains a read-only header note + filesystem read-only permissions to prevent accidental edits; log changes in `status.md` if modified.
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 83.4b — Kursinhalt Snapshots & Trainer-Titel
+
+## Kontext
+
+- Status: completed (schema + validation + PDF update).
+- Branch: `feature/station83-3-zertifikate-ui`.
+- Scope: Kursinhalt fields for Kurse, Zertifikate snapshots, PDF from snapshots, trainer title enforcement.
+
+## Ergebnis (kurz)
+
+- Added `inhalt_theorie`/`inhalt_praxis` to Kurse (UI textareas + MariaDB mapping) without blocking course saves.
+- Extended Zertifikate snapshots with course content; certificate creation now rejects missing Kursinhalt and missing trainer titles (Trainer 1 always, Trainer 2 if selected).
+- PDF rendering now uses Kursinhalt snapshots (one bullet per line) and requires trainer titles; no PDF storage.
+- Trainer detail/edit highlights Titel as required for certificates.
+- Kurse edit: “Weitere Trainer” now uses a single select dropdown with a “Keiner” option (no raw ID list).
+
+## Tests
+
+- Manual verification:
+  - Kursinhalt Theorie/Praxis filled in a Kurs; save succeeds ✅
+  - Zertifikat creation blocks when Kursinhalt or Trainer titles missing ✅
+  - PDF uses Kursinhalt snapshot bullets + trainer titles ✅
+
+## Notizen
+
+- Zertifikate creation now fails when Kursinhalt fields are empty; update Kurs first.
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 83.4 — Zertifikate PDF Export
+
+## Kontext
+
+- Status: completed (PDF export).
+- Branch: `feature/station83-3-zertifikate-ui`.
+- Scope: single-page PDF generation from Zertifikate snapshots only; no PDF storage.
+
+## Ergebnis (kurz)
+
+- Added on-demand PDF export from Zertifikate detail view using snapshot fields only.
+- PDF layout includes header (logo), Kursbestätigung title/subtitle, participant sentence, dog line, kurs title, static Kursinhalt (Theorie/Praxis), closing line, and footer with Ort/Datum/signatures/address.
+- Trainer 2 signature block renders only when snapshot values exist; export guarded for missing snapshot fields.
+- No PDF binaries or paths stored.
+
+## Tests
+
+- Manual verification pending.
+
+## Notizen
+
+- Export triggers browser print dialog; filename uses `Zertifikat_<code>.pdf`.
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 83.3 — Zertifikate UI (List/Create/Detail)
+
+## Kontext
+
+- Status: completed (UI only).
+- Branch: `feature/station83-3-zertifikate-ui`.
+- Scope: Zertifikate module UI (list/create/detail) with snapshot preview; no PDF generation.
+
+## Ergebnis (kurz)
+
+- New Zertifikate module with list view (code, kunde/hund/kurs snapshots, dates) and detail view grouped by Kunde/Hund/Kurs/Trainer/Ausstellung.
+- Zertifikate create flow implemented with Kunde/Hund/Kurs/Trainer selections, live snapshot preview, and required field validation.
+- Entry points added from Kunde, Hund, and Kurs detail actions; navigation link added to header.
+- PDF export button shown as disabled placeholder (no PDF generation yet).
+- API routing/RBAC/Mock wiring updated to include Zertifikate.
+
+## Tests
+
+- Not run (manual UI verification pending).
+
+## Notizen
+
+- No PDF generation implemented; detail view shows a disabled placeholder button.
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 83.2 — Schema Changes & Zertifikate Storage
+
+## Kontext
+
+- Status: completed (schema + storage wiring).
+- Branch: `feature/station83-2-schema`.
+- Scope: kunden.geschlecht, trainer.titel, kurs.ort required; zertifikate table + adapter wiring.
+
+## Ergebnis (kurz)
+
+- Added `geschlecht` for Kunden (autofill on create via Vorname heuristic; editable in detail/form).
+- Added optional `titel` for Trainer (editable in detail/form).
+- Added `ort` for Kurse (required in UI + API validation; stored alongside existing location).
+- Added Zertifikate table schema + MariaDB storage adapter with required-field validation.
+- Added non-destructive migration SQL in `tools/mariadb/migrations/83_2_zertifikate_schema.sql`.
+
+## Tests
+
+- `mariadb --protocol=socket --socket /run/mysqld/mysqld.sock -N -B dogule1 < tools/mariadb/migrations/83_2_zertifikate_schema.sql` ✅
+- `mariadb --protocol=socket --socket /run/mysqld/mysqld.sock -N -B dogule1 -e "DESCRIBE zertifikate; DESCRIBE kunden; DESCRIBE trainer; DESCRIBE kurse;"` ✅
+
+## Issues
+
+- None.
+
+# - - - - - - - - - - - - - - - - - - - -
+
 # Station 82 — Billing from Kurse
 
 ## Kontext

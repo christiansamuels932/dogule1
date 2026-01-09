@@ -4,6 +4,7 @@ const ALL_MODULES = [
   "hunde",
   "kurse",
   "trainer",
+  "zertifikate",
   "kommunikation",
   "kalender",
   "finanzen",
