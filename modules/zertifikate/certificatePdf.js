@@ -1,9 +1,6 @@
 // READ-ONLY: Zertifikate renderer is locked. If you edit this file, log a note in status.md.
 /* globals URL, Blob, window */
-const CERT_BG_URL = new URL(
-  "../../Material/zertifikat_bg_a4_300dpi.png",
-  import.meta.url
-).href;
+const CERT_BG_URL = new URL("../../Material/zertifikat_bg_a4_300dpi.png", import.meta.url).href;
 
 const LAYOUT = {
   textColor: "#232323",
@@ -73,7 +70,7 @@ const LAYOUT = {
       h: 2.2,
       fontSize: 8.5,
       align: "center",
-      color: "#4b4b4b",
+      color: "#ffffff",
       opacity: 0.8,
     },
   },
@@ -105,7 +102,9 @@ function escapeHtml(value = "") {
 }
 
 function normalizeGender(value) {
-  const normalized = String(value || "").trim().toLowerCase();
+  const normalized = String(value || "")
+    .trim()
+    .toLowerCase();
   if (!normalized) return "";
   return normalized;
 }
@@ -416,9 +415,7 @@ function buildBulletItems(lines = [], maxLines = 6) {
   if (trimmed.length > maxLines && safeLines.length) {
     safeLines[safeLines.length - 1] = `${safeLines[safeLines.length - 1]}…`;
   }
-  return safeLines
-    .map((item) => `<li>${escapeHtml(item)}</li>`)
-    .join("");
+  return safeLines.map((item) => `<li>${escapeHtml(item)}</li>`).join("");
 }
 
 function blockStyle(key, isList = false) {

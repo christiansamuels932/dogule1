@@ -7,3 +7,4 @@ Dogtabs Data/
 *.accdr
 .pnpm-home/
 .local/
+**/.directory

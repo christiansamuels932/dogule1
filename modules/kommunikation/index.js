@@ -1,8 +1,16 @@
 /* globals document, window, console, crypto */
 import { STORAGE_ERROR_CODES, StorageError } from "../shared/storage/errors.js";
-import { createNotice, createEmptyState, createFormRow } from "../shared/components/components.js";
+import {
+  createNotice,
+  createEmptyState,
+  createFormRow,
+  createCard,
+  createButton,
+  createSectionHeader,
+} from "../shared/components/components.js";
 import * as groupchatClient from "./groupchat/client.js";
 import * as infochannelClient from "./infochannel/client.js";
+import * as automationClient from "./automation/client.js";
 
 const TAB_CONFIG = [
   { id: "chats", label: "Chats", actionId: "kommunikation.chat.view" },
@@ -17,7 +25,6 @@ const PLACEHOLDER_DATA = {
   infochannel: [
     { id: "info-1", title: "Info: Feiertage", snippet: "Betriebsferien nächste Woche." },
   ],
-  system: [{ id: "sys-1", title: "Systemhinweis", snippet: "Kein neuer Versand geplant." }],
 };
 
 const chatState = {
@@ -115,6 +122,8 @@ async function renderTabContent({ host, tab, detailId, actor }) {
       await renderChats(host, detailId, actor);
     } else if (tab === "infochannel") {
       await renderInfochannel(host, detailId, actor);
+    } else if (tab === "system") {
+      await renderSystem(host, actor);
     } else {
       const items = await loadTabData(tab);
       if (!items || items.length === 0) {
@@ -582,6 +591,424 @@ async function renderInfochannelDetail(host, noticeId, actor) {
   }
 }
 
+async function renderSystem(host, actor) {
+  host.innerHTML = "";
+  await probeStorageAvailability("system");
+
+  const wrapper = document.createElement("div");
+  wrapper.className = "kommunikation-system";
+  host.appendChild(wrapper);
+
+  const header = createSectionHeader({
+    title: "Automation",
+    subtitle: "Geburtstags- und Zertifikats-Workflows (Station 84).",
+    level: 2,
+  });
+  wrapper.appendChild(header);
+
+  const canManage = isAuthorized("kommunikation.system.manage", actor);
+
+  const [settings, eventsResult] = await Promise.all([
+    automationClient.getAutomationSettings(),
+    automationClient.listAutomationEvents({ limit: 12 }),
+  ]);
+
+  wrapper.appendChild(
+    createNotice(buildAutomationStatusText(settings), {
+      variant: "info",
+      role: "status",
+    })
+  );
+
+  const settingsCardFragment = createCard({
+    eyebrow: "E-Mail",
+    title: "Versand vorbereiten",
+    body: "",
+    footer: "",
+  });
+  const settingsCard =
+    settingsCardFragment.querySelector(".ui-card") || settingsCardFragment.firstElementChild;
+  const settingsBody = settingsCard.querySelector(".ui-card__body");
+  const settingsFooter = settingsCard.querySelector(".ui-card__footer");
+  const settingsForm = document.createElement("form");
+  settingsForm.className = "kommunikation-system__form";
+  settingsForm.noValidate = true;
+
+  const senderRow = createFormRow({
+    id: "automation-sender-email",
+    label: "Absender E-Mail",
+    control: "input",
+    type: "email",
+    required: true,
+    value: settings.senderEmail || "",
+  });
+  const senderInput = senderRow.querySelector("input");
+  senderInput.name = "senderEmail";
+
+  const senderNameRow = createFormRow({
+    id: "automation-sender-name",
+    label: "Absender Name",
+    control: "input",
+    type: "text",
+    value: settings.senderName || "",
+  });
+  const senderNameInput = senderNameRow.querySelector("input");
+  senderNameInput.name = "senderName";
+
+  const replyRow = createFormRow({
+    id: "automation-reply-to",
+    label: "Reply-To",
+    control: "input",
+    type: "email",
+    value: settings.replyTo || "",
+  });
+  const replyInput = replyRow.querySelector("input");
+  replyInput.name = "replyTo";
+
+  const providerRow = createFormRow({
+    id: "automation-provider",
+    label: "Provider",
+    control: "input",
+    type: "text",
+    value: settings.provider || "",
+  });
+  const providerInput = providerRow.querySelector("input");
+  providerInput.name = "provider";
+
+  const hostRow = createFormRow({
+    id: "automation-smtp-host",
+    label: "SMTP Host",
+    control: "input",
+    type: "text",
+    value: settings.smtpHost || "",
+  });
+  const hostInput = hostRow.querySelector("input");
+  hostInput.name = "smtpHost";
+
+  const portRow = createFormRow({
+    id: "automation-smtp-port",
+    label: "SMTP Port",
+    control: "input",
+    type: "number",
+    value: settings.smtpPort ? String(settings.smtpPort) : "",
+  });
+  const portInput = portRow.querySelector("input");
+  portInput.name = "smtpPort";
+
+  const secureRow = createFormRow({
+    id: "automation-smtp-secure",
+    label: "SMTP TLS",
+    control: "select",
+    options: buildBooleanOptions(settings.smtpSecure, {
+      trueLabel: "TLS aktiv",
+      falseLabel: "TLS aus",
+    }),
+  });
+  const secureSelect = secureRow.querySelector("select");
+  secureSelect.name = "smtpSecure";
+
+  const userRow = createFormRow({
+    id: "automation-smtp-user",
+    label: "SMTP Benutzer",
+    control: "input",
+    type: "text",
+    value: settings.smtpUser || "",
+  });
+  const userInput = userRow.querySelector("input");
+  userInput.name = "smtpUser";
+
+  const passwordRow = createFormRow({
+    id: "automation-smtp-pass",
+    label: "SMTP Passwort",
+    control: "input",
+    type: "password",
+    value: "",
+    describedByText: settings.smtpPassword ? "Passwort gespeichert." : "Noch kein Passwort.",
+  });
+  const passInput = passwordRow.querySelector("input");
+  passInput.name = "smtpPassword";
+
+  const sendingRow = createFormRow({
+    id: "automation-sending-enabled",
+    label: "Versand aktivieren",
+    control: "select",
+    options: buildBooleanOptions(settings.sendingEnabled, {
+      trueLabel: "Aktiv",
+      falseLabel: "Deaktiviert",
+    }),
+  });
+  const sendingSelect = sendingRow.querySelector("select");
+  sendingSelect.name = "sendingEnabled";
+
+  const birthdayRow = createFormRow({
+    id: "automation-birthday-enabled",
+    label: "Geburtstagsmails",
+    control: "select",
+    options: buildBooleanOptions(settings.birthdayEnabled, {
+      trueLabel: "Aktiv",
+      falseLabel: "Deaktiviert",
+    }),
+  });
+  const birthdaySelect = birthdayRow.querySelector("select");
+  birthdaySelect.name = "birthdayEnabled";
+
+  const certificateRow = createFormRow({
+    id: "automation-certificate-enabled",
+    label: "Zertifikate senden",
+    control: "select",
+    options: buildBooleanOptions(settings.certificateEnabled, {
+      trueLabel: "Aktiv",
+      falseLabel: "Deaktiviert",
+    }),
+  });
+  const certificateSelect = certificateRow.querySelector("select");
+  certificateSelect.name = "certificateEnabled";
+
+  settingsForm.append(
+    senderRow,
+    senderNameRow,
+    replyRow,
+    providerRow,
+    hostRow,
+    portRow,
+    secureRow,
+    userRow,
+    passwordRow,
+    sendingRow,
+    birthdayRow,
+    certificateRow
+  );
+
+  const statusSlot = document.createElement("div");
+  statusSlot.className = "kommunikation-system__status";
+  settingsBody.appendChild(settingsForm);
+  settingsBody.appendChild(statusSlot);
+
+  const saveBtn = createButton({
+    label: "Speichern",
+    variant: "primary",
+    onClick: () => settingsForm.requestSubmit(),
+  });
+  saveBtn.type = "button";
+  saveBtn.disabled = !canManage;
+  const testBtn = createButton({
+    label: "SMTP testen",
+    variant: "quiet",
+    onClick: async () => {
+      if (!canManage) return;
+      statusSlot.innerHTML = "";
+      testBtn.disabled = true;
+      testBtn.textContent = "Teste ...";
+      try {
+        await automationClient.testAutomationConnection();
+        statusSlot.appendChild(
+          createNotice("SMTP Verbindung OK.", { variant: "ok", role: "status" })
+        );
+      } catch (error) {
+        const message =
+          error.code === "smtp_not_ready"
+            ? "SMTP Einstellungen fehlen."
+            : error.code === "smtp_failed"
+              ? "SMTP Verbindung fehlgeschlagen."
+              : "SMTP Test fehlgeschlagen.";
+        statusSlot.appendChild(createNotice(message, { variant: "warn", role: "alert" }));
+      } finally {
+        testBtn.disabled = !canManage;
+        testBtn.textContent = "SMTP testen";
+      }
+    },
+  });
+  testBtn.type = "button";
+  testBtn.disabled = !canManage;
+  settingsFooter.appendChild(saveBtn);
+  settingsFooter.appendChild(testBtn);
+  wrapper.appendChild(settingsCard);
+
+  if (!canManage) {
+    statusSlot.appendChild(
+      createNotice("Nur Admins koennen die Automationen bearbeiten.", {
+        variant: "warn",
+        role: "alert",
+      })
+    );
+    settingsForm.querySelectorAll("input, select, textarea").forEach((node) => {
+      node.disabled = true;
+    });
+  }
+
+  settingsForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    if (!canManage) return;
+    statusSlot.innerHTML = "";
+    saveBtn.disabled = true;
+    saveBtn.textContent = "Speichere ...";
+
+    const portValue = portInput.value.trim();
+    const parsedPort = portValue ? Number(portValue) : null;
+    if (portValue && !Number.isFinite(parsedPort)) {
+      statusSlot.appendChild(
+        createNotice("SMTP Port muss eine Zahl sein.", { variant: "warn", role: "alert" })
+      );
+      saveBtn.disabled = false;
+      saveBtn.textContent = "Speichern";
+      return;
+    }
+
+    const patch = {
+      senderEmail: senderInput.value.trim(),
+      senderName: senderNameInput.value.trim(),
+      replyTo: replyInput.value.trim(),
+      provider: providerInput.value.trim(),
+      smtpHost: hostInput.value.trim(),
+      smtpPort: parsedPort,
+      smtpSecure: parseBooleanSelect(secureSelect.value),
+      smtpUser: userInput.value.trim(),
+      sendingEnabled: parseBooleanSelect(sendingSelect.value),
+      birthdayEnabled: parseBooleanSelect(birthdaySelect.value),
+      certificateEnabled: parseBooleanSelect(certificateSelect.value),
+    };
+    const passValue = passInput.value.trim();
+    if (passValue) {
+      patch.smtpPassword = passValue;
+    }
+
+    try {
+      await automationClient.updateAutomationSettings(patch);
+      statusSlot.appendChild(
+        createNotice("Gespeichert. Versand bleibt vorerst deaktiviert.", {
+          variant: "ok",
+          role: "status",
+        })
+      );
+      passInput.value = "";
+    } catch (error) {
+      const message = error.code === "DENIED" ? "Keine Berechtigung." : "Speichern fehlgeschlagen.";
+      statusSlot.appendChild(createNotice(message, { variant: "warn", role: "alert" }));
+    } finally {
+      saveBtn.disabled = false;
+      saveBtn.textContent = "Speichern";
+    }
+  });
+
+  const eventsCardFragment = createCard({
+    eyebrow: "Audit",
+    title: "Automation Events",
+    body: "",
+    footer: "",
+  });
+  const eventsCard =
+    eventsCardFragment.querySelector(".ui-card") || eventsCardFragment.firstElementChild;
+  const eventsBody = eventsCard.querySelector(".ui-card__body");
+  const events = Array.isArray(eventsResult?.events) ? eventsResult.events : [];
+
+  if (!events.length) {
+    eventsBody.appendChild(createEmptyState("Leer", "Noch keine Automation Events."));
+  } else {
+    const list = document.createElement("div");
+    list.className = "kommunikation-list";
+    events.forEach((evt) => {
+      const card = document.createElement("article");
+      card.className = "kommunikation-card";
+      const title = document.createElement("h3");
+      title.className = "kommunikation-card__title";
+      title.textContent = buildAutomationEventTitle(evt);
+      const snippet = document.createElement("p");
+      snippet.className = "kommunikation-card__snippet";
+      snippet.textContent = buildAutomationEventSnippet(evt);
+      const meta = document.createElement("div");
+      meta.className = "kommunikation-card__meta";
+      const status = document.createElement("span");
+      status.className = "kommunikation-card__badge";
+      status.textContent = buildAutomationEventStatus(evt);
+      const timestamp = document.createElement("span");
+      timestamp.textContent = evt.createdAt ? formatTime(evt.createdAt) : "";
+      meta.appendChild(status);
+      meta.appendChild(timestamp);
+
+      const actions = document.createElement("div");
+      actions.className = "kommunikation-system__event-actions";
+      actions.hidden = true;
+      const approveBtn = createButton({ label: "Freigeben", variant: "primary" });
+      const denyBtn = createButton({ label: "Ablehnen", variant: "quiet" });
+      approveBtn.type = "button";
+      denyBtn.type = "button";
+      approveBtn.disabled = !canManage;
+      denyBtn.disabled = !canManage;
+      actions.append(approveBtn, denyBtn);
+
+      const decisionText = document.createElement("p");
+      decisionText.className = "kommunikation-card__snippet";
+      if (evt.decision) {
+        decisionText.textContent = buildAutomationDecisionText(evt);
+        actions.hidden = true;
+      }
+
+      card.addEventListener("click", (event) => {
+        if (event.target?.closest("button")) return;
+        if (evt.decision) return;
+        actions.hidden = !actions.hidden;
+      });
+
+      approveBtn.addEventListener("click", async () => {
+        approveBtn.disabled = true;
+        denyBtn.disabled = true;
+        try {
+          const updated = await automationClient.updateAutomationEvent(evt.id, {
+            status: "approved",
+            reason: "manual-approved",
+            decision: "approved",
+          });
+          Object.assign(evt, updated || {});
+          status.textContent = buildAutomationEventStatus(evt);
+          snippet.textContent = buildAutomationEventSnippet(evt);
+          decisionText.textContent = buildAutomationDecisionText(evt);
+          decisionText.hidden = false;
+          actions.hidden = true;
+        } catch {
+          actions.hidden = false;
+        } finally {
+          approveBtn.disabled = !canManage;
+          denyBtn.disabled = !canManage;
+        }
+      });
+
+      denyBtn.addEventListener("click", async () => {
+        approveBtn.disabled = true;
+        denyBtn.disabled = true;
+        try {
+          const updated = await automationClient.updateAutomationEvent(evt.id, {
+            status: "denied",
+            reason: "manual-denied",
+            decision: "denied",
+          });
+          Object.assign(evt, updated || {});
+          status.textContent = buildAutomationEventStatus(evt);
+          snippet.textContent = buildAutomationEventSnippet(evt);
+          decisionText.textContent = buildAutomationDecisionText(evt);
+          decisionText.hidden = false;
+          actions.hidden = true;
+        } catch {
+          actions.hidden = false;
+        } finally {
+          approveBtn.disabled = !canManage;
+          denyBtn.disabled = !canManage;
+        }
+      });
+
+      card.appendChild(title);
+      card.appendChild(snippet);
+      decisionText.hidden = !evt.decision;
+      card.appendChild(decisionText);
+      card.appendChild(meta);
+      card.appendChild(actions);
+      list.appendChild(card);
+    });
+    eventsBody.appendChild(list);
+  }
+
+  wrapper.appendChild(eventsCard);
+}
+
 async function renderChatList(host) {
   host.innerHTML = "";
   const list = document.createElement("div");
@@ -906,6 +1333,69 @@ function buildSnippet(text, maxLength = 120) {
   const raw = (text || "").trim();
   if (raw.length <= maxLength) return raw;
   return `${raw.slice(0, maxLength).trim()}...`;
+}
+
+function buildAutomationStatusText(settings = {}) {
+  const sender = settings.senderEmail ? `Absender: ${settings.senderEmail}` : "Absender fehlt";
+  const smtpReady = settings.smtpHost && settings.smtpUser ? "SMTP bereit" : "SMTP fehlt";
+  const sending = settings.sendingEnabled ? "Versand aktiviert" : "Versand deaktiviert";
+  return `${sender}. ${smtpReady}. ${sending}. Versand nur nach Freigabe.`;
+}
+
+function buildBooleanOptions(value, { trueLabel, falseLabel } = {}) {
+  const resolved = value === true;
+  return [
+    { value: "true", label: trueLabel || "Ja", selected: resolved },
+    { value: "false", label: falseLabel || "Nein", selected: !resolved },
+  ];
+}
+
+function parseBooleanSelect(value) {
+  return String(value).toLowerCase() === "true";
+}
+
+function buildAutomationEventTitle(event = {}) {
+  if (event.eventType === "birthday") return "Geburtstagsmail";
+  if (event.eventType === "certificate_delivery") return "Zertifikat Versand";
+  return "Automation";
+}
+
+function buildAutomationEventSnippet(event = {}) {
+  const recipient = event.recipientEmail || "Kein Empfaenger";
+  const reason = formatAutomationReason(event.reason);
+  return buildSnippet(`${recipient} · ${reason}`, 140);
+}
+
+function buildAutomationEventStatus(event = {}) {
+  const status = event.status || "";
+  if (status === "approved") return "Freigegeben";
+  if (status === "denied") return "Abgelehnt";
+  if (status === "sent") return "Gesendet";
+  if (status === "failed") return "Fehlgeschlagen";
+  if (status === "skipped") return "Uebersprungen";
+  if (status === "prepared") return "Vorbereitet";
+  return status || "Unbekannt";
+}
+
+function formatAutomationReason(reason) {
+  if (!reason) return "Unbekannt";
+  if (reason === "automation-disabled") return "Automation deaktiviert";
+  if (reason === "sending-disabled") return "Versand deaktiviert";
+  if (reason === "smtp-missing") return "SMTP fehlt";
+  if (reason === "awaiting-approval") return "Wartet auf Freigabe";
+  if (reason === "smtp-sent") return "Versand erfolgreich";
+  if (reason === "smtp-error") return "SMTP Fehler";
+  if (reason === "manual-approved") return "Manuell freigegeben";
+  if (reason === "manual-denied") return "Manuell abgelehnt";
+  return reason;
+}
+
+function buildAutomationDecisionText(event = {}) {
+  const decision = event.decision || "";
+  if (!decision) return "";
+  const label = decision === "approved" ? "Freigegeben" : "Abgelehnt";
+  const ts = event.decidedAt ? formatTime(event.decidedAt) : "";
+  return ts ? `${label} · ${ts}` : label;
 }
 
 function buildInfochannelStatusText(notice, actor) {

@@ -18,6 +18,7 @@ import {
   createSectionHeader,
 } from "../shared/components/components.js";
 import { openCertificatePdf, validateCertificateSnapshot } from "./certificatePdf.js";
+import { recordAutomationEvent } from "../kommunikation/automation/client.js";
 
 export function initModule(container, routeInfo = {}) {
   if (!container) return;
@@ -34,9 +35,7 @@ export function initModule(container, routeInfo = {}) {
   section.appendChild(title);
 
   if (mode === "list") {
-    section.appendChild(
-      createSectionHeader({ title: "Übersicht", subtitle: "", level: 2 })
-    );
+    section.appendChild(createSectionHeader({ title: "Übersicht", subtitle: "", level: 2 }));
     renderListView(section);
   } else if (mode === "create") {
     section.appendChild(
@@ -44,7 +43,9 @@ export function initModule(container, routeInfo = {}) {
     );
     renderCreateView(section);
   } else if (mode === "detail") {
-    section.appendChild(createSectionHeader({ title: "Zertifikat", subtitle: "Details", level: 2 }));
+    section.appendChild(
+      createSectionHeader({ title: "Zertifikat", subtitle: "Details", level: 2 })
+    );
     renderDetailView(section, detailId);
   } else if (mode === "edit") {
     section.appendChild(
@@ -52,9 +53,7 @@ export function initModule(container, routeInfo = {}) {
     );
     renderEditView(section, detailId);
   } else {
-    section.appendChild(
-      createSectionHeader({ title: "Übersicht", subtitle: "", level: 2 })
-    );
+    section.appendChild(createSectionHeader({ title: "Übersicht", subtitle: "", level: 2 }));
     renderListView(section);
   }
 
@@ -117,7 +116,9 @@ async function renderListView(section) {
   } catch (error) {
     console.error("[ZERTIFIKATE_LIST_FAIL]", error);
     body.innerHTML = "";
-    body.appendChild(createNotice("Fehler beim Laden der Daten.", { variant: "warn", role: "alert" }));
+    body.appendChild(
+      createNotice("Fehler beim Laden der Daten.", { variant: "warn", role: "alert" })
+    );
     return;
   }
 
@@ -135,14 +136,7 @@ async function renderListView(section) {
   table.className = "kunden-list-table";
   const thead = document.createElement("thead");
   const headRow = document.createElement("tr");
-  [
-    "Code",
-    "Kunde",
-    "Hund",
-    "Kurs",
-    "Kursdatum",
-    "Ausstellungsdatum",
-  ].forEach((label) => {
+  ["Code", "Kunde", "Hund", "Kurs", "Kursdatum", "Ausstellungsdatum"].forEach((label) => {
     const th = document.createElement("th");
     th.textContent = label;
     headRow.appendChild(th);
@@ -276,12 +270,12 @@ async function renderDetailView(section, id) {
       { label: "Code", value: zertifikat.code },
       {
         label: "Kunde",
-        value: formatKundeWording(
-          zertifikat.kundeNameSnapshot,
-          zertifikat.kundeGeschlechtSnapshot
-        ),
+        value: formatKundeWording(zertifikat.kundeNameSnapshot, zertifikat.kundeGeschlechtSnapshot),
       },
-      { label: "Kunde Geschlecht", value: formatGeschlechtLabel(zertifikat.kundeGeschlechtSnapshot) },
+      {
+        label: "Kunde Geschlecht",
+        value: formatGeschlechtLabel(zertifikat.kundeGeschlechtSnapshot),
+      },
       { label: "Hund", value: zertifikat.hundNameSnapshot },
       { label: "Hund Rasse", value: zertifikat.hundRasseSnapshot },
       { label: "Hund Geschlecht", value: formatGeschlechtLabel(zertifikat.hundGeschlechtSnapshot) },
@@ -333,10 +327,10 @@ async function renderDetailView(section, id) {
       const missing = validateCertificateSnapshot(zertifikat);
       if (missing.length) {
         exportStatus.appendChild(
-          createNotice(
-            `PDF kann nicht erstellt werden. Fehlende Felder: ${missing.join(", ")}.`,
-            { variant: "warn", role: "alert" }
-          )
+          createNotice(`PDF kann nicht erstellt werden. Fehlende Felder: ${missing.join(", ")}.`, {
+            variant: "warn",
+            role: "alert",
+          })
         );
         return;
       }
@@ -701,28 +695,44 @@ async function renderCreateView(section, { mode = "create", existing = null } = 
   const updatePreview = () => {
     const snapshot = buildSnapshot(refs, { kunden, hunde, kurse, trainer });
     previewBody.innerHTML = "";
-    previewBody.appendChild(buildDetailGroup("Kunde", [
-      ["Name", formatKundeWording(snapshot.kundeNameSnapshot, snapshot.kundeGeschlechtSnapshot)],
-      ["Geschlecht", formatGeschlechtLabel(snapshot.kundeGeschlechtSnapshot)],
-    ]));
-    previewBody.appendChild(buildDetailGroup("Hund", [
-      ["Name", snapshot.hundNameSnapshot || "–"],
-      ["Rasse", snapshot.hundRasseSnapshot || "–"],
-      ["Geschlecht", formatGeschlechtLabel(snapshot.hundGeschlechtSnapshot)],
-    ]));
-    previewBody.appendChild(buildDetailGroup("Kurs", [
-      ["Titel", snapshot.kursTitelSnapshot || "–"],
-      ["Datum", snapshot.kursDatumSnapshot || "–"],
-      ["Ort", snapshot.kursOrtSnapshot || "–"],
-    ]));
-    previewBody.appendChild(buildDetailGroup("Trainer", [
-      ["Trainer 1", formatTrainerLabel(snapshot.trainer1NameSnapshot, snapshot.trainer1TitelSnapshot)],
-      ["Trainer 2", formatTrainerLabel(snapshot.trainer2NameSnapshot, snapshot.trainer2TitelSnapshot)],
-    ]));
-    previewBody.appendChild(buildDetailGroup("Ausstellung", [
-      ["Ausstellungsdatum", snapshot.ausstellungsdatum || "–"],
-      ["Bemerkungen", snapshot.bemerkungen || "–"],
-    ]));
+    previewBody.appendChild(
+      buildDetailGroup("Kunde", [
+        ["Name", formatKundeWording(snapshot.kundeNameSnapshot, snapshot.kundeGeschlechtSnapshot)],
+        ["Geschlecht", formatGeschlechtLabel(snapshot.kundeGeschlechtSnapshot)],
+      ])
+    );
+    previewBody.appendChild(
+      buildDetailGroup("Hund", [
+        ["Name", snapshot.hundNameSnapshot || "–"],
+        ["Rasse", snapshot.hundRasseSnapshot || "–"],
+        ["Geschlecht", formatGeschlechtLabel(snapshot.hundGeschlechtSnapshot)],
+      ])
+    );
+    previewBody.appendChild(
+      buildDetailGroup("Kurs", [
+        ["Titel", snapshot.kursTitelSnapshot || "–"],
+        ["Datum", snapshot.kursDatumSnapshot || "–"],
+        ["Ort", snapshot.kursOrtSnapshot || "–"],
+      ])
+    );
+    previewBody.appendChild(
+      buildDetailGroup("Trainer", [
+        [
+          "Trainer 1",
+          formatTrainerLabel(snapshot.trainer1NameSnapshot, snapshot.trainer1TitelSnapshot),
+        ],
+        [
+          "Trainer 2",
+          formatTrainerLabel(snapshot.trainer2NameSnapshot, snapshot.trainer2TitelSnapshot),
+        ],
+      ])
+    );
+    previewBody.appendChild(
+      buildDetailGroup("Ausstellung", [
+        ["Ausstellungsdatum", snapshot.ausstellungsdatum || "–"],
+        ["Bemerkungen", snapshot.bemerkungen || "–"],
+      ])
+    );
   };
 
   const syncTrainerMode = (manualRef, selectRef, nameRef, titelRef) => {
@@ -739,11 +749,21 @@ async function renderCreateView(section, { mode = "create", existing = null } = 
   };
 
   refs.trainer1Manual.input.addEventListener("change", () => {
-    syncTrainerMode(refs.trainer1Manual, refs.trainer1Id, refs.trainer1NameManual, refs.trainer1TitelManual);
+    syncTrainerMode(
+      refs.trainer1Manual,
+      refs.trainer1Id,
+      refs.trainer1NameManual,
+      refs.trainer1TitelManual
+    );
     updatePreview();
   });
   refs.trainer2Manual.input.addEventListener("change", () => {
-    syncTrainerMode(refs.trainer2Manual, refs.trainer2Id, refs.trainer2NameManual, refs.trainer2TitelManual);
+    syncTrainerMode(
+      refs.trainer2Manual,
+      refs.trainer2Id,
+      refs.trainer2NameManual,
+      refs.trainer2TitelManual
+    );
     updatePreview();
   });
 
@@ -795,22 +815,33 @@ async function renderCreateView(section, { mode = "create", existing = null } = 
     refs.trainer1Id,
     refs.trainer2Id,
     refs.ausstellungsdatum,
-  ].forEach(
-    (ref) => {
-      ref.input.addEventListener("change", updatePreview);
-    }
-  );
-  [refs.trainer1NameManual, refs.trainer1TitelManual, refs.trainer2NameManual, refs.trainer2TitelManual].forEach(
-    (ref) => {
-      ref.input.addEventListener("input", updatePreview);
-    }
-  );
+  ].forEach((ref) => {
+    ref.input.addEventListener("change", updatePreview);
+  });
+  [
+    refs.trainer1NameManual,
+    refs.trainer1TitelManual,
+    refs.trainer2NameManual,
+    refs.trainer2TitelManual,
+  ].forEach((ref) => {
+    ref.input.addEventListener("input", updatePreview);
+  });
   refs.bemerkungen.input.addEventListener("input", updatePreview);
 
   updateKundenOptions();
   syncKursDefaults();
-  syncTrainerMode(refs.trainer1Manual, refs.trainer1Id, refs.trainer1NameManual, refs.trainer1TitelManual);
-  syncTrainerMode(refs.trainer2Manual, refs.trainer2Id, refs.trainer2NameManual, refs.trainer2TitelManual);
+  syncTrainerMode(
+    refs.trainer1Manual,
+    refs.trainer1Id,
+    refs.trainer1NameManual,
+    refs.trainer1TitelManual
+  );
+  syncTrainerMode(
+    refs.trainer2Manual,
+    refs.trainer2Id,
+    refs.trainer2NameManual,
+    refs.trainer2TitelManual
+  );
   syncHundOptions();
   updatePreview();
 
@@ -822,9 +853,7 @@ async function renderCreateView(section, { mode = "create", existing = null } = 
     applyErrors(refs, errors);
     if (Object.keys(errors).length) {
       const errorList = Object.values(errors).filter(Boolean).join(" ");
-      const message = errorList
-        ? `Bitte prüfen: ${errorList}`
-        : "Bitte prüfe die Pflichtfelder.";
+      const message = errorList ? `Bitte prüfen: ${errorList}` : "Bitte prüfe die Pflichtfelder.";
       statusSlot.appendChild(createNotice(message, { variant: "warn", role: "alert" }));
       return;
     }
@@ -864,6 +893,18 @@ async function renderCreateView(section, { mode = "create", existing = null } = 
         if (!created?.id) {
           throw new Error("create_failed");
         }
+        try {
+          const kunde = kunden.find((entry) => entry.id === payload.kundeId) || {};
+          await recordAutomationEvent({
+            eventType: "certificate_delivery",
+            zertifikatId: created.id,
+            kundeId: payload.kundeId,
+            hundId: payload.hundId,
+            recipientEmail: kunde.email || "",
+          });
+        } catch (automationError) {
+          console.warn("[ZERTIFIKAT_AUTOMATION_SKIP]", automationError);
+        }
         window.location.hash = `#/zertifikate/${created.id}`;
       }
     } catch (error) {
@@ -897,7 +938,9 @@ async function renderEditView(section, id) {
 
   const zertifikat = await getZertifikat(id);
   if (!zertifikat) {
-    section.appendChild(createNotice("Zertifikat nicht gefunden.", { variant: "warn", role: "alert" }));
+    section.appendChild(
+      createNotice("Zertifikat nicht gefunden.", { variant: "warn", role: "alert" })
+    );
     return;
   }
   const formSection = document.createElement("div");
@@ -925,8 +968,7 @@ function buildSnapshot(refs, { kunden = [], hunde = [], kurse = [], trainer = []
     hundRasseSnapshot: hund?.rasse || "",
     hundGeschlechtSnapshot: hund?.geschlecht || "",
     kursTitelSnapshot: kurs?.title || "",
-    kursDatumSnapshot:
-      refs.kursDatumSnapshot?.input?.value?.trim() || kurs?.date || "",
+    kursDatumSnapshot: refs.kursDatumSnapshot?.input?.value?.trim() || kurs?.date || "",
     kursOrtSnapshot:
       refs.kursOrtSnapshot?.input?.value?.trim() || kurs?.ort || kurs?.location || "",
     kursInhaltTheorieSnapshot: (kurs?.inhaltTheorie || "").trim(),
@@ -1046,17 +1088,13 @@ function setSelectOptions(select, options, selectedValue) {
 
 function buildKundenOptions(kunden = [], selectedId = "", searchTerm = "") {
   const base = [{ value: "", label: "Bitte wählen" }];
-  const safeTerm = String(searchTerm || "").trim().toLowerCase();
+  const safeTerm = String(searchTerm || "")
+    .trim()
+    .toLowerCase();
   const list = (Array.isArray(kunden) ? kunden : [])
     .filter((kunde) => {
       if (!safeTerm) return true;
-      const haystack = [
-        kunde.code,
-        kunde.kundenCode,
-        kunde.vorname,
-        kunde.nachname,
-        kunde.email,
-      ]
+      const haystack = [kunde.code, kunde.kundenCode, kunde.vorname, kunde.nachname, kunde.email]
         .filter(Boolean)
         .join(" ")
         .toLowerCase();
@@ -1135,7 +1173,9 @@ function formatTrainerLabel(name = "", titel = "", code = "") {
 }
 
 function formatGeschlechtLabel(value) {
-  const normalized = String(value || "").trim().toLowerCase();
+  const normalized = String(value || "")
+    .trim()
+    .toLowerCase();
   if (!normalized) return "Unbekannt";
   if (normalized === "weiblich") return "Weiblich";
   if (normalized === "männlich") return "Männlich";
@@ -1144,7 +1184,9 @@ function formatGeschlechtLabel(value) {
 
 function formatKundeWording(name, geschlecht) {
   const base = name || "–";
-  const normalized = String(geschlecht || "").trim().toLowerCase();
+  const normalized = String(geschlecht || "")
+    .trim()
+    .toLowerCase();
   if (normalized === "weiblich") return `Kundin ${base}`;
   if (normalized === "männlich") return `Kunde ${base}`;
   return `Kunde ${base}`;

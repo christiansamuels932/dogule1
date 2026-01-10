@@ -9,6 +9,8 @@ Quick stop (manual):
 - `pkill -f "tools/server/apiServer.js|vite dev|pnpm dev|vite" 2>/dev/null || true`
 - `sudo systemctl stop mariadb`
 
+OPEN: SMTP input pending (Outlook credentials not yet provided; SMTP test + send pipeline ready but blocked).
+
 This document is the authoritative status log for Dogule1 (replaces dogule1_status.md). Station suffix legend: `R` = lifecycle/retention, `K` = Kommunikation, `E` = Email/Outlook line.
 Every station block is wrapped by a visual bracket line: `# - - - - - - - - - - - - - - - - - - - -` before and after.
 Each station block uses this structure (read-only):
@@ -23,6 +25,56 @@ Each station block uses this structure (read-only):
 - READ-ONLY INSTRUCTIONS: All stations (including historical ones) must stay logged in this file; never replace or truncate existing entries when adding new stations. If a truncation occurs, restore the full history before adding new content (the Station 39–41 overwrite was fixed by restoring Stations 1–38 and reappending 39–41).
 
 Branching rule: each station must be developed on its dedicated branch; if the expected branch does not exist yet, create a new one before starting the station.
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 84 — Automation & Certificates (Kommunikation/System)
+
+## Kontext
+
+- Status: completed (awaiting SMTP credentials).
+- Branch: `feature/station84-automation`.
+- Scope: event-driven automation scaffolding for birthday + certificate delivery, admin approval flow, SMTP test + send pipeline (no cron, no auto-send).
+- Preconditions: MariaDB required; Kommunikation System tab available; Outlook SMTP settings pending.
+
+## Ergebnis (kurz)
+
+- Added automation settings + events storage, validators, and audit logging; new API routes for settings/events + event decision update + SMTP connection test.
+- Kommunikation → System tab now renders automation settings (sender + SMTP fields), SMTP test button, and event list with approve/deny controls.
+- Event hooks: new Hund with today's birthday logs an event; new Zertifikat logs a delivery event.
+- Approval flow persists decisions and attempts send only when `sendingEnabled=true` and SMTP is ready; status moves to `sent` or `failed` with reason/error captured.
+- Added nodemailer dependency for SMTP verification and send pipeline; Outlook credentials still required to operate.
+
+## Tests
+
+- Not run (manual UI verification only).
+
+## Notizen
+
+- SMTP credentials are still missing; system is prepared but blocked until Outlook settings are supplied.
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 83.6 — Zertifikat-ID Whiteout
+
+## Kontext
+
+- Status: completed.
+- Branch: `feature/station84-automation`.
+- Scope: make Zertifikat-ID footer invisible on print by switching text color to white.
+- Preconditions: Zertifikate PDF renderer in place.
+
+## Ergebnis (kurz)
+
+- Zertifikat-ID footer now renders in white (`#ffffff`) to avoid visibility on printouts.
+
+## Tests
+
+- Not run (visual change only).
+
+## Notizen
+
+- Logged due to `certificatePdf.js` read-only note.
 
 # - - - - - - - - - - - - - - - - - - - -
 
