@@ -11,6 +11,7 @@ import {
   syncWindowAuth,
   getAllowedNavModules,
   getDefaultModuleForRole,
+  getAuthHeaders,
 } from "../../modules/shared/auth/client.js";
 import { isModuleAllowed, normalizeRole } from "../../modules/shared/auth/rbac.js";
 
@@ -32,6 +33,7 @@ function ensureIntegrityOnce() {
 }
 
 ensureIntegrityOnce();
+installStorageProbe();
 
 async function loadAndRender(routeInfo) {
   const route = routeInfo.module;
@@ -147,6 +149,24 @@ function updateAuthHeader(session) {
   logoutBtn.textContent = "Abmelden";
   logoutBtn.addEventListener("click", () => handleLogout(session));
   host.append(name, role, logoutBtn);
+}
+
+function installStorageProbe() {
+  if (typeof window === "undefined") return;
+  window.__DOGULE_STORAGE_PROBE__ = async () => {
+    const session = getSession();
+    if (!session?.accessToken) return;
+    const res = await fetch("/api/kommunikation/infochannel/notices?limit=1", {
+      method: "GET",
+      headers: { ...getAuthHeaders() },
+    });
+    if (res.status === 401 || res.status === 403) {
+      return;
+    }
+    if (!res.ok) {
+      throw new Error(`storage_probe_failed:${res.status}`);
+    }
+  };
 }
 
 async function handleNavigation() {

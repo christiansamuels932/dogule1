@@ -35,6 +35,16 @@ function assertOptionalNumber(value, field) {
   }
 }
 
+function assertOptionalBoolean(value, field) {
+  if (value === undefined || value === null) return;
+  if (typeof value !== "boolean") {
+    throw new StorageError(
+      STORAGE_ERROR_CODES.SCHEMA_VALIDATION_FAILED,
+      `${field} must be a boolean`
+    );
+  }
+}
+
 function assertOptionalStringOrNumber(value, field) {
   if (value === undefined || value === null) return;
   if (typeof value === "string") return;
@@ -484,5 +494,106 @@ export function validateInfochannelEvent(record) {
   assertString(record.actorId, "kommunikation_infochannel_notice_event.actorId");
   assertString(record.actorRole, "kommunikation_infochannel_notice_event.actorRole");
   assertString(record.slaDueAt, "kommunikation_infochannel_notice_event.slaDueAt");
+  return record;
+}
+
+export function validateAutomationSettings(record) {
+  const required = [
+    "id",
+    "provider",
+    "senderEmail",
+    "senderName",
+    "replyTo",
+    "smtpHost",
+    "smtpPort",
+    "smtpSecure",
+    "smtpUser",
+    "smtpPassword",
+    "sendingEnabled",
+    "birthdayEnabled",
+    "certificateEnabled",
+    "createdAt",
+    "updatedAt",
+    "schemaVersion",
+  ];
+  required.forEach((field) => {
+    if (record[field] === undefined) {
+      throw new StorageError(
+        STORAGE_ERROR_CODES.SCHEMA_VALIDATION_FAILED,
+        `kommunikation_automation_settings.${field} is required`
+      );
+    }
+  });
+  requireSchemaVersion(record, "kommunikation_automation_settings");
+  assertString(record.id, "kommunikation_automation_settings.id");
+  assertString(record.provider, "kommunikation_automation_settings.provider");
+  assertString(record.senderEmail, "kommunikation_automation_settings.senderEmail");
+  assertString(record.senderName, "kommunikation_automation_settings.senderName");
+  assertString(record.replyTo, "kommunikation_automation_settings.replyTo");
+  assertString(record.smtpHost, "kommunikation_automation_settings.smtpHost");
+  assertOptionalNumber(record.smtpPort, "kommunikation_automation_settings.smtpPort");
+  assertOptionalBoolean(record.smtpSecure, "kommunikation_automation_settings.smtpSecure");
+  assertString(record.smtpUser, "kommunikation_automation_settings.smtpUser");
+  assertString(record.smtpPassword, "kommunikation_automation_settings.smtpPassword");
+  assertOptionalBoolean(record.sendingEnabled, "kommunikation_automation_settings.sendingEnabled");
+  assertOptionalBoolean(
+    record.birthdayEnabled,
+    "kommunikation_automation_settings.birthdayEnabled"
+  );
+  assertOptionalBoolean(
+    record.certificateEnabled,
+    "kommunikation_automation_settings.certificateEnabled"
+  );
+  assertString(record.createdAt, "kommunikation_automation_settings.createdAt");
+  assertString(record.updatedAt, "kommunikation_automation_settings.updatedAt");
+  return record;
+}
+
+export function validateAutomationEvent(record) {
+  const required = [
+    "id",
+    "eventType",
+    "status",
+    "reason",
+    "senderEmail",
+    "recipientEmail",
+    "kundeId",
+    "hundId",
+    "zertifikatId",
+    "actorId",
+    "actorRole",
+    "createdAt",
+    "schemaVersion",
+  ];
+  required.forEach((field) => {
+    if (record[field] === undefined) {
+      throw new StorageError(
+        STORAGE_ERROR_CODES.SCHEMA_VALIDATION_FAILED,
+        `kommunikation_automation_event.${field} is required`
+      );
+    }
+  });
+  requireSchemaVersion(record, "kommunikation_automation_event");
+  assertString(record.id, "kommunikation_automation_event.id");
+  assertString(record.eventType, "kommunikation_automation_event.eventType");
+  if (!["birthday", "certificate_delivery"].includes(record.eventType)) {
+    throw new StorageError(
+      STORAGE_ERROR_CODES.SCHEMA_VALIDATION_FAILED,
+      "kommunikation_automation_event.eventType must be birthday or certificate_delivery"
+    );
+  }
+  assertString(record.status, "kommunikation_automation_event.status");
+  assertString(record.reason, "kommunikation_automation_event.reason");
+  assertString(record.senderEmail, "kommunikation_automation_event.senderEmail");
+  assertString(record.recipientEmail, "kommunikation_automation_event.recipientEmail");
+  assertOptionalString(record.kundeId, "kommunikation_automation_event.kundeId");
+  assertOptionalString(record.hundId, "kommunikation_automation_event.hundId");
+  assertOptionalString(record.zertifikatId, "kommunikation_automation_event.zertifikatId");
+  assertOptionalString(record.decision, "kommunikation_automation_event.decision");
+  assertOptionalString(record.decidedAt, "kommunikation_automation_event.decidedAt");
+  assertOptionalString(record.decidedBy, "kommunikation_automation_event.decidedBy");
+  assertString(record.actorId, "kommunikation_automation_event.actorId");
+  assertString(record.actorRole, "kommunikation_automation_event.actorRole");
+  assertString(record.createdAt, "kommunikation_automation_event.createdAt");
   return record;
 }

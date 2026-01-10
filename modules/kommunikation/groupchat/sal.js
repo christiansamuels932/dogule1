@@ -87,9 +87,9 @@ function isAllowedAction(authz, actionId) {
   if (!authz) return false;
   if (authz === true) return true;
   if (Array.isArray(authz.allowedActions)) {
-    return authz.allowedActions.includes(actionId);
+    return authz.allowedActions.includes(actionId) || authz.allowedActions.includes("*");
   }
-  if (Array.isArray(authz)) return authz.includes(actionId);
+  if (Array.isArray(authz)) return authz.includes(actionId) || authz.includes("*");
   if (authz.allowed === true) return true;
   if (authz.decision === "allow") return true;
   return false;

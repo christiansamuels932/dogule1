@@ -10,6 +10,7 @@ import { createHund, updateHund, listHunde } from "../shared/api/hunde.js";
 import { listKunden } from "../shared/api/kunden.js";
 import { runIntegrityCheck } from "../shared/api/db/integrityCheck.js";
 import { HERKUNFT_OPTIONS } from "./herkunft.js";
+import { recordAutomationEvent } from "../kommunikation/automation/client.js";
 
 const TOAST_KEY = "__DOGULE_HUNDE_TOAST__";
 const GESCHLECHT_OPTIONS = [
@@ -130,6 +131,8 @@ export async function createHundeFormView(container, options = {}) {
   const submitContext = {
     mode,
     id: hundId,
+    existing,
+    kunden,
     refs,
     section,
     submit,
@@ -613,6 +616,25 @@ function buildPayload(values) {
   };
 }
 
+function shouldTriggerBirthdayEmail(nextDate, previousDate, mode) {
+  if (!isBirthdayToday(nextDate)) return false;
+  if (mode === "create") return true;
+  if (!previousDate) return true;
+  return !isBirthdayToday(previousDate);
+}
+
+function isBirthdayToday(dateString) {
+  const raw = String(dateString || "").trim();
+  if (!raw) return false;
+  const parts = raw.split("-");
+  if (parts.length < 3) return false;
+  const month = Number(parts[1]);
+  const day = Number(parts[2]);
+  if (!Number.isFinite(month) || !Number.isFinite(day)) return false;
+  const today = new Date();
+  return today.getMonth() + 1 === month && today.getDate() === day;
+}
+
 function toNumber(value) {
   if (value === null || value === undefined || value === "") return null;
   const parsed = Number(value);
@@ -662,7 +684,10 @@ function generateNextHundCode(hundeListe = []) {
   return `H-${String(next).padStart(3, "0")}`;
 }
 
-async function handleHundFormSubmit(event, { mode, id, refs, section, submit, hundeListe }) {
+async function handleHundFormSubmit(
+  event,
+  { mode, id, existing, kunden, refs, section, submit, hundeListe }
+) {
   event.preventDefault();
   const codeInput = refs.hundeCode?.input;
   const isManualCode = codeInput ? !codeInput.readOnly : false;
@@ -703,6 +728,19 @@ async function handleHundFormSubmit(event, { mode, id, refs, section, submit, hu
     const result = mode === "create" ? await createHund(payload) : await updateHund(id, payload);
     if (!result?.id) {
       throw new Error("Hund speichern ohne ID");
+    }
+    if (shouldTriggerBirthdayEmail(payload.geburtsdatum, existing?.geburtsdatum, mode)) {
+      const kunde = (kunden || []).find((entry) => entry.id === payload.kundenId) || {};
+      try {
+        await recordAutomationEvent({
+          eventType: "birthday",
+          kundeId: payload.kundenId,
+          hundId: result.id,
+          recipientEmail: kunde.email || "",
+        });
+      } catch (automationError) {
+        console.warn("[HUNDE_AUTOMATION_SKIP]", automationError);
+      }
     }
     try {
       runIntegrityCheck();

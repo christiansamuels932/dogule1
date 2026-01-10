@@ -5,6 +5,7 @@ import crypto from "node:crypto";
 import { Buffer } from "node:buffer";
 import { createGroupchatApiHandlers } from "../../kommunikation/groupchat/apiRoutes.js";
 import { createInfochannelApiHandlers } from "../../kommunikation/infochannel/apiRoutes.js";
+import { createAutomationApiHandlers } from "../../kommunikation/automation/apiRoutes.js";
 import { createCoreApiRouter } from "./coreApiRouter.js";
 import { createAuthService } from "../auth/authService.js";
 import { resolveAuthConfig } from "../auth/config.js";
@@ -167,6 +168,10 @@ export function createKommunikationApiRouter(options = {}) {
     ...(options.infochannel || {}),
     salOptions: { ...salOptions, ...(options.infochannel?.salOptions || {}) },
   });
+  const automation = createAutomationApiHandlers({
+    ...(options.automation || {}),
+    salOptions: { ...salOptions, ...(options.automation?.salOptions || {}) },
+  });
 
   async function handle(req, res) {
     const reqUrl = req?.url || "";
@@ -214,6 +219,31 @@ export function createKommunikationApiRouter(options = {}) {
     if (confirmMatch && method === "POST") {
       await infochannel.handleConfirmNotice(
         buildReq(req, { body, params: { id: confirmMatch[1] }, query }),
+        res
+      );
+      return true;
+    }
+
+    if (path === "/api/kommunikation/automation/settings") {
+      const handler =
+        method === "PATCH" ? automation.handleUpdateSettings : automation.handleGetSettings;
+      await handler(buildReq(req, { body, params: {}, query }), res);
+      return true;
+    }
+    if (path === "/api/kommunikation/automation/settings/test" && method === "POST") {
+      await automation.handleTestConnection(buildReq(req, { body, params: {}, query }), res);
+      return true;
+    }
+    if (path === "/api/kommunikation/automation/events") {
+      const handler =
+        method === "POST" ? automation.handleRecordEvent : automation.handleListEvents;
+      await handler(buildReq(req, { body, params: {}, query }), res);
+      return true;
+    }
+    const eventMatch = path.match(/^\/api\/kommunikation\/automation\/events\/([^/]+)$/);
+    if (eventMatch && method === "PATCH") {
+      await automation.handleUpdateEvent(
+        buildReq(req, { body, params: { id: eventMatch[1] }, query }),
         res
       );
       return true;
