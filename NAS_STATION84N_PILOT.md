@@ -151,6 +151,16 @@ Remote access (current session)
 - Reverse Proxy finalized: name `dogule1`, source HTTPS `4c31.synology.me` port `8443` (HSTS enabled), destination HTTP `127.0.0.1:5177`.
 - External access verified: `https://4c31.synology.me:8443/#/auth` loads from outside LAN (user confirmed); client will bookmark this until a custom hostname is available.
 
+Update workflow (manual verification)
+
+- User preference: manual drag & drop `.NAS-Distro` to `/volume1/dogule1nasfolder` (including `config/` when env changes).
+- Updated UI shipped with new header branding (Fontanas logo + DOGULE) and removed module title/description blocks.
+- Updated seed login: `Rifo` / `rifo6087` (admin).
+- NAS update install: `pnpm install --prod` triggered husky `prepare` and failed; removed `scripts.prepare`, then install completed.
+- API restart initially failed with `EADDRINUSE` on port `5177`; resolved by NAS reboot.
+- Post-reboot verification: "Neuer Hund", "Neuer Kurs", and Zertifikat print work (user confirmed).
+- Auth update: removed `staff` seed user; updated `developer` password to `devpass6087`, then refreshed `.NAS-Distro` and manually copied to NAS.
+
 ## Recommended NAS layout
 
 Use a dedicated root:

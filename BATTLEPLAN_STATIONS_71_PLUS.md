@@ -342,6 +342,58 @@ Exit criteria
 
 - Automation is event-driven and predictable.
 
+Station 84N — NAS Client Pilot (Sync + Run)
+
+Branch: `feature/station84n-nas-pilot`
+
+Scope
+
+- Run Dogule1 from NAS for a single-client pilot (NAS-hosted UI + API + MariaDB).
+- Define a safe mirror strategy from `/home/ran/codex/dogule1` to NAS web root.
+- Clarify what is synced vs. built (avoid syncing `node_modules`, secrets, and transient storage).
+- Provide a low-friction operator flow for updates (sync → build → restart).
+- Prefer NAS-local git clone + build; avoid syncing the entire repo into the web root.
+
+Deliverables
+
+- `NAS_STATION84N_PILOT.md` with exact steps (git clone or Drive sync, build folder layout, service start/stop).
+- Sync rules/ignore list (what must never be synced to NAS).
+- Optional helper script for copy/build to NAS web root.
+
+Validation
+
+- Manual pilot checklist: UI loads from NAS, login works, read/write flows OK.
+
+Exit criteria
+
+- NAS pilot is repeatable and safe for a single client with documented sync + rollback path.
+- NAS deploy layout uses `repo/` (source), `app/` (dist), `api/` (server), `config/` (env), `db/` (MariaDB).
+
+Station 84U — NAS Update Workflow (Remote)
+
+Branch: `feature/station84u-nas-update-workflow`
+
+Scope
+
+- Define a repeatable update workflow that propagates local changes to the NAS pilot.
+- Ensure updates are visible at `https://4c31.synology.me:8443/#/auth` without manual drift.
+- Cover both UI (dist) and API (server/modules/tools) updates, with minimal downtime.
+- Include rollback and validation steps.
+
+Deliverables
+
+- `NAS_UPDATE_WORKFLOW.md` with step-by-step update instructions.
+- Optional helper script to package `.NAS-Distro` and sync to NAS.
+- Documented restart procedure for the API (Task Scheduler or manual).
+
+Validation
+
+- Manual update rehearsal: change a UI label or API response locally, deploy, and verify externally.
+
+Exit criteria
+
+- A documented, tested workflow updates the NAS pilot reliably with clear rollback.
+
 Phase: Deployment & Beta
 
 Station 85 — Update & Rollout Workflow

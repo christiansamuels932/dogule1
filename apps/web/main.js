@@ -2,6 +2,7 @@
 /* globals window, document, console, DOMParser, requestAnimationFrame, fetch */
 import "../../modules/shared/shared.css";
 import "../../modules/shared/layout.css";
+import fontanasLogoUrl from "./assets/fontanas-logo.png";
 import layoutHtml from "../../modules/shared/layout.html?raw";
 import templatesHtml from "../../modules/shared/components/templates.html?raw";
 import { runIntegrityCheck } from "../../modules/shared/api/db/integrityCheck.js";
@@ -228,6 +229,7 @@ async function mountLayout() {
     // Station 7 – Load modules into persistent layout (header/footer stay)
     // Purpose: unify page frame and route changes without reloading or losing layout.
     applyLayoutBody(layoutDoc.body);
+    hydrateBranding();
 
     layoutMain = document.getElementById("dogule-main");
     if (!layoutMain) {
@@ -238,6 +240,13 @@ async function mountLayout() {
     console.error("DOGULE1_ROUTER_002 layout bootstrap failed", error);
     layoutPromise = null;
     return null;
+  }
+}
+
+function hydrateBranding() {
+  const logo = document.getElementById("dogule-logo");
+  if (logo) {
+    logo.src = fontanasLogoUrl;
   }
 }
 

@@ -30,6 +30,41 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 # - - - - - - - - - - - - - - - - - - - -
 
+# Station 84U — NAS Update Workflow (Remote)
+
+## Kontext
+
+- Status: in progress.
+- Branch: `feature/station84u-nas-update-workflow`.
+- Scope: implement UI/login updates, validate manual NAS update flow, and document a minimal update workflow.
+- Preconditions: NAS pilot running with reverse proxy (`4c31.synology.me:8443`), manual drag & drop updates.
+
+## Ergebnis (kurz)
+
+- Implemented header branding (Fontanas logo + DOGULE) and removed module title/description blocks across modules.
+- Updated seed admin login to `Rifo` / `rifo6087`; login placeholder updated.
+- Built and refreshed `.NAS-Distro`, manually copied to NAS, and confirmed core flows (Neuer Hund, Neuer Kurs, Zertifikat print).
+- Documented minimal manual update workflow in `NAS_UPDATE_WORKFLOW.md`.
+- Removed `staff` seed user and updated `developer` password to `devpass6087`; refreshed `.NAS-Distro` and manually copied to NAS.
+
+## Tests
+
+- NAS UI: `https://4c31.synology.me:8443/#/auth` loads ✅
+- Manual flow checks: Neuer Hund, Neuer Kurs, Zertifikat drucken ✅
+- Auth update: not re-verified after latest `.NAS-Distro` copy.
+
+## Issues
+
+- NAS `pnpm install --prod` failed due to husky `prepare` (`husky: command not found`); fixed by removing `scripts.prepare`.
+- API restart hit `EADDRINUSE` on `:5177`; resolved by NAS reboot.
+
+## Notizen
+
+- User prefers manual drag & drop for NAS updates (including full `config/` when env changes).
+- Latest `.NAS-Distro` copy was manual drag & drop.
+
+# - - - - - - - - - - - - - - - - - - - -
+
 # Station 84N.3 — NAS Data Sync + Autostart Hardening
 
 ## Kontext
@@ -173,7 +208,7 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 ## Notizen
 
-- Update workflow formalization still pending; plan to capture under Station 84U.
+- Update workflow formalization moved to Station 84U.
 
 # - - - - - - - - - - - - - - - - - - - -
 
@@ -2530,5 +2565,3 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 ## Notizen
 
 - VPS execution and validation are still pending; this entry only covers the runbook update.
-
-# - - - - - - - - - - - - - - - - - - - -

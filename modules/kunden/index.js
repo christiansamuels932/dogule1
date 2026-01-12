@@ -29,13 +29,15 @@ function createSectionBlock({ title, subtitle = "", level = 2, className = "" } 
   const section = document.createElement("section");
   const baseClass = "dogule-section kunden-section";
   section.className = className ? `${baseClass} ${className}` : baseClass;
-  section.appendChild(
-    createSectionHeader({
-      title,
-      subtitle,
-      level,
-    })
-  );
+  if (title || subtitle) {
+    section.appendChild(
+      createSectionHeader({
+        title,
+        subtitle,
+        level,
+      })
+    );
+  }
   return section;
 }
 
@@ -241,16 +243,11 @@ async function renderList(root) {
   root.innerHTML = "";
 
   const section = createSectionBlock({
-    title: "Kunden",
-    subtitle: "Übersicht über alle Kundinnen und Kunden",
+    title: "",
+    subtitle: "",
     level: 1,
   });
   injectToast(section);
-  section.appendChild(
-    createNotice("Verwalte Stammdaten, verbundene Hunde und Kurse an einem Ort.", {
-      variant: "info",
-    })
-  );
 
   const actionsCard = createStandardCard("Aktionen");
   const actionBody = actionsCard.querySelector(".ui-card__body");

@@ -18,19 +18,12 @@ export async function initModule(container) {
   container.innerHTML = "";
   const fragment = document.createDocumentFragment();
 
-  fragment.appendChild(
-    createSectionHeader({
-      title: "Dashboard",
-      level: 1,
-    })
-  );
-
   const overviewSection = document.createElement("section");
   overviewSection.className = "dogule-section";
   overviewSection.appendChild(
     createSectionHeader({
       title: "Übersicht",
-      subtitle: "Schnellzugriff und Status",
+      subtitle: "",
       level: 2,
     })
   );

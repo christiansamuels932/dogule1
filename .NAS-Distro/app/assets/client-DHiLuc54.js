@@ -1,0 +1,76 @@
+import { g as s } from "./index-Cx63mBGt.js";
+const u = "/api/kommunikation/automation";
+function a(t, e, o) {
+  const r = new Error(e || t);
+  return ((r.code = t), r);
+}
+function c() {
+  var n;
+  if (typeof window > "u") return {};
+  const t = window.__DOGULE_ACTOR__ || {},
+    e = (n = window.__DOGULE_AUTHZ__) == null ? void 0 : n.allowedActions,
+    o = {},
+    r = s();
+  return (
+    r != null && r.accessToken && (o.Authorization = `Bearer ${r.accessToken}`),
+    t.id && (o["x-dogule-actor-id"] = t.id),
+    t.role && (o["x-dogule-actor-role"] = t.role),
+    Array.isArray(e) && e.length && (o["x-dogule-authz"] = e.join(",")),
+    o
+  );
+}
+async function i(t, e = {}) {
+  const o = await fetch(`${u}${t}`, {
+      method: e.method || "GET",
+      headers: { "Content-Type": "application/json", ...c(), ...(e.headers || {}) },
+      body: e.body ? JSON.stringify(e.body) : void 0,
+    }),
+    r = await o.text(),
+    n = r ? JSON.parse(r) : null;
+  if (o.status >= 200 && o.status < 300) return n;
+  throw o.status === 403
+    ? a("DENIED", "denied")
+    : o.status === 404
+      ? a("NOT_FOUND", "not_found")
+      : o.status === 400
+        ? a(
+            (n == null ? void 0 : n.error) || "INVALID_INPUT",
+            (n == null ? void 0 : n.message) || "invalid_input"
+          )
+        : o.status === 502
+          ? a(
+              (n == null ? void 0 : n.error) || "SMTP_FAILED",
+              (n == null ? void 0 : n.message) || "smtp_failed"
+            )
+          : a(
+              (n == null ? void 0 : n.error) || "SERVER_ERROR",
+              (n == null ? void 0 : n.message) || "server_error"
+            );
+}
+async function f() {
+  const t = await i("/settings", { method: "GET" });
+  return (t == null ? void 0 : t.settings) || null;
+}
+async function l(t = {}) {
+  const e = await i("/settings", { method: "PATCH", body: t });
+  return (e == null ? void 0 : e.settings) || null;
+}
+async function h({ limit: t } = {}) {
+  const e = new URLSearchParams();
+  t && e.set("limit", String(t));
+  const o = e.toString() ? `/events?${e.toString()}` : "/events";
+  return i(o, { method: "GET" });
+}
+async function m(t = {}) {
+  const e = await i("/events", { method: "POST", body: t });
+  return (e == null ? void 0 : e.event) || null;
+}
+async function g(t, e = {}) {
+  if (!t) throw a("INVALID_INPUT", "event id required");
+  const o = await i(`/events/${t}`, { method: "PATCH", body: e });
+  return (o == null ? void 0 : o.event) || null;
+}
+async function w() {
+  return (await i("/settings/test", { method: "POST" })) || null;
+}
+export { g as a, f as g, h as l, m as r, w as t, l as u };

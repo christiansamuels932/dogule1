@@ -132,7 +132,7 @@ export async function initModule(container) {
   const userRow = createFormRow({
     id: "auth-username",
     label: "Benutzername",
-    placeholder: "z. B. admin",
+    placeholder: "z. B. Rifo",
     required: true,
   });
   const userInput = userRow.querySelector("input");

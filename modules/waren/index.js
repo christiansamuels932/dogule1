@@ -24,16 +24,10 @@ export function initModule(container, routeInfo = {}) {
   const section = document.createElement("section");
   section.className = "dogule-section waren-section";
 
-  const heading = document.createElement("h1");
-  heading.textContent = "Waren";
-  heading.tabIndex = -1;
-  section.appendChild(heading);
-
   const placeholder = document.createElement("div");
   placeholder.className = "waren-placeholder";
 
   if (mode === "list") {
-    appendSubheading(section, "Übersicht");
     placeholder.dataset.view = "list";
     renderListView(placeholder);
   } else if (mode === "create") {
@@ -51,7 +45,6 @@ export function initModule(container, routeInfo = {}) {
     if (detailId) placeholder.dataset.id = detailId;
     renderFormView(placeholder, { mode: "edit", id: detailId });
   } else {
-    appendSubheading(section, "Übersicht");
     placeholder.dataset.view = "list";
   }
 

@@ -179,27 +179,6 @@ async function renderList(section) {
   section.innerHTML = "";
   scrollToTop();
   await fetchTrainer(true);
-  const { fragment: headingFragment } = createMainHeading("Kurse", "Planung und Übersicht");
-  section.appendChild(headingFragment);
-
-  const introCardFragment = createCard({
-    eyebrow: "",
-    title: "",
-    body: "",
-    footer: "",
-  });
-  const introCard =
-    introCardFragment.querySelector(".ui-card") || introCardFragment.firstElementChild;
-  if (introCard) {
-    const introBody = introCard.querySelector(".ui-card__body");
-    introBody.innerHTML = "";
-    introBody.appendChild(
-      createNotice("Verwalte Kurse und überprüfe freie Plätze.", {
-        variant: "info",
-      })
-    );
-    section.appendChild(introCard);
-  }
   injectToast(section);
 
   const toolbar = buildCourseToolbarCard();
