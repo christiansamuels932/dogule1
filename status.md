@@ -1,3 +1,5 @@
+READ-ONLY NOTE: provide only 1 step of instruction/guidance per message.
+
 Quick start (manual):
 
 - `sudo systemctl start mariadb && sudo systemctl status mariadb`
@@ -25,6 +27,76 @@ Each station block uses this structure (read-only):
 - READ-ONLY INSTRUCTIONS: All stations (including historical ones) must stay logged in this file; never replace or truncate existing entries when adding new stations. If a truncation occurs, restore the full history before adding new content (the Station 39–41 overwrite was fixed by restoring Stations 1–38 and reappending 39–41).
 
 Branching rule: each station must be developed on its dedicated branch; if the expected branch does not exist yet, create a new one before starting the station.
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 84N.3 — NAS Data Sync + Autostart Hardening
+
+## Kontext
+
+- Status: completed (ops).
+- Branch: `feature/station84n-nas-pilot`.
+- Scope: sync local MariaDB data to NAS; ensure API autostarts on boot and restarts daily.
+- Preconditions: local MariaDB running; NAS SSH access.
+
+## Ergebnis (kurz)
+
+- Local MariaDB started; full `dogule1` dump created and imported into NAS via socket.
+- NAS data now matches local; counts verified for `kunden`, `hunde`, and `zertifikate`.
+- Added `/volume1/dogule1nasfolder/api/start_if_needed.sh` (start API if not running).
+- DSM Task Scheduler set to run the script on boot and daily; reboot verified API starts and UI loads.
+
+## Tests
+
+- Local dump: `mariadb-dump --protocol=socket --socket /run/mysqld/mysqld.sock -u ran -p dogule1 > /tmp/dogule1.sql` ✅
+- NAS import: `mysql --protocol=socket --socket /run/mysqld/mysqld.sock -u dogule1 -p dogule1 < /volume1/dogule1nasfolder/dogule1.sql` ✅
+- NAS counts: `SELECT COUNT(*) AS kunden FROM kunden; ...` ✅ (kunden 1412, hunde 388, zertifikate 2)
+- Reboot check: API serves `http://192.168.1.116:5177/#/auth` ✅
+
+## Notizen
+
+- `scp` to `/volume1/dogule1nasfolder` failed (NAS scp path handling); used SSH stream copy instead.
+- Remote access via reverse proxy still pending; user will resume tomorrow.
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 84N.2 — NAS Pilot Execution (Distro Refresh, API Bring-Up, Zertifikate Fix)
+
+## Kontext
+
+- Status: completed.
+- Branch: `feature/station84n-nas-pilot` (existing).
+- Scope: refresh `.NAS-Distro`, deploy to NAS, install runtime deps, start API, fix Zertifikate load error, log every detail into `NAS_STATION84N_PILOT.md`.
+- Preconditions: NAS access via SSH, MariaDB running on NAS, local MariaDB for data export (blocked by sudo).
+
+## Ergebnis (kurz)
+
+- Collected and logged full NAS inventory + network/port forwarding details and all actions (including credentials) into `NAS_STATION84N_PILOT.md` with high granularity.
+- Refreshed `.NAS-Distro` locally (`pnpm build`, synced `dist/`, `modules/`, `tools/server/`, `tools/ops/`, `tools/mariadb/`), copied to NAS `/volume1/dogule1nasfolder`, and installed prod deps after removing `scripts.prepare` (husky).
+- Started NAS API successfully; confirmed UI served from `/volume1/dogule1nasfolder/app` after updating `DOGULE1_WEB_ROOT` in the env file.
+- Resolved Zertifikate load error by creating missing `zertifikate` table with `utf8mb4_uca1400_ai_ci` collation and valid FKs; Zertifikate UI now loads (empty).
+- Created DSM Task Scheduler Triggered Task (root) to autostart API on boot; manual Run verified API responds on NAS.
+
+## Tests
+
+- Local: `pnpm build` ✅
+- NAS: `pnpm install --prod` ✅ (after removing `prepare` script)
+- NAS: `curl http://127.0.0.1:5177/api/kunden` → `{"message":"missing_token"}` ✅ (expected)
+- NAS: `SHOW TABLES LIKE 'zertifikate'` ✅ after manual CREATE
+- NAS: Task Scheduler Run → `curl http://127.0.0.1:5177/api/kunden` → `{"message":"missing_token"}` ✅
+
+## Issues
+
+- NAS `pnpm install --prod` failed initially due to husky `prepare` script (`husky: command not found`); resolved by removing `scripts.prepare` in NAS `package.json`.
+- `83_2_zertifikate_schema.sql` failed due to FK collation mismatch (`collation_database=utf8mb3_general_ci`); resolved via manual CREATE with `utf8mb4_uca1400_ai_ci`.
+- Local MariaDB not running; `sudo` password rejected, blocking local dump → NAS data still behind local.
+
+## Notizen
+
+- API autostart configured via DSM Task Scheduler; reboot verification pending.
+- NAS env includes automation defaults; UI now served from `/volume1/dogule1nasfolder/app`.
+- Data sync from local to NAS remains pending until local MariaDB can be started.
+- Merged into Station 84N summary for project-level completion tracking.
 
 # - - - - - - - - - - - - - - - - - - - -
 
@@ -75,6 +147,66 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 ## Notizen
 
 - Logged due to `certificatePdf.js` read-only note.
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 84N — NAS Client Pilot
+
+## Kontext
+
+- Status: completed.
+- Branch: `feature/station84n-nas-pilot`.
+- Scope: define and validate NAS pilot runbook for single-client testing, including remote access.
+- Preconditions: NAS access with Node, pnpm, MariaDB, and router port forwards.
+
+## Ergebnis (kurz)
+
+- Expanded `NAS_STATION84N_PILOT.md` into a full runbook with validated NAS layout, deployment steps, dependency fixes, and data sync notes.
+- Executed NAS pilot refresh: built and deployed `.NAS-Distro`, installed prod deps, fixed Zertifikate schema/collation, and verified API/UI bring-up.
+- Configured DSM Task Scheduler autostart and verified external access via reverse proxy.
+- Remote access configured via Synology DDNS (`4c31.synology.me`), Let's Encrypt cert, and reverse proxy on `:8443` to API `:5177`.
+- External UI access confirmed at `https://4c31.synology.me:8443/#/auth`.
+
+## Tests
+
+- External access: `https://4c31.synology.me:8443/#/auth` ✅
+
+## Notizen
+
+- Update workflow formalization still pending; plan to capture under Station 84U.
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 84N.1 — NAS Pilot Troubleshooting (Copy + Dependencies)
+
+## Kontext
+
+- Status: in progress (ops troubleshooting).
+- Branch: `feature/station84n-nas-pilot`.
+- Scope: get NAS pilot running from `.NAS-Distro` and resolve missing deps and copy flow.
+
+## Ergebnis (kurz)
+
+- Created `.NAS-Distro` payload locally with `app/`, `api/`, `config/`, `logs/`, `README.md`, and `dogule1.env` example.
+- Built `dist/` locally and refreshed `.NAS-Distro/app/`.
+- Added runtime env example pointing `DOGULE1_WEB_ROOT=/volume1/web/dogule1-staging`.
+- Copied `package.json` + `pnpm-lock.yaml` into `.NAS-Distro/api` to allow prod dependency install on NAS.
+- Logged missing `nodemailer` on NAS and updated README to require `pnpm install --prod` (or `npm install --omit=dev`).
+
+## Tests
+
+- `pnpm build` (local) ✅
+- NAS API start failed due to missing `nodemailer` (no `package.json` on NAS at the time).
+
+## Issues
+
+- NAS `mysql --socket` works for `dogule1` user; TCP `127.0.0.1` not listening.
+- Local→NAS copy not completed: rsync run from NAS fails; rsync from local failed due to SSH auth (wrong password/hostname).
+
+## Notizen
+
+- Use local host with SSH `me@192.168.1.116` to push `.NAS-Distro` to NAS.
+- Install prod deps on NAS under `/volume1/dogule1nasfolder/.NAS-Distro/api` before starting API.
 
 # - - - - - - - - - - - - - - - - - - - -
 
