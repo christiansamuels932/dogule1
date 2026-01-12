@@ -1,0 +1,1619 @@
+/* global process, console */
+import mariadb from "mariadb";
+import { StorageError, STORAGE_ERROR_CODES } from "./errors.js";
+import { uuidv7 } from "../utils/uuidv7.js";
+
+const DEFAULT_POOL_LIMIT = 10;
+const DEFAULT_SOCKET_PATH = "/home/ran/codex/.local/mariadb/mariadb.sock";
+
+function toNumber(value, fallback = 0) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+function toStringValue(value, fallback = "") {
+  if (value === undefined || value === null) return fallback;
+  if (typeof value === "string") return value;
+  return String(value);
+}
+
+function toArrayValue(value) {
+  if (Array.isArray(value)) return value;
+  if (value === undefined || value === null) return [];
+  return [value];
+}
+
+function toJson(value) {
+  if (value === undefined) return null;
+  if (value === null) return null;
+  return JSON.stringify(value);
+}
+
+function parseJson(value, fallback) {
+  if (value === undefined || value === null || value === "") return fallback;
+  if (typeof value === "object") return value;
+  try {
+    return JSON.parse(value);
+  } catch {
+    return fallback;
+  }
+}
+
+function toBoolOrNull(value) {
+  if (value === undefined || value === null || value === "") return null;
+  if (typeof value === "boolean") return value;
+  if (value === 1 || value === "1") return true;
+  if (value === 0 || value === "0") return false;
+  return Boolean(value);
+}
+
+function nowIso() {
+  return new Date().toISOString();
+}
+
+const FEMALE_VORNAMEN = new Set([
+  "anna",
+  "andrea",
+  "lea",
+  "lara",
+  "laura",
+  "maria",
+  "marie",
+  "sara",
+  "sarah",
+  "julia",
+  "juliane",
+  "lena",
+  "eva",
+  "nina",
+  "sophie",
+  "sofie",
+  "luisa",
+]);
+
+const MALE_VORNAMEN = new Set([
+  "thomas",
+  "mark",
+  "marco",
+  "marcus",
+  "lukas",
+  "luca",
+  "jan",
+  "jonas",
+  "michael",
+  "peter",
+  "tim",
+  "timo",
+  "daniel",
+  "andreas",
+]);
+
+function inferGeschlechtFromVorname(vorname) {
+  const trimmed = toStringValue(vorname).trim().toLowerCase();
+  if (!trimmed) return "";
+  if (FEMALE_VORNAMEN.has(trimmed)) return "weiblich";
+  if (MALE_VORNAMEN.has(trimmed)) return "männlich";
+  if (trimmed.endsWith("a")) return "weiblich";
+  return "";
+}
+
+function resolveConfig(options = {}) {
+  const env = options.env || process.env;
+  const socketPath = options.socketPath || env.DOGULE1_MARIADB_SOCKET || DEFAULT_SOCKET_PATH;
+  const defaultUser = env.DOGULE1_MARIADB_USER || env.USER || env.LOGNAME || "root";
+  const config = {
+    host: options.host || env.DOGULE1_MARIADB_HOST || "127.0.0.1",
+    port: Number(options.port || env.DOGULE1_MARIADB_PORT || 3307),
+    user: options.user || defaultUser,
+    password: options.password || env.DOGULE1_MARIADB_PASSWORD || "",
+    database: options.database || env.DOGULE1_MARIADB_DATABASE || "dogule1",
+    connectionLimit: Number(
+      options.connectionLimit || env.DOGULE1_MARIADB_POOL_LIMIT || DEFAULT_POOL_LIMIT
+    ),
+  };
+  if (socketPath) {
+    config.socketPath = socketPath;
+  }
+  return config;
+}
+
+function toStorageError(error, fallbackMessage) {
+  if (error instanceof StorageError) return error;
+  return new StorageError(
+    STORAGE_ERROR_CODES.STORAGE_ERROR,
+    fallbackMessage || error?.message || "MariaDB operation failed",
+    { cause: error }
+  );
+}
+
+function mapKundeRow(row) {
+  if (!row) return null;
+  return {
+    id: row.id,
+    code: row.code,
+    vorname: row.vorname,
+    nachname: row.nachname,
+    geschlecht: row.geschlecht,
+    email: row.email,
+    telefon: row.telefon,
+    adresse: row.adresse,
+    status: row.status,
+    ausweisId: row.ausweis_id,
+    fotoUrl: row.foto_url,
+    begleitpersonen: parseJson(row.begleitpersonen, []),
+    notizen: row.notizen,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    schemaVersion: row.schema_version,
+    version: row.version,
+  };
+}
+
+function mapHundRow(row) {
+  if (!row) return null;
+  return {
+    id: row.id,
+    code: row.code,
+    name: row.name,
+    rufname: row.rufname,
+    rasse: row.rasse,
+    geschlecht: row.geschlecht,
+    status: row.status,
+    geburtsdatum: row.geburtsdatum,
+    gewichtKg: row.gewicht_kg === null ? null : toNumber(row.gewicht_kg, null),
+    groesseCm: row.groesse_cm === null ? null : toNumber(row.groesse_cm, null),
+    kundenId: row.kunden_id,
+    trainingsziele: row.trainingsziele,
+    notizen: row.notizen,
+    felltyp: row.felltyp,
+    kastriert: row.kastriert === null ? null : Boolean(row.kastriert),
+    fellfarbe: row.fellfarbe,
+    groesseTyp: row.groesse_typ,
+    herkunft: row.herkunft,
+    chipNummer: row.chip_nummer,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    schemaVersion: row.schema_version,
+    version: row.version,
+  };
+}
+
+function mapTrainerRow(row) {
+  if (!row) return null;
+  return {
+    id: row.id,
+    code: row.code,
+    name: row.name,
+    titel: row.titel,
+    email: row.email,
+    telefon: row.telefon,
+    notizen: row.notizen,
+    verfuegbarkeiten: parseJson(row.verfuegbarkeiten, []),
+    ausbildungshistorie: row.ausbildungshistorie,
+    stundenerfassung: row.stundenerfassung,
+    lohnabrechnung: row.lohnabrechnung,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    schemaVersion: row.schema_version,
+    version: row.version,
+  };
+}
+
+function mapKursRow(row) {
+  if (!row) return null;
+  return {
+    id: row.id,
+    code: row.code,
+    title: row.title,
+    trainerName: row.trainer_name,
+    trainerId: row.trainer_id,
+    trainerIds: (() => {
+      const parsed = parseJson(row.trainer_ids, []);
+      if (Array.isArray(parsed) && parsed.length) return parsed;
+      return row.trainer_id ? [row.trainer_id] : [];
+    })(),
+    date: row.date,
+    startTime: row.start_time,
+    endTime: row.end_time,
+    location: row.location,
+    ort: row.ort,
+    status: row.status,
+    aboForm: row.abo_form,
+    alterHund: row.alter_hund,
+    aufbauend: row.aufbauend,
+    capacity: toNumber(row.capacity, 0),
+    bookedCount: toNumber(row.booked_count, 0),
+    level: row.level,
+    price: row.price === null || row.price === undefined ? "" : String(row.price),
+    notes: row.notes,
+    inhaltTheorie: row.inhalt_theorie,
+    inhaltPraxis: row.inhalt_praxis,
+    hundIds: parseJson(row.hund_ids, []),
+    kundenIds: parseJson(row.kunden_ids, []),
+    outlookEventId: row.outlook_event_id,
+    outlookDate: row.outlook_date,
+    outlookStart: row.outlook_start,
+    outlookEnd: row.outlook_end,
+    outlookLocation: row.outlook_location,
+    inventoryFlag: Boolean(row.inventory_flag),
+    portfolioFlag: Boolean(row.portfolio_flag),
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    schemaVersion: row.schema_version,
+    version: row.version,
+  };
+}
+
+function mapKalenderRow(row) {
+  if (!row) return null;
+  return {
+    id: row.id,
+    code: row.code,
+    title: row.title,
+    start: row.start_at,
+    end: row.end_at,
+    location: row.location,
+    notes: row.notes,
+    kursId: row.kurs_id,
+    trainerId: row.trainer_id,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    schemaVersion: row.schema_version,
+    version: row.version,
+  };
+}
+
+function mapFinanzRow(row) {
+  if (!row) return null;
+  return {
+    id: row.id,
+    code: row.code,
+    kundeId: row.kunde_id,
+    kursId: row.kurs_id,
+    trainerId: row.trainer_id,
+    typ: row.typ,
+    betrag: toNumber(row.betrag, 0),
+    datum: row.datum,
+    beschreibung: row.beschreibung,
+    leistungVon: row.leistung_von,
+    leistungBis: row.leistung_bis,
+    waehrung: row.waehrung,
+    nettoBetrag: toNumber(row.netto_betrag, 0),
+    mwstSatz: toNumber(row.mwst_satz, 0),
+    mwstBetrag: toNumber(row.mwst_betrag, 0),
+    mwstHinweis: row.mwst_hinweis,
+    steuerbefreiungHinweis: row.steuerbefreiung_hinweis,
+    zahlungsfrist: row.zahlungsfrist,
+    zahlungsbedingungen: row.zahlungsbedingungen,
+    iban: row.iban,
+    kontaktEmail: row.kontakt_email,
+    kontaktTelefon: row.kontakt_telefon,
+    issuerName: row.issuer_name,
+    issuerAdresse: row.issuer_adresse,
+    empfaengerName: row.empfaenger_name,
+    empfaengerAdresse: row.empfaenger_adresse,
+    qrPayload: row.qr_payload,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    schemaVersion: row.schema_version,
+    version: row.version,
+  };
+}
+
+function mapWarenRow(row) {
+  if (!row) return null;
+  return {
+    id: row.id,
+    code: row.code,
+    kundenId: row.kunden_id,
+    produktName: row.produkt_name,
+    menge: toNumber(row.menge, 1),
+    preis: toNumber(row.preis, 0),
+    datum: row.datum,
+    beschreibung: row.beschreibung,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    schemaVersion: row.schema_version,
+    version: row.version,
+  };
+}
+
+function mapZertifikatRow(row) {
+  if (!row) return null;
+  return {
+    id: row.id,
+    code: row.code,
+    kundeId: row.kunde_id,
+    hundId: row.hund_id,
+    kursId: row.kurs_id,
+    kundeNameSnapshot: row.kunde_name_snapshot,
+    kundeGeschlechtSnapshot: row.kunde_geschlecht_snapshot,
+    hundNameSnapshot: row.hund_name_snapshot,
+    hundRasseSnapshot: row.hund_rasse_snapshot,
+    hundGeschlechtSnapshot: row.hund_geschlecht_snapshot,
+    kursTitelSnapshot: row.kurs_titel_snapshot,
+    kursDatumSnapshot: row.kurs_datum_snapshot,
+    kursOrtSnapshot: row.kurs_ort_snapshot,
+    kursInhaltTheorieSnapshot: row.kurs_inhalt_theorie_snapshot,
+    kursInhaltPraxisSnapshot: row.kurs_inhalt_praxis_snapshot,
+    ausstellungsdatum: row.ausstellungsdatum,
+    trainer1NameSnapshot: row.trainer1_name_snapshot,
+    trainer1TitelSnapshot: row.trainer1_titel_snapshot,
+    trainer2NameSnapshot: row.trainer2_name_snapshot,
+    trainer2TitelSnapshot: row.trainer2_titel_snapshot,
+    bemerkungen: row.bemerkungen,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    schemaVersion: row.schema_version,
+    version: row.version,
+  };
+}
+
+function normalizeKunde(data = {}, existing) {
+  const createdAt = existing?.createdAt || data.createdAt || nowIso();
+  const shouldInfer =
+    data.geschlecht === undefined ||
+    data.geschlecht === null ||
+    String(data.geschlecht).trim() === "";
+  const existingGeschlecht = existing ? toStringValue(existing.geschlecht) : "";
+  const geschlecht = shouldInfer
+    ? existingGeschlecht || inferGeschlechtFromVorname(data.vorname ?? existing?.vorname)
+    : toStringValue(data.geschlecht);
+  return {
+    id: data.id || existing?.id || uuidv7(),
+    code: toStringValue(data.code ?? existing?.code),
+    vorname: toStringValue(data.vorname ?? existing?.vorname),
+    nachname: toStringValue(data.nachname ?? existing?.nachname),
+    geschlecht,
+    email: toStringValue(data.email ?? existing?.email),
+    telefon: toStringValue(data.telefon ?? existing?.telefon),
+    adresse: toStringValue(data.adresse ?? existing?.adresse),
+    status: toStringValue(data.status ?? existing?.status),
+    ausweisId: toStringValue(
+      data.ausweisId ?? data.ausweisID ?? existing?.ausweisId ?? existing?.ausweisID
+    ),
+    fotoUrl: toStringValue(data.fotoUrl ?? data.foto ?? existing?.fotoUrl ?? existing?.foto),
+    begleitpersonen: Array.isArray(data.begleitpersonen)
+      ? data.begleitpersonen
+      : Array.isArray(existing?.begleitpersonen)
+        ? existing.begleitpersonen
+        : [],
+    notizen: toStringValue(data.notizen ?? existing?.notizen),
+    createdAt,
+    updatedAt: nowIso(),
+    schemaVersion: Number(data.schemaVersion ?? existing?.schemaVersion ?? 1),
+    version: Number(data.version ?? existing?.version ?? 0),
+  };
+}
+
+function normalizeHund(data = {}, existing) {
+  const createdAt = existing?.createdAt || data.createdAt || nowIso();
+  return {
+    id: data.id || existing?.id || uuidv7(),
+    code: toStringValue(data.code ?? existing?.code),
+    name: toStringValue(data.name ?? existing?.name),
+    rufname: toStringValue(data.rufname ?? existing?.rufname),
+    rasse: toStringValue(data.rasse ?? existing?.rasse),
+    geschlecht: toStringValue(data.geschlecht ?? existing?.geschlecht),
+    status: toStringValue(data.status ?? existing?.status),
+    geburtsdatum: toStringValue(data.geburtsdatum ?? existing?.geburtsdatum),
+    gewichtKg: data.gewichtKg ?? existing?.gewichtKg ?? null,
+    groesseCm: data.groesseCm ?? existing?.groesseCm ?? null,
+    kundenId: toStringValue(data.kundenId ?? existing?.kundenId),
+    trainingsziele: toStringValue(data.trainingsziele ?? existing?.trainingsziele),
+    notizen: toStringValue(data.notizen ?? existing?.notizen),
+    felltyp: toStringValue(data.felltyp ?? data.fellTyp ?? existing?.felltyp ?? existing?.fellTyp),
+    kastriert: toBoolOrNull(data.kastriert ?? existing?.kastriert),
+    fellfarbe: toStringValue(
+      data.fellfarbe ?? data.fellFarbe ?? existing?.fellfarbe ?? existing?.fellFarbe
+    ),
+    groesseTyp: toStringValue(data.groesseTyp ?? existing?.groesseTyp),
+    herkunft: toStringValue(data.herkunft ?? existing?.herkunft),
+    chipNummer: toStringValue(
+      data.chipNummer ?? data.chipnummer ?? existing?.chipNummer ?? existing?.chipnummer
+    ),
+    createdAt,
+    updatedAt: nowIso(),
+    schemaVersion: Number(data.schemaVersion ?? existing?.schemaVersion ?? 1),
+    version: Number(data.version ?? existing?.version ?? 0),
+  };
+}
+
+function normalizeTrainer(data = {}, existing) {
+  const createdAt = existing?.createdAt || data.createdAt || nowIso();
+  return {
+    id: data.id || existing?.id || uuidv7(),
+    code: toStringValue(data.code ?? existing?.code),
+    name: toStringValue(data.name ?? existing?.name),
+    titel: toStringValue(data.titel ?? existing?.titel),
+    email: toStringValue(data.email ?? existing?.email),
+    telefon: toStringValue(data.telefon ?? existing?.telefon),
+    notizen: toStringValue(data.notizen ?? existing?.notizen),
+    verfuegbarkeiten: Array.isArray(data.verfuegbarkeiten)
+      ? data.verfuegbarkeiten
+      : Array.isArray(existing?.verfuegbarkeiten)
+        ? existing.verfuegbarkeiten
+        : [],
+    ausbildungshistorie: toStringValue(data.ausbildungshistorie ?? existing?.ausbildungshistorie),
+    stundenerfassung: toStringValue(data.stundenerfassung ?? existing?.stundenerfassung),
+    lohnabrechnung: toStringValue(data.lohnabrechnung ?? existing?.lohnabrechnung),
+    createdAt,
+    updatedAt: nowIso(),
+    schemaVersion: Number(data.schemaVersion ?? existing?.schemaVersion ?? 1),
+    version: Number(data.version ?? existing?.version ?? 0),
+  };
+}
+
+function normalizeKurs(data = {}, existing) {
+  const createdAt = existing?.createdAt || data.createdAt || nowIso();
+  const normalizeTrainerIds = (ids, fallbackId) => {
+    const normalized = toArrayValue(ids)
+      .map((entry) => toStringValue(entry))
+      .filter(Boolean);
+    if (fallbackId && !normalized.includes(fallbackId)) {
+      normalized.unshift(fallbackId);
+    }
+    return normalized;
+  };
+  const ort = toStringValue(data.ort ?? data.location ?? existing?.ort ?? existing?.location);
+  const location = toStringValue(
+    data.location ?? data.ort ?? existing?.location ?? existing?.ort
+  );
+  return {
+    id: data.id || existing?.id || uuidv7(),
+    code: toStringValue(data.code ?? existing?.code),
+    title: toStringValue(data.title ?? existing?.title),
+    trainerName: toStringValue(data.trainerName ?? existing?.trainerName),
+    trainerId: toStringValue(data.trainerId ?? existing?.trainerId),
+    trainerIds: normalizeTrainerIds(
+      data.trainerIds ?? existing?.trainerIds ?? [],
+      toStringValue(data.trainerId ?? existing?.trainerId)
+    ),
+    date: toStringValue(data.date ?? existing?.date),
+    startTime: toStringValue(data.startTime ?? existing?.startTime),
+    endTime: toStringValue(data.endTime ?? existing?.endTime),
+    location,
+    ort,
+    status: toStringValue(data.status ?? existing?.status),
+    aboForm: toStringValue(data.aboForm ?? existing?.aboForm),
+    alterHund: toStringValue(data.alterHund ?? existing?.alterHund),
+    aufbauend: toStringValue(data.aufbauend ?? existing?.aufbauend),
+    capacity: toNumber(data.capacity ?? existing?.capacity ?? 0, 0),
+    bookedCount: toNumber(data.bookedCount ?? existing?.bookedCount ?? 0, 0),
+    level: toStringValue(data.level ?? existing?.level),
+    price: toStringValue(data.price ?? existing?.price),
+    notes: toStringValue(data.notes ?? existing?.notes),
+    inhaltTheorie: toStringValue(data.inhaltTheorie ?? existing?.inhaltTheorie),
+    inhaltPraxis: toStringValue(data.inhaltPraxis ?? existing?.inhaltPraxis),
+    hundIds: toArrayValue(data.hundIds ?? existing?.hundIds),
+    kundenIds: toArrayValue(data.kundenIds ?? existing?.kundenIds),
+    outlookEventId: toStringValue(data.outlookEventId ?? existing?.outlookEventId),
+    outlookDate: toStringValue(data.outlookDate ?? existing?.outlookDate),
+    outlookStart: toStringValue(data.outlookStart ?? existing?.outlookStart),
+    outlookEnd: toStringValue(data.outlookEnd ?? existing?.outlookEnd),
+    outlookLocation: toStringValue(data.outlookLocation ?? existing?.outlookLocation),
+    inventoryFlag: Boolean(data.inventoryFlag ?? existing?.inventoryFlag ?? false),
+    portfolioFlag: Boolean(data.portfolioFlag ?? existing?.portfolioFlag ?? false),
+    createdAt,
+    updatedAt: nowIso(),
+    schemaVersion: Number(data.schemaVersion ?? existing?.schemaVersion ?? 1),
+    version: Number(data.version ?? existing?.version ?? 0),
+  };
+}
+
+function normalizeKalender(data = {}, existing) {
+  const createdAt = existing?.createdAt || data.createdAt || nowIso();
+  return {
+    id: data.id || existing?.id || uuidv7(),
+    code: toStringValue(data.code ?? existing?.code),
+    title: toStringValue(data.title ?? existing?.title),
+    start: toStringValue(data.start ?? existing?.start),
+    end: toStringValue(data.end ?? existing?.end),
+    location: toStringValue(data.location ?? existing?.location),
+    notes: toStringValue(data.notes ?? existing?.notes),
+    kursId: data.kursId ?? existing?.kursId ?? null,
+    trainerId: data.trainerId ?? existing?.trainerId ?? null,
+    createdAt,
+    updatedAt: nowIso(),
+    schemaVersion: Number(data.schemaVersion ?? existing?.schemaVersion ?? 1),
+    version: Number(data.version ?? existing?.version ?? 0),
+  };
+}
+
+function normalizeFinanz(data = {}, existing) {
+  const createdAt = existing?.createdAt || data.createdAt || nowIso();
+  return {
+    id: data.id || existing?.id || uuidv7(),
+    code: toStringValue(data.code ?? existing?.code),
+    kundeId: toStringValue(data.kundeId ?? existing?.kundeId),
+    kursId: data.kursId ?? existing?.kursId ?? null,
+    trainerId: data.trainerId ?? existing?.trainerId ?? null,
+    typ: toStringValue(data.typ ?? existing?.typ),
+    betrag: toNumber(data.betrag ?? existing?.betrag ?? 0, 0),
+    datum: toStringValue(data.datum ?? existing?.datum),
+    beschreibung: toStringValue(data.beschreibung ?? existing?.beschreibung),
+    leistungVon: toStringValue(data.leistungVon ?? existing?.leistungVon),
+    leistungBis: toStringValue(data.leistungBis ?? existing?.leistungBis),
+    waehrung: toStringValue(data.waehrung ?? existing?.waehrung ?? "CHF"),
+    nettoBetrag: toNumber(data.nettoBetrag ?? existing?.nettoBetrag ?? 0, 0),
+    mwstSatz: toNumber(data.mwstSatz ?? existing?.mwstSatz ?? 0, 0),
+    mwstBetrag: toNumber(data.mwstBetrag ?? existing?.mwstBetrag ?? 0, 0),
+    mwstHinweis: toStringValue(data.mwstHinweis ?? existing?.mwstHinweis),
+    steuerbefreiungHinweis: toStringValue(
+      data.steuerbefreiungHinweis ?? existing?.steuerbefreiungHinweis
+    ),
+    zahlungsfrist: toStringValue(data.zahlungsfrist ?? existing?.zahlungsfrist),
+    zahlungsbedingungen: toStringValue(data.zahlungsbedingungen ?? existing?.zahlungsbedingungen),
+    iban: toStringValue(data.iban ?? existing?.iban),
+    kontaktEmail: toStringValue(data.kontaktEmail ?? existing?.kontaktEmail),
+    kontaktTelefon: toStringValue(data.kontaktTelefon ?? existing?.kontaktTelefon),
+    issuerName: toStringValue(data.issuerName ?? existing?.issuerName),
+    issuerAdresse: toStringValue(data.issuerAdresse ?? existing?.issuerAdresse),
+    empfaengerName: toStringValue(data.empfaengerName ?? existing?.empfaengerName),
+    empfaengerAdresse: toStringValue(data.empfaengerAdresse ?? existing?.empfaengerAdresse),
+    qrPayload: toStringValue(data.qrPayload ?? existing?.qrPayload),
+    createdAt,
+    updatedAt: nowIso(),
+    schemaVersion: Number(data.schemaVersion ?? existing?.schemaVersion ?? 1),
+    version: Number(data.version ?? existing?.version ?? 0),
+  };
+}
+
+function normalizeWaren(data = {}, existing) {
+  const createdAt = existing?.createdAt || data.createdAt || nowIso();
+  return {
+    id: data.id || existing?.id || uuidv7(),
+    code: toStringValue(data.code ?? existing?.code),
+    kundenId: toStringValue(data.kundenId ?? existing?.kundenId),
+    produktName: toStringValue(data.produktName ?? existing?.produktName),
+    menge: toNumber(data.menge ?? existing?.menge ?? 1, 1),
+    preis: toNumber(data.preis ?? existing?.preis ?? 0, 0),
+    datum: toStringValue(data.datum ?? existing?.datum),
+    beschreibung: toStringValue(data.beschreibung ?? existing?.beschreibung),
+    createdAt,
+    updatedAt: nowIso(),
+    schemaVersion: Number(data.schemaVersion ?? existing?.schemaVersion ?? 1),
+    version: Number(data.version ?? existing?.version ?? 0),
+  };
+}
+
+function normalizeZertifikat(data = {}, existing) {
+  const createdAt = existing?.createdAt || data.createdAt || nowIso();
+  return {
+    id: data.id || existing?.id || uuidv7(),
+    code: toStringValue(data.code ?? existing?.code),
+    kundeId: toStringValue(data.kundeId ?? existing?.kundeId),
+    hundId: toStringValue(data.hundId ?? existing?.hundId),
+    kursId: toStringValue(data.kursId ?? existing?.kursId),
+    kundeNameSnapshot: toStringValue(data.kundeNameSnapshot ?? existing?.kundeNameSnapshot),
+    kundeGeschlechtSnapshot: toStringValue(
+      data.kundeGeschlechtSnapshot ?? existing?.kundeGeschlechtSnapshot
+    ),
+    hundNameSnapshot: toStringValue(data.hundNameSnapshot ?? existing?.hundNameSnapshot),
+    hundRasseSnapshot: toStringValue(data.hundRasseSnapshot ?? existing?.hundRasseSnapshot),
+    hundGeschlechtSnapshot: toStringValue(
+      data.hundGeschlechtSnapshot ?? existing?.hundGeschlechtSnapshot
+    ),
+    kursTitelSnapshot: toStringValue(data.kursTitelSnapshot ?? existing?.kursTitelSnapshot),
+    kursDatumSnapshot: toStringValue(data.kursDatumSnapshot ?? existing?.kursDatumSnapshot),
+    kursOrtSnapshot: toStringValue(data.kursOrtSnapshot ?? existing?.kursOrtSnapshot),
+    kursInhaltTheorieSnapshot: toStringValue(
+      data.kursInhaltTheorieSnapshot ?? existing?.kursInhaltTheorieSnapshot
+    ),
+    kursInhaltPraxisSnapshot: toStringValue(
+      data.kursInhaltPraxisSnapshot ?? existing?.kursInhaltPraxisSnapshot
+    ),
+    ausstellungsdatum: toStringValue(data.ausstellungsdatum ?? existing?.ausstellungsdatum),
+    trainer1NameSnapshot: toStringValue(
+      data.trainer1NameSnapshot ?? existing?.trainer1NameSnapshot
+    ),
+    trainer1TitelSnapshot: toStringValue(
+      data.trainer1TitelSnapshot ?? existing?.trainer1TitelSnapshot
+    ),
+    trainer2NameSnapshot:
+      data.trainer2NameSnapshot ?? existing?.trainer2NameSnapshot ?? null,
+    trainer2TitelSnapshot:
+      data.trainer2TitelSnapshot ?? existing?.trainer2TitelSnapshot ?? null,
+    bemerkungen: toStringValue(data.bemerkungen ?? existing?.bemerkungen),
+    createdAt,
+    updatedAt: nowIso(),
+    schemaVersion: Number(data.schemaVersion ?? existing?.schemaVersion ?? 1),
+    version: Number(data.version ?? existing?.version ?? 0),
+  };
+}
+
+function ensureRequiredFields(record, fields, message) {
+  const missing = fields.filter((field) => !toStringValue(record[field]).trim());
+  if (missing.length) {
+    throw new StorageError(STORAGE_ERROR_CODES.INVALID_DATA, message, { details: { missing } });
+  }
+}
+
+function ensureKursOrt(record) {
+  ensureRequiredFields(record, ["ort"], "Kurs Ort ist erforderlich");
+}
+
+function ensureZertifikatRequired(record) {
+  ensureRequiredFields(
+    record,
+    [
+      "kundeId",
+      "hundId",
+      "kursId",
+      "ausstellungsdatum",
+      "kursOrtSnapshot",
+      "trainer1NameSnapshot",
+      "kursInhaltTheorieSnapshot",
+      "kursInhaltPraxisSnapshot",
+    ],
+    "Zertifikat benötigt Kunde, Hund, Kurs, Ausstellungsdatum, Kurs Ort und Trainer"
+  );
+  if (!toStringValue(record.trainer1TitelSnapshot).trim()) {
+    throw new StorageError(STORAGE_ERROR_CODES.INVALID_DATA, "TRAINER_TITEL_REQUIRED");
+  }
+  if (record.trainer2NameSnapshot && !toStringValue(record.trainer2TitelSnapshot).trim()) {
+    throw new StorageError(STORAGE_ERROR_CODES.INVALID_DATA, "TRAINER_TITEL_REQUIRED");
+  }
+}
+
+async function fetchOne(pool, sql, params, mapper) {
+  const rows = await pool.query(sql, params);
+  if (!rows || rows.length === 0) return null;
+  return mapper(rows[0]);
+}
+
+async function listAll(pool, sql, params, mapper) {
+  const rows = await pool.query(sql, params);
+  return rows.map(mapper);
+}
+
+async function ensureExists(pool, table, id) {
+  const rows = await pool.query(`SELECT id FROM ${table} WHERE id = ?`, [id]);
+  if (!rows || rows.length === 0) {
+    throw new StorageError(STORAGE_ERROR_CODES.NOT_FOUND, `${table} ${id} not found`);
+  }
+}
+
+export function createMariaDbAdapter(options = {}) {
+  const config = resolveConfig(options);
+  console.log(
+    `[mariadb] connect host=${config.host} port=${config.port} socket=${config.socketPath || "none"} user=${config.user} db=${config.database}`
+  );
+  const pool = options.pool || mariadb.createPool(config);
+
+  async function listKunden() {
+    try {
+      return await listAll(pool, "SELECT * FROM kunden ORDER BY id", [], mapKundeRow);
+    } catch (error) {
+      throw toStorageError(error, "Failed to list kunden");
+    }
+  }
+
+  async function getKunde(id) {
+    try {
+      const record = await fetchOne(pool, "SELECT * FROM kunden WHERE id = ?", [id], mapKundeRow);
+      if (!record) {
+        throw new StorageError(STORAGE_ERROR_CODES.NOT_FOUND, `kunden ${id} not found`);
+      }
+      return record;
+    } catch (error) {
+      throw toStorageError(error, `Failed to get kunden ${id}`);
+    }
+  }
+
+  async function createKunde(data = {}) {
+    const record = normalizeKunde(data, null);
+    const params = [
+      record.id,
+      record.code,
+      record.vorname,
+      record.nachname,
+      record.geschlecht,
+      record.email,
+      record.telefon,
+      record.adresse,
+      record.status,
+      record.ausweisId,
+      record.fotoUrl,
+      toJson(record.begleitpersonen),
+      record.notizen,
+      record.createdAt,
+      record.updatedAt,
+      record.schemaVersion,
+      record.version,
+    ];
+    try {
+      await pool.query(
+        "INSERT INTO kunden (id, code, vorname, nachname, geschlecht, email, telefon, adresse, status, ausweis_id, foto_url, begleitpersonen, notizen, created_at, updated_at, schema_version, version) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        params
+      );
+      return record;
+    } catch (error) {
+      throw toStorageError(error, "Failed to create kunden");
+    }
+  }
+
+  async function updateKunde(id, patch = {}) {
+    try {
+      const existing = await fetchOne(pool, "SELECT * FROM kunden WHERE id = ?", [id], mapKundeRow);
+      if (!existing) return null;
+      const record = normalizeKunde({ ...existing, ...patch, id: existing.id }, existing);
+      const params = [
+        record.code,
+        record.vorname,
+        record.nachname,
+        record.geschlecht,
+        record.email,
+        record.telefon,
+        record.adresse,
+        record.status,
+        record.ausweisId,
+        record.fotoUrl,
+        toJson(record.begleitpersonen),
+        record.notizen,
+        record.updatedAt,
+        record.schemaVersion,
+        record.version,
+        record.id,
+      ];
+      await pool.query(
+        "UPDATE kunden SET code=?, vorname=?, nachname=?, geschlecht=?, email=?, telefon=?, adresse=?, status=?, ausweis_id=?, foto_url=?, begleitpersonen=?, notizen=?, updated_at=?, schema_version=?, version=? WHERE id=?",
+        params
+      );
+      return record;
+    } catch (error) {
+      throw toStorageError(error, `Failed to update kunden ${id}`);
+    }
+  }
+
+  async function deleteKunde(id) {
+    try {
+      await ensureExists(pool, "kunden", id);
+      await pool.query("DELETE FROM kunden WHERE id = ?", [id]);
+      return { ok: true, id };
+    } catch (error) {
+      throw toStorageError(error, `Failed to delete kunden ${id}`);
+    }
+  }
+
+  async function listHunde() {
+    try {
+      return await listAll(pool, "SELECT * FROM hunde ORDER BY id", [], mapHundRow);
+    } catch (error) {
+      throw toStorageError(error, "Failed to list hunde");
+    }
+  }
+
+  async function getHund(id) {
+    try {
+      const record = await fetchOne(pool, "SELECT * FROM hunde WHERE id = ?", [id], mapHundRow);
+      if (!record) {
+        throw new StorageError(STORAGE_ERROR_CODES.NOT_FOUND, `hunde ${id} not found`);
+      }
+      return record;
+    } catch (error) {
+      throw toStorageError(error, `Failed to get hunde ${id}`);
+    }
+  }
+
+  async function createHund(data = {}) {
+    const record = normalizeHund(data, null);
+    const params = [
+      record.id,
+      record.code,
+      record.name,
+      record.rufname,
+      record.rasse,
+      record.geschlecht,
+      record.status,
+      record.geburtsdatum,
+      record.gewichtKg,
+      record.groesseCm,
+      record.kundenId,
+      record.trainingsziele,
+      record.notizen,
+      record.felltyp,
+      record.kastriert === null ? null : record.kastriert ? 1 : 0,
+      record.fellfarbe,
+      record.groesseTyp,
+      record.herkunft,
+      record.chipNummer,
+      record.createdAt,
+      record.updatedAt,
+      record.schemaVersion,
+      record.version,
+    ];
+    try {
+      await pool.query(
+        "INSERT INTO hunde (id, code, name, rufname, rasse, geschlecht, status, geburtsdatum, gewicht_kg, groesse_cm, kunden_id, trainingsziele, notizen, felltyp, kastriert, fellfarbe, groesse_typ, herkunft, chip_nummer, created_at, updated_at, schema_version, version) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        params
+      );
+      return record;
+    } catch (error) {
+      throw toStorageError(error, "Failed to create hunde");
+    }
+  }
+
+  async function updateHund(id, patch = {}) {
+    try {
+      const existing = await fetchOne(pool, "SELECT * FROM hunde WHERE id = ?", [id], mapHundRow);
+      if (!existing) return null;
+      const record = normalizeHund({ ...existing, ...patch, id: existing.id }, existing);
+      const params = [
+        record.code,
+        record.name,
+        record.rufname,
+        record.rasse,
+        record.geschlecht,
+        record.status,
+        record.geburtsdatum,
+        record.gewichtKg,
+        record.groesseCm,
+        record.kundenId,
+        record.trainingsziele,
+        record.notizen,
+        record.felltyp,
+        record.kastriert === null ? null : record.kastriert ? 1 : 0,
+        record.fellfarbe,
+        record.groesseTyp,
+        record.herkunft,
+        record.chipNummer,
+        record.updatedAt,
+        record.schemaVersion,
+        record.version,
+        record.id,
+      ];
+      await pool.query(
+        "UPDATE hunde SET code=?, name=?, rufname=?, rasse=?, geschlecht=?, status=?, geburtsdatum=?, gewicht_kg=?, groesse_cm=?, kunden_id=?, trainingsziele=?, notizen=?, felltyp=?, kastriert=?, fellfarbe=?, groesse_typ=?, herkunft=?, chip_nummer=?, updated_at=?, schema_version=?, version=? WHERE id=?",
+        params
+      );
+      return record;
+    } catch (error) {
+      throw toStorageError(error, `Failed to update hunde ${id}`);
+    }
+  }
+
+  async function deleteHund(id) {
+    try {
+      await ensureExists(pool, "hunde", id);
+      await pool.query("DELETE FROM hunde WHERE id = ?", [id]);
+      return { ok: true, id };
+    } catch (error) {
+      throw toStorageError(error, `Failed to delete hunde ${id}`);
+    }
+  }
+
+  async function listTrainer() {
+    try {
+      return await listAll(pool, "SELECT * FROM trainer ORDER BY id", [], mapTrainerRow);
+    } catch (error) {
+      throw toStorageError(error, "Failed to list trainer");
+    }
+  }
+
+  async function getTrainer(id) {
+    try {
+      const record = await fetchOne(
+        pool,
+        "SELECT * FROM trainer WHERE id = ?",
+        [id],
+        mapTrainerRow
+      );
+      if (!record) {
+        throw new StorageError(STORAGE_ERROR_CODES.NOT_FOUND, `trainer ${id} not found`);
+      }
+      return record;
+    } catch (error) {
+      throw toStorageError(error, `Failed to get trainer ${id}`);
+    }
+  }
+
+  async function createTrainer(data = {}) {
+    const record = normalizeTrainer(data, null);
+    const params = [
+      record.id,
+      record.code,
+      record.name,
+      record.titel,
+      record.email,
+      record.telefon,
+      record.notizen,
+      toJson(record.verfuegbarkeiten),
+      record.ausbildungshistorie,
+      record.stundenerfassung,
+      record.lohnabrechnung,
+      record.createdAt,
+      record.updatedAt,
+      record.schemaVersion,
+      record.version,
+    ];
+    try {
+      await pool.query(
+        "INSERT INTO trainer (id, code, name, titel, email, telefon, notizen, verfuegbarkeiten, ausbildungshistorie, stundenerfassung, lohnabrechnung, created_at, updated_at, schema_version, version) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        params
+      );
+      return record;
+    } catch (error) {
+      throw toStorageError(error, "Failed to create trainer");
+    }
+  }
+
+  async function updateTrainer(id, patch = {}) {
+    try {
+      const existing = await fetchOne(
+        pool,
+        "SELECT * FROM trainer WHERE id = ?",
+        [id],
+        mapTrainerRow
+      );
+      if (!existing) return null;
+      const record = normalizeTrainer({ ...existing, ...patch, id: existing.id }, existing);
+      const params = [
+        record.code,
+        record.name,
+        record.titel,
+        record.email,
+        record.telefon,
+        record.notizen,
+        toJson(record.verfuegbarkeiten),
+        record.ausbildungshistorie,
+        record.stundenerfassung,
+        record.lohnabrechnung,
+        record.updatedAt,
+        record.schemaVersion,
+        record.version,
+        record.id,
+      ];
+      await pool.query(
+        "UPDATE trainer SET code=?, name=?, titel=?, email=?, telefon=?, notizen=?, verfuegbarkeiten=?, ausbildungshistorie=?, stundenerfassung=?, lohnabrechnung=?, updated_at=?, schema_version=?, version=? WHERE id=?",
+        params
+      );
+      return record;
+    } catch (error) {
+      throw toStorageError(error, `Failed to update trainer ${id}`);
+    }
+  }
+
+  async function deleteTrainer(id) {
+    try {
+      await ensureExists(pool, "trainer", id);
+      await pool.query("DELETE FROM trainer WHERE id = ?", [id]);
+      return { ok: true, id };
+    } catch (error) {
+      throw toStorageError(error, `Failed to delete trainer ${id}`);
+    }
+  }
+
+  async function listKurse() {
+    try {
+      return await listAll(pool, "SELECT * FROM kurse ORDER BY id", [], mapKursRow);
+    } catch (error) {
+      throw toStorageError(error, "Failed to list kurse");
+    }
+  }
+
+  async function getKurs(id) {
+    try {
+      const record = await fetchOne(pool, "SELECT * FROM kurse WHERE id = ?", [id], mapKursRow);
+      if (!record) {
+        throw new StorageError(STORAGE_ERROR_CODES.NOT_FOUND, `kurse ${id} not found`);
+      }
+      return record;
+    } catch (error) {
+      throw toStorageError(error, `Failed to get kurse ${id}`);
+    }
+  }
+
+  async function createKurs(data = {}) {
+    const record = normalizeKurs(data, null);
+    ensureKursOrt(record);
+    const params = [
+      record.id,
+      record.code,
+      record.title,
+      record.trainerName,
+      record.trainerId,
+      toJson(record.trainerIds),
+      record.date,
+      record.startTime,
+      record.endTime,
+      record.location,
+      record.ort,
+      record.status,
+      record.aboForm,
+      record.alterHund,
+      record.aufbauend,
+      record.capacity,
+      record.bookedCount,
+      record.level,
+      record.price,
+      record.notes,
+      record.inhaltTheorie,
+      record.inhaltPraxis,
+      toJson(record.hundIds),
+      toJson(record.kundenIds),
+      record.outlookEventId,
+      record.outlookDate,
+      record.outlookStart,
+      record.outlookEnd,
+      record.outlookLocation,
+      record.inventoryFlag ? 1 : 0,
+      record.portfolioFlag ? 1 : 0,
+      record.createdAt,
+      record.updatedAt,
+      record.schemaVersion,
+      record.version,
+    ];
+    try {
+      await pool.query(
+        "INSERT INTO kurse (id, code, title, trainer_name, trainer_id, trainer_ids, date, start_time, end_time, location, ort, status, abo_form, alter_hund, aufbauend, capacity, booked_count, level, price, notes, inhalt_theorie, inhalt_praxis, hund_ids, kunden_ids, outlook_event_id, outlook_date, outlook_start, outlook_end, outlook_location, inventory_flag, portfolio_flag, created_at, updated_at, schema_version, version) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        params
+      );
+      return record;
+    } catch (error) {
+      throw toStorageError(error, "Failed to create kurse");
+    }
+  }
+
+  async function updateKurs(id, patch = {}) {
+    try {
+      const existing = await fetchOne(pool, "SELECT * FROM kurse WHERE id = ?", [id], mapKursRow);
+      if (!existing) return null;
+      const record = normalizeKurs({ ...existing, ...patch, id: existing.id }, existing);
+      ensureKursOrt(record);
+      const params = [
+        record.code,
+        record.title,
+        record.trainerName,
+        record.trainerId,
+        toJson(record.trainerIds),
+        record.date,
+        record.startTime,
+        record.endTime,
+        record.location,
+        record.ort,
+        record.status,
+        record.aboForm,
+        record.alterHund,
+        record.aufbauend,
+        record.capacity,
+        record.bookedCount,
+        record.level,
+        record.price,
+        record.notes,
+        record.inhaltTheorie,
+        record.inhaltPraxis,
+        toJson(record.hundIds),
+        toJson(record.kundenIds),
+        record.outlookEventId,
+        record.outlookDate,
+        record.outlookStart,
+        record.outlookEnd,
+        record.outlookLocation,
+        record.inventoryFlag ? 1 : 0,
+        record.portfolioFlag ? 1 : 0,
+        record.updatedAt,
+        record.schemaVersion,
+        record.version,
+        record.id,
+      ];
+      await pool.query(
+        "UPDATE kurse SET code=?, title=?, trainer_name=?, trainer_id=?, trainer_ids=?, date=?, start_time=?, end_time=?, location=?, ort=?, status=?, abo_form=?, alter_hund=?, aufbauend=?, capacity=?, booked_count=?, level=?, price=?, notes=?, inhalt_theorie=?, inhalt_praxis=?, hund_ids=?, kunden_ids=?, outlook_event_id=?, outlook_date=?, outlook_start=?, outlook_end=?, outlook_location=?, inventory_flag=?, portfolio_flag=?, updated_at=?, schema_version=?, version=? WHERE id=?",
+        params
+      );
+      return record;
+    } catch (error) {
+      throw toStorageError(error, `Failed to update kurse ${id}`);
+    }
+  }
+
+  async function deleteKurs(id) {
+    try {
+      await ensureExists(pool, "kurse", id);
+      await pool.query("DELETE FROM kurse WHERE id = ?", [id]);
+      return { ok: true, id };
+    } catch (error) {
+      throw toStorageError(error, `Failed to delete kurse ${id}`);
+    }
+  }
+
+  async function listKalender() {
+    try {
+      return await listAll(pool, "SELECT * FROM kalender ORDER BY id", [], mapKalenderRow);
+    } catch (error) {
+      throw toStorageError(error, "Failed to list kalender");
+    }
+  }
+
+  async function getKalender(id) {
+    try {
+      const record = await fetchOne(
+        pool,
+        "SELECT * FROM kalender WHERE id = ?",
+        [id],
+        mapKalenderRow
+      );
+      if (!record) {
+        throw new StorageError(STORAGE_ERROR_CODES.NOT_FOUND, `kalender ${id} not found`);
+      }
+      return record;
+    } catch (error) {
+      throw toStorageError(error, `Failed to get kalender ${id}`);
+    }
+  }
+
+  async function createKalender(data = {}) {
+    const record = normalizeKalender(data, null);
+    const params = [
+      record.id,
+      record.code,
+      record.title,
+      record.start,
+      record.end,
+      record.location,
+      record.notes,
+      record.kursId,
+      record.trainerId,
+      record.createdAt,
+      record.updatedAt,
+      record.schemaVersion,
+      record.version,
+    ];
+    try {
+      await pool.query(
+        "INSERT INTO kalender (id, code, title, start_at, end_at, location, notes, kurs_id, trainer_id, created_at, updated_at, schema_version, version) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        params
+      );
+      return record;
+    } catch (error) {
+      throw toStorageError(error, "Failed to create kalender");
+    }
+  }
+
+  async function updateKalender(id, patch = {}) {
+    try {
+      const existing = await fetchOne(
+        pool,
+        "SELECT * FROM kalender WHERE id = ?",
+        [id],
+        mapKalenderRow
+      );
+      if (!existing) return null;
+      const record = normalizeKalender({ ...existing, ...patch, id: existing.id }, existing);
+      const params = [
+        record.code,
+        record.title,
+        record.start,
+        record.end,
+        record.location,
+        record.notes,
+        record.kursId,
+        record.trainerId,
+        record.updatedAt,
+        record.schemaVersion,
+        record.version,
+        record.id,
+      ];
+      await pool.query(
+        "UPDATE kalender SET code=?, title=?, start_at=?, end_at=?, location=?, notes=?, kurs_id=?, trainer_id=?, updated_at=?, schema_version=?, version=? WHERE id=?",
+        params
+      );
+      return record;
+    } catch (error) {
+      throw toStorageError(error, `Failed to update kalender ${id}`);
+    }
+  }
+
+  async function deleteKalender(id) {
+    try {
+      await ensureExists(pool, "kalender", id);
+      await pool.query("DELETE FROM kalender WHERE id = ?", [id]);
+      return { ok: true, id };
+    } catch (error) {
+      throw toStorageError(error, `Failed to delete kalender ${id}`);
+    }
+  }
+
+  async function listFinanzen() {
+    try {
+      return await listAll(pool, "SELECT * FROM zahlungen ORDER BY id", [], mapFinanzRow);
+    } catch (error) {
+      throw toStorageError(error, "Failed to list finanzen");
+    }
+  }
+
+  async function getFinanz(id) {
+    try {
+      const record = await fetchOne(
+        pool,
+        "SELECT * FROM zahlungen WHERE id = ?",
+        [id],
+        mapFinanzRow
+      );
+      if (!record) {
+        throw new StorageError(STORAGE_ERROR_CODES.NOT_FOUND, `finanzen ${id} not found`);
+      }
+      return record;
+    } catch (error) {
+      throw toStorageError(error, `Failed to get finanzen ${id}`);
+    }
+  }
+
+  async function createFinanz(data = {}) {
+    const record = normalizeFinanz(data, null);
+    const params = [
+      record.id,
+      record.code,
+      record.kundeId,
+      record.kursId,
+      record.trainerId,
+      record.typ,
+      record.betrag,
+      record.datum,
+      record.beschreibung,
+      record.leistungVon,
+      record.leistungBis,
+      record.waehrung,
+      record.nettoBetrag,
+      record.mwstSatz,
+      record.mwstBetrag,
+      record.mwstHinweis,
+      record.steuerbefreiungHinweis,
+      record.zahlungsfrist,
+      record.zahlungsbedingungen,
+      record.iban,
+      record.kontaktEmail,
+      record.kontaktTelefon,
+      record.issuerName,
+      record.issuerAdresse,
+      record.empfaengerName,
+      record.empfaengerAdresse,
+      record.qrPayload,
+      record.createdAt,
+      record.updatedAt,
+      record.schemaVersion,
+      record.version,
+    ];
+    try {
+      await pool.query(
+        "INSERT INTO zahlungen (id, code, kunde_id, kurs_id, trainer_id, typ, betrag, datum, beschreibung, leistung_von, leistung_bis, waehrung, netto_betrag, mwst_satz, mwst_betrag, mwst_hinweis, steuerbefreiung_hinweis, zahlungsfrist, zahlungsbedingungen, iban, kontakt_email, kontakt_telefon, issuer_name, issuer_adresse, empfaenger_name, empfaenger_adresse, qr_payload, created_at, updated_at, schema_version, version) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        params
+      );
+      return record;
+    } catch (error) {
+      throw toStorageError(error, "Failed to create finanzen");
+    }
+  }
+
+  async function updateFinanz(id, patch = {}) {
+    try {
+      const existing = await fetchOne(
+        pool,
+        "SELECT * FROM zahlungen WHERE id = ?",
+        [id],
+        mapFinanzRow
+      );
+      if (!existing) return null;
+      const record = normalizeFinanz({ ...existing, ...patch, id: existing.id }, existing);
+      const params = [
+        record.code,
+        record.kundeId,
+        record.kursId,
+        record.trainerId,
+        record.typ,
+        record.betrag,
+        record.datum,
+        record.beschreibung,
+        record.leistungVon,
+        record.leistungBis,
+        record.waehrung,
+        record.nettoBetrag,
+        record.mwstSatz,
+        record.mwstBetrag,
+        record.mwstHinweis,
+        record.steuerbefreiungHinweis,
+        record.zahlungsfrist,
+        record.zahlungsbedingungen,
+        record.iban,
+        record.kontaktEmail,
+        record.kontaktTelefon,
+        record.issuerName,
+        record.issuerAdresse,
+        record.empfaengerName,
+        record.empfaengerAdresse,
+        record.qrPayload,
+        record.updatedAt,
+        record.schemaVersion,
+        record.version,
+        record.id,
+      ];
+      await pool.query(
+        "UPDATE zahlungen SET code=?, kunde_id=?, kurs_id=?, trainer_id=?, typ=?, betrag=?, datum=?, beschreibung=?, leistung_von=?, leistung_bis=?, waehrung=?, netto_betrag=?, mwst_satz=?, mwst_betrag=?, mwst_hinweis=?, steuerbefreiung_hinweis=?, zahlungsfrist=?, zahlungsbedingungen=?, iban=?, kontakt_email=?, kontakt_telefon=?, issuer_name=?, issuer_adresse=?, empfaenger_name=?, empfaenger_adresse=?, qr_payload=?, updated_at=?, schema_version=?, version=? WHERE id=?",
+        params
+      );
+      return record;
+    } catch (error) {
+      throw toStorageError(error, `Failed to update finanzen ${id}`);
+    }
+  }
+
+  async function deleteFinanz(id) {
+    try {
+      await ensureExists(pool, "zahlungen", id);
+      await pool.query("DELETE FROM zahlungen WHERE id = ?", [id]);
+      return { ok: true, id };
+    } catch (error) {
+      throw toStorageError(error, `Failed to delete finanzen ${id}`);
+    }
+  }
+
+  async function listWaren() {
+    try {
+      return await listAll(pool, "SELECT * FROM waren ORDER BY id", [], mapWarenRow);
+    } catch (error) {
+      throw toStorageError(error, "Failed to list waren");
+    }
+  }
+
+  async function getWaren(id) {
+    try {
+      const record = await fetchOne(pool, "SELECT * FROM waren WHERE id = ?", [id], mapWarenRow);
+      if (!record) {
+        throw new StorageError(STORAGE_ERROR_CODES.NOT_FOUND, `waren ${id} not found`);
+      }
+      return record;
+    } catch (error) {
+      throw toStorageError(error, `Failed to get waren ${id}`);
+    }
+  }
+
+  async function createWaren(data = {}) {
+    const record = normalizeWaren(data, null);
+    const params = [
+      record.id,
+      record.code,
+      record.kundenId,
+      record.produktName,
+      record.menge,
+      record.preis,
+      record.datum,
+      record.beschreibung,
+      record.createdAt,
+      record.updatedAt,
+      record.schemaVersion,
+      record.version,
+    ];
+    try {
+      await pool.query(
+        "INSERT INTO waren (id, code, kunden_id, produkt_name, menge, preis, datum, beschreibung, created_at, updated_at, schema_version, version) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        params
+      );
+      return record;
+    } catch (error) {
+      throw toStorageError(error, "Failed to create waren");
+    }
+  }
+
+  async function updateWaren(id, patch = {}) {
+    try {
+      const existing = await fetchOne(pool, "SELECT * FROM waren WHERE id = ?", [id], mapWarenRow);
+      if (!existing) return null;
+      const record = normalizeWaren({ ...existing, ...patch, id: existing.id }, existing);
+      const params = [
+        record.code,
+        record.kundenId,
+        record.produktName,
+        record.menge,
+        record.preis,
+        record.datum,
+        record.beschreibung,
+        record.updatedAt,
+        record.schemaVersion,
+        record.version,
+        record.id,
+      ];
+      await pool.query(
+        "UPDATE waren SET code=?, kunden_id=?, produkt_name=?, menge=?, preis=?, datum=?, beschreibung=?, updated_at=?, schema_version=?, version=? WHERE id=?",
+        params
+      );
+      return record;
+    } catch (error) {
+      throw toStorageError(error, `Failed to update waren ${id}`);
+    }
+  }
+
+  async function deleteWaren(id) {
+    try {
+      await ensureExists(pool, "waren", id);
+      await pool.query("DELETE FROM waren WHERE id = ?", [id]);
+      return { ok: true, id };
+    } catch (error) {
+      throw toStorageError(error, `Failed to delete waren ${id}`);
+    }
+  }
+
+  async function listZertifikate() {
+    try {
+      return await listAll(pool, "SELECT * FROM zertifikate ORDER BY id", [], mapZertifikatRow);
+    } catch (error) {
+      throw toStorageError(error, "Failed to list zertifikate");
+    }
+  }
+
+  async function getZertifikat(id) {
+    try {
+      const record = await fetchOne(
+        pool,
+        "SELECT * FROM zertifikate WHERE id = ?",
+        [id],
+        mapZertifikatRow
+      );
+      if (!record) {
+        throw new StorageError(STORAGE_ERROR_CODES.NOT_FOUND, `zertifikate ${id} not found`);
+      }
+      return record;
+    } catch (error) {
+      throw toStorageError(error, `Failed to get zertifikate ${id}`);
+    }
+  }
+
+  async function createZertifikat(data = {}) {
+    const record = normalizeZertifikat(data, null);
+    ensureZertifikatRequired(record);
+    const params = [
+      record.id,
+      record.code,
+      record.kundeId,
+      record.hundId,
+      record.kursId,
+      record.kundeNameSnapshot,
+      record.kundeGeschlechtSnapshot,
+      record.hundNameSnapshot,
+      record.hundRasseSnapshot,
+      record.hundGeschlechtSnapshot,
+      record.kursTitelSnapshot,
+      record.kursDatumSnapshot,
+      record.kursOrtSnapshot,
+      record.kursInhaltTheorieSnapshot,
+      record.kursInhaltPraxisSnapshot,
+      record.ausstellungsdatum,
+      record.trainer1NameSnapshot,
+      record.trainer1TitelSnapshot,
+      record.trainer2NameSnapshot,
+      record.trainer2TitelSnapshot,
+      record.bemerkungen,
+      record.createdAt,
+      record.updatedAt,
+      record.schemaVersion,
+      record.version,
+    ];
+    try {
+      await pool.query(
+        "INSERT INTO zertifikate (id, code, kunde_id, hund_id, kurs_id, kunde_name_snapshot, kunde_geschlecht_snapshot, hund_name_snapshot, hund_rasse_snapshot, hund_geschlecht_snapshot, kurs_titel_snapshot, kurs_datum_snapshot, kurs_ort_snapshot, kurs_inhalt_theorie_snapshot, kurs_inhalt_praxis_snapshot, ausstellungsdatum, trainer1_name_snapshot, trainer1_titel_snapshot, trainer2_name_snapshot, trainer2_titel_snapshot, bemerkungen, created_at, updated_at, schema_version, version) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        params
+      );
+      return record;
+    } catch (error) {
+      throw toStorageError(error, "Failed to create zertifikate");
+    }
+  }
+
+  async function updateZertifikat(id, patch = {}) {
+    try {
+      const existing = await fetchOne(
+        pool,
+        "SELECT * FROM zertifikate WHERE id = ?",
+        [id],
+        mapZertifikatRow
+      );
+      if (!existing) return null;
+      const record = normalizeZertifikat({ ...existing, ...patch, id: existing.id }, existing);
+      ensureZertifikatRequired(record);
+      const params = [
+        record.code,
+        record.kundeId,
+        record.hundId,
+        record.kursId,
+        record.kundeNameSnapshot,
+        record.kundeGeschlechtSnapshot,
+        record.hundNameSnapshot,
+        record.hundRasseSnapshot,
+        record.hundGeschlechtSnapshot,
+        record.kursTitelSnapshot,
+        record.kursDatumSnapshot,
+        record.kursOrtSnapshot,
+        record.kursInhaltTheorieSnapshot,
+        record.kursInhaltPraxisSnapshot,
+        record.ausstellungsdatum,
+        record.trainer1NameSnapshot,
+        record.trainer1TitelSnapshot,
+        record.trainer2NameSnapshot,
+        record.trainer2TitelSnapshot,
+        record.bemerkungen,
+        record.updatedAt,
+        record.schemaVersion,
+        record.version,
+        record.id,
+      ];
+      await pool.query(
+        "UPDATE zertifikate SET code=?, kunde_id=?, hund_id=?, kurs_id=?, kunde_name_snapshot=?, kunde_geschlecht_snapshot=?, hund_name_snapshot=?, hund_rasse_snapshot=?, hund_geschlecht_snapshot=?, kurs_titel_snapshot=?, kurs_datum_snapshot=?, kurs_ort_snapshot=?, kurs_inhalt_theorie_snapshot=?, kurs_inhalt_praxis_snapshot=?, ausstellungsdatum=?, trainer1_name_snapshot=?, trainer1_titel_snapshot=?, trainer2_name_snapshot=?, trainer2_titel_snapshot=?, bemerkungen=?, updated_at=?, schema_version=?, version=? WHERE id=?",
+        params
+      );
+      return record;
+    } catch (error) {
+      throw toStorageError(error, `Failed to update zertifikate ${id}`);
+    }
+  }
+
+  async function deleteZertifikat(id) {
+    try {
+      await ensureExists(pool, "zertifikate", id);
+      await pool.query("DELETE FROM zertifikate WHERE id = ?", [id]);
+      return { ok: true, id };
+    } catch (error) {
+      throw toStorageError(error, `Failed to delete zertifikate ${id}`);
+    }
+  }
+
+  return {
+    kunden: {
+      list: listKunden,
+      get: getKunde,
+      create: createKunde,
+      update: (arg) => updateKunde(arg?.id || arg, arg?.data || arg?.payload || arg?.data || arg),
+      delete: deleteKunde,
+    },
+    hunde: {
+      list: listHunde,
+      get: getHund,
+      create: createHund,
+      update: (arg) => updateHund(arg?.id || arg, arg?.data || arg?.payload || arg?.data || arg),
+      delete: deleteHund,
+    },
+    trainer: {
+      list: listTrainer,
+      get: getTrainer,
+      create: createTrainer,
+      update: (arg) => updateTrainer(arg?.id || arg, arg?.data || arg?.payload || arg?.data || arg),
+      delete: deleteTrainer,
+    },
+    kurse: {
+      list: listKurse,
+      get: getKurs,
+      create: createKurs,
+      update: (arg) => updateKurs(arg?.id || arg, arg?.data || arg?.payload || arg?.data || arg),
+      delete: deleteKurs,
+    },
+    kalender: {
+      list: listKalender,
+      get: getKalender,
+      create: createKalender,
+      update: (arg) =>
+        updateKalender(arg?.id || arg, arg?.data || arg?.payload || arg?.data || arg),
+      delete: deleteKalender,
+    },
+    finanzen: {
+      list: listFinanzen,
+      get: getFinanz,
+      create: createFinanz,
+      update: (arg) => updateFinanz(arg?.id || arg, arg?.data || arg?.payload || arg?.data || arg),
+      delete: deleteFinanz,
+    },
+    waren: {
+      list: listWaren,
+      get: getWaren,
+      create: createWaren,
+      update: (arg) => updateWaren(arg?.id || arg, arg?.data || arg?.payload || arg?.data || arg),
+      delete: deleteWaren,
+    },
+    zertifikate: {
+      list: listZertifikate,
+      get: getZertifikat,
+      create: createZertifikat,
+      update: (arg) =>
+        updateZertifikat(arg?.id || arg, arg?.data || arg?.payload || arg?.data || arg),
+      delete: deleteZertifikat,
+    },
+    pool,
+  };
+}
