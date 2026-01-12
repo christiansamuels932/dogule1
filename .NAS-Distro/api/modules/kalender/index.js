@@ -82,12 +82,10 @@ async function renderDayView(section, dateObj) {
   const toolbar = buildDayToolbar(dateObj);
   section.appendChild(toolbar);
 
-  const h1 = document.createElement("h1");
-  h1.textContent = "Kalender – Tag";
   const h2 = document.createElement("h2");
   h2.textContent = formatGermanDate(dateObj);
   h2.className = "kalender-subhead";
-  section.append(h1, h2);
+  section.append(h2);
 
   const gridWrapper = document.createElement("div");
   gridWrapper.className = "kalender-grid-wrapper";
@@ -374,14 +372,11 @@ async function renderWeekView(section, mondayDate) {
   const toolbar = buildWeekToolbar(mondayDate);
   section.appendChild(toolbar);
 
-  const h1 = document.createElement("h1");
-  h1.textContent = "Kalender – Woche";
-
   const weekRange = buildWeekRangeLabel(mondayDate);
   const h2 = document.createElement("h2");
   h2.className = "kalender-subhead";
   h2.textContent = weekRange;
-  section.append(h1, h2);
+  section.append(h2);
 
   const wrapper = document.createElement("div");
   wrapper.className = "kalender-grid-wrapper";
@@ -535,12 +530,10 @@ async function renderMonthView(section, year, month) {
   const toolbar = buildMonthToolbar(year, month);
   section.appendChild(toolbar);
 
-  const h1 = document.createElement("h1");
-  h1.textContent = "Kalender – Monat";
   const h2 = document.createElement("h2");
   h2.className = "kalender-subhead";
   h2.textContent = formatMonthLabel(year, month);
-  section.append(h1, h2);
+  section.append(h2);
 
   const grid = document.createElement("div");
   grid.className = "kalender-month-grid";
@@ -761,12 +754,10 @@ async function renderEventDetail(section, eventId) {
   const toolbar = buildEventToolbar();
   section.appendChild(toolbar);
 
-  const h1 = document.createElement("h1");
-  h1.textContent = "Kalender – Ereignis";
   let h2 = document.createElement("h2");
   h2.className = "kalender-subhead";
   h2.textContent = "Lade Ereignis...";
-  section.append(h1, h2);
+  section.append(h2);
 
   try {
     const event = await getKalenderEvent(eventId);
@@ -986,12 +977,10 @@ async function renderYearView(section, year) {
   const toolbar = buildYearToolbar(year);
   section.appendChild(toolbar);
 
-  const h1 = document.createElement("h1");
-  h1.textContent = "Kalender – Jahr";
   const h2 = document.createElement("h2");
   h2.className = "kalender-subhead";
   h2.textContent = String(year);
-  section.append(h1, h2);
+  section.append(h2);
 
   const grid = document.createElement("div");
   grid.className = "kalender-year-grid";

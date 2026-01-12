@@ -36,7 +36,7 @@ describe("authService", () => {
   });
 
   it("logs in with valid credentials and returns tokens", async () => {
-    const result = await service.login("admin", "adminpass", { requestId: "req-1" });
+    const result = await service.login("Rifo", "rifo6087", { requestId: "req-1" });
     expect(result.user.role).toBe("admin");
     expect(result.accessToken).toBeTruthy();
     expect(result.refreshToken).toBeTruthy();
@@ -50,21 +50,21 @@ describe("authService", () => {
       lockout: { maxAttempts: 3, windowMs: 5 * 60 * 1000, lockoutMs: 15 * 60 * 1000 },
     });
     service = createAuthService({ audit: audit.spy, config: cfg });
-    await expect(service.login("admin", "wrong", {})).rejects.toHaveProperty(
+    await expect(service.login("Rifo", "wrong", {})).rejects.toHaveProperty(
       "code",
       AUTH_ERROR_CODES.INVALID_CREDENTIALS
     );
-    await expect(service.login("admin", "wrong", {})).rejects.toHaveProperty(
+    await expect(service.login("Rifo", "wrong", {})).rejects.toHaveProperty(
       "code",
       AUTH_ERROR_CODES.INVALID_CREDENTIALS
     );
-    await expect(service.login("admin", "wrong", {})).rejects.toHaveProperty(
+    await expect(service.login("Rifo", "wrong", {})).rejects.toHaveProperty(
       "code",
       AUTH_ERROR_CODES.INVALID_CREDENTIALS
     );
-    const lock = service._internal.failures.get("admin");
+    const lock = service._internal.failures.get("Rifo");
     expect(lock.lockoutUntil).toBeGreaterThan(FIXED_NOW);
-    await expect(service.login("admin", "adminpass", {})).rejects.toHaveProperty(
+    await expect(service.login("Rifo", "rifo6087", {})).rejects.toHaveProperty(
       "code",
       AUTH_ERROR_CODES.LOCKED_OUT
     );
@@ -93,7 +93,7 @@ describe("authService", () => {
   });
 
   it("denies validateAccessToken for expired tokens", async () => {
-    const login = await service.login("admin", "adminpass", {});
+    const login = await service.login("Rifo", "rifo6087", {});
     now.mockReturnValue(FIXED_NOW + 16 * 60 * 1000); // beyond access ttl
     await expect(service.validateAccessToken(login.accessToken)).rejects.toHaveProperty(
       "code",
@@ -106,7 +106,7 @@ describe("authService", () => {
       audit: audit.spy,
       config: { ...baseConfig(), enabled: false },
     });
-    await expect(service.login("admin", "adminpass")).rejects.toHaveProperty(
+    await expect(service.login("Rifo", "rifo6087")).rejects.toHaveProperty(
       "code",
       AUTH_ERROR_CODES.DISABLED
     );
@@ -121,7 +121,7 @@ describe("authService", () => {
         getUserById: () => ({ ...getSeedUsers()[0], role: "admin", requires2fa: false }),
       },
     });
-    await expect(service.login("admin", "adminpass")).rejects.toHaveProperty(
+    await expect(service.login("Rifo", "rifo6087")).rejects.toHaveProperty(
       "code",
       AUTH_ERROR_CODES.REQUIRE_2FA
     );

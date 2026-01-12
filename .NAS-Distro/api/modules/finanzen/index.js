@@ -15,7 +15,6 @@ import {
   createCard,
   createEmptyState,
   createNotice,
-  createSectionHeader,
   createFormRow,
 } from "../shared/components/components.js";
 import { listKurse } from "../shared/api/kurse.js";
@@ -48,9 +47,6 @@ export function initModule(container, routeInfo = {}) {
     const section = document.createElement("section");
     section.className = "dogule-section finanzen-section";
     container.appendChild(section);
-
-    const heading = createMainHeading("Rechnungen");
-    section.appendChild(heading);
 
     const contentHost = document.createElement("div");
     contentHost.setAttribute("data-fin-content", "host");
@@ -123,30 +119,6 @@ function parseRouteSegments(segments = []) {
   }
 
   return { mode: "detail", detailId: first || null, filters: {} };
-}
-
-function createMainHeading(title = "") {
-  const fragment = createSectionHeader({
-    title,
-    subtitle: "",
-    level: 1,
-  });
-  const sectionEl = fragment.querySelector(".ui-section") || fragment.firstElementChild;
-  const originalTitle = sectionEl?.querySelector(".ui-section__title");
-  const h1 = document.createElement("h1");
-  h1.className = originalTitle?.className || "ui-section__title";
-  h1.textContent = title || "";
-  h1.tabIndex = -1;
-  if (originalTitle?.id) {
-    h1.id = originalTitle.id;
-  }
-  if (originalTitle) {
-    originalTitle.replaceWith(h1);
-  } else if (sectionEl) {
-    const header = sectionEl.querySelector(".ui-section__header") || sectionEl;
-    header.prepend(h1);
-  }
-  return sectionEl || fragment;
 }
 
 function renderSummaryCard(target, finanzen = []) {

@@ -45,11 +45,6 @@ export async function initModule(container, routeInfo = {}) {
   const section = document.createElement("section");
   section.className = "dogule-section kommunikation-section";
 
-  const heading = document.createElement("h1");
-  heading.textContent = "Kommunikation";
-  heading.tabIndex = -1;
-  section.appendChild(heading);
-
   const tabs = renderTabs(tab);
   section.appendChild(tabs);
 

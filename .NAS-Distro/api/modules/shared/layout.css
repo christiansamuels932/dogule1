@@ -8,10 +8,17 @@
 .dogule-footer {
   background-color: var(--color-brand-900);
   color: var(--color-paper);
-  padding: 1.1rem 1.5rem;
 }
 
 .dogule-header {
+  padding: 0;
+}
+
+.dogule-header-inner {
+  max-width: 1100px;
+  width: min(1100px, 100%);
+  margin: 0 auto;
+  padding: 1.1rem 1.5rem;
   display: flex;
   flex-direction: column;
   gap: 0.85rem;
@@ -19,15 +26,36 @@
 
 .dogule-header-bar {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 1rem;
   flex-wrap: wrap;
 }
 
-.dogule-header-title {
-  font-size: 1.35rem;
-  font-weight: 600;
+.dogule-brand-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.55rem 0.9rem;
+  background: rgba(255, 253, 246, 0.12);
+  border: 1px solid rgba(255, 253, 246, 0.28);
+  border-radius: 14px;
+  box-shadow: 0 10px 22px rgba(20, 24, 38, 0.25);
+}
+
+.dogule-brand-logo {
+  height: 48px;
+  width: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.35));
+}
+
+.dogule-brand-text {
+  font-family: var(--font-heading);
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--color-paper);
 }
 
 .dogule-auth {
@@ -35,7 +63,6 @@
   align-items: center;
   gap: 0.5rem;
   font-size: 0.9rem;
-  margin-top: -0.35rem;
 }
 
 .dogule-auth__user {
@@ -61,11 +88,15 @@
   background: rgba(255, 253, 246, 0.2);
 }
 
+.dogule-nav {
+  padding-left: 0.6rem;
+}
+
 .dogule-nav a {
   margin-right: 0.75rem;
   color: var(--color-paper);
   text-decoration: none;
-  padding: 0.3rem 0.6rem;
+  padding: 0.3rem 0.5rem;
   border-radius: 999px;
   transition:
     background 150ms ease,
@@ -92,6 +123,7 @@
 }
 
 .dogule-footer {
+  padding: 1.1rem 1.5rem;
   text-align: center;
   font-size: 0.9rem;
 }

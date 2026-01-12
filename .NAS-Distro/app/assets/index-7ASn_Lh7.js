@@ -1,0 +1,1326 @@
+import { e as w, c as Ge, a as Le, b as _, d as Z, f as Q } from "./components-CDhMLcLx.js";
+import { g as Ie } from "./index-Cx63mBGt.js";
+import { g as He, l as Ue, t as Ve, u as Fe, a as xe } from "./client-DHiLuc54.js";
+const oe = { STORAGE_ERROR: "STORAGE_ERROR", STORAGE_ROOT_MISSING: "STORAGE_ROOT_MISSING" };
+class Oe extends Error {
+  constructor(t, n, a = {}) {
+    (super(n),
+      (this.name = "StorageError"),
+      (this.code = t),
+      a.cause && (this.cause = a.cause),
+      a.details !== void 0 && (this.details = a.details));
+  }
+}
+const Ke = "/api/kommunikation/groupchat";
+function z(e, t, n) {
+  const a = new Error(t || e);
+  return ((a.code = e), n && (a.details = n), a);
+}
+function Ze() {
+  var i;
+  if (typeof window > "u") return {};
+  const e = window.__DOGULE_ACTOR__ || {},
+    t = (i = window.__DOGULE_AUTHZ__) == null ? void 0 : i.allowedActions,
+    n = {},
+    a = Ie();
+  return (
+    a != null && a.accessToken && (n.Authorization = `Bearer ${a.accessToken}`),
+    e.id && (n["x-dogule-actor-id"] = e.id),
+    e.role && (n["x-dogule-actor-role"] = e.role),
+    Array.isArray(t) && t.length && (n["x-dogule-authz"] = t.join(",")),
+    n
+  );
+}
+async function se(e, t = {}) {
+  const n = await fetch(`${Ke}${e}`, {
+      method: t.method || "GET",
+      headers: { "Content-Type": "application/json", ...Ze(), ...(t.headers || {}) },
+      body: t.body ? JSON.stringify(t.body) : void 0,
+    }),
+    a = await n.text(),
+    i = a ? JSON.parse(a) : null;
+  if (n.status >= 200 && n.status < 300) return i;
+  throw n.status === 429
+    ? z("RATE_LIMITED", "rate_limited", {
+        retryAfterSeconds:
+          Number(n.headers.get("retry-after") || (i == null ? void 0 : i.retryAfterSeconds) || 0) ||
+          1,
+      })
+    : n.status === 403
+      ? z("DENIED", "denied")
+      : n.status === 400
+        ? z("INVALID_INPUT", (i == null ? void 0 : i.message) || "invalid_input")
+        : z("SERVER_ERROR", (i == null ? void 0 : i.message) || "server_error");
+}
+function ze(e) {
+  return e ? (typeof e == "string" ? e : e.body || null) : null;
+}
+async function Me({ limit: e, cursor: t } = {}) {
+  const n = new URLSearchParams();
+  return (
+    e && n.set("limit", String(e)),
+    t && n.set("cursor", t),
+    await se(`/messages?${n.toString()}`, { method: "GET" })
+  );
+}
+async function De({ body: e, clientNonce: t }) {
+  const n = ze(e);
+  return se("/messages", { method: "POST", body: { body: n, clientNonce: t } });
+}
+async function We({ messageId: e }) {
+  return se("/read-marker", { method: "POST", body: { messageId: e } });
+}
+const Je = "/api/kommunikation/infochannel";
+function H(e, t, n) {
+  const a = new Error(t || e);
+  return ((a.code = e), n && (a.details = n), a);
+}
+function Xe() {
+  var i;
+  if (typeof window > "u") return {};
+  const e = window.__DOGULE_ACTOR__ || {},
+    t = (i = window.__DOGULE_AUTHZ__) == null ? void 0 : i.allowedActions,
+    n = {},
+    a = Ie();
+  return (
+    a != null && a.accessToken && (n.Authorization = `Bearer ${a.accessToken}`),
+    e.id && (n["x-dogule-actor-id"] = e.id),
+    e.role && (n["x-dogule-actor-role"] = e.role),
+    Array.isArray(t) && t.length && (n["x-dogule-authz"] = t.join(",")),
+    n
+  );
+}
+async function Y(e, t = {}) {
+  const n = await fetch(`${Je}${e}`, {
+      method: t.method || "GET",
+      headers: { "Content-Type": "application/json", ...Xe(), ...(t.headers || {}) },
+      body: t.body ? JSON.stringify(t.body) : void 0,
+    }),
+    a = await n.text(),
+    i = a ? JSON.parse(a) : null;
+  if (n.status >= 200 && n.status < 300) return i;
+  throw n.status === 429
+    ? H("RATE_LIMITED", "rate_limited", {
+        retryAfterSeconds:
+          Number(n.headers.get("retry-after") || (i == null ? void 0 : i.retryAfterSeconds) || 0) ||
+          1,
+      })
+    : n.status === 403
+      ? H("DENIED", "denied")
+      : n.status === 404
+        ? H("NOT_FOUND", "not_found")
+        : n.status === 400
+          ? H("INVALID_INPUT", (i == null ? void 0 : i.message) || "invalid_input")
+          : H("SERVER_ERROR", (i == null ? void 0 : i.message) || "server_error");
+}
+async function Qe({ limit: e, cursor: t } = {}) {
+  const n = new URLSearchParams();
+  (e && n.set("limit", String(e)), t && n.set("cursor", t));
+  const a = n.toString() ? `/notices?${n.toString()}` : "/notices";
+  return Y(a, { method: "GET" });
+}
+async function Ye({ title: e, body: t, slaHours: n } = {}) {
+  return Y("/notices", { method: "POST", body: { title: e, body: t, slaHours: n } });
+}
+async function je({ id: e }) {
+  if (!e) throw H("INVALID_INPUT", "notice id required");
+  return Y(`/notices/${e}`, { method: "GET" });
+}
+async function et({ id: e }) {
+  if (!e) throw H("INVALID_INPUT", "notice id required");
+  return Y(`/notices/${e}/confirm`, { method: "POST" });
+}
+const X = [
+    { id: "chats", label: "Chats", actionId: "kommunikation.chat.view" },
+    { id: "infochannel", label: "Infochannel", actionId: "kommunikation.infochannel.view" },
+    { id: "system", label: "System", actionId: "kommunikation.system.view" },
+  ],
+  tt = 1,
+  nt = 50,
+  Re = {
+    infochannel: [
+      { id: "info-1", title: "Info: Feiertage", snippet: "Betriebsferien nächste Woche." },
+    ],
+  },
+  p = { messages: [], nextCursor: null, unreadCount: 0, isLoading: !1, error: null };
+async function Lt(e, t = {}) {
+  if (!e) return;
+  vt(e);
+  const { tab: n, detailId: a } = at(t == null ? void 0 : t.segments),
+    i = qe(),
+    o = document.createElement("section");
+  o.className = "dogule-section kommunikation-section";
+  const r = it(n);
+  o.appendChild(r);
+  const s = document.createElement("div");
+  ((s.className = "kommunikation-content"),
+    s.setAttribute("data-tab", n),
+    o.appendChild(s),
+    e.appendChild(o),
+    _t(o),
+    await ot({ host: s, tab: n, detailId: a, actor: i }));
+}
+function at(e = []) {
+  const t = Array.isArray(e) ? e.filter(Boolean) : [],
+    n = t[0] || "chats",
+    a = X.some((o) => o.id === n) ? n : "chats",
+    i = t.length > 1 ? t.slice(1).join("/") : null;
+  return { tab: a, detailId: i };
+}
+function it(e) {
+  const t = document.createElement("nav");
+  return (
+    (t.className = "kommunikation-tabs"),
+    t.setAttribute("aria-label", "Kommunikation Tabs"),
+    X.forEach((n) => {
+      const a = document.createElement("button");
+      ((a.type = "button"),
+        (a.className = "kommunikation-tab"),
+        (a.textContent = n.label),
+        a.setAttribute("data-tab", n.id),
+        n.id === e &&
+          (a.classList.add("kommunikation-tab--active"), a.setAttribute("aria-current", "page")),
+        a.addEventListener("click", () => {
+          n.id !== e && (window.location.hash = `#/kommunikation/${n.id}`);
+        }),
+        t.appendChild(a));
+    }),
+    t
+  );
+}
+async function ot({ host: e, tab: t, detailId: n, actor: a }) {
+  if (!e) return;
+  rt(e);
+  const i = X.find((r) => r.id === t) || X[0],
+    o = le(i.actionId, a);
+  if (
+    (ie({
+      actionId: i.actionId,
+      actor: a,
+      targetId: n || "list",
+      result: o ? "pending" : "denied",
+    }),
+    !o)
+  ) {
+    st(e);
+    return;
+  }
+  try {
+    if (t === "chats") await mt(e, n, a);
+    else if (t === "infochannel") await pt(e, n, a);
+    else if (t === "system") await ht(e, a);
+    else {
+      const r = await wt(t);
+      !r || r.length === 0 ? ct(e, t) : n ? ut(e, t, n, r) : lt(e, t, r);
+    }
+    ie({ actionId: i.actionId, actor: a, targetId: n || "list", result: "success" });
+  } catch (r) {
+    (I(r) ? de(e) : dt(e),
+      ie({
+        actionId: i.actionId,
+        actor: a,
+        targetId: n || "list",
+        result: "error",
+        metaCode: I(r) ? "OFFLINE" : "LOAD_ERROR",
+      }));
+  }
+}
+function rt(e) {
+  ((e.innerHTML = ""), e.appendChild(w("Lade Ansicht...", { variant: "info", role: "status" })));
+}
+function st(e) {
+  ((e.innerHTML = ""),
+    e.appendChild(
+      w("Kein Zugriff. Bitte berechtigten Zugang anfordern.", { variant: "warn", role: "alert" })
+    ));
+}
+function de(e) {
+  ((e.innerHTML = ""),
+    e.appendChild(
+      w("Offline. Verbindung zur Ablage derzeit nicht möglich.", { variant: "warn", role: "alert" })
+    ));
+}
+function dt(e) {
+  ((e.innerHTML = ""),
+    e.appendChild(w("Fehler beim Laden der Kommunikation.", { variant: "warn", role: "alert" })));
+}
+function ct(e, t) {
+  e.innerHTML = "";
+  const n =
+    t === "chats"
+      ? "Keine Chats vorhanden."
+      : t === "infochannel"
+        ? "Keine Infochannel-Meldungen vorhanden."
+        : "Keine Systemmeldungen vorhanden.";
+  e.appendChild(Q("Leer", n));
+}
+function lt(e, t, n) {
+  e.innerHTML = "";
+  const a = document.createElement("div");
+  ((a.className = "kommunikation-list"),
+    n.forEach((i) => {
+      const o = document.createElement("article");
+      o.className = "kommunikation-card";
+      const r = document.createElement("h3");
+      ((r.className = "kommunikation-card__title"), (r.textContent = i.title || "Eintrag"));
+      const s = document.createElement("p");
+      ((s.className = "kommunikation-card__snippet"),
+        (s.textContent = i.snippet || ""),
+        o.appendChild(r),
+        o.appendChild(s),
+        o.setAttribute("tabindex", "0"),
+        o.addEventListener("click", () => {
+          window.location.hash = `#/kommunikation/${t}/${i.id}`;
+        }),
+        o.addEventListener("keypress", (d) => {
+          (d.key === "Enter" || d.key === " ") &&
+            (d.preventDefault(), (window.location.hash = `#/kommunikation/${t}/${i.id}`));
+        }),
+        a.appendChild(o));
+    }),
+    e.appendChild(a));
+}
+function ut(e, t, n, a) {
+  e.innerHTML = "";
+  const i = a.find((l) => l.id === n) || null;
+  if (!i) {
+    e.appendChild(
+      w("Eintrag nicht gefunden oder nicht verfügbar.", { variant: "warn", role: "alert" })
+    );
+    return;
+  }
+  const o = document.createElement("div");
+  o.className = "kommunikation-detail";
+  const r = document.createElement("h3");
+  r.textContent = i.title || "Details";
+  const s = document.createElement("p");
+  ((s.className = "kommunikation-detail__meta"),
+    (s.textContent = i.snippet || "Keine weiteren Details."));
+  const d = document.createElement("button");
+  ((d.type = "button"),
+    (d.className = "ui-btn ui-btn--secondary"),
+    (d.textContent = "Zurück"),
+    d.addEventListener("click", () => {
+      window.location.hash = `#/kommunikation/${t}`;
+    }),
+    o.appendChild(r),
+    o.appendChild(s),
+    o.appendChild(d),
+    e.appendChild(o));
+}
+async function mt(e, t, n) {
+  try {
+    await j("chats");
+  } catch (a) {
+    throw (de(e), a);
+  }
+  if (!t) {
+    await gt(e);
+    return;
+  }
+  await bt(e, n);
+}
+async function pt(e, t, n) {
+  try {
+    await j("infochannel");
+  } catch (a) {
+    throw (de(e), a);
+  }
+  if (!t) {
+    await $e(e, n);
+    return;
+  }
+  await ft(e, t, n);
+}
+async function $e(e, t) {
+  e.innerHTML = "";
+  const n = document.createElement("div");
+  n.className = "kommunikation-infochannel";
+  const a = document.createElement("div");
+  if (((a.className = "kommunikation-list"), le("kommunikation.infochannel.publish", t))) {
+    const i = document.createElement("form");
+    i.className = "infochannel-compose";
+    const o = _({
+        id: "infochannel-title",
+        label: "Titel",
+        required: !0,
+        placeholder: "Kurze Zusammenfassung",
+      }),
+      r = _({
+        id: "infochannel-body",
+        label: "Nachricht",
+        control: "textarea",
+        required: !0,
+        placeholder: "Nachricht an alle Trainerinnen und Trainer",
+      }),
+      s = _({
+        id: "infochannel-sla",
+        label: "SLA (Stunden)",
+        type: "number",
+        value: "48",
+        describedByText: "Frist für Bestätigung der Meldung.",
+      }),
+      d = r.querySelector("textarea");
+    d && (d.rows = 5);
+    const l = s.querySelector("input");
+    l && ((l.min = "1"), (l.step = "1"));
+    const m = document.createElement("div");
+    m.className = "infochannel-compose__actions";
+    const c = document.createElement("span");
+    c.className = "infochannel-compose__status";
+    const h = document.createElement("button");
+    ((h.type = "submit"),
+      (h.className = "ui-btn"),
+      (h.textContent = "Meldung veröffentlichen"),
+      m.appendChild(c),
+      m.appendChild(h),
+      i.appendChild(o),
+      i.appendChild(r),
+      i.appendChild(s),
+      i.appendChild(m),
+      i.addEventListener("submit", async (S) => {
+        var C, f, E;
+        (S.preventDefault(), (c.textContent = "Veröffentlichen..."), (h.disabled = !0));
+        const k = ((C = i.querySelector("#infochannel-title")) == null ? void 0 : C.value) || "",
+          y = ((f = i.querySelector("#infochannel-body")) == null ? void 0 : f.value) || "",
+          u = ((E = i.querySelector("#infochannel-sla")) == null ? void 0 : E.value) || "";
+        try {
+          (await Ye({ title: k, body: y, slaHours: u }),
+            (c.textContent = "Meldung veröffentlicht."),
+            i.reset());
+          const b = i.querySelector("#infochannel-sla");
+          (b && (b.value = "48"), await $e(e, t));
+        } catch (b) {
+          b.code === "RATE_LIMITED"
+            ? (c.textContent = "Zu viele Meldungen – bitte warten.")
+            : b.code === "INVALID_INPUT"
+              ? (c.textContent = "Bitte Titel und Nachricht prüfen.")
+              : I(b)
+                ? (c.textContent = "Offline. Veröffentlichung fehlgeschlagen.")
+                : (c.textContent = "Veröffentlichen fehlgeschlagen.");
+        } finally {
+          h.disabled = !1;
+        }
+      }),
+      n.appendChild(i));
+  }
+  (a.appendChild(w("Infochannel wird geladen...", { variant: "info" })),
+    n.appendChild(a),
+    e.appendChild(n));
+  try {
+    const i = await Qe();
+    a.innerHTML = "";
+    const o = (i == null ? void 0 : i.notices) || [];
+    if (!o.length) {
+      a.appendChild(Q("Leer", "Keine Infochannel-Meldungen vorhanden."));
+      return;
+    }
+    o.forEach((r) => {
+      var S;
+      const s = document.createElement("article");
+      s.className = "kommunikation-card";
+      const d = document.createElement("h3");
+      ((d.className = "kommunikation-card__title"), (d.textContent = r.title || "Infochannel"));
+      const l = document.createElement("p");
+      ((l.className = "kommunikation-card__snippet"), (l.textContent = Be(r.body)));
+      const m = document.createElement("div");
+      m.className = "kommunikation-card__meta";
+      const c = document.createElement("time");
+      ((c.dateTime = r.createdAt || ""), (c.textContent = r.createdAt ? A(r.createdAt) : ""));
+      const h = document.createElement("span");
+      ((h.className = "kommunikation-card__status"),
+        (h.textContent = Et(r, t)),
+        r.viewerOverdue || r.overdueCount > 0
+          ? h.classList.add("kommunikation-card__status--warn")
+          : (((S = r.viewerConfirmation) != null && S.late) || r.lateCount > 0) &&
+            h.classList.add("kommunikation-card__status--late"),
+        m.appendChild(c),
+        m.appendChild(h),
+        s.appendChild(d),
+        s.appendChild(l),
+        s.appendChild(m),
+        s.setAttribute("tabindex", "0"),
+        s.addEventListener("click", () => {
+          window.location.hash = `#/kommunikation/infochannel/${r.id}`;
+        }),
+        s.addEventListener("keypress", (k) => {
+          (k.key === "Enter" || k.key === " ") &&
+            (k.preventDefault(), (window.location.hash = `#/kommunikation/infochannel/${r.id}`));
+        }),
+        a.appendChild(s));
+    });
+  } catch (i) {
+    ((a.innerHTML = ""),
+      a.appendChild(
+        w(I(i) ? "Offline. Laden fehlgeschlagen." : "Fehler beim Laden.", {
+          variant: "warn",
+          role: "alert",
+        })
+      ));
+  }
+}
+async function ft(e, t, n) {
+  e.innerHTML = "";
+  const a = document.createElement("div");
+  a.className = "kommunikation-chat-header";
+  const i = document.createElement("button");
+  ((i.type = "button"),
+    (i.className = "kommunikation-back"),
+    (i.textContent = "Zurück"),
+    i.addEventListener("click", () => {
+      window.location.hash = "#/kommunikation/infochannel";
+    }));
+  const o = document.createElement("h2");
+  ((o.textContent = "Infochannel"), a.appendChild(i), a.appendChild(o), e.appendChild(a));
+  const r = document.createElement("div");
+  ((r.className = "kommunikation-detail infochannel-detail"),
+    r.appendChild(w("Meldung wird geladen...", { variant: "info" })),
+    e.appendChild(r));
+  try {
+    const s = await je({ id: t }),
+      d = s.notice || {};
+    r.innerHTML = "";
+    const l = document.createElement("h3");
+    l.textContent = d.title || "Infochannel";
+    const m = document.createElement("p");
+    ((m.className = "infochannel-detail__body"), (m.textContent = d.body || ""));
+    const c = document.createElement("div");
+    c.className = "infochannel-detail__meta";
+    const h = document.createElement("span");
+    h.textContent = d.createdAt ? `Veröffentlicht: ${A(d.createdAt)}` : "Veröffentlicht";
+    const S = document.createElement("span");
+    ((S.textContent = d.slaDueAt ? `SLA bis: ${A(d.slaDueAt)}` : "SLA"),
+      c.appendChild(h),
+      c.appendChild(S));
+    const k = document.createElement("div");
+    if (
+      ((k.className = "infochannel-detail__summary"),
+      (k.textContent = `Bestätigt ${d.confirmedCount || 0}/${d.targetCount || 0}`),
+      r.appendChild(l),
+      r.appendChild(m),
+      r.appendChild(c),
+      r.appendChild(k),
+      n.role === "trainer")
+    ) {
+      const y = document.createElement("div");
+      y.className = "infochannel-confirm";
+      const u = document.createElement("span");
+      u.className = "infochannel-confirm__status";
+      const C = s.confirmation;
+      if (
+        (C
+          ? (u.textContent = C.late
+              ? `Bestätigt (verspätet) · ${A(C.confirmedAt)}`
+              : `Bestätigt · ${A(C.confirmedAt)}`)
+          : s.overdue
+            ? (u.textContent = "SLA überschritten – Bestätigung ausstehend.")
+            : (u.textContent = "Bestätigung ausstehend."),
+        y.appendChild(u),
+        !C)
+      ) {
+        const f = document.createElement("button");
+        ((f.type = "button"),
+          (f.className = "ui-btn"),
+          (f.textContent = "Jetzt bestätigen"),
+          f.addEventListener("click", async () => {
+            var E;
+            ((f.disabled = !0), (u.textContent = "Bestätige..."));
+            try {
+              const b = await et({ id: t }),
+                v =
+                  ((E = b == null ? void 0 : b.confirmation) == null ? void 0 : E.confirmedAt) ||
+                  new Date().toISOString(),
+                K = d.slaDueAt && new Date(v).getTime() > new Date(d.slaDueAt).getTime();
+              ((u.textContent = K ? `Bestätigt (verspätet) · ${A(v)}` : `Bestätigt · ${A(v)}`),
+                f.remove());
+            } catch (b) {
+              (b.code === "RATE_LIMITED"
+                ? (u.textContent = "Zu viele Bestätigungen – bitte warten.")
+                : b.code === "DENIED"
+                  ? (u.textContent = "Keine Berechtigung zum Bestätigen.")
+                  : I(b)
+                    ? (u.textContent = "Offline. Bestätigung fehlgeschlagen.")
+                    : (u.textContent = "Bestätigung fehlgeschlagen."),
+                (f.disabled = !1));
+            }
+          }),
+          y.appendChild(f));
+      }
+      r.appendChild(y);
+    }
+    if (n.role === "admin" && Array.isArray(s.targets)) {
+      const y = document.createElement("div");
+      y.className = "infochannel-targets";
+      const u = document.createElement("h4");
+      u.textContent = "Bestätigungen";
+      const C = document.createElement("ul");
+      ((C.className = "infochannel-targets__list"),
+        s.targets.forEach((f) => {
+          const E = document.createElement("li");
+          E.className = "infochannel-targets__item";
+          const b = document.createElement("span");
+          b.textContent = f.trainerName || f.trainerId;
+          const v = document.createElement("span");
+          ((v.className = "infochannel-targets__status"),
+            f.status === "confirmed"
+              ? (v.textContent = f.late
+                  ? `Bestätigt (verspätet) · ${A(f.confirmedAt)}`
+                  : `Bestätigt · ${A(f.confirmedAt)}`)
+              : f.status === "overdue"
+                ? ((v.textContent = "SLA überschritten"),
+                  v.classList.add("infochannel-targets__status--warn"))
+                : (v.textContent = "Ausstehend"),
+            E.appendChild(b),
+            E.appendChild(v),
+            C.appendChild(E));
+        }),
+        y.appendChild(u),
+        y.appendChild(C),
+        r.appendChild(y));
+    }
+  } catch (s) {
+    ((r.innerHTML = ""),
+      r.appendChild(
+        w(
+          s.code === "NOT_FOUND"
+            ? "Meldung nicht gefunden."
+            : I(s)
+              ? "Offline. Laden fehlgeschlagen."
+              : "Fehler beim Laden der Meldung.",
+          { variant: "warn", role: "alert" }
+        )
+      ));
+  }
+}
+async function ht(e, t) {
+  ((e.innerHTML = ""), await j("system"));
+  const n = document.createElement("div");
+  ((n.className = "kommunikation-system"), e.appendChild(n));
+  const a = Ge({
+    title: "Automation",
+    subtitle: "Geburtstags- und Zertifikats-Workflows (Station 84).",
+    level: 2,
+  });
+  n.appendChild(a);
+  const i = le("kommunikation.system.manage", t),
+    [o, r] = await Promise.all([He(), Ue({ limit: 12 })]);
+  n.appendChild(w(yt(o), { variant: "info", role: "status" }));
+  const s = Le({ eyebrow: "E-Mail", title: "Versand vorbereiten", body: "", footer: "" }),
+    d = s.querySelector(".ui-card") || s.firstElementChild,
+    l = d.querySelector(".ui-card__body"),
+    m = d.querySelector(".ui-card__footer"),
+    c = document.createElement("form");
+  ((c.className = "kommunikation-system__form"), (c.noValidate = !0));
+  const h = _({
+      id: "automation-sender-email",
+      label: "Absender E-Mail",
+      control: "input",
+      type: "email",
+      required: !0,
+      value: o.senderEmail || "",
+    }),
+    S = h.querySelector("input");
+  S.name = "senderEmail";
+  const k = _({
+      id: "automation-sender-name",
+      label: "Absender Name",
+      control: "input",
+      type: "text",
+      value: o.senderName || "",
+    }),
+    y = k.querySelector("input");
+  y.name = "senderName";
+  const u = _({
+      id: "automation-reply-to",
+      label: "Reply-To",
+      control: "input",
+      type: "email",
+      value: o.replyTo || "",
+    }),
+    C = u.querySelector("input");
+  C.name = "replyTo";
+  const f = _({
+      id: "automation-provider",
+      label: "Provider",
+      control: "input",
+      type: "text",
+      value: o.provider || "",
+    }),
+    E = f.querySelector("input");
+  E.name = "provider";
+  const b = _({
+      id: "automation-smtp-host",
+      label: "SMTP Host",
+      control: "input",
+      type: "text",
+      value: o.smtpHost || "",
+    }),
+    v = b.querySelector("input");
+  v.name = "smtpHost";
+  const K = _({
+      id: "automation-smtp-port",
+      label: "SMTP Port",
+      control: "input",
+      type: "number",
+      value: o.smtpPort ? String(o.smtpPort) : "",
+    }),
+    ue = K.querySelector("input");
+  ue.name = "smtpPort";
+  const me = _({
+      id: "automation-smtp-secure",
+      label: "SMTP TLS",
+      control: "select",
+      options: W(o.smtpSecure, { trueLabel: "TLS aktiv", falseLabel: "TLS aus" }),
+    }),
+    pe = me.querySelector("select");
+  pe.name = "smtpSecure";
+  const fe = _({
+      id: "automation-smtp-user",
+      label: "SMTP Benutzer",
+      control: "input",
+      type: "text",
+      value: o.smtpUser || "",
+    }),
+    he = fe.querySelector("input");
+  he.name = "smtpUser";
+  const ge = _({
+      id: "automation-smtp-pass",
+      label: "SMTP Passwort",
+      control: "input",
+      type: "password",
+      value: "",
+      describedByText: o.smtpPassword ? "Passwort gespeichert." : "Noch kein Passwort.",
+    }),
+    ee = ge.querySelector("input");
+  ee.name = "smtpPassword";
+  const be = _({
+      id: "automation-sending-enabled",
+      label: "Versand aktivieren",
+      control: "select",
+      options: W(o.sendingEnabled, { trueLabel: "Aktiv", falseLabel: "Deaktiviert" }),
+    }),
+    ye = be.querySelector("select");
+  ye.name = "sendingEnabled";
+  const Ce = _({
+      id: "automation-birthday-enabled",
+      label: "Geburtstagsmails",
+      control: "select",
+      options: W(o.birthdayEnabled, { trueLabel: "Aktiv", falseLabel: "Deaktiviert" }),
+    }),
+    ke = Ce.querySelector("select");
+  ke.name = "birthdayEnabled";
+  const Ee = _({
+      id: "automation-certificate-enabled",
+      label: "Zertifikate senden",
+      control: "select",
+      options: W(o.certificateEnabled, { trueLabel: "Aktiv", falseLabel: "Deaktiviert" }),
+    }),
+    we = Ee.querySelector("select");
+  ((we.name = "certificateEnabled"), c.append(h, k, u, f, b, K, me, fe, ge, be, Ce, Ee));
+  const L = document.createElement("div");
+  ((L.className = "kommunikation-system__status"), l.appendChild(c), l.appendChild(L));
+  const R = Z({ label: "Speichern", variant: "primary", onClick: () => c.requestSubmit() });
+  ((R.type = "button"), (R.disabled = !i));
+  const q = Z({
+    label: "SMTP testen",
+    variant: "quiet",
+    onClick: async () => {
+      if (i) {
+        ((L.innerHTML = ""), (q.disabled = !0), (q.textContent = "Teste ..."));
+        try {
+          (await Ve(), L.appendChild(w("SMTP Verbindung OK.", { variant: "ok", role: "status" })));
+        } catch (x) {
+          const g =
+            x.code === "smtp_not_ready"
+              ? "SMTP Einstellungen fehlen."
+              : x.code === "smtp_failed"
+                ? "SMTP Verbindung fehlgeschlagen."
+                : "SMTP Test fehlgeschlagen.";
+          L.appendChild(w(g, { variant: "warn", role: "alert" }));
+        } finally {
+          ((q.disabled = !i), (q.textContent = "SMTP testen"));
+        }
+      }
+    },
+  });
+  ((q.type = "button"),
+    (q.disabled = !i),
+    m.appendChild(R),
+    m.appendChild(q),
+    n.appendChild(d),
+    i ||
+      (L.appendChild(
+        w("Nur Admins koennen die Automationen bearbeiten.", { variant: "warn", role: "alert" })
+      ),
+      c.querySelectorAll("input, select, textarea").forEach((x) => {
+        x.disabled = !0;
+      })),
+    c.addEventListener("submit", async (x) => {
+      if ((x.preventDefault(), !i)) return;
+      ((L.innerHTML = ""), (R.disabled = !0), (R.textContent = "Speichere ..."));
+      const g = ue.value.trim(),
+        N = g ? Number(g) : null;
+      if (g && !Number.isFinite(N)) {
+        (L.appendChild(w("SMTP Port muss eine Zahl sein.", { variant: "warn", role: "alert" })),
+          (R.disabled = !1),
+          (R.textContent = "Speichern"));
+        return;
+      }
+      const U = {
+          senderEmail: S.value.trim(),
+          senderName: y.value.trim(),
+          replyTo: C.value.trim(),
+          provider: E.value.trim(),
+          smtpHost: v.value.trim(),
+          smtpPort: N,
+          smtpSecure: J(pe.value),
+          smtpUser: he.value.trim(),
+          sendingEnabled: J(ye.value),
+          birthdayEnabled: J(ke.value),
+          certificateEnabled: J(we.value),
+        },
+        O = ee.value.trim();
+      O && (U.smtpPassword = O);
+      try {
+        (await Fe(U),
+          L.appendChild(
+            w("Gespeichert. Versand bleibt vorerst deaktiviert.", { variant: "ok", role: "status" })
+          ),
+          (ee.value = ""));
+      } catch (V) {
+        const G = V.code === "DENIED" ? "Keine Berechtigung." : "Speichern fehlgeschlagen.";
+        L.appendChild(w(G, { variant: "warn", role: "alert" }));
+      } finally {
+        ((R.disabled = !1), (R.textContent = "Speichern"));
+      }
+    }));
+  const ve = Le({ eyebrow: "Audit", title: "Automation Events", body: "", footer: "" }),
+    _e = ve.querySelector(".ui-card") || ve.firstElementChild,
+    Se = _e.querySelector(".ui-card__body"),
+    Ae = Array.isArray(r == null ? void 0 : r.events) ? r.events : [];
+  if (!Ae.length) Se.appendChild(Q("Leer", "Noch keine Automation Events."));
+  else {
+    const x = document.createElement("div");
+    ((x.className = "kommunikation-list"),
+      Ae.forEach((g) => {
+        const N = document.createElement("article");
+        N.className = "kommunikation-card";
+        const U = document.createElement("h3");
+        ((U.className = "kommunikation-card__title"), (U.textContent = Ct(g)));
+        const O = document.createElement("p");
+        ((O.className = "kommunikation-card__snippet"), (O.textContent = te(g)));
+        const V = document.createElement("div");
+        V.className = "kommunikation-card__meta";
+        const G = document.createElement("span");
+        ((G.className = "kommunikation-card__badge"), (G.textContent = ne(g)));
+        const Ne = document.createElement("span");
+        ((Ne.textContent = g.createdAt ? A(g.createdAt) : ""), V.appendChild(G), V.appendChild(Ne));
+        const T = document.createElement("div");
+        ((T.className = "kommunikation-system__event-actions"), (T.hidden = !0));
+        const M = Z({ label: "Freigeben", variant: "primary" }),
+          D = Z({ label: "Ablehnen", variant: "quiet" });
+        ((M.type = "button"),
+          (D.type = "button"),
+          (M.disabled = !i),
+          (D.disabled = !i),
+          T.append(M, D));
+        const $ = document.createElement("p");
+        (($.className = "kommunikation-card__snippet"),
+          g.decision && (($.textContent = ae(g)), (T.hidden = !0)),
+          N.addEventListener("click", (F) => {
+            var Te;
+            ((Te = F.target) != null && Te.closest("button")) ||
+              g.decision ||
+              (T.hidden = !T.hidden);
+          }),
+          M.addEventListener("click", async () => {
+            ((M.disabled = !0), (D.disabled = !0));
+            try {
+              const F = await xe(g.id, {
+                status: "approved",
+                reason: "manual-approved",
+                decision: "approved",
+              });
+              (Object.assign(g, F || {}),
+                (G.textContent = ne(g)),
+                (O.textContent = te(g)),
+                ($.textContent = ae(g)),
+                ($.hidden = !1),
+                (T.hidden = !0));
+            } catch {
+              T.hidden = !1;
+            } finally {
+              ((M.disabled = !i), (D.disabled = !i));
+            }
+          }),
+          D.addEventListener("click", async () => {
+            ((M.disabled = !0), (D.disabled = !0));
+            try {
+              const F = await xe(g.id, {
+                status: "denied",
+                reason: "manual-denied",
+                decision: "denied",
+              });
+              (Object.assign(g, F || {}),
+                (G.textContent = ne(g)),
+                (O.textContent = te(g)),
+                ($.textContent = ae(g)),
+                ($.hidden = !1),
+                (T.hidden = !0));
+            } catch {
+              T.hidden = !1;
+            } finally {
+              ((M.disabled = !i), (D.disabled = !i));
+            }
+          }),
+          N.appendChild(U),
+          N.appendChild(O),
+          ($.hidden = !g.decision),
+          N.appendChild($),
+          N.appendChild(V),
+          N.appendChild(T),
+          x.appendChild(N));
+      }),
+      Se.appendChild(x));
+  }
+  n.appendChild(_e);
+}
+async function gt(e) {
+  var s;
+  e.innerHTML = "";
+  const t = document.createElement("div");
+  t.className = "kommunikation-list";
+  const n = document.createElement("article");
+  n.className = "kommunikation-card";
+  const a = document.createElement("h3");
+  ((a.className = "kommunikation-card__title"), (a.textContent = "Gruppenchat"));
+  const i = document.createElement("p");
+  ((i.className = "kommunikation-card__snippet"), (i.textContent = "Lade Nachrichten..."));
+  const o = document.createElement("div");
+  o.className = "kommunikation-card__meta";
+  const r = document.createElement("span");
+  ((r.className = "kommunikation-card__badge"),
+    (r.hidden = !0),
+    o.appendChild(r),
+    n.appendChild(a),
+    n.appendChild(i),
+    n.appendChild(o),
+    n.setAttribute("tabindex", "0"),
+    n.addEventListener("click", () => {
+      window.location.hash = "#/kommunikation/chats/global";
+    }),
+    t.appendChild(n),
+    e.appendChild(t));
+  try {
+    const d = await Me({ limit: tt }),
+      l = (s = d.messages) == null ? void 0 : s[d.messages.length - 1];
+    if (l) {
+      i.textContent = l.body || "Neue Nachricht";
+      const c = new Date(l.createdAt),
+        h = isNaN(c.getTime()) ? "" : ` · ${c.toLocaleString("de-DE")}`;
+      i.textContent = `${l.body}${h}`;
+    } else i.textContent = "Keine Nachrichten vorhanden.";
+    const m = d.unreadCount || 0;
+    m > 0 ? ((r.textContent = m > 99 ? "99+" : String(m)), (r.hidden = !1)) : (r.hidden = !0);
+  } catch (d) {
+    i.textContent = I(d) ? "Offline. Laden fehlgeschlagen." : "Fehler beim Laden.";
+  }
+}
+async function bt(e, t) {
+  e.innerHTML = "";
+  const n = document.createElement("div");
+  n.className = "kommunikation-chat-header";
+  const a = document.createElement("h2");
+  a.textContent = "Gruppenchat";
+  const i = document.createElement("button");
+  ((i.type = "button"),
+    (i.className = "kommunikation-back"),
+    (i.textContent = "Zurück"),
+    i.addEventListener("click", () => {
+      window.location.hash = "#/kommunikation/chats";
+    }),
+    n.appendChild(i),
+    n.appendChild(a),
+    e.appendChild(n));
+  const o = document.createElement("div");
+  ((o.className = "kommunikation-chat-banner"), (o.hidden = !0), e.appendChild(o));
+  const r = w("", { variant: "info", role: "status" }),
+    s = r.firstElementChild;
+  s && (s.classList.add("kommunikation-chat-retention"), (s.hidden = !0), e.appendChild(r));
+  const d = w("", { variant: "warn", role: "status" }),
+    l = d.firstElementChild;
+  l && (l.classList.add("kommunikation-chat-retention"), (l.hidden = !0), e.appendChild(d));
+  const m = document.createElement("div");
+  ((m.className = "kommunikation-chat-messages"), e.appendChild(m));
+  const c = document.createElement("div");
+  ((c.className = "kommunikation-chat-composer"),
+    (c.innerHTML = `
+    <textarea rows="2" placeholder="Nachricht eingeben..."></textarea>
+    <div class="kommunikation-composer-actions">
+      <span class="kommunikation-composer-status" aria-live="polite"></span>
+      <button type="button" class="kommunikation-send">Senden</button>
+    </div>
+  `),
+    e.appendChild(c));
+  async function h() {
+    var k, y;
+    ((o.hidden = !0),
+      s && (s.hidden = !0),
+      l && (l.hidden = !0),
+      (m.innerHTML = ""),
+      (p.isLoading = !0));
+    try {
+      const u = await Me({ limit: nt });
+      if (
+        ((p.messages = u.messages || []),
+        (p.nextCursor = u.nextCursor || null),
+        (p.unreadCount = u.unreadCount || 0),
+        s && (k = u.retention) != null && k.enabled && Number.isInteger(u.retention.retentionDays))
+      ) {
+        const C = u.retention.retentionDays;
+        ((s.querySelector(".ui-notice__content").textContent =
+          `Aufbewahrung: Nachrichten werden nach ${C} Tagen automatisch gelöscht.`),
+          (s.hidden = !1));
+      }
+      (l &&
+        (y = u.truncated) != null &&
+        y.dueToRetention &&
+        ((l.querySelector(".ui-notice__content").textContent =
+          "Ältere Nachrichten sind aufgrund der Aufbewahrungsfrist nicht mehr verfügbar."),
+        (l.hidden = !1)),
+        B(m, p.messages, P),
+        await re(p.messages));
+    } catch (u) {
+      ((p.error = u),
+        I(u)
+          ? ((o.textContent = "Offline. Verbindung zur Ablage derzeit nicht möglich."),
+            (o.hidden = !1))
+          : ((o.textContent = "Fehler beim Laden der Nachrichten."), (o.hidden = !1)));
+    } finally {
+      p.isLoading = !1;
+    }
+  }
+  async function S(k, y, u) {
+    const C = (k || "").trim();
+    if (!C) return;
+    const f = {
+      id: `pending-${y}`,
+      body: C,
+      createdAt: new Date().toISOString(),
+      authorActorId: t.id || "ich",
+      authorRole: t.role || "staff",
+      status: "pending",
+      clientNonce: y,
+    };
+    ((p.messages = [...p.messages, f]), B(m, p.messages, P));
+    try {
+      const b = (await De({ body: C, clientNonce: y })).message;
+      ((p.messages = p.messages
+        .filter((v) => v.id !== f.id)
+        .concat(b)
+        .sort(ce)),
+        B(m, p.messages, P),
+        await re(p.messages),
+        (u.textContent = ""));
+    } catch (E) {
+      const b = { ...f, status: "failed", error: E };
+      ((p.messages = p.messages.filter((v) => v.id !== f.id).concat(b)),
+        B(m, p.messages, P),
+        E.code === "RATE_LIMITED"
+          ? (u.textContent = "Zu viele Nachrichten – bitte warten.")
+          : I(E)
+            ? (u.textContent = "Offline. Wartet auf Verbindung.")
+            : (u.textContent = "Senden fehlgeschlagen."));
+    }
+  }
+  (c.querySelector(".kommunikation-send").addEventListener("click", async () => {
+    const k = c.querySelector("textarea"),
+      y = c.querySelector(".kommunikation-composer-status"),
+      u = Pe(),
+      C = k.value;
+    ((k.value = ""), await S(C, u, y));
+  }),
+    await h());
+}
+function B(e, t, n) {
+  if (((e.innerHTML = ""), !t || t.length === 0)) {
+    e.appendChild(Q("Keine Nachrichten", "Es gibt noch keine Nachrichten."));
+    return;
+  }
+  t.sort(ce).forEach((a) => {
+    var m;
+    const i = document.createElement("div");
+    i.className = "kommunikation-message";
+    const o = document.createElement("div");
+    o.className = "kommunikation-message__meta";
+    const r = document.createElement("span");
+    r.textContent = a.authorRole || a.authorActorId || "Unbekannt";
+    const s = document.createElement("time");
+    ((s.dateTime = a.createdAt),
+      (s.textContent = A(a.createdAt)),
+      o.appendChild(r),
+      o.appendChild(s));
+    const d = document.createElement("p");
+    ((d.className = "kommunikation-message__body"), (d.textContent = a.body || ""));
+    const l = document.createElement("span");
+    if (
+      ((l.className = "kommunikation-message__status"),
+      a.status === "pending"
+        ? (l.textContent = "Sendet...")
+        : a.status === "failed" &&
+          (l.textContent =
+            ((m = a.error) == null ? void 0 : m.code) === "RATE_LIMITED"
+              ? "Zu viele Nachrichten – bitte warten"
+              : "Senden fehlgeschlagen – Erneut versuchen"),
+      a.status === "failed")
+    ) {
+      const c = document.createElement("button");
+      ((c.type = "button"),
+        (c.className = "kommunikation-retry"),
+        (c.textContent = "Erneut senden"),
+        c.addEventListener("click", async () => {
+          var h;
+          if (typeof n == "function") {
+            const S =
+                (h = e.parentElement) == null
+                  ? void 0
+                  : h.querySelector(".kommunikation-composer-status"),
+              k = a.clientNonce || Pe();
+            await n(a.body, k, S, a);
+          }
+        }),
+        l.appendChild(c));
+    }
+    (i.appendChild(o),
+      i.appendChild(d),
+      (a.status === "pending" || a.status === "failed") && i.appendChild(l),
+      e.appendChild(i));
+  });
+}
+async function P(e, t, n, a) {
+  const i = qe(),
+    o = (e || "").trim();
+  if (!o) return;
+  p.messages = p.messages.filter((s) => s.id !== a.id);
+  const r = document.querySelector(".kommunikation-chat-messages");
+  (B(r, p.messages, P),
+    await (async () => {
+      const s = {
+        id: `pending-${t}`,
+        body: o,
+        createdAt: new Date().toISOString(),
+        authorActorId: i.id || "ich",
+        authorRole: i.role || "staff",
+        status: "pending",
+      };
+      ((p.messages = [...p.messages, s]), B(r, p.messages, P));
+      try {
+        const l = (await De({ body: o, clientNonce: t })).message;
+        ((p.messages = p.messages
+          .filter((m) => m.id !== s.id)
+          .concat(l)
+          .sort(ce)),
+          B(r, p.messages, P),
+          await re(p.messages),
+          n && (n.textContent = ""));
+      } catch (d) {
+        const l = { ...s, status: "failed", error: d };
+        ((p.messages = p.messages.filter((m) => m.id !== s.id).concat(l)),
+          B(r, p.messages, P),
+          n &&
+            (n.textContent =
+              d.code === "RATE_LIMITED"
+                ? "Zu viele Nachrichten – bitte warten."
+                : "Senden fehlgeschlagen."));
+      }
+    })());
+}
+async function re(e) {
+  if (!e || e.length === 0) return;
+  const t = e[e.length - 1];
+  try {
+    await We({ messageId: t.id });
+  } catch (n) {
+    typeof console < "u" && console.debug("Failed to update read marker", n);
+  }
+}
+function A(e) {
+  const t = new Date(e);
+  return isNaN(t.getTime()) ? "" : t.toLocaleString("de-DE");
+}
+function Be(e, t = 120) {
+  const n = (e || "").trim();
+  return n.length <= t ? n : `${n.slice(0, t).trim()}...`;
+}
+function yt(e = {}) {
+  const t = e.senderEmail ? `Absender: ${e.senderEmail}` : "Absender fehlt",
+    n = e.smtpHost && e.smtpUser ? "SMTP bereit" : "SMTP fehlt",
+    a = e.sendingEnabled ? "Versand aktiviert" : "Versand deaktiviert";
+  return `${t}. ${n}. ${a}. Versand nur nach Freigabe.`;
+}
+function W(e, { trueLabel: t, falseLabel: n } = {}) {
+  const a = e === !0;
+  return [
+    { value: "true", label: t || "Ja", selected: a },
+    { value: "false", label: n || "Nein", selected: !a },
+  ];
+}
+function J(e) {
+  return String(e).toLowerCase() === "true";
+}
+function Ct(e = {}) {
+  return e.eventType === "birthday"
+    ? "Geburtstagsmail"
+    : e.eventType === "certificate_delivery"
+      ? "Zertifikat Versand"
+      : "Automation";
+}
+function te(e = {}) {
+  const t = e.recipientEmail || "Kein Empfaenger",
+    n = kt(e.reason);
+  return Be(`${t} · ${n}`, 140);
+}
+function ne(e = {}) {
+  const t = e.status || "";
+  return t === "approved"
+    ? "Freigegeben"
+    : t === "denied"
+      ? "Abgelehnt"
+      : t === "sent"
+        ? "Gesendet"
+        : t === "failed"
+          ? "Fehlgeschlagen"
+          : t === "skipped"
+            ? "Uebersprungen"
+            : t === "prepared"
+              ? "Vorbereitet"
+              : t || "Unbekannt";
+}
+function kt(e) {
+  return e
+    ? e === "automation-disabled"
+      ? "Automation deaktiviert"
+      : e === "sending-disabled"
+        ? "Versand deaktiviert"
+        : e === "smtp-missing"
+          ? "SMTP fehlt"
+          : e === "awaiting-approval"
+            ? "Wartet auf Freigabe"
+            : e === "smtp-sent"
+              ? "Versand erfolgreich"
+              : e === "smtp-error"
+                ? "SMTP Fehler"
+                : e === "manual-approved"
+                  ? "Manuell freigegeben"
+                  : e === "manual-denied"
+                    ? "Manuell abgelehnt"
+                    : e
+    : "Unbekannt";
+}
+function ae(e = {}) {
+  const t = e.decision || "";
+  if (!t) return "";
+  const n = t === "approved" ? "Freigegeben" : "Abgelehnt",
+    a = e.decidedAt ? A(e.decidedAt) : "";
+  return a ? `${n} · ${a}` : n;
+}
+function Et(e, t) {
+  if ((t == null ? void 0 : t.role) === "trainer")
+    return e.viewerConfirmation
+      ? e.viewerConfirmation.late
+        ? "Bestätigt (verspätet)"
+        : "Bestätigt"
+      : e.viewerOverdue
+        ? "SLA überschritten"
+        : "Bestätigung ausstehend";
+  const n = Number(e.targetCount || 0),
+    a = Number(e.confirmedCount || 0),
+    i = Number(e.pendingCount || Math.max(0, n - a)),
+    o = [`Bestätigt ${a}/${n}`];
+  return (
+    e.lateCount > 0 && o.push(`${e.lateCount} verspätet`),
+    (e.overdueCount > 0 || i > 0) &&
+      o.push(e.overdueCount > 0 ? `${e.overdueCount} überfällig` : `${i} offen`),
+    o.join(" · ")
+  );
+}
+function ce(e, t) {
+  return e.createdAt < t.createdAt
+    ? -1
+    : e.createdAt > t.createdAt
+      ? 1
+      : (e.id || "").localeCompare(t.id || "");
+}
+function Pe() {
+  return typeof crypto < "u" && crypto.randomUUID
+    ? crypto.randomUUID()
+    : Math.random().toString(36).slice(2);
+}
+async function wt(e) {
+  return (await j(e), Array.isArray(Re[e]) ? Re[e] : []);
+}
+function qe() {
+  const e = (typeof window < "u" && window.__DOGULE_ACTOR__) || {},
+    t = e.role || null,
+    n = e.id || null;
+  return { type: t ? "user" : "anonymous", id: n, role: t };
+}
+function le(e, t) {
+  var a;
+  if (!e) return !1;
+  if ((t == null ? void 0 : t.role) === "admin") return !0;
+  const n =
+    (typeof window < "u" && ((a = window.__DOGULE_AUTHZ__) == null ? void 0 : a.allowedActions)) ||
+    [];
+  return !!(Array.isArray(n) && (n.includes(e) || n.includes("*")));
+}
+function I(e) {
+  if (!e) return !1;
+  if (e instanceof Oe) return e.code === oe.STORAGE_ROOT_MISSING || e.code === oe.STORAGE_ERROR;
+  const t = (e == null ? void 0 : e.message) || "";
+  return /network|offline|fetch|unreachable/i.test(t);
+}
+function ie({ actionId: e, actor: t, targetId: n, result: a, metaCode: i }) {
+  try {
+    St({ actionId: e, actor: t, targetId: n, result: a, metaCode: i });
+  } catch (o) {
+    typeof console < "u" && console.warn("Kommunikation logging failed", o);
+  }
+}
+function vt(e) {
+  ((e.innerHTML = ""),
+    typeof e.scrollTo == "function" ? e.scrollTo({ top: 0, behavior: "auto" }) : (e.scrollTop = 0));
+}
+function _t(e) {
+  const t = e == null ? void 0 : e.querySelector("h1");
+  t && t.focus({ preventScroll: !0 });
+}
+async function j(e) {
+  if (typeof window < "u" && typeof window.__DOGULE_STORAGE_PROBE__ == "function") {
+    await window.__DOGULE_STORAGE_PROBE__({ tab: e });
+    return;
+  }
+  throw new Oe(oe.STORAGE_ERROR, "Storage probe unavailable (no SAL context)");
+}
+function St({ actionId: e, actor: t, targetId: n, result: a, metaCode: i }) {
+  var s;
+  const o = {
+      actionId: e,
+      actor: {
+        type: (t == null ? void 0 : t.type) || "anonymous",
+        id: (t == null ? void 0 : t.id) || null,
+        role: (t == null ? void 0 : t.role) || null,
+      },
+      target: { type: "kommunikation", id: n || "unknown" },
+      result: a || "success",
+      level: "info",
+      severity: "INFO",
+      message: "KOMMUNIKATION-VIEW",
+      meta: i ? { code: i } : void 0,
+    },
+    r =
+      (typeof window < "u" && window.__DOGULE_LOGGER__) ||
+      ((s = window == null ? void 0 : window.console) == null ? void 0 : s.info);
+  typeof r == "function" && r(o);
+}
+export { Lt as initModule };

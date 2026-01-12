@@ -1,10 +1,10 @@
 const USERS = [
   {
-    id: "user-admin",
-    username: "admin",
+    id: "user-rifo",
+    username: "Rifo",
     role: "admin",
     passwordHash:
-      "pbkdf2$sha256$120000$rSPBtW8a4eFQiMoiUTg81g==$cMprKXdONLgj7wkmtdTInrp1G8Iye799pJ2zB4Fmyi4=",
+      "pbkdf2$sha-256$120000$pW9nCcsmY88i5Z+zM4XPaQ==$nfneGOFusc4/PskQiqVfmUDne0LNsPR2Q+AU/Pq1NSw=",
     requires2fa: false,
   },
   {

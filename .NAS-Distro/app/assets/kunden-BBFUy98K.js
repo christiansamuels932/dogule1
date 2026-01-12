@@ -1,0 +1,114 @@
+import {
+  i as r,
+  h as f,
+  l as h,
+  a as d,
+  e as m,
+  r as p,
+  b as k,
+  c as E,
+  d as A,
+  u as g,
+} from "./httpClient-DjX31kqd.js";
+import "./index-Cx63mBGt.js";
+const i = "kunden",
+  t = "kundenCode",
+  o = {
+    code: "",
+    vorname: "",
+    nachname: "",
+    geschlecht: "",
+    email: "",
+    telefon: "",
+    adresse: "",
+    notizen: "",
+  },
+  w = new Set([
+    "anna",
+    "andrea",
+    "lea",
+    "lara",
+    "laura",
+    "maria",
+    "marie",
+    "sara",
+    "sarah",
+    "julia",
+    "juliane",
+    "lena",
+    "eva",
+    "nina",
+    "sophie",
+    "sofie",
+    "luisa",
+  ]),
+  L = new Set([
+    "thomas",
+    "mark",
+    "marco",
+    "marcus",
+    "lukas",
+    "luca",
+    "jan",
+    "jonas",
+    "michael",
+    "peter",
+    "tim",
+    "timo",
+    "daniel",
+    "andreas",
+  ]);
+function b(e) {
+  const n = typeof e == "string" ? e.trim().toLowerCase() : "";
+  return n
+    ? w.has(n)
+      ? "weiblich"
+      : L.has(n)
+        ? "männlich"
+        : n.endsWith("a")
+          ? "weiblich"
+          : ""
+    : "";
+}
+const c = (e = {}) => {
+    if (e.geschlecht !== void 0 && e.geschlecht !== null && e.geschlecht !== "") return e;
+    const n = b(e.vorname);
+    return n ? { ...e, geschlecht: n } : e;
+  },
+  K = (e = {}) => (e.code !== void 0 ? e : e[t] !== void 0 ? { ...e, code: e[t] } : e),
+  l = (e = {}) => ({ ...o, ...K(e) }),
+  j = (e) =>
+    e &&
+    (Object.prototype.hasOwnProperty.call(e, t) && delete e[t],
+    Object.defineProperty(e, t, {
+      configurable: !0,
+      enumerable: !1,
+      get() {
+        return this.code;
+      },
+      set(n) {
+        this.code = n;
+      },
+    }),
+    e),
+  s = (e = {}) => j({ id: "", createdAt: "", updatedAt: "", ...o, ...e });
+async function C(e) {
+  return r() ? f("kunden") : (await h(i, e)).map(s);
+}
+async function M(e, n) {
+  return r() ? d("kunden", e) : (await C(n)).find((a) => a.id === e) || null;
+}
+async function _(e = {}, n) {
+  if (r()) return k("kunden", c(e));
+  const u = await E(i, l(c(e)), n);
+  return s(u);
+}
+async function G(e, n = {}, u) {
+  if (r()) return A("kunden", e, n);
+  const a = await g(i, e, l(n), u);
+  return a ? s(a) : null;
+}
+async function N(e, n) {
+  return r() ? m("kunden", e) : p(i, e, n);
+}
+export { _ as createKunde, N as deleteKunde, M as getKunde, C as listKunden, G as updateKunde };

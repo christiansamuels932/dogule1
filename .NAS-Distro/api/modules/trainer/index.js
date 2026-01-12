@@ -42,10 +42,6 @@ export async function initModule(container, routeInfo) {
   const section = document.createElement("section");
   section.className = "dogule-section trainer-section";
 
-  const h1 = document.createElement("h1");
-  h1.textContent = "Trainer";
-  section.appendChild(h1);
-
   try {
     if (view === "list") {
       await renderList(section);
@@ -66,7 +62,8 @@ export async function initModule(container, routeInfo) {
   }
 
   container.appendChild(section);
-  scrollAndFocus(container, h1);
+  scrollAndFocus(container, section);
+  focusHeading(section);
 }
 
 function resolveView(routeInfo) {
@@ -80,13 +77,6 @@ function resolveView(routeInfo) {
 }
 
 async function renderList(section) {
-  const header = createSectionHeader({
-    title: "Trainer",
-    subtitle: "Übersicht aller Trainerinnen und Trainer",
-    level: 2,
-  });
-  section.appendChild(header);
-
   const actionsCard = createCard({
     eyebrow: "",
     title: "Aktionen",

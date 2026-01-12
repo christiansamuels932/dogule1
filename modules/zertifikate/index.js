@@ -29,13 +29,7 @@ export function initModule(container, routeInfo = {}) {
   const section = document.createElement("section");
   section.className = "dogule-section zertifikate-section";
 
-  const title = document.createElement("h1");
-  title.textContent = "Zertifikate";
-  title.tabIndex = -1;
-  section.appendChild(title);
-
   if (mode === "list") {
-    section.appendChild(createSectionHeader({ title: "Übersicht", subtitle: "", level: 2 }));
     renderListView(section);
   } else if (mode === "create") {
     section.appendChild(
@@ -58,7 +52,8 @@ export function initModule(container, routeInfo = {}) {
   }
 
   container.appendChild(section);
-  title.focus?.();
+  const heading = section.querySelector("h1, h2");
+  heading?.focus?.();
 }
 
 function parseRoute(segments = []) {

@@ -3,7 +3,6 @@ import {
   createCard,
   createEmptyState,
   createNotice,
-  createSectionHeader,
   createButton,
   createFormRow,
 } from "../shared/components/components.js";
@@ -17,17 +16,6 @@ export async function createHundeListView(container) {
   container.classList.add("hunde-view");
 
   try {
-    const header = createSectionHeader({
-      title: "Hunde",
-      subtitle: "",
-      level: 1,
-    });
-    container.appendChild(header);
-
-    const noticeFragment = createNotice("Verwalte Hunde und ihre Besitzer.", {
-      variant: "info",
-    });
-    container.appendChild(noticeFragment);
     injectHundToast(container);
 
     let exportHandler = null;
@@ -36,7 +24,7 @@ export async function createHundeListView(container) {
     container.append(actionCard, listCard);
 
     exportHandler = await populateHundeTable(listCard);
-    focusHeading(header);
+    focusHeading(container);
   } catch (error) {
     console.error("[HUNDE_ERR_LIST_INIT]", error);
     container.innerHTML = "";
