@@ -1,0 +1,97 @@
+.dogule-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.dogule-header,
+.dogule-footer {
+  background-color: var(--color-brand-900);
+  color: var(--color-paper);
+  padding: 1.1rem 1.5rem;
+}
+
+.dogule-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.dogule-header-bar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.dogule-header-title {
+  font-size: 1.35rem;
+  font-weight: 600;
+}
+
+.dogule-auth {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  margin-top: -0.35rem;
+}
+
+.dogule-auth__user {
+  font-weight: 600;
+}
+
+.dogule-auth__role {
+  opacity: 0.75;
+}
+
+.dogule-auth__btn {
+  border: 1px solid rgba(255, 253, 246, 0.6);
+  color: var(--color-paper);
+  background: transparent;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.dogule-auth__btn:hover,
+.dogule-auth__btn:focus-visible {
+  background: rgba(255, 253, 246, 0.2);
+}
+
+.dogule-nav a {
+  margin-right: 0.75rem;
+  color: var(--color-paper);
+  text-decoration: none;
+  padding: 0.3rem 0.6rem;
+  border-radius: 999px;
+  transition:
+    background 150ms ease,
+    color 150ms ease;
+}
+
+.dogule-nav a.active,
+.dogule-nav .nav__link--active {
+  background: rgba(255, 253, 246, 0.2);
+}
+
+.dogule-nav a:hover,
+.dogule-nav a:focus-visible {
+  background: rgba(255, 253, 246, 0.32);
+}
+
+.dogule-main {
+  flex: 1;
+  padding: 2rem 1.5rem 2.5rem;
+  background-color: transparent;
+  max-width: 1100px;
+  width: min(1100px, 100%);
+  margin: 0 auto;
+}
+
+.dogule-footer {
+  text-align: center;
+  font-size: 0.9rem;
+}

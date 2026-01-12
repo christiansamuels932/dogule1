@@ -1,0 +1,64 @@
+.dogule-card {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  padding: 1rem;
+  background: var(--color-paper);
+  box-shadow: var(--shadow-soft);
+}
+
+.dogule-card__header {
+  margin-bottom: 0.75rem;
+}
+
+.dogule-card__title {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.dogule-card__subtitle {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.9rem;
+}
+
+.dogule-card__body {
+  font-size: 0.95rem;
+}
+
+.dogule-alert {
+  border-left: 4px solid var(--color-brand-500);
+  padding: 0.75rem 1rem;
+  background: #f3ecd2;
+  color: var(--color-brand-900);
+  border-radius: 0.4rem;
+  margin: 1rem 0;
+}
+
+.dogule-alert__title {
+  display: block;
+  margin-bottom: 0.2rem;
+}
+
+.dogule-alert__message {
+  margin: 0;
+}
+
+.ui-empty {
+  padding: 0.5rem 0;
+  color: var(--color-muted);
+  font-size: 0.95rem;
+  font-weight: 400;
+}
+
+.ui-empty__title {
+  margin: 0 0 0.1rem;
+  font-size: 0.95rem;
+  font-weight: 400;
+}
+
+.ui-empty__hint {
+  margin: 0;
+  color: var(--color-muted-2);
+  font-size: 0.9rem;
+  font-weight: 400;
+}

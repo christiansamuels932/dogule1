@@ -3,6 +3,7 @@ import js from "@eslint/js";
 export default [
   {
     ignores: [
+      ".NAS-Distro/**",
       "dist/**",
       "dogule1-alpha/**",
       "storage_candidate/**",
@@ -13,6 +14,7 @@ export default [
   js.configs.recommended,
   {
     ignores: [
+      ".NAS-Distro/**",
       "node_modules/**",
       "dist/**",
       ".husky/**",
