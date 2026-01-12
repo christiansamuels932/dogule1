@@ -13,6 +13,7 @@ Status: scratchpad; move items into stations or issues when ready.
 - [ ] Align module list so the module titles in the left nav (Dashboard/Kunden/Hunde/Kurse/Trainer/Zertifikate/Kommunikation/Kalender/Finanzen/Waren) start exactly where the module names in the overview grid start; current left offset is too far left.
 - [ ] Remove module title + description blocks from each module page (e.g., "Kunden" title and its description text like "Übersicht über alle Kundinnen und Kunden ...").
 - [ ] Update login credentials: main login user "Rifo" with password "rifo6087"; adjust competencies/roles to match.
+- [ ] Add login password reset: send confirmation code to `christiansamuels932@gmail.com` and validate before allowing password change.
 
 ## Notes
 

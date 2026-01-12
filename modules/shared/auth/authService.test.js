@@ -72,7 +72,7 @@ describe("authService", () => {
   });
 
   it("refreshes tokens and revokes old refresh token", async () => {
-    const login = await service.login("staff", "staffpass", {});
+    const login = await service.login("developer", "devpass6087", {});
     const firstRefresh = await service.refresh(login.refreshToken, {});
     expect(firstRefresh.accessToken).not.toBe(login.accessToken);
     expect(firstRefresh.refreshToken).not.toBe(login.refreshToken);

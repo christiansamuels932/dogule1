@@ -8,14 +8,6 @@ const USERS = [
     requires2fa: false,
   },
   {
-    id: "user-staff",
-    username: "staff",
-    role: "staff",
-    passwordHash:
-      "pbkdf2$sha256$120000$rakK5AqwTFKD9Iy9xvVWdw==$dVuDO2tz8VcblKv2LNhQMellECOB+Ra47PFixip3YHo=",
-    requires2fa: false,
-  },
-  {
     id: "user-trainer",
     username: "trainer",
     role: "trainer",
@@ -28,7 +20,7 @@ const USERS = [
     username: "developer",
     role: "developer",
     passwordHash:
-      "pbkdf2$sha-256$120000$1MgunOkUCaVb2VRvmZtHPA==$+s2yKLLBnaQyf3DSeNbZNNp6HBIngvvdfhx8FXzWACw=",
+      "pbkdf2$sha-256$120000$u6ioECtBb2jEpZ3GYIqAfA==$MQuLfN2sD06UvJkZLlGbXWU2F5Lj0e4jVJgoNe3M7LE=",
     requires2fa: false,
   },
 ];
