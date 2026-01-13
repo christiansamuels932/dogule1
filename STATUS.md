@@ -32,6 +32,29 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 # - - - - - - - - - - - - - - - - - - - -
 
+# Station 91 — Kurs → Zertifikat Hintergrund (PNG)
+
+## Kontext
+
+- Status: completed.
+- Branch: `feature/station91`.
+- Scope: per-kurs certificate background PNG, selection/preview, block generation when missing.
+
+## Ergebnis (kurz)
+
+- Added background mapping helper, Kurs UI selection/preview, and PDF background resolution.
+- Shifted Kursinhalt lists ~7mm left in Zertifikat PDF layout for alignment.
+
+## Tests
+
+- Not run (manual).
+
+## Notizen
+
+- `modules/zertifikate/certificatePdf.js` modified per read-only guard.
+
+# - - - - - - - - - - - - - - - - - - - -
+
 # Station 89 — Login password reset with email code
 
 ## Kontext

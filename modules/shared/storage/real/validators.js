@@ -218,6 +218,7 @@ export function validateKurs(record) {
     "level",
     "price",
     "notes",
+    "zertifikatHintergrund",
     "hundIds",
     "createdAt",
     "updatedAt",
@@ -261,6 +262,7 @@ export function validateKurs(record) {
   assertOptionalString(record.level, "kurse.level");
   assertOptionalStringOrNumber(record.price, "kurse.price");
   assertOptionalString(record.notes, "kurse.notes");
+  assertOptionalString(record.zertifikatHintergrund, "kurse.zertifikatHintergrund");
   if (!Array.isArray(record.hundIds)) {
     throw new StorageError(
       STORAGE_ERROR_CODES.SCHEMA_VALIDATION_FAILED,
