@@ -13,11 +13,11 @@ import {
   getDefaultModuleForRole,
 } from "../shared/auth/client.js";
 
-async function loginUser(username, password) {
+async function loginUser(username) {
   const res = await fetch("/api/auth/login", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ username, password }),
+    body: JSON.stringify({ username }),
   });
   const text = await res.text();
   const data = text ? JSON.parse(text) : null;
@@ -27,6 +27,21 @@ async function loginUser(username, password) {
     throw err;
   }
   return data;
+}
+
+async function fetchAuthOptions() {
+  const res = await fetch("/api/auth/options", {
+    method: "GET",
+    headers: { "Content-Type": "application/json" },
+  });
+  const text = await res.text();
+  const data = text ? JSON.parse(text) : null;
+  if (!res.ok) {
+    const err = new Error(data?.message || "options_failed");
+    err.code = data?.code || "OPTIONS_FAILED";
+    throw err;
+  }
+  return Array.isArray(data?.users) ? data.users : [];
 }
 
 async function logoutUser(refreshToken) {
@@ -106,7 +121,7 @@ export async function initModule(container) {
   section.appendChild(
     createSectionHeader({
       title: "Anmelden",
-      subtitle: "Bitte mit Benutzername und Passwort anmelden.",
+      subtitle: "Bitte Benutzer auswählen.",
       level: 1,
     })
   );
@@ -131,24 +146,14 @@ export async function initModule(container) {
 
   const userRow = createFormRow({
     id: "auth-username",
-    label: "Benutzername",
-    placeholder: "z. B. Rifo",
+    label: "Benutzer",
+    control: "select",
     required: true,
+    options: [{ value: "", label: "Bitte auswählen", selected: true }],
   });
-  const userInput = userRow.querySelector("input");
+  const userInput = userRow.querySelector("select");
   userInput.name = "username";
   form.appendChild(userRow);
-
-  const passRow = createFormRow({
-    id: "auth-password",
-    label: "Passwort",
-    type: "password",
-    placeholder: "Passwort",
-    required: true,
-  });
-  const passInput = passRow.querySelector("input");
-  passInput.name = "password";
-  form.appendChild(passRow);
 
   const footer = card.querySelector(".ui-card__footer");
   footer.innerHTML = "";
@@ -160,13 +165,47 @@ export async function initModule(container) {
   actions.appendChild(submit);
   footer.appendChild(actions);
 
+  try {
+    const users = await fetchAuthOptions();
+    users.forEach((user) => {
+      const option = document.createElement("option");
+      option.value = user.username || "";
+      option.textContent = user.label || user.username || "";
+      if (!option.value) return;
+      userInput.appendChild(option);
+    });
+    if (!users.length) {
+      statusSlot.appendChild(
+        createNotice("Keine Login-Optionen gefunden.", { variant: "warn", role: "alert" })
+      );
+    }
+  } catch (error) {
+    console.error("[AUTH_OPTIONS_FAILED]", error);
+    statusSlot.appendChild(
+      createNotice("Login-Optionen konnten nicht geladen werden.", {
+        variant: "warn",
+        role: "alert",
+      })
+    );
+    submit.disabled = true;
+  }
+
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
     statusSlot.innerHTML = "";
+    if (!userInput.value.trim()) {
+      statusSlot.appendChild(
+        createNotice("Bitte einen Benutzer auswählen.", {
+          variant: "warn",
+          role: "alert",
+        })
+      );
+      return;
+    }
     submit.disabled = true;
     submit.textContent = "Anmelden ...";
     try {
-      const result = await loginUser(userInput.value.trim(), passInput.value);
+      const result = await loginUser(userInput.value.trim());
       saveSession(result);
       const target = getDefaultModuleForRole(result.user?.role);
       window.location.hash = `#/${target}`;

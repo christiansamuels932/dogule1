@@ -1,4 +1,5 @@
 DO NOT DELETE OR TRUNCATE: Only append new station entries to this file. Keep full history.
+NEW ENTRIES: Add the latest station block directly below this header section (top of file), pushing older entries down.
 READ-ONLY NOTE: provide only 1 step of instruction/guidance per message.
 
 Quick start (manual):
@@ -28,6 +29,101 @@ Each station block uses this structure (read-only):
 - READ-ONLY INSTRUCTIONS: All stations (including historical ones) must stay logged in this file; never replace or truncate existing entries when adding new stations. If a truncation occurs, restore the full history before adding new content (the Station 39–41 overwrite was fixed by restoring Stations 1–38 and reappending 39–41).
 
 Branching rule: each station must be developed on its dedicated branch; if the expected branch does not exist yet, create a new one before starting the station.
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 88 — Login dropdown + simplified roles
+
+## Kontext
+
+- Status: read-only (completed).
+- Branch: `feature/station88`.
+- Scope: dropdown login for trainers + developer, remove passwords, reduce roles to Admin/Trainer with TR-001 as Admin; simplify detail views for Kunden/Hunde/Kurse/Trainer.
+- Preconditions: MariaDB storage available for trainer list.
+
+## Ergebnis (kurz)
+
+- Login UI now loads `/api/auth/options` and uses a dropdown; password input removed.
+- Auth accepts username-only logins; trainer users are provisioned from trainer records; Developer remains a seed login with full access.
+- RBAC reduced to Admin/Trainer plus Developer full access; trainer access limited to Kunden/Hunde and matching API guards.
+- Kunden detail now shows only Hunde dieses Kunden and Zertifikate; Hunde detail now shows Besitzer + Zertifikate.
+- Kurse detail removes participant + finance sections; Trainer detail removes calendar and revenue sections.
+
+## Tests
+
+- Not run (manual).
+
+## Notizen
+
+- Admin assignment is derived from trainer code `TR-001` (Fontana Richard).
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 87 — Remove module title + description blocks
+
+## Kontext
+
+- Status: read-only (completed).
+- Branch: `station87-remove-module-headers`.
+- Scope: remove module title/description blocks and align Zertifikate layout with other modules.
+
+## Ergebnis (kurz)
+
+- Removed top title/description header blocks across module pages.
+- Zertifikate list/detail/create now follow the same action-card + content-card structure as other modules.
+
+## Tests
+
+- Manual UI check: Dashboard, Kunden, Hunde, Kurse, Trainer, Zertifikate ✅
+
+## Notizen
+
+- None.
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 86 — Align left-nav module list with overview grid
+
+## Kontext
+
+- Status: read-only (completed).
+- Branch: `station86-align-nav`.
+- Scope: align left-nav module titles with module names in the overview grid.
+
+## Ergebnis (kurz)
+
+- Adjusted left-nav padding to align module titles with overview grid labels.
+
+## Tests
+
+- Manual UI check: left-nav alignment ✅
+
+## Notizen
+
+- None.
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 85 — App header card (FontanasLogo + DOGULE title)
+
+## Kontext
+
+- Status: read-only (completed).
+- Branch: `84XCleanUp`.
+- Scope: add header card with Fontanas logo and DOGULE title.
+
+## Ergebnis (kurz)
+
+- Header card shows the Fontanas logo (181x73) on the left and large white "DOGULE" text on the right within the same frame.
+- Layout updated in shared header styling to reflect the new sizing.
+
+## Tests
+
+- Manual UI check: Dashboard and one module page ✅
+
+## Notizen
+
+- None.
 
 # - - - - - - - - - - - - - - - - - - - -
 
@@ -163,29 +259,6 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 # - - - - - - - - - - - - - - - - - - - -
 
-# Station 83.6 — Zertifikat-ID Whiteout
-
-## Kontext
-
-- Status: completed.
-- Branch: `feature/station84-automation`.
-- Scope: make Zertifikat-ID footer invisible on print by switching text color to white.
-- Preconditions: Zertifikate PDF renderer in place.
-
-## Ergebnis (kurz)
-
-- Zertifikat-ID footer now renders in white (`#ffffff`) to avoid visibility on printouts.
-
-## Tests
-
-- Not run (visual change only).
-
-## Notizen
-
-- Logged due to `certificatePdf.js` read-only note.
-
-# - - - - - - - - - - - - - - - - - - - -
-
 # Station 84N — NAS Client Pilot
 
 ## Kontext
@@ -243,6 +316,29 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 - Use local host with SSH `me@192.168.1.116` to push `.NAS-Distro` to NAS.
 - Install prod deps on NAS under `/volume1/dogule1nasfolder/.NAS-Distro/api` before starting API.
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 83.6 — Zertifikat-ID Whiteout
+
+## Kontext
+
+- Status: completed.
+- Branch: `feature/station84-automation`.
+- Scope: make Zertifikat-ID footer invisible on print by switching text color to white.
+- Preconditions: Zertifikate PDF renderer in place.
+
+## Ergebnis (kurz)
+
+- Zertifikat-ID footer now renders in white (`#ffffff`) to avoid visibility on printouts.
+
+## Tests
+
+- Not run (visual change only).
+
+## Notizen
+
+- Logged due to `certificatePdf.js` read-only note.
 
 # - - - - - - - - - - - - - - - - - - - -
 
@@ -690,121 +786,239 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 # - - - - - - - - - - - - - - - - - - - -
 
-# Station 71 — UI Visual Pass & Entity List/Detail Cleanup
+# Station 76.5 — NAS Deployment (Staging for Manual Test)
 
 ## Kontext
 
 - Status: read-only (completed).
 
-- Branch: `station71`.
-- Scope: visual cohesion pass, standardized button spacing, and list/detail refinements for Kunden/Hunde/Kurse/Trainer; no backend changes.
+- Branch: `feature/station76.5-nas-deployment`.
+- Scope: deploy MariaDB-backed app to NAS, expose public staging, and validate readiness for Station 77 manual tests.
+- Access scope: public (`https://4c31.synology.me/dogule1-staging/`).
+- NAS profile: Synology DS218play (DSM 7.3.2-86009), SAN.
 
 ## Ergebnis (kurz)
 
-- Applied new visual palette and typography across shared styles; unified button styling and spacing in module action areas.
-- Rebuilt Kunden/Hunde/Trainer list views into sortable, scrollable table overviews; aligned detail views with cleaner definition-list layouts.
-- Updated Kunden detail/form to include Status select (Aktiv/Deaktiviert), Ausweis-ID, Foto upload (Verfügbar/Keines link), and Begleitpersonen; Hunde detail extended with required fields (Felltyp, Kastriert, Fellfarbe, Größe-Typ, Herkunft, Chip-Nummer).
-- Adjusted Kurse list/detail to display created date and Outlook-mirror status in place of direct scheduling; added Kunde/Hund summaries in Kurs overview; normalized trainer availability labels to weekdays.
-- Fixed vertical spacing for “Hund hinzufügen” and “Auswahl leeren” buttons; standardized form footer button layout across Kunde/Hund/Kurs/Trainer.
-- Updated battleplan to include certificate station and UI requirements for status/photo upload.
+- Created reproducible NAS runbook in `NAS_STATION76_5_SETUP.md`; captured environment, access scope, and rollback steps.
+- Repo deployed to NAS (`/volume1/dogule1nasfolder/dogule1`), dependencies installed, `pnpm build` completed, and `dist/` deployed to `/volume1/web/dogule1-staging/`.
+- API server running on NAS (`node tools/server/apiServer.js`), reverse proxy exposed at `https://4c31.synology.me:8443/api`.
+- Added CORS support to API server and configured `DOGULE1_CORS_ORIGINS=https://4c31.synology.me`.
+- NAS MariaDB refreshed from local export; full dataset restored and dashboard counts validated.
+- Deployment report recorded in `NAS_STATION76_5_REPORT.md`.
 
 ## Tests
 
-- Not run (UI/documentation changes only).
+- `curl http://127.0.0.1:5177/api/kunden` ✅
+- `curl --resolve 4c31.synology.me:8443:192.168.1.116 https://4c31.synology.me:8443/api/kunden` ✅
+- Manual UI smoke: Kunden + Hunde create OK; counts updated ✅
+
+## Issues
+
+- CORS blocked cross-port API access; resolved by adding CORS headers in `tools/server/apiServer.js` and setting `DOGULE1_CORS_ORIGINS`.
+- Reverse proxy UI lacked path-based routing; API exposed on port 8443 instead of `/api` on 443.
 
 ## Notizen
 
-- Photo upload is stored as data URL for now (mock storage), surfaced as “Verfügbar” link in details.
+- Rollback procedure documented in `NAS_STATION76_5_SETUP.md` (stop API, clear staging folder, disable proxy/close port).
+- Station 77 prerequisite met: NAS staging environment is live and stable.
+- Future task logged: add persistent boot-time API service via DSM Task Scheduler (not implemented yet).
 
 # - - - - - - - - - - - - - - - - - - - -
 
-# Station 72 — Alpha Closeout & Beta Readiness Gate
+# Station 76.6 — Post-Remediation Verification
 
 ## Kontext
 
 - Status: read-only (completed).
 
-- Branch: `feature/station72-alpha-closeout`.
-- Scope: freeze Alpha scope, define Beta entry/exit criteria, and standardize manual test issue logging. Documentation only.
+- Branch: `feature/station76.5-nas-deployment`.
+- Scope: verify Hunde `Geburtsdatum`/`Herkunft` UI rendering, confirm Kunden list column sorting, and re-run tests after XLSX dependency removal.
 
 ## Ergebnis (kurz)
 
-- Added `BETA_READINESS.md` with Alpha freeze list, Beta entry/exit criteria, and manual test issue log template.
-- Captured deferred-to-Beta scope (DogTabs ingestion, MariaDB-only backend, expanded entity fields, performance validation, manual test cycles).
+- Verified Kunden → Hunde list shows `Geburtsdatum` values and `Herkunft` labels (not numeric codes).
+- Verified Hund detail view renders `Geburtsdatum` and `Herkunft` correctly.
+- Confirmed Kunden list column "Hunde, Name" is present and sortable.
+- `pnpm test` and `pnpm build` pass after XLSX removal.
 
 ## Tests
 
-- Not run (documentation changes only).
-
-# - - - - - - - - - - - - - - - - - - - -
-
-# Station 73 — DogTabs Data Inventory & Mapping Plan
-
-## Kontext
-
-- Status: read-only (completed).
-
-- Branch: `feature/station73-dogtabs-inventory`.
-- Scope: inventory DogTabs legacy capture (read-only), document file formats/counts, and define a mapping plan to Dogule1 schema.
-
-## Ergebnis (kurz)
-
-- Added `DOGTABS_DATA_INVENTORY.md` with file-type counts, directory inventory, snapshot counts, and PII notes for the Station-61 capture.
-- Added `DOGTABS_TO_DOGULE1_MAPPING.md` describing target mappings, ID strategy, FK rules, and open questions; embedded Access DB extraction manual.
-- Extracted Access DB schema and table list from the DogTabs database and mapped core tables (Kunden, Hunde, Seminare, Rechnungen, Pension/Rooms).
-- Captured column headers via `mdb-export` for `$_kundenstamm`, `$_kunden_hunde`, `$_seminardaten`, and `$_rechnung_kopf` and documented them in the mapping plan.
-
-## Tests
-
-- `mdb-tables -1 "migration/legacy/station61/capture_20251219_185854Z/raw/dogtaps_90_Datenbank/delete dogtaps_Datenbank.accdr.ORG"` — ✅
-- `mdb-schema "migration/legacy/station61/capture_20251219_185854Z/raw/dogtaps_90_Datenbank/delete dogtaps_Datenbank.accdr.ORG" mysql` — ✅ (No MSysRelationships)
-- `mdb-export ... "$_kundenstamm"` — ✅ (header capture)
-- `mdb-export ... "$_kunden_hunde"` — ✅ (header capture)
-- `mdb-export ... "$_seminardaten"` — ✅ (header capture)
-- `mdb-export ... "$_rechnung_kopf"` — ✅ (header capture)
-
-## Notizen
-
-- XLSX snapshots appear to have no embedded column headers; Access DB remains the authoritative schema source.
-- `mdb-schema` output saved outside the repo in `/tmp/dogtaps_schema.sql`.
-- Relationships were not emitted by `mdbtools` (`No MSysRelationships`), so FK rules still need manual validation.
-
-# - - - - - - - - - - - - - - - - - - - -
-
-# Station 74 — MariaDB Schema & Adapter Implementation
-
-## Kontext
-
-- Status: read-only (completed).
-
-- Branch: `feature/station74-mariadb-schema-adapter`.
-- Scope: implement MariaDB schema + adapter, switch core CRUD to HTTP-backed API, and hard-require MariaDB for Beta usage.
-
-## Ergebnis (kurz)
-
-- Added MariaDB schema + local setup guide (`tools/mariadb/schema.sql`, `tools/mariadb/README.md`) and initialized local data dir under `/home/ran/codex/.local/mariadb` (socket-only).
-- Implemented MariaDB storage adapter (`modules/shared/storage/mariadbAdapter.js`) with CRUD for kunden/hunde/kurse/trainer/kalender/finanzen/waren, uuidv7 defaults, and JSON field handling.
-- Added core HTTP API router (`modules/shared/server/coreApiRouter.js`) and combined router export; Vite dev now wires core + Kommunikation via `createApiRouter`.
-- UI core modules switched to HTTP in browser with `modules/shared/api/httpClient.js`, while tests stay on mock via a test-environment guard.
-- Added Node API server entrypoint (`tools/server/apiServer.js`), MariaDB smoke test (`tools/mariadb/smokeTest.js`), and `.env.example` for local config.
-- Storage config supports `mariadb` mode and can enforce it via `DOGULE1_REQUIRE_MARIADB=1`; `.local/` is gitignored.
-
-## Tests
-
-- `pnpm install` ✅ (esbuild build scripts ignored warning)
-- `pnpm test` ❌ (HTTP mode tried `http://localhost:3000`, fixed by test-env guard)
+- Manual UI check: Kunden list → Kunde → Hunde list; Hund detail ✅
+- Manual UI check: Kunden list column "Hunde, Name" sortable ✅
 - `pnpm test` ✅
-- `mariadb-install-db --datadir /home/ran/codex/.local/mariadb --user=ran` ✅ (auth_pam ownership warnings)
-- `nohup mariadbd --datadir /home/ran/codex/.local/mariadb --socket=/home/ran/codex/.local/mariadb/mariadb.sock --pid-file=/home/ran/codex/.local/mariadb/mariadb.pid --log-error=/home/ran/codex/.local/mariadb/mariadb.err --skip-networking &` ✅
-- `mariadb --protocol=socket --socket /home/ran/codex/.local/mariadb/mariadb.sock --user=ran < tools/mariadb/schema.sql` ✅
-- `mariadb --protocol=socket --socket /home/ran/codex/.local/mariadb/mariadb.sock --user=ran -e "SHOW TABLES IN dogule1;"` ✅
-- `pnpm run mariadb:smoke` ✅ (uses default socket + user)
+- `pnpm build` ✅
 
 ## Notizen
 
-- MariaDB runs with `--skip-networking` (socket-only) due to sandbox restrictions; set `DOGULE1_MARIADB_SOCKET` to connect.
-- Core UI now expects `/api/*` endpoints in browser; use `createApiRouter` from `modules/shared/server/apiRouter.js` to serve CRUD + Kommunikation.
-- `mariadb:smoke` emits MODULE_TYPELESS warning (repo is not ESM); left as-is.
+- Manual verification only; no code changes.
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 76.7 — NAS Manual Test + Battleplan Update
+
+## Kontext
+
+- Status: read-only (completed).
+
+- Branch: `feature/station76.5-nas-deployment`.
+- Scope: validate NAS staging manual test pass with live API, and record battleplan updates for NAS autostart + role-based logins.
+
+## Ergebnis (kurz)
+
+- Confirmed NAS API was down (502); started `tools/server/apiServer.js` on NAS to restore data access.
+- Verified reverse proxy and local API health; full manual test pass on NAS staging completed.
+- Added battleplan notes: NAS autostart requirement for MariaDB + API server, and Trainer/Admin role-based login requirement for Kommunikation.
+
+## Tests
+
+- NAS local API: `curl http://127.0.0.1:5177/api/kunden` ✅
+- NAS reverse proxy: `curl https://4c31.synology.me:8443/api/kunden` ✅
+- Manual NAS staging test (Kunden/Hunde/Kurse/Trainer/Kalender/Finanzen/Waren + navigation) ✅
+
+## Notizen
+
+- API server must be running on NAS for the frontend to load data.
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 76.8 — NAS Autostart Follow-up
+
+## Kontext
+
+- Status: read-only (completed).
+- Branch: `feature/station76.6-nas-followup`.
+- Scope: make NAS staging self-starting by documenting API + MariaDB autostart steps and providing an API boot script.
+
+## Ergebnis (kurz)
+
+- Added NAS API boot script at `tools/ops/nas-api-server.sh` (waits for MariaDB socket, then starts API).
+- Updated NAS runbook with DSM Task Scheduler boot task instructions and MariaDB autostart checklist.
+
+## Tests
+
+- Not run (documentation + ops script only).
+
+## Notizen
+
+- Task Scheduler must run at boot to keep staging alive after NAS restarts.
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 76.9 — NAS Git Deploy Key Workflow
+
+## Kontext
+
+- Status: read-only (completed).
+- Branch: `feature/station76.6-nas-followup`.
+- Scope: switch NAS updates to a GitHub Deploy Key workflow and document `git pull` deployment steps.
+
+## Ergebnis (kurz)
+
+- Added a detailed NAS git workflow in `NAS_STATION76_5_SETUP.md` (deploy key creation, remote config, pull-based updates).
+- Clarified that `git fetch` does not update the working tree; `git pull` is required for deployments.
+
+## Tests
+
+- Not run (documentation-only).
+
+## Notizen
+
+- NAS updates should avoid scp/rsync for repo changes; use `git pull` after merges.
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 76.10 — NAS Healthcheck Script
+
+## Kontext
+
+- Status: read-only (completed).
+- Branch: `feature/station76.6-nas-followup`.
+- Scope: add a lightweight boot-time healthcheck script for NAS API/MariaDB and log results to `api.log`.
+
+## Ergebnis (kurz)
+
+- Added `tools/ops/nas-api-healthcheck.sh` for socket + API checks.
+- `tools/ops/nas-api-server.sh` now triggers the healthcheck after starting the API.
+- Runbook updated with executable steps for the new healthcheck.
+
+## Tests
+
+- Not run (ops script only).
+
+## Notizen
+
+- Healthcheck uses `curl` and the MariaDB socket path to validate readiness.
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 76.11 — Contabo VPS Setup (Battleplan Added)
+
+## Kontext
+
+- Status: read-only (completed).
+- Branch: `feature/station76.6-nas-followup`.
+- Scope: add a new battleplan station for migrating hosting from NAS to Contabo VPS with production-grade setup and step-by-step operator runbook.
+
+## Ergebnis (kurz)
+
+- Added Station 76.7 “Contabo VPS Setup (Production-Grade Hosting)” to `BATTLEPLAN_STATIONS_71_PLUS.md`.
+- Station scope includes VPS provisioning, OS hardening, firewall, MariaDB + Node API services, static hosting with reverse proxy, TLS, backup/rollback, and verified runbook.
+
+## Tests
+
+- Not run (documentation-only).
+
+## Notizen
+
+- Next agent should create `CONTABO_VPS_SETUP.md` and execute the runbook on the VPS.
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 76.12 — Handover Notes (Contabo VPS)
+
+## Kontext
+
+- Status: read-only (completed).
+- Branch: `feature/station76.6-nas-followup`.
+- Scope: record handover notes for the Contabo VPS station so a new agent can continue without context loss.
+
+## Ergebnis (kurz)
+
+- New battleplan entry: Station 76.7 “Contabo VPS Setup (Production-Grade Hosting)” in `BATTLEPLAN_STATIONS_71_PLUS.md`.
+- `status.md` Station 76.11 notes that the runbook must be created and executed.
+- Next deliverable: `CONTABO_VPS_SETUP.md` with full provisioning + service setup steps.
+- VPS work should include: SSH keys only, firewall hardening, MariaDB + API systemd units, static hosting with reverse proxy, TLS, backups, and reboot validation.
+
+## Tests
+
+- Not run (handover note only).
+
+## Notizen
+
+- Use this as the single source of truth for the next agent’s kickoff.
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 76.13 — Contabo VPS Runbook Draft
+
+## Kontext
+
+- Status: read-only (completed).
+- Branch: `feature/station76.7-contabo-runbook`.
+- Scope: draft a step-by-step Contabo VPS runbook aligned with battleplan and NAS learnings; documentation only (no VPS execution).
+
+## Ergebnis (kurz)
+
+- Expanded `CONTABO_VPS_SETUP.md` with DNS cutover, deploy key setup, SSH service reload fixes, MariaDB backup/restore hardening, and explicit `DOGULE1_REQUIRE_MARIADB` config.
+- Runbook now includes VPS verification, update workflow, backups, rollback, and reboot validation in one linear checklist.
+
+## Tests
+
+- Not run (documentation-only).
+
+## Notizen
+
+- VPS execution and validation are still pending; this entry only covers the runbook update.
 
 # - - - - - - - - - - - - - - - - - - - -
 
@@ -872,6 +1086,124 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 ## Notizen
 
 - `status.md` remains the continuous log and was not consolidated.
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 74 — MariaDB Schema & Adapter Implementation
+
+## Kontext
+
+- Status: read-only (completed).
+
+- Branch: `feature/station74-mariadb-schema-adapter`.
+- Scope: implement MariaDB schema + adapter, switch core CRUD to HTTP-backed API, and hard-require MariaDB for Beta usage.
+
+## Ergebnis (kurz)
+
+- Added MariaDB schema + local setup guide (`tools/mariadb/schema.sql`, `tools/mariadb/README.md`) and initialized local data dir under `/home/ran/codex/.local/mariadb` (socket-only).
+- Implemented MariaDB storage adapter (`modules/shared/storage/mariadbAdapter.js`) with CRUD for kunden/hunde/kurse/trainer/kalender/finanzen/waren, uuidv7 defaults, and JSON field handling.
+- Added core HTTP API router (`modules/shared/server/coreApiRouter.js`) and combined router export; Vite dev now wires core + Kommunikation via `createApiRouter`.
+- UI core modules switched to HTTP in browser with `modules/shared/api/httpClient.js`, while tests stay on mock via a test-environment guard.
+- Added Node API server entrypoint (`tools/server/apiServer.js`), MariaDB smoke test (`tools/mariadb/smokeTest.js`), and `.env.example` for local config.
+- Storage config supports `mariadb` mode and can enforce it via `DOGULE1_REQUIRE_MARIADB=1`; `.local/` is gitignored.
+
+## Tests
+
+- `pnpm install` ✅ (esbuild build scripts ignored warning)
+- `pnpm test` ❌ (HTTP mode tried `http://localhost:3000`, fixed by test-env guard)
+- `pnpm test` ✅
+- `mariadb-install-db --datadir /home/ran/codex/.local/mariadb --user=ran` ✅ (auth_pam ownership warnings)
+- `nohup mariadbd --datadir /home/ran/codex/.local/mariadb --socket=/home/ran/codex/.local/mariadb/mariadb.sock --pid-file=/home/ran/codex/.local/mariadb/mariadb.pid --log-error=/home/ran/codex/.local/mariadb/mariadb.err --skip-networking &` ✅
+- `mariadb --protocol=socket --socket /home/ran/codex/.local/mariadb/mariadb.sock --user=ran < tools/mariadb/schema.sql` ✅
+- `mariadb --protocol=socket --socket /home/ran/codex/.local/mariadb/mariadb.sock --user=ran -e "SHOW TABLES IN dogule1;"` ✅
+- `pnpm run mariadb:smoke` ✅ (uses default socket + user)
+
+## Notizen
+
+- MariaDB runs with `--skip-networking` (socket-only) due to sandbox restrictions; set `DOGULE1_MARIADB_SOCKET` to connect.
+- Core UI now expects `/api/*` endpoints in browser; use `createApiRouter` from `modules/shared/server/apiRouter.js` to serve CRUD + Kommunikation.
+- `mariadb:smoke` emits MODULE_TYPELESS warning (repo is not ESM); left as-is.
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 73 — DogTabs Data Inventory & Mapping Plan
+
+## Kontext
+
+- Status: read-only (completed).
+
+- Branch: `feature/station73-dogtabs-inventory`.
+- Scope: inventory DogTabs legacy capture (read-only), document file formats/counts, and define a mapping plan to Dogule1 schema.
+
+## Ergebnis (kurz)
+
+- Added `DOGTABS_DATA_INVENTORY.md` with file-type counts, directory inventory, snapshot counts, and PII notes for the Station-61 capture.
+- Added `DOGTABS_TO_DOGULE1_MAPPING.md` describing target mappings, ID strategy, FK rules, and open questions; embedded Access DB extraction manual.
+- Extracted Access DB schema and table list from the DogTabs database and mapped core tables (Kunden, Hunde, Seminare, Rechnungen, Pension/Rooms).
+- Captured column headers via `mdb-export` for `$_kundenstamm`, `$_kunden_hunde`, `$_seminardaten`, and `$_rechnung_kopf` and documented them in the mapping plan.
+
+## Tests
+
+- `mdb-tables -1 "migration/legacy/station61/capture_20251219_185854Z/raw/dogtaps_90_Datenbank/delete dogtaps_Datenbank.accdr.ORG"` — ✅
+- `mdb-schema "migration/legacy/station61/capture_20251219_185854Z/raw/dogtaps_90_Datenbank/delete dogtaps_Datenbank.accdr.ORG" mysql` — ✅ (No MSysRelationships)
+- `mdb-export ... "$_kundenstamm"` — ✅ (header capture)
+- `mdb-export ... "$_kunden_hunde"` — ✅ (header capture)
+- `mdb-export ... "$_seminardaten"` — ✅ (header capture)
+- `mdb-export ... "$_rechnung_kopf"` — ✅ (header capture)
+
+## Notizen
+
+- XLSX snapshots appear to have no embedded column headers; Access DB remains the authoritative schema source.
+- `mdb-schema` output saved outside the repo in `/tmp/dogtaps_schema.sql`.
+- Relationships were not emitted by `mdbtools` (`No MSysRelationships`), so FK rules still need manual validation.
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 72 — Alpha Closeout & Beta Readiness Gate
+
+## Kontext
+
+- Status: read-only (completed).
+
+- Branch: `feature/station72-alpha-closeout`.
+- Scope: freeze Alpha scope, define Beta entry/exit criteria, and standardize manual test issue logging. Documentation only.
+
+## Ergebnis (kurz)
+
+- Added `BETA_READINESS.md` with Alpha freeze list, Beta entry/exit criteria, and manual test issue log template.
+- Captured deferred-to-Beta scope (DogTabs ingestion, MariaDB-only backend, expanded entity fields, performance validation, manual test cycles).
+
+## Tests
+
+- Not run (documentation changes only).
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 71 — UI Visual Pass & Entity List/Detail Cleanup
+
+## Kontext
+
+- Status: read-only (completed).
+
+- Branch: `station71`.
+- Scope: visual cohesion pass, standardized button spacing, and list/detail refinements for Kunden/Hunde/Kurse/Trainer; no backend changes.
+
+## Ergebnis (kurz)
+
+- Applied new visual palette and typography across shared styles; unified button styling and spacing in module action areas.
+- Rebuilt Kunden/Hunde/Trainer list views into sortable, scrollable table overviews; aligned detail views with cleaner definition-list layouts.
+- Updated Kunden detail/form to include Status select (Aktiv/Deaktiviert), Ausweis-ID, Foto upload (Verfügbar/Keines link), and Begleitpersonen; Hunde detail extended with required fields (Felltyp, Kastriert, Fellfarbe, Größe-Typ, Herkunft, Chip-Nummer).
+- Adjusted Kurse list/detail to display created date and Outlook-mirror status in place of direct scheduling; added Kunde/Hund summaries in Kurs overview; normalized trainer availability labels to weekdays.
+- Fixed vertical spacing for “Hund hinzufügen” and “Auswahl leeren” buttons; standardized form footer button layout across Kunde/Hund/Kurs/Trainer.
+- Updated battleplan to include certificate station and UI requirements for status/photo upload.
+
+## Tests
+
+- Not run (UI/documentation changes only).
+
+## Notizen
+
+- Photo upload is stored as data URL for now (mock storage), surfaced as “Verfügbar” link in details.
 
 # - - - - - - - - - - - - - - - - - - - -
 
@@ -1289,26 +1621,59 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 # - - - - - - - - - - - - - - - - - - - -
 
-# Station 1–17 — Foundations & Early Linking (Historisch)
+# Station 61 — Legacy Data Capture
 
 ## Kontext
 
 - Status: read-only (completed).
 
-- Zeitraum: Phase 1 Baseline bis Kurs-Finanzflächen.
-- Branches/PRs: diverse, bereits gemergt; keine offenen PRs mehr aus dieser Phase.
-- Scope: Tooling, Router/Layout, Shared Components, zentrale Mock-API, CRUD für Kunden/Hunde/Kurse, erste Finanzen-Ansichten, frühe Verknüpfungen (Kunden↔Hunde↔Kurse), Build/NAS-Vorbereitung.
+- Branch: `feature/station61-legacy-capture`.
+- Scope: Station 61 forensic capture of DogTabs legacy data; freeze raw inputs only (no parsing/mapping/cleanup).
 
 ## Ergebnis (kurz)
 
-- Tooling/CI/Husky/Commitlint aufgesetzt, Module scaffolded, Hash-Router + persistentes Layout, Shared UI-Komponenten, zentrale Mock-DB/CRUD.
-- CRUD: Kunden, Hunde, Kurse; Finanzen-Karten für Kunden/Hunde/Kurse (readonly).
-- Verknüpfungen: Kunden↔Hunde, Hunde↔Kurse, Kunden↔Kurse (teilnehmerbezogen), Kurs-Finanzflächen.
-- Build: Vite-only mit relativen Pfaden; NAS-Platzhalter; Integrity-Check etabliert.
+- Raw DogTabs payload copied byte-for-byte into `migration/legacy/station61/capture_20251219_185854Z` (capturedAt 2025-12-19T18:58:54Z UTC) with `raw/`, `README.md`, `manifest.json`, and `checksums.sha256`.
+- Checksums cover all files except the checksum file itself; manifest lists size/hash per raw file; capture naming follows `capture_YYYYMMDD_HHMMSSZ`.
+- CI guard `tools/ci/legacyStation61Guard.js` added and wired into the lint workflow (fetch-depth 0) to forbid modifications to existing `capture_*` directories; guard run locally using env-fed git status output (Node child_process blocked here) → pass.
+- Legacy data remains unfiltered/unsorted; reserved for later mapping/cleanup stations.
+
+## Tests
+
+- `node tools/ci/legacyStation61Guard.js` with env-provided git status output ✅ (pnpm unavailable locally)
 
 ## Notizen
 
-- Alle Stationen 1–17 abgeschlossen, keine offenen Issues aus dieser Phase bekannt.
+- Dogtaps raw payload parked in `migration/legacy/station61/capture_20251219_185854Z/raw/`; folder is gitignored and only stored for reference (no processing / no per-file listing here).
+
+- Repo-doc gap: `agents.md` remains missing; Station 61 directory is input-only/immutable after commit.
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 59 — Authentication & Sessions MVP Implementation
+
+## Kontext
+
+- Status: read-only (completed).
+
+- Branch: `feature/station59-auth-sessions`.
+- Ziel: Auth-/Session-MVP mit lokalem Login (`admin|staff|trainer`), PBKDF2-Hashing, Access/Refresh-Tokens, Lockout, Logout/Revoke, Admin-2FA-Flag (stub), Feature-Flagging; Audit-/AuthZ-Aktions-IDs fest verdrahtet in Baseline/Matrix.
+
+## Ergebnis (kurz)
+
+- `DOGULE1_SECURITY_BASELINE.md` ergänzt um Auth-Parameter: PBKDF2-HMAC-SHA256 (120k, 16B Salt, 32B Key), Access=15m, Refresh=7d, Lockout 5/5m → 15m, Secrets `DOGULE1_AUTH_SECRET`/`DOGULE1_REFRESH_SECRET`, Flags `DOGULE1_AUTH_ENABLED`, `DOGULE1_SESSION_COOKIE_NAME` (HttpOnly/SameSite=Strict/Secure), Admin-2FA-Toggle, Audit-ActionIDs `auth.*`.
+- `SECURITY_AUTHORIZATION_MATRIX.md` erweitert um `auth.login|refresh|logout|lockout|denied` Rollenregeln (deny-by-default bleibt).
+- Neue Auth-Implementierung (Mock/MVP): `modules/shared/auth/` mit Hashing, HMAC-signed Tokens, Lockout-Tracking, Refresh-Rotation/Revoke, Audit-Hooks (actionId/actor/target/result + Chain-Felder), Feature-Flag `DOGULE1_AUTH_ENABLED` (default off), Admin-2FA-Flag (stub: verweigert, wenn gefordert aber nicht gesetzt). Seed-User mit PBKDF2-Hashes (`admin`, `staff`, `trainer`).
+- Config-Resolver (`modules/shared/auth/config.js`) für Secrets/TTLs/Lockout/2FA; Error-Codes gekapselt; ownership bleibt rein in-memory (kein Storage-Write).
+
+## Tests
+
+- `pnpm vitest run modules/shared/auth/authService.test.js` ✅ (nach Vitest-Konfig-Anpassung auf Single-Thread)
+- `pnpm vitest run` ✅ (alle 7 Suites: kalender utils, router utils, finanzen.trainer, authService)
+
+## Notizen
+
+- Keine Runtime-/Storage-Änderungen; `storage_candidate/`, `storage_reports/`, NAS/`dist-station40.tar.gz`, `dogule1-alpha/` unverändert.
+- Vitest-Konfig auf Single-Thread (`pool: "threads", maxThreads=1`) gesetzt, um den vorherigen Worker-Crash zu beheben; Tests laufen stabil.
 
 # - - - - - - - - - - - - - - - - - - - -
 
@@ -1338,34 +1703,6 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 ## Notizen
 
 - `STATION58_STORAGE_ACCESS_LAYER_ARCHITECTURE.md` ist Vorgabe für zukünftige SAL-Implementationen (Stations 59–63); CI-Gate folgt in Station 60. Keine Runtime-/Storage-/NAS-Änderungen; `storage_candidate/`, `storage_reports/`, `dist-station40.tar.gz`, `dogule1-alpha/` unverändert.
-
-# - - - - - - - - - - - - - - - - - - - -
-
-# Station 59 — Authentication & Sessions MVP Implementation
-
-## Kontext
-
-- Status: read-only (completed).
-
-- Branch: `feature/station59-auth-sessions`.
-- Ziel: Auth-/Session-MVP mit lokalem Login (`admin|staff|trainer`), PBKDF2-Hashing, Access/Refresh-Tokens, Lockout, Logout/Revoke, Admin-2FA-Flag (stub), Feature-Flagging; Audit-/AuthZ-Aktions-IDs fest verdrahtet in Baseline/Matrix.
-
-## Ergebnis (kurz)
-
-- `DOGULE1_SECURITY_BASELINE.md` ergänzt um Auth-Parameter: PBKDF2-HMAC-SHA256 (120k, 16B Salt, 32B Key), Access=15m, Refresh=7d, Lockout 5/5m → 15m, Secrets `DOGULE1_AUTH_SECRET`/`DOGULE1_REFRESH_SECRET`, Flags `DOGULE1_AUTH_ENABLED`, `DOGULE1_SESSION_COOKIE_NAME` (HttpOnly/SameSite=Strict/Secure), Admin-2FA-Toggle, Audit-ActionIDs `auth.*`.
-- `SECURITY_AUTHORIZATION_MATRIX.md` erweitert um `auth.login|refresh|logout|lockout|denied` Rollenregeln (deny-by-default bleibt).
-- Neue Auth-Implementierung (Mock/MVP): `modules/shared/auth/` mit Hashing, HMAC-signed Tokens, Lockout-Tracking, Refresh-Rotation/Revoke, Audit-Hooks (actionId/actor/target/result + Chain-Felder), Feature-Flag `DOGULE1_AUTH_ENABLED` (default off), Admin-2FA-Flag (stub: verweigert, wenn gefordert aber nicht gesetzt). Seed-User mit PBKDF2-Hashes (`admin`, `staff`, `trainer`).
-- Config-Resolver (`modules/shared/auth/config.js`) für Secrets/TTLs/Lockout/2FA; Error-Codes gekapselt; ownership bleibt rein in-memory (kein Storage-Write).
-
-## Tests
-
-- `pnpm vitest run modules/shared/auth/authService.test.js` ✅ (nach Vitest-Konfig-Anpassung auf Single-Thread)
-- `pnpm vitest run` ✅ (alle 7 Suites: kalender utils, router utils, finanzen.trainer, authService)
-
-## Notizen
-
-- Keine Runtime-/Storage-Änderungen; `storage_candidate/`, `storage_reports/`, NAS/`dist-station40.tar.gz`, `dogule1-alpha/` unverändert.
-- Vitest-Konfig auf Single-Thread (`pool: "threads", maxThreads=1`) gesetzt, um den vorherigen Worker-Crash zu beheben; Tests laufen stabil.
 
 # - - - - - - - - - - - - - - - - - - - -
 
@@ -1399,578 +1736,236 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 # - - - - - - - - - - - - - - - - - - - -
 
-# Station 18 — Status Quo Cleanup & Router/Layout/Build/Mock DB Konsolidierung
+# Station 56 — Migration Rehearsal & Cutover Prep (E2d)
 
 ## Kontext
 
 - Status: read-only (completed).
 
-- Phase-1 Abschluss: Vereinheitlichung und Hardening der Basis.
-- Scope: UI/ID-Regeln angleichen, Vite-Build stabilisieren, Router/Layout finalisieren, Mock-DB zentralisieren.
+- Branch: `53-55-Code`.
+- Ziel: End-to-end Rehearsal der Station-53–55 Toolchain (dry-run → migrate → scan, Checksums/Merkle, FK/Invariant/PII), Determinismusbeweis, Rollback-Drill, Playbook-Aktualisierung.
+- Inputs: Mock-DB (`modules/shared/api/db/index.js`) + Registries (`migration/mapping/*.json`) fixiert; Candidate-Root `storage_candidate/v1/`; `MIGRATE_RUN_ID=run-local`.
 
 ## Ergebnis (kurz)
 
-- Dashboard/Kunden/Hunde/Kurse vereinheitlicht; ID/Code-Regeln dokumentiert (id fix, code editierbar).
-- Router final: Clean Hash Router mit `import.meta.glob`, Fehlerzustände, Navigation-Highlighting.
-- Layout final: Statische Layout-Injektion, Mount nur in `#dogule-main`.
-- Build final: Vite-only, relative Pfade, keine Hybrid-Templates.
-- Mock-DB: Alle Daten zentral in `modules/shared/api/db/index.js`; Integrity-Check aktiv.
-- NAS-Platzhalter/Doku hinterlegt.
+- Rehearsal auf sauberem Workspace ausgeführt: `dry-run` → `migrate` → `scan-all` → 0 BLOCKER/WARNING; Candidate + Reports unter `storage_candidate/v1` und `storage_reports/latest-*`.
+- Determinismus bestätigt: Candidate gelöscht, erneut `dry-run`/`migrate`/`scan-all`, `diff -r storage_candidate/v1-run1 storage_candidate/v1` leer (byte-identisch).
+- Rollback-Drill: `MIGRATE_FAIL_AFTER_MODULE=kurse node tools/migration/cli.js migrate` bricht wie erwartet ab, Temp-Root entfernt, kein `storage_candidate/v1` hinterlassen; anschließender Clean-Run wieder grün.
+- Hashes dokumentiert (`run.json`): kunden `e4237d40…317d`, hunde `66740e0d…511`, kurse `85c4ff57…8dd`, trainer `5a797283…437`, kalender `40035969…ef2`, finanzen `b2797674…1aa`, waren `297c6599…7b0`, kommunikation `e3b0c442…b855`.
+- `CUTOVER_PLAYBOOK.md` und `STATION56_REHEARSAL_REPORT.md` auf Station-56-Rehearsal-Stand aktualisiert (Determinismus- und Rollback-Schritte aufgenommen).
+
+## Tests
+
+- `node tools/migration/cli.js dry-run` ✅
+- `node tools/migration/cli.js migrate` ✅ (run-local)
+- `node tools/migration/cli.js scan-all` ✅
+- `diff -r storage_candidate/v1-run1 storage_candidate/v1` ✅ (Determinismus)
+- `MIGRATE_FAIL_AFTER_MODULE=kurse node tools/migration/cli.js migrate` ❌ erwartet (Rollback-Drill; hinterließ kein `storage_candidate/v1`)
 
 ## Notizen
 
-- Phase 1 QA-Checkliste angelegt; dient als laufender Prüfanker.
+- Artefakte gitignored: `storage_candidate/v1/`, `storage_reports/latest-*`.
+- Bekannte Warnung unverändert akzeptiert: Node-Hinweis zu fehlendem `"type": "module"` in package.json.
+- Registries weiter Platzhalter aus Mock-IDs; echte UUID-Freigabe vor realem Cutover notwendig.
 
 # - - - - - - - - - - - - - - - - - - - -
 
-# - - - - - - - - - - - - - - - - - - - -
-
-# Station 19 — Module Self-Test Preparation (Phase A)
+# Station 55 — Integrity Scanner & CI Integration (Phase E2c)
 
 ## Kontext
 
 - Status: read-only (completed).
 
-- Ziel: Pflicht-Checkliste für Phase-A-Module etablieren.
-- Artefakt: `PHASEA_SELFTEST_CHECKLIST.md` erstellt und im MASTER verankert.
+- Branch: `feature/station55-integrity-scanner-plan`.
+- PR: https://github.com/christiansamuels932/dogule1/pull/61
+- Ziel: Read-only Integrity-Scanner + CLI-Befehle (scan-all/module/pii/drift/verify-checksums) für Candidate-Storage, CI-ready; keine Migration-Writes oder Registry-Mutationen.
 
 ## Ergebnis (kurz)
 
-- Checkliste deckt Router/Layout/Shared Components/CRUD/Empty/Error/Accessibility/Integrity ab.
-- MASTER verweist auf Checkliste als Voraussetzung für alle Phase-A-Stationen.
+- CLI erweitert um Scan-Kommandos (schema/FK/invariants/PII/drift + separate verify-checksums) mit deterministischen Reports (`storage_reports/latest-scan/`); Exit-Regel: BLOCKER → exit 1, sonst 0.
+- Validatoren implementiert: Schema (schemaVersion=1, version vorhanden), FK-Auflösung gegen Candidate-Daten, Invarianten (Zeitspanne, capacity>=bookedCount, non-negative price/betrag, Kurs/Trainer-Erfordernisse), Checksums (SHA-256 + Merkle, empty-root = SHA-256("")), Schema-Drift, PII-Leak-Check (kein PII in Checksums/Reports).
+- Registry bleibt read-only; keine Runtime-/Mock-DB-Schreibzugriffe; Reports gitignored.
+
+## Tests
+
+- `pnpm exec eslint tools/migration` ✅
+- Scan-Läufe nicht ausgeführt (Tooling-Implementierung ohne Ausführung).
 
 ## Notizen
 
-- Keine Codeänderungen an Modulen; Dokumentationsstation abgeschlossen.
+- Läufe sollen auf `storage_candidate/v1` erfolgen; CI-Jobs folgen in dieser Station. Untracked Artefakte (`dist-station40.tar.gz`, `dogule1-alpha/`) unverändert.
 
 # - - - - - - - - - - - - - - - - - - - -
 
-# - - - - - - - - - - - - - - - - - - - -
-
-# Station 20 — Dashboard Phase A
+# Station 54 — Storage Adapters & Checksums (Plan, Phase E2b)
 
 ## Kontext
 
 - Status: read-only (completed).
 
-- Ziel: Dashboard auf zentrale Mock-API umstellen, Phase-A-Ready.
+- Branch: `feature/station54-storage-adapters-checksums`.
+- PR: https://github.com/christiansamuels932/dogule1/pull/60
+- Ziel: Implementierungs-Layout für Storage-Adapter und Checksumms festlegen (Candidate-Only), keine Runtime-/Storage-Schreiboperationen.
 
 ## Ergebnis (kurz)
 
-- Dashboard-Zählungen nutzen zentrale Kunden/Hunde/Kurse-Daten.
-- Fallback-Texte vereinheitlicht, Scroll/Focus beim Laden.
-- Status-Karte via Shared Notice; Self-Test für Dashboard abgeschlossen.
+- `tools/migration/STATION54_IMPLEMENTATION_PLAN.md` ergänzt: Ziel-Layout `storage_candidate/v1/<module>/data.jsonl` + Checksums, TargetAdapter-API (temp→fsync→rename, abort cleanup), SHA-256-Hashes mit kanonischem JSON, Merkle-Regeln (id-sortiert, Empty-Root = SHA-256("")), CLI-Migrate-Flags/Defaults, read-only Registry-Nutzung (Proposals nur in registry_candidate), Report-Pfade deterministisch, Validierungs-Scope = Schema-only (FK/Invariant/PII in 55), Safety-Guidelines (nur Candidate-Root).
+- `.gitignore` erweitert um `storage_candidate/` (Candidate-Ausgaben werden nicht eingecheckt).
 
 ## Tests
 
-- `pnpm lint` ✅
-- `pnpm build` ✅
+- Keine (Dokumentationsstation, keine Codeänderungen).
 
 ## Notizen
 
-- MASTER ergänzt: Module gelten nur nach vollständigem GUI + manueller Freigabe als abgeschlossen.
+- Station 53 (dry-run) muss landen, bevor 54 Schreibpfade nutzt; 54 bleibt candidate-only/offline. Untracked Artefakte (`dist-station40.tar.gz`, `dogule1-alpha/`) unverändert.
 
 # - - - - - - - - - - - - - - - - - - - -
 
-# - - - - - - - - - - - - - - - - - - - -
-
-# Station 24 — Trainer Single-Module Completion (Phase A)
+# Station 53–55 — Migration Tooling Execution (Dry-Run, Migrate, Scan)
 
 ## Kontext
 
 - Status: read-only (completed).
 
-- Branch: `feature/station24-trainer`
-- Ziel: Trainer-Modul Phase-A-fertig (CRUD, Validierung, Shared Components).
+- Branch: `53-55-Code`
+- Ziel: Station-53–55 Tooling tatsächlich ausführen/härten (Dry-Run + Migrate + Scan) mit deterministischen Outputs, Atomik via Temp-Root→Rename, Checksum/Merkle, Registry-gestützte FK-Rewrites.
+- Registry: synthetische Platzhalter (`migration/mapping/*.json`) erstellt für alle Module; finale UUID-Zuweisungen müssen noch planerisch bestätigt/ersetzt werden.
 
 ## Ergebnis (kurz)
 
-- h1/h2-Hierarchie sauber, Router-Mount unverändert.
-- IDs sequenziell `t<n>` API-seitig; UI zeigt ID read-only, Code-Override-Toggle in Create/Edit.
-- Verfügbarkeiten als interaktives Textarea mit Persistenz.
-- Form-Buttons triggern Submit (`requestSubmit`), CRUD wieder funktionsfähig.
-- Detail/List zeigen ID/Code/Kontakt/Notizen/Verfügbarkeiten.
+- `migrate.js` implementiert: liest Mock-DB, wendet Registry auf IDs/FKs an, erzwingt `schemaVersion=1`/`version=0`, schreibt Kandidat nur unter `storage_candidate/v1` via temp-root + atomic rename, erzeugt Entity-Checksums + Merkle (`checksums/entities.jsonl`, `merkle.json`) und deterministisches `checksums/run.json` (`runId`, `generatedAt` fix).
+- CLI erweitert (`node tools/migration/cli.js migrate`), Dry-Run/Scan bleiben bestehen; Scan toleriert leere Registry nur bei leeren Modulen.
+- Determinismus belegt: zwei `migrate` Läufe mit identischem `MIGRATE_RUN_ID=run-1` erzeugen byte-identische Trees (`diff -r` leer).
+- Rollback-Drill: `MIGRATE_FAIL_AFTER_MODULE=kurse` → erwarteter Abbruch, Temp-Root wird entfernt, bestehender Kandidat bleibt unverändert.
+- Kandidat + Checksums aktuell unter `storage_candidate/v1`; `run.json` nutzt `generatedAt: "00000000T000000Z"`.
+- Mappings abgeleitet aus Mock-DB (Option A = Mock als Legacy): `migration/mapping/*.json` jetzt deterministisch aus Mock-IDs → uuidv7 (per Hash-Seeding).
 
 ## Tests
 
-- `pnpm lint` ✅
-- `pnpm build` ✅
-- Manuelle UI-Validierung Phase-A: CRUD, Validierung, Empty/Error, Navigation, Shared-Styles ✅
-
-# - - - - - - - - - - - - - - - - - - - -
-
-# - - - - - - - - - - - - - - - - - - - -
-
-# Station 25 — Finanzen Phase A (Listen/Detail/Filter – Skeleton)
-
-## Kontext
-
-- Status: read-only (completed).
-
-- Branch: `feature/station25-finanzen`
-- Ziel: Phase-A-Skelett für Finanzen (ohne CRUD/Deletes, vorbereitet für Station 27).
-
-## Ergebnis (kurz)
-
-- `initModule` mit Scroll/Fokus/Hash-Segmente.
-- Loading/Error/Empty via Shared Notices.
-- Summary-Karte (Summe Zahlungen/Offen/Saldo), Filter-Karte (Kunde/Typ).
-- Einträge-Tabelle mit Kundenauflösung und Hash-Details.
-- Detail-Card mit Kunde-Link + Back-Link.
-
-## Tests
-
-- `pnpm lint` ✅
-- `pnpm build` ✅
-- Manuell: `#/finanzen`, `#/finanzen/<id>` console-clean.
-
-# - - - - - - - - - - - - - - - - - - - -
-
-# - - - - - - - - - - - - - - - - - - - -
-
-# Station 27 — Finanzen Single-Module Completion (Phase A)
-
-## Kontext
-
-- Status: read-only (completed).
-
-- Branch: `feature/station27-finanzen`
-- Ziel: Finanzen-CRUD komplettieren.
-
-## Ergebnis (kurz)
-
-- Hash-Routen `#/finanzen`/`new`/`<id>`/`<id>/edit`.
-- Shared-Formular: ID read-only + Code-Override, Felder Kunde/Typ/Betrag/Datum/Beschreibung.
-- Filter + Summary beibehalten; Detail mit Edit/Delete-Actions, Inline-Löschbestätigung.
-- Typen vereinheitlicht auf „Bezahlt/Offen“, Kundenlabels aus zentraler Map.
-- Shared Notices/Empty, Fokus/Scroll-Reset, deutsche UI.
-
-## Tests
-
-- `pnpm lint` ✅
-- `pnpm test` ✅
-- `pnpm build` ✅
-- Manuelle Self-Test: CRUD end-to-end inkl. Delete ✅, Console clean.
-
-# - - - - - - - - - - - - - - - - - - - -
-
-# - - - - - - - - - - - - - - - - - - - -
-
-# Station 28 — Waren Single-Module Completion (Phase A)
-
-## Kontext
-
-- Status: read-only (completed).
-
-- Branch: `feature/station28-waren`
-- Ziel: Waren-CRUD Phase-A-fertig (keine Relationen).
-
-## Ergebnis (kurz)
-
-- Routen `#/waren`/`new`/`<id>`/`<id>/edit`.
-- Listen/Detail/Form/Delete über Shared Cards/Buttons/Notices/Form-Rows.
-- Deutsche UI, Loading/Error/Empty/Not-Found, Fokus/H1/H2 korrekt.
-- Keine Routing-/Console-Warnungen; nutzt zentrale Waren-API.
-
-## Tests
-
-- `pnpm lint` ✅
-- `pnpm build` ✅
-- Manuelle Self-Test: CRUD inkl. Delete ✅
-
-# - - - - - - - - - - - - - - - - - - - -
-
-# - - - - - - - - - - - - - - - - - - - -
-
-# Station 29 — Connect Kunden ↔ Hunde
-
-## Kontext
-
-- Status: read-only (completed).
-
-- Branch: `feature/station29-kunden-hunde`
-- Ziel: Bidirektionale Navigation Kunden↔Hunde, FK-Sicherung.
-
-## Ergebnis (kurz)
-
-- Kunden-Detail zeigt verlinkte Hunde (ID/Code); Hunde-Liste/Detail verlinkt Besitzer, Rücksprung nach Delete.
-- Hund-API erzwingt gültige `kundenId` bei Create/Update.
-- Self-Test-Checkliste um Station-29-Block ergänzt.
-
-## Tests
-
-- `runIntegrityCheck` ✅
-- `pnpm lint` ✅
-- `pnpm test` ✅
-- `pnpm build` ✅
-
-# - - - - - - - - - - - - - - - - - - - -
-
-# - - - - - - - - - - - - - - - - - - - -
-
-# Station 30 — Connect Kunden ↔ Kurse (Hunde-basiert)
-
-## Kontext
-
-- Status: read-only (completed).
-
-- Branch: `feature/station30-kunden-kurse`
-- Ziel: Teilnehmermodell auf Hunde-only, abgeleitete Kundenanzeigen.
-
-## Ergebnis (kurz)
-
-- Kurse validieren `hundIds`, `kundenIds` entfernt; Integrity-Check aktualisiert.
-- Kunden-Detail verlinkt Kurse über Hunde.
-- Kurs-UI zeigt Teilnehmerkunden abgeleitet aus Hundebesitzern.
-- Neues Typeahead im Kurs-Formular: Spalten Kunden/Hunde; Kunde-Klick fügt alle eigenen Hunde hinzu, Hund-Klick Einzelhund; Chips/Leeren; leere Auswahl erlaubt.
-
-## Tests
-
-- `pnpm lint` ✅
-- `pnpm vitest run` ✅
-- `pnpm build` ✅
-- PR erstellt (Station abgeschlossen).
-
-# - - - - - - - - - - - - - - - - - - - -
-
-# - - - - - - - - - - - - - - - - - - - -
-
-# Station 31 — Connect Hunde ↔ Kurse
-
-## Kontext
-
-- Status: read-only (completed).
-
-- Branch: `feature/station31-hunde-kurse`
-- Ziel: Kurse in Hundedetail, Hunde in Kursdetail; Besitzerinfos konsistent.
-
-## Ergebnis (kurz)
-
-- Hunde-Detail listet Kurse inkl. Links; Kurs-Detail listet teilnehmende Hunde inkl. Besitzerinfos.
-- Alle Hundedarstellungen zeigen Besitzer (Code/Name) + Ort aus Kundenadresse; Kurs-Formular-Suche/Chips ebenso.
-
-## Tests
-
-- `pnpm lint` ✅
-- `pnpm vitest run` ✅
-- `pnpm build` ✅
-- PR ausstehend.
-
-# - - - - - - - - - - - - - - - - - - - -
-
-# - - - - - - - - - - - - - - - - - - - -
-
-# Station 32 — Connect Kurse ↔ Trainer
-
-## Kontext
-
-- Status: read-only (completed).
-
-- Branch: `feature/station31-hunde-kurse` (fortgeführt)
-- Ziel: Trainer-Zuweisung validieren, Kurse ↔ Trainer Navigation, Delete-Guards.
-
-## Ergebnis (kurz)
-
-- Kurse laden/prüfen Trainerliste, Trainerkarte im Kursdetail (ID/Code/Kontakt), UI-Fehler bei ungültigem Trainer.
-- Trainer-Detail listet Kurseinsatz; Trainer-Löschen blockiert bei Zuweisungen und zeigt Kursliste, Integrity-Check im Fehlerfall.
-- Aktionen-Karten mit primärem „Neuer …“-Button vereinheitlicht.
-
-## Tests
-
-- `pnpm lint` ✅
-- `pnpm vitest run` ✅
-- `pnpm build` ✅
-- Manuell: Kursdetail → Trainer-Link, Trainerdetail → Kurse, Kurs-Create/Edit mit Trainer, Delete-Guard.
-
-# - - - - - - - - - - - - - - - - - - - -
-
-# - - - - - - - - - - - - - - - - - - - -
-
-# Station 32a — Build-Fix Trainer FK Export
-
-## Kontext
-
-- Status: read-only (completed).
-
-- Branch: `feature/station31-hunde-kurse`
-- Ziel: CI-Build-Fix nach fehlendem Export und FK-Check.
-
-## Ergebnis (kurz)
-
-- `modules/shared/api/kurse.js` exportiert `getKurseForTrainer`.
-- Trainer-FK-Checks verschärft; Integrity-Check erweitert.
-
-## Tests
-
-- `pnpm lint` ✅
-- `pnpm vitest run` ✅
-- `pnpm build` ✅
-- Commit: `fix: enforce trainer FK and export getKurseForTrainer`.
-
-# - - - - - - - - - - - - - - - - - - - -
-
-# - - - - - - - - - - - - - - - - - - - -
-
-# Station 33 — Connect Kurse ↔ Kalender
-
-## Kontext
-
-- Status: read-only (completed).
-
-- Branch: `feature/station33-kurse-kalender`
-- Ziel: Kalender-Ereignisse strikt aus Kursen ableiten/synchronisieren.
-
-## Ergebnis (kurz)
-
-- Kalender upsert/remove per Kurs; `syncKalenderWithKurse` räumt Waisen.
-- Event-Payload lokal → ISO, nur MASTER-Felder.
-- UI: Event-Blocks verlinken zu `#/kurse/<id>`, Event-Detail zeigt Kurs-Infos + „Zum Kurs/Zum Tag“.
-
-## Tests
-
-- `pnpm lint` ✅
-- `pnpm vitest run` ✅
-- `pnpm build` ✅
-- Manuell: Kurs erstellen → Event erscheint; Zeit ändern → Event verschiebt; Löschen nach Entlinken entfernt Event; Event-Detail-Link ok.
-
-# - - - - - - - - - - - - - - - - - - - -
-
-# - - - - - - - - - - - - - - - - - - - -
-
-# Station 35 — Connect Trainer ↔ Finanzen (re-scoped)
-
-## Kontext
-
-- Status: read-only (completed).
-
-- Branch: `feature/station35-trainer-finanzen`
-- Ziel: Trainer-Metadaten in Finanzen (read-only), optional `kursId` in Zahlungen, keine Schemaerweiterung darüber hinaus.
-
-## Ergebnis (kurz)
-
-- Finanzen-Liste/Detail zeigen Trainer-Meta/Links für Kurs-Zahlungen; Trainer-Detail Umsatz-Karte (Summen Bezahlt/Offen/Saldo + letzte Einträge) mit Finanzen-Links.
-- Neue API-Helper `resolveFinanzenWithRelations`, `getFinanzenReportForTrainer`; Integrity-Check validiert `kursId` falls vorhanden.
-- Nicht kursgebundene Zahlungen bleiben unverändert; Kurs ohne Trainer zeigt Hinweis; Trainer-Umsatzkarte leer bei keinem Umsatz.
-
-## Tests
-
-- `pnpm lint` ✅
-- `pnpm vitest run --root . modules/shared/api/finanzen.trainer.test.js` ✅
-- `pnpm build` ✅
-- Manuelle Checks durchgeführt.
-
-# - - - - - - - - - - - - - - - - - - - -
-
-# - - - - - - - - - - - - - - - - - - - -
-
-# Station 35.1 — CI Lint Fix (Trainer ↔ Finanzen)
-
-## Kontext
-
-- Status: read-only (completed).
-
-- Branch: `feature/station35-trainer-finanzen`
-- Ziel: Lint-Fehler (unused helper) beheben.
-
-## Ergebnis (kurz)
-
-- Unbenutzten Helper `formatScheduleTimeRange` entfernt; Aufruf bleibt bei `formatTimeRange`.
-
-## Tests
-
-- `pnpm lint` ✅
-
-## Notizen
-
-- Rein technischer Cleanup, keine funktionalen Änderungen.
-
-# - - - - - - - - - - - - - - - - - - - -
-
-# - - - - - - - - - - - - - - - - - - - -
-
-# Station 36 — Connect Trainer ↔ Kalender (Derivation-Only)
-
-## Kontext
-
-- Status: read-only (completed).
-
-- Branch: `feature/station35-trainer-finanzen` (weitergeführt für Station 36)
-- Ziel: Trainerdaten nur abgeleitet in Kalenderoberflächen anzeigen, keine Schema-/Persistenzänderungen.
-- Vorbedingungen: Station 32/32a (Kurse ↔ Trainer, FK-Checks), Station 33 (Kurse ↔ Kalender via kursId, keine Trainerfelder im Event) waren bereits umgesetzt.
-
-## Änderungen (Code)
-
-- `modules/kalender/index.js` (Bestand aus Station 33 weiterverwendet): Event-Blöcke/Details nutzen bereits `attachKursAndTrainer` und zeigen Trainer-Metadaten (Titel, Trainerzeile, „Zum Trainer“-Link im Event-Detail). Keine neuen Persistenzfelder; ableitende Darstellung bleibt intakt.
-- `modules/kalender/utils/eventContext.js`: Weiterhin verantwortlich für Kurs/Trainer-Auflösung pro Event (keine Schemaänderung).
-- `modules/trainer/index.js`: Neue read-only Karte „Kalendereinsätze“ im Trainer-Detail:
-  - Lädt alle Kalender-Events, filtert nach `trainerId`.
-  - Zeigt Datum + Zeitspanne (ISO → lokal), Titel/Code, Links zu Kurs (`#/kurse/<id>`) und Event (`#/kalender/event/<id>` Hash via `buildKalenderHash`).
-  - Deutsche Empty/Error States, sortiert nach Startzeit.
-  - Keine Schreiboperationen; rein abgeleitete Anzeige.
-- Hilfsfunktionen ergänzt: Sortierung/Formatierung (`sortEventsByStart`, `formatEventTimeRange`).
-
-## Tests & Qualität
-
-- `pnpm lint` ✅
-- `pnpm test --run` ✅ (Vitest-Suite inkl. Kalender-Utils/Routes/Layout und Finanzen-Trainer-Tests)
-- `pnpm build` ✅
-- `runIntegrityCheck` ✅ (Node Warnung: package.json ohne `"type": "module"`, unverändert)
-- Manuelle Checks ✅: Kalender Tag/Woche zeigt Trainerzeile bzw. „Kein Trainer zugewiesen.“; Event-Detail mit Trainerblock + „Zum Trainer“; Trainer-Detail-Karte listet Events inkl. Links/Empty/Error.
-
-## Lint/Build/CI-Folgen
-
-- Keine neuen Lint-Verstöße; Husky/lint-staged liefen bei Commits.
-- Node Warnung bei Integrity-Check bleibt bekannt (Type-Flag), bewusst nicht geändert.
-
-## Entscheidungen / Abweichungen
-
-- Keine Schemaänderungen in `kalender` (Events behalten nur `kursId`; Trainer wird immer über Kurs aufgelöst).
-- Keine Router/Layout-Anpassungen; nur Moduloberflächen erweitert.
-- Keine neuen Mock-Daten; bestehende Kurs→Kalender-Synchronisation reicht für Trainerableitung.
+- `node tools/migration/cli.js dry-run` ✅ (0 BLOCKER)
+- `node tools/migration/cli.js migrate` ✅ (kandidat geschrieben, checksums/merkle)
+- `node tools/migration/cli.js scan-all` ✅ (0 BLOCKER/WARNING)
+- Determinismus: zwei Läufe (`MIGRATE_RUN_ID=run-1`) + `diff -r storage_candidate/v1_run1 storage_candidate/v1_run2` → keine Unterschiede
+- Rollback-Injection: `MIGRATE_FAIL_AFTER_MODULE=kurse MIGRATE_RUN_ID=fail-test node tools/migration/cli.js migrate` ❌ erwartet; Temp-Verzeichnis bereinigt
+- `pnpm lint` ✅ (nach Ignore-Erweiterung für build/output/reports)
 
 ## Issues
 
-- Node-Hinweis beim Integrity-Check (fehlendes `"type": "module"` in package.json) bewusst akzeptiert; keine Aktion.
+- UUID-Mappings leiten sich deterministisch aus Mock-IDs ab; falls echte Legacy-Daten auftauchen, müssen sie ersetzt werden.
+- Fsync-Pfad (temp→fsync→rename) fehlt noch; aktuell rename-atomik ohne fsync.
+- Vitest nicht erneut ausgeführt (vorbekanntes Worker-Exit-Problem bleibt offen).
+- Node-Warnung zu fehlendem `"type": "module"` weiter vorhanden (bewusst unverändert).
 
 ## Notizen
 
-- Station 36 abgeschlossen. PR “Station 36.X – Update Log” offen: https://github.com/christiansamuels932/dogule1/pull/48.
+- Kandidat-/Report-Pfade gitignored (`storage_candidate/`, `storage_reports/`).
+- CUTOVER-Playbook/Station-56-Report noch zu schreiben; wird in Station 56 erwartet.
 
 # - - - - - - - - - - - - - - - - - - - -
 
-# Station 37 — Local Alpha Assembly Prep (Phase C)
+# Station 52 — Migration & Integrity Tooling Plan (Phase E2)
 
 ## Kontext
 
 - Status: read-only (completed).
 
-- Branch: `feature/station35-trainer-finanzen` (weitergeführt für Station 37).
-- Ziel: Alpha-Assembly vorbereiten ohne Scope-Erweiterung; Plan/Doku ergänzen, UX-Konsistenz prüfen, kleine UI-Korrekturen.
-- Grenzen: Kommunikation bleibt Placeholder, Waren ↔ Finanzen nicht verknüpft, keine automatischen Kurs/Waren-Umsätze in Finanzen.
+- Branch: `feature/station52-migration-tooling-plan`.
+- PR: https://github.com/christiansamuels932/dogule1/pull/58
+- Ziel: Plan für Migration/Integrity-Tooling auf Basis der Storage-Baseline erstellen (keine Implementierung/Storage-Manipulation).
 
 ## Ergebnis (kurz)
 
-- Plan/Doku: `STATION37_ALPHA_PLAN.md` hinzugefügt (Scope-Guards, Walkthrough, Gaps); README um Alpha-Abschnitt ergänzt (Runs, Verknüpfungen, bekannte Lücken).
-- Navigation: Hauptmenü-Reihenfolge angepasst auf `Dashboard, Kunden, Hunde, Kurse, Trainer, Kommunikation, Kalender, Finanzen, Waren`.
-- Kunden-Create: Optionaler Hunde-Block im Kundenformular (Mehrfachentwürfe, Name Pflicht, Code auto, Kunde FK gesetzt, Toast mit Erfolg/Fehlschlägen).
-- Waren: Listen/Detail zeigen zugehörigen Kunden; Formular erfordert Kunde-Select; „Neu“-Button links ausgerichtet; Codes weiter optional.
-- Bekannter Gap dokumentiert: Kein automatischer Waren→Finanzen- oder Kurs→Finanzen-Eintrag (bleibt bewusst offen).
+- `MIGRATION_TOOLING_PLAN.md` angelegt: Scope/Out-of-scope, Engine-Architektur (CLI, Source/Target-Adapter, Mapper, Legacy-ID-Registry, Validation, BatchRunner), ID/Version/Prefix-Regeln, Mapping/Checksum/Integrity-Scanner/Fallback-Strategien, Staging/Cutover/Rollback, Test- und Failure-Injection-Protokoll, Runbook/Reports.
+- Plan bindet strikt an `DOGULE1_SYSTEM_BASELINE_V2.md` (Baseline gewinnt bei Konflikt) und nennt Governance-Namenskonflikt (Stations 53–56) als vorgelagerte Governance-Aktion.
+- Keine Runtime-Codeänderungen; reine Dokumentation/Planung.
 
 ## Tests
 
-- `pnpm lint` ✅
-- `pnpm vitest run` ✅ (Vite CJS Node API deprecation notice)
-- `pnpm build` ✅
-- `node --input-type=module -e "import('./modules/shared/api/db/integrityCheck.js').then(m=>m.runIntegrityCheck())"` ✅ (bekannte `"type": "module"` Warnung akzeptiert)
+- Keine (Dokumentationsstation, keine Codeänderungen).
 
 ## Notizen
 
-- Manuelle Alpha-Walkthrough-Schritte erfolgreich (Kunde→Hund→Kurs→Trainer→Kalender, Waren-CRUD, Finanzen-CRUD).
-- Station 38 soll bekannte Gaps berücksichtigen (kein Waren/Kurs-Auto-Revenue, Kommunikation weiterhin minimal).
+- Untracked Artefakte (`dist-station40.tar.gz`, `dogule1-alpha/`) unverändert belassen. Governance-Update erforderlich, bevor technische Schritte 53–56 umgesetzt werden.
+- Governance wurde nach Station 52 angepasst: Stationen 53–56 sind jetzt Migration/Integrity (siehe PR `feature/station52-migration-tooling-plan`); nachgelagerte Stationen wurden entsprechend renummeriert.
 
 # - - - - - - - - - - - - - - - - - - - -
 
-# Station 38 — Local Alpha Test Script (Phase C)
+# Station 51 — Storage Baseline V2 Formalization
 
 ## Kontext
 
 - Status: read-only (completed).
 
-- Branch: `feature/station38-alpha-test-script` (ab Station-37-Stand fortgeführt).
-- Ziel: Deterministisches, schrittweises Alpha-Testskript erstellen, das alle Module (Phase A) und Verknüpfungen (Phase B) abdeckt und bekannte Nicht-Ziele dokumentiert.
-- Artefakte: `ALPHA_TEST_SCRIPT.md` (vollständiges Skript mit Aktionen/Erwartungen/Konsolen-Checks).
+- Branch: `feature/station51-storage-baseline`.
+- Ziel: Speicher-Baseline V2 dokumentieren (Schemas, IDs, PII/Residency, Integrität, Migration).
 
 ## Ergebnis (kurz)
 
-- Vollständiges Alpha-Testskript mit festen Testdaten (Alpha Kunde/Hund/Kurs/Trainer/Ware/Finanzbuchung), Aktionen→Erwartung→Konsolen-Triplets, Navigation/Back/Forward/Hash-Checks.
-- Deckt Phase-A-Checks je Modul (Focus/Scroll/Shared Components/Empty/Error/Loading) und alle Verknüpfungsketten (Kunden↔Hunde↔Kurse↔Trainer↔Kalender, Trainer↔Finanzen) ab; Kommunikation als Placeholder bestätigt.
-- Negative Tests dokumentiert: Keine automatischen Waren→Finanzen- oder Kurs→Finanzen-Einträge.
-- Data/Cleanup-Policy und Branch/Commit-Lock festgelegt für deterministische Runs.
+- `DOGULE1_SYSTEM_BASELINE_V2.md` angelegt (Schema-Tabellen für alle Module inkl. Kommunikation-Shell, PII/Residency, ID/Version-Policy, Invarianten, Checksums, Concurrency/Atomicity, Failure-Injection, Mock→Real-Mapping, Backup/Scan-Cadence).
+- Governance verweist nun auf die Baseline; `modules/shared/api/README.md` hinzugefügt als Pointer für Mock-Daten/Storage-Arbeiten.
+- Keine Codeänderungen an Runtime; Migration/Tooling noch ausstehend.
 
 ## Tests
 
-- Keine Builds/Tests notwendig (Dokumentationsstation); Pre-Run-Befehle im Skript vorgegeben (`pnpm install`, Integrity Check, `pnpm lint`, `pnpm vitest run`, `pnpm build`, `pnpm dev`).
+- Keine (Dokumentationsstation).
 
 ## Notizen
 
-- Bekannte Warnung bleibt akzeptiert: Node-Hinweis zu fehlendem `"type": "module"` beim Integrity Check.
-- Branch/Commit-Lock im Skript: `feature/station38-alpha-test-script` @ `621e849`.
+- Migration-/Integrity-Tooling folgt in späteren Schritten; PII/Prefix/Version Defaults sind im Dokument fixiert.
 
 # - - - - - - - - - - - - - - - - - - - -
 
-# - - - - - - - - - - - - - - - - - - - -
-
-# Station 39 — Alpha Hardening (Failure Inventory)
+# Station 50 — Roadmap Governance & Definitions of Ready
 
 ## Kontext
 
 - Status: read-only (completed).
 
-- Branch: `feature/station39-alpha-hardening`.
-- Ziel: Alpha-Testskript vollständig ausführen (ohne Codeänderungen), Abweichungen in `STATION39_FAILURE_INVENTORY.txt` dokumentieren.
+- Branch: `feature/station50-governance`.
+- Ziel: Governance und DoR-Artefakte für Stationen 50–70 erstellen (nur Dokumentation, keine Builds/Tests).
 
 ## Ergebnis (kurz)
 
-- Pre-Run-Kommandos ausgeführt; Lint/Build/IntegrityCheck grün, Vitest bricht ab (Worker exited unexpectedly, keine Tests gesammelt).
-- Dev-Server musste mit erhöhten Rechten gestartet werden (Port ::1:5173 EPERM im ersten Versuch, zweiter Start per Escalation). UI-Walkthrough vollständig durchgeführt, keine in-app Abweichungen/Console-Warnungen, kleiner Beobachtungspunkt: Finanzen-Liste initial gelegentlich ~1s Ladezeit, aber innerhalb Erwartung.
-- Failure Inventory ergänzt (Environment-Hinweise, Vitest-Failure, Dev-Server-Port, alle Modul-Checks als Pass).
+- `DOGULE1_GOVERNANCE.md` angelegt: Stationen 50–70 restated mit Validierung (2025-12-08, gültig), Gating-Regeln, Branch/PR-Governance, Rollen, Änderungsregeln, Blocker-Protokollierung.
+- `DOR_PHASES_E_TO_I.md` angelegt: DoR-Templates für Phasen E–I mit Pflichtfeldern (Scope, Dependencies, Risiken/Annahmen, Artefakte, Testbarkeit, Reviewer, Timebox, Boundaries, Exit-Kriterien) und Vorgabe, Risiken/Annahmen in PR + `status.md` zu loggen.
 
 ## Tests
 
-- `pnpm install` ✅ (Warnung: husky install deprecated; pnpm approve-builds Hinweis)
-- `node --input-type=module -e "import('./modules/shared/api/db/integrityCheck.js').then(m=>m.runIntegrityCheck())"` ✅ (bekannte `"type": "module"` Warnung)
-- `pnpm lint` ✅
-- `pnpm vitest run` ❌ (Worker exited unexpectedly; 6 unhandled errors, keine Tests)
-- `pnpm build` ✅
-- `pnpm dev` ⚠️ (erstes Mal EPERM ::1:5173; zweiter Start mit Escalation OK, aber Prozess durch Timeout beendet)
+- Keine (Dokumentationsstation).
+
+## Notizen
+
+- Keine Codeänderungen. Untracked Artefakte (`dist-station40.tar.gz`, `dogule1-alpha/`) unverändert belassen.
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 42 — NAS Smoke Test
+
+## Kontext
+
+- Status: read-only (completed).
+
+- Branch: `feature/station42-nas-smoketest`.
+- Ziel: Formale NAS-Smoketest-Abnahme des statischen Builds (HTTP, keine Codeänderungen), Protokollierung in `NAS_SMOKE_TEST_REPORT.md` und `status.md`.
+
+## Ergebnis (kurz)
+
+- NAS-App über HTTP geladen; alle Module (Dashboard, Kunden, Hunde, Kurse, Trainer, Kommunikation/Placeholder, Kalender, Finanzen, Waren) gerendert ohne Fehler (nur erwartetes `favicon.ico` 404).
+- CRUD für Kunden/Hunde/Kurse/Trainer/Finanzen/Waren erfolgreich (Create/Edit/Delete). Kalender Tag/Woche + Event-Linking funktionieren; Back/Forward/Hash stabil.
+
+## Tests
+
+- Manuelle NAS-Smoketests per Browser (HTTP auf NAS-Pfad) ✅
+- Keine Build/Lint/Test-Läufe (Validierungsstation, kein Code geändert).
 
 ## Issues
 
-- Vitest: Worker-exit/Unhandled errors verhindern Testlauf (keine Suites gesammelt).
-- Dev-Server: Port 5173 EPERM ohne Escalation; startete nur mit erhöhten Rechten und lief bis Timeout; Browser/DevTools Lauf erfolgte manuell außerhalb des Timers.
+- Erwartetes `favicon.ico` 404 im NAS-Serving (als bekannt/benign dokumentiert).
 
 ## Notizen
 
-- `STATION39_FAILURE_INVENTORY.txt` enthält detaillierte Beobachtungen (Environment + alle Modul-Schritte als Pass). Keine GUI-Anpassungen oder Codeänderungen vorgenommen.
-
-# - - - - - - - - - - - - - - - - - - - -
-
-# Station 40 — NAS Build Preparation (Completed)
-
-## Kontext
-
-- Status: read-only (completed).
-
-- Branch: `feature/station40-nas-deployment` @ commit `0763e90f77a81abc97b245310eca260fd3119db7`.
-- Ziel: NAS-Build vorbereiten, Validierungssequenz erneut ausführen, statisches Hosting prüfen.
-
-## Ergebnis (kurz)
-
-- Vollständige Validierungssequenz auf Branch/Commit Lock erneut ausgeführt (siehe Tests); Build frisch erzeugt.
-- Manuelle Alpha-Walkthrough-Tests laut Skript: ✅ (keine In-App-Abweichungen, Konsole clean; entspricht Local Alpha V0.1).
-- Static-Hosting-Test per `python3 -m http.server 8000` aus `dist/`: ✅ (alle Module/CRUD, Nav/Back/Forward, keine roten Konsolenfehler oder CORS/MIME/404-Hinweise). `file://`-Aufruf von `index.html` erzeugt erwartete CORS-Fehler für CSS/JS (ESM-Standard) und ist kein Blocker für NAS-HTTP-Hosting.
-- NAS-Build-Artefakt erstellt: `dist-station40.tar.gz` (untracked) mit SHA256 `5a473e409dffaf662417b33177781d3578a0e5e4e90121f750637dcd0d504dee` aus dem frisch erzeugten `dist/`.
-
-## Tests
-
-- `pnpm install` ✅
-- `node --input-type=module -e "import('./modules/shared/api/db/integrityCheck.js').then(m=>m.runIntegrityCheck())"` ✅ (nur bekannte Warning zu fehlendem `"type": "module"`)
-- `pnpm lint` ✅
-- `pnpm vitest run` ❌ (gleiches Worker-Exit/no-tests-collected-Muster wie Station 39; Umweltproblem, kein Regression)
-- `rm -rf dist` → `pnpm build` ✅ (frische hashed Assets in `dist/assets`; Basis für Paket)
-- Manuelles Alpha-Skript: ✅
-- Static-Hosting-Smoke (lokal, HTTP auf `dist/`): ✅ (siehe Ergebnis)
-
-## Offene Punkte/Risiken
-
-- Vitest-Worker-Exit bleibt ungefixt (Umweltproblem).
-- Dev-Server kann Port-EPERM auf ::1:5173 auslösen; bei Bedarf mit Escalation starten (siehe Station 39).
-- `file://`-Zugriff auf `dist/index.html` erzeugt erwartete ESM-CORS-Fehler; NAS/HTTP-Hosting nicht betroffen.
-
-## Nächste Schritte / Migration
-
-- Station 41 – NAS Deployment: `dist/` bzw. `dist-station40.tar.gz` nach NAS-Zielpfad laut `NAS_ALPHA_DEPLOY.md` kopieren, statischen Hosting-Smoke-Test durchführen und Ergebnisse loggen.
-- Ready for migration zu Station 41.
+- `NAS_SMOKE_TEST_REPORT.md` ergänzt mit Metadaten/Ergebnissen. Untracked Artefakte (`dist-station40.tar.gz`, `dogule1-alpha/`) unverändert belassen.
 
 # - - - - - - - - - - - - - - - - - - - -
 
@@ -2028,202 +2023,601 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 # - - - - - - - - - - - - - - - - - - - -
 
-# Station 42 — NAS Smoke Test
+# Station 40 — NAS Build Preparation (Completed)
 
 ## Kontext
 
 - Status: read-only (completed).
 
-- Branch: `feature/station42-nas-smoketest`.
-- Ziel: Formale NAS-Smoketest-Abnahme des statischen Builds (HTTP, keine Codeänderungen), Protokollierung in `NAS_SMOKE_TEST_REPORT.md` und `status.md`.
+- Branch: `feature/station40-nas-deployment` @ commit `0763e90f77a81abc97b245310eca260fd3119db7`.
+- Ziel: NAS-Build vorbereiten, Validierungssequenz erneut ausführen, statisches Hosting prüfen.
 
 ## Ergebnis (kurz)
 
-- NAS-App über HTTP geladen; alle Module (Dashboard, Kunden, Hunde, Kurse, Trainer, Kommunikation/Placeholder, Kalender, Finanzen, Waren) gerendert ohne Fehler (nur erwartetes `favicon.ico` 404).
-- CRUD für Kunden/Hunde/Kurse/Trainer/Finanzen/Waren erfolgreich (Create/Edit/Delete). Kalender Tag/Woche + Event-Linking funktionieren; Back/Forward/Hash stabil.
+- Vollständige Validierungssequenz auf Branch/Commit Lock erneut ausgeführt (siehe Tests); Build frisch erzeugt.
+- Manuelle Alpha-Walkthrough-Tests laut Skript: ✅ (keine In-App-Abweichungen, Konsole clean; entspricht Local Alpha V0.1).
+- Static-Hosting-Test per `python3 -m http.server 8000` aus `dist/`: ✅ (alle Module/CRUD, Nav/Back/Forward, keine roten Konsolenfehler oder CORS/MIME/404-Hinweise). `file://`-Aufruf von `index.html` erzeugt erwartete CORS-Fehler für CSS/JS (ESM-Standard) und ist kein Blocker für NAS-HTTP-Hosting.
+- NAS-Build-Artefakt erstellt: `dist-station40.tar.gz` (untracked) mit SHA256 `5a473e409dffaf662417b33177781d3578a0e5e4e90121f750637dcd0d504dee` aus dem frisch erzeugten `dist/`.
 
 ## Tests
 
-- Manuelle NAS-Smoketests per Browser (HTTP auf NAS-Pfad) ✅
-- Keine Build/Lint/Test-Läufe (Validierungsstation, kein Code geändert).
+- `pnpm install` ✅
+- `node --input-type=module -e "import('./modules/shared/api/db/integrityCheck.js').then(m=>m.runIntegrityCheck())"` ✅ (nur bekannte Warning zu fehlendem `"type": "module"`)
+- `pnpm lint` ✅
+- `pnpm vitest run` ❌ (gleiches Worker-Exit/no-tests-collected-Muster wie Station 39; Umweltproblem, kein Regression)
+- `rm -rf dist` → `pnpm build` ✅ (frische hashed Assets in `dist/assets`; Basis für Paket)
+- Manuelles Alpha-Skript: ✅
+- Static-Hosting-Smoke (lokal, HTTP auf `dist/`): ✅ (siehe Ergebnis)
+
+## Offene Punkte/Risiken
+
+- Vitest-Worker-Exit bleibt ungefixt (Umweltproblem).
+- Dev-Server kann Port-EPERM auf ::1:5173 auslösen; bei Bedarf mit Escalation starten (siehe Station 39).
+- `file://`-Zugriff auf `dist/index.html` erzeugt erwartete ESM-CORS-Fehler; NAS/HTTP-Hosting nicht betroffen.
+
+## Nächste Schritte / Migration
+
+- Station 41 – NAS Deployment: `dist/` bzw. `dist-station40.tar.gz` nach NAS-Zielpfad laut `NAS_ALPHA_DEPLOY.md` kopieren, statischen Hosting-Smoke-Test durchführen und Ergebnisse loggen.
+- Ready for migration zu Station 41.
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 39 — Alpha Hardening (Failure Inventory)
+
+## Kontext
+
+- Status: read-only (completed).
+
+- Branch: `feature/station39-alpha-hardening`.
+- Ziel: Alpha-Testskript vollständig ausführen (ohne Codeänderungen), Abweichungen in `STATION39_FAILURE_INVENTORY.txt` dokumentieren.
+
+## Ergebnis (kurz)
+
+- Pre-Run-Kommandos ausgeführt; Lint/Build/IntegrityCheck grün, Vitest bricht ab (Worker exited unexpectedly, keine Tests gesammelt).
+- Dev-Server musste mit erhöhten Rechten gestartet werden (Port ::1:5173 EPERM im ersten Versuch, zweiter Start per Escalation). UI-Walkthrough vollständig durchgeführt, keine in-app Abweichungen/Console-Warnungen, kleiner Beobachtungspunkt: Finanzen-Liste initial gelegentlich ~1s Ladezeit, aber innerhalb Erwartung.
+- Failure Inventory ergänzt (Environment-Hinweise, Vitest-Failure, Dev-Server-Port, alle Modul-Checks als Pass).
+
+## Tests
+
+- `pnpm install` ✅ (Warnung: husky install deprecated; pnpm approve-builds Hinweis)
+- `node --input-type=module -e "import('./modules/shared/api/db/integrityCheck.js').then(m=>m.runIntegrityCheck())"` ✅ (bekannte `"type": "module"` Warnung)
+- `pnpm lint` ✅
+- `pnpm vitest run` ❌ (Worker exited unexpectedly; 6 unhandled errors, keine Tests)
+- `pnpm build` ✅
+- `pnpm dev` ⚠️ (erstes Mal EPERM ::1:5173; zweiter Start mit Escalation OK, aber Prozess durch Timeout beendet)
 
 ## Issues
 
-- Erwartetes `favicon.ico` 404 im NAS-Serving (als bekannt/benign dokumentiert).
+- Vitest: Worker-exit/Unhandled errors verhindern Testlauf (keine Suites gesammelt).
+- Dev-Server: Port 5173 EPERM ohne Escalation; startete nur mit erhöhten Rechten und lief bis Timeout; Browser/DevTools Lauf erfolgte manuell außerhalb des Timers.
 
 ## Notizen
 
-- `NAS_SMOKE_TEST_REPORT.md` ergänzt mit Metadaten/Ergebnissen. Untracked Artefakte (`dist-station40.tar.gz`, `dogule1-alpha/`) unverändert belassen.
+- `STATION39_FAILURE_INVENTORY.txt` enthält detaillierte Beobachtungen (Environment + alle Modul-Schritte als Pass). Keine GUI-Anpassungen oder Codeänderungen vorgenommen.
 
 # - - - - - - - - - - - - - - - - - - - -
 
-# Station 50 — Roadmap Governance & Definitions of Ready
+# Station 38 — Local Alpha Test Script (Phase C)
 
 ## Kontext
 
 - Status: read-only (completed).
 
-- Branch: `feature/station50-governance`.
-- Ziel: Governance und DoR-Artefakte für Stationen 50–70 erstellen (nur Dokumentation, keine Builds/Tests).
+- Branch: `feature/station38-alpha-test-script` (ab Station-37-Stand fortgeführt).
+- Ziel: Deterministisches, schrittweises Alpha-Testskript erstellen, das alle Module (Phase A) und Verknüpfungen (Phase B) abdeckt und bekannte Nicht-Ziele dokumentiert.
+- Artefakte: `ALPHA_TEST_SCRIPT.md` (vollständiges Skript mit Aktionen/Erwartungen/Konsolen-Checks).
 
 ## Ergebnis (kurz)
 
-- `DOGULE1_GOVERNANCE.md` angelegt: Stationen 50–70 restated mit Validierung (2025-12-08, gültig), Gating-Regeln, Branch/PR-Governance, Rollen, Änderungsregeln, Blocker-Protokollierung.
-- `DOR_PHASES_E_TO_I.md` angelegt: DoR-Templates für Phasen E–I mit Pflichtfeldern (Scope, Dependencies, Risiken/Annahmen, Artefakte, Testbarkeit, Reviewer, Timebox, Boundaries, Exit-Kriterien) und Vorgabe, Risiken/Annahmen in PR + `status.md` zu loggen.
+- Vollständiges Alpha-Testskript mit festen Testdaten (Alpha Kunde/Hund/Kurs/Trainer/Ware/Finanzbuchung), Aktionen→Erwartung→Konsolen-Triplets, Navigation/Back/Forward/Hash-Checks.
+- Deckt Phase-A-Checks je Modul (Focus/Scroll/Shared Components/Empty/Error/Loading) und alle Verknüpfungsketten (Kunden↔Hunde↔Kurse↔Trainer↔Kalender, Trainer↔Finanzen) ab; Kommunikation als Placeholder bestätigt.
+- Negative Tests dokumentiert: Keine automatischen Waren→Finanzen- oder Kurs→Finanzen-Einträge.
+- Data/Cleanup-Policy und Branch/Commit-Lock festgelegt für deterministische Runs.
 
 ## Tests
 
-- Keine (Dokumentationsstation).
+- Keine Builds/Tests notwendig (Dokumentationsstation); Pre-Run-Befehle im Skript vorgegeben (`pnpm install`, Integrity Check, `pnpm lint`, `pnpm vitest run`, `pnpm build`, `pnpm dev`).
 
 ## Notizen
 
-- Keine Codeänderungen. Untracked Artefakte (`dist-station40.tar.gz`, `dogule1-alpha/`) unverändert belassen.
+- Bekannte Warnung bleibt akzeptiert: Node-Hinweis zu fehlendem `"type": "module"` beim Integrity Check.
+- Branch/Commit-Lock im Skript: `feature/station38-alpha-test-script` @ `621e849`.
 
 # - - - - - - - - - - - - - - - - - - - -
 
-# Station 51 — Storage Baseline V2 Formalization
+# Station 37 — Local Alpha Assembly Prep (Phase C)
 
 ## Kontext
 
 - Status: read-only (completed).
 
-- Branch: `feature/station51-storage-baseline`.
-- Ziel: Speicher-Baseline V2 dokumentieren (Schemas, IDs, PII/Residency, Integrität, Migration).
+- Branch: `feature/station35-trainer-finanzen` (weitergeführt für Station 37).
+- Ziel: Alpha-Assembly vorbereiten ohne Scope-Erweiterung; Plan/Doku ergänzen, UX-Konsistenz prüfen, kleine UI-Korrekturen.
+- Grenzen: Kommunikation bleibt Placeholder, Waren ↔ Finanzen nicht verknüpft, keine automatischen Kurs/Waren-Umsätze in Finanzen.
 
 ## Ergebnis (kurz)
 
-- `DOGULE1_SYSTEM_BASELINE_V2.md` angelegt (Schema-Tabellen für alle Module inkl. Kommunikation-Shell, PII/Residency, ID/Version-Policy, Invarianten, Checksums, Concurrency/Atomicity, Failure-Injection, Mock→Real-Mapping, Backup/Scan-Cadence).
-- Governance verweist nun auf die Baseline; `modules/shared/api/README.md` hinzugefügt als Pointer für Mock-Daten/Storage-Arbeiten.
-- Keine Codeänderungen an Runtime; Migration/Tooling noch ausstehend.
+- Plan/Doku: `STATION37_ALPHA_PLAN.md` hinzugefügt (Scope-Guards, Walkthrough, Gaps); README um Alpha-Abschnitt ergänzt (Runs, Verknüpfungen, bekannte Lücken).
+- Navigation: Hauptmenü-Reihenfolge angepasst auf `Dashboard, Kunden, Hunde, Kurse, Trainer, Kommunikation, Kalender, Finanzen, Waren`.
+- Kunden-Create: Optionaler Hunde-Block im Kundenformular (Mehrfachentwürfe, Name Pflicht, Code auto, Kunde FK gesetzt, Toast mit Erfolg/Fehlschlägen).
+- Waren: Listen/Detail zeigen zugehörigen Kunden; Formular erfordert Kunde-Select; „Neu“-Button links ausgerichtet; Codes weiter optional.
+- Bekannter Gap dokumentiert: Kein automatischer Waren→Finanzen- oder Kurs→Finanzen-Eintrag (bleibt bewusst offen).
 
 ## Tests
 
-- Keine (Dokumentationsstation).
+- `pnpm lint` ✅
+- `pnpm vitest run` ✅ (Vite CJS Node API deprecation notice)
+- `pnpm build` ✅
+- `node --input-type=module -e "import('./modules/shared/api/db/integrityCheck.js').then(m=>m.runIntegrityCheck())"` ✅ (bekannte `"type": "module"` Warnung akzeptiert)
 
 ## Notizen
 
-- Migration-/Integrity-Tooling folgt in späteren Schritten; PII/Prefix/Version Defaults sind im Dokument fixiert.
+- Manuelle Alpha-Walkthrough-Schritte erfolgreich (Kunde→Hund→Kurs→Trainer→Kalender, Waren-CRUD, Finanzen-CRUD).
+- Station 38 soll bekannte Gaps berücksichtigen (kein Waren/Kurs-Auto-Revenue, Kommunikation weiterhin minimal).
 
 # - - - - - - - - - - - - - - - - - - - -
 
-# Station 52 — Migration & Integrity Tooling Plan (Phase E2)
+# Station 36 — Connect Trainer ↔ Kalender (Derivation-Only)
 
 ## Kontext
 
 - Status: read-only (completed).
 
-- Branch: `feature/station52-migration-tooling-plan`.
-- PR: https://github.com/christiansamuels932/dogule1/pull/58
-- Ziel: Plan für Migration/Integrity-Tooling auf Basis der Storage-Baseline erstellen (keine Implementierung/Storage-Manipulation).
+- Branch: `feature/station35-trainer-finanzen` (weitergeführt für Station 36)
+- Ziel: Trainerdaten nur abgeleitet in Kalenderoberflächen anzeigen, keine Schema-/Persistenzänderungen.
+- Vorbedingungen: Station 32/32a (Kurse ↔ Trainer, FK-Checks), Station 33 (Kurse ↔ Kalender via kursId, keine Trainerfelder im Event) waren bereits umgesetzt.
 
-## Ergebnis (kurz)
+## Änderungen (Code)
 
-- `MIGRATION_TOOLING_PLAN.md` angelegt: Scope/Out-of-scope, Engine-Architektur (CLI, Source/Target-Adapter, Mapper, Legacy-ID-Registry, Validation, BatchRunner), ID/Version/Prefix-Regeln, Mapping/Checksum/Integrity-Scanner/Fallback-Strategien, Staging/Cutover/Rollback, Test- und Failure-Injection-Protokoll, Runbook/Reports.
-- Plan bindet strikt an `DOGULE1_SYSTEM_BASELINE_V2.md` (Baseline gewinnt bei Konflikt) und nennt Governance-Namenskonflikt (Stations 53–56) als vorgelagerte Governance-Aktion.
-- Keine Runtime-Codeänderungen; reine Dokumentation/Planung.
+- `modules/kalender/index.js` (Bestand aus Station 33 weiterverwendet): Event-Blöcke/Details nutzen bereits `attachKursAndTrainer` und zeigen Trainer-Metadaten (Titel, Trainerzeile, „Zum Trainer“-Link im Event-Detail). Keine neuen Persistenzfelder; ableitende Darstellung bleibt intakt.
+- `modules/kalender/utils/eventContext.js`: Weiterhin verantwortlich für Kurs/Trainer-Auflösung pro Event (keine Schemaänderung).
+- `modules/trainer/index.js`: Neue read-only Karte „Kalendereinsätze“ im Trainer-Detail:
+  - Lädt alle Kalender-Events, filtert nach `trainerId`.
+  - Zeigt Datum + Zeitspanne (ISO → lokal), Titel/Code, Links zu Kurs (`#/kurse/<id>`) und Event (`#/kalender/event/<id>` Hash via `buildKalenderHash`).
+  - Deutsche Empty/Error States, sortiert nach Startzeit.
+  - Keine Schreiboperationen; rein abgeleitete Anzeige.
+- Hilfsfunktionen ergänzt: Sortierung/Formatierung (`sortEventsByStart`, `formatEventTimeRange`).
 
-## Tests
+## Tests & Qualität
 
-- Keine (Dokumentationsstation, keine Codeänderungen).
+- `pnpm lint` ✅
+- `pnpm test --run` ✅ (Vitest-Suite inkl. Kalender-Utils/Routes/Layout und Finanzen-Trainer-Tests)
+- `pnpm build` ✅
+- `runIntegrityCheck` ✅ (Node Warnung: package.json ohne `"type": "module"`, unverändert)
+- Manuelle Checks ✅: Kalender Tag/Woche zeigt Trainerzeile bzw. „Kein Trainer zugewiesen.“; Event-Detail mit Trainerblock + „Zum Trainer“; Trainer-Detail-Karte listet Events inkl. Links/Empty/Error.
 
-## Notizen
+## Lint/Build/CI-Folgen
 
-- Untracked Artefakte (`dist-station40.tar.gz`, `dogule1-alpha/`) unverändert belassen. Governance-Update erforderlich, bevor technische Schritte 53–56 umgesetzt werden.
-- Governance wurde nach Station 52 angepasst: Stationen 53–56 sind jetzt Migration/Integrity (siehe PR `feature/station52-migration-tooling-plan`); nachgelagerte Stationen wurden entsprechend renummeriert.
+- Keine neuen Lint-Verstöße; Husky/lint-staged liefen bei Commits.
+- Node Warnung bei Integrity-Check bleibt bekannt (Type-Flag), bewusst nicht geändert.
 
-# - - - - - - - - - - - - - - - - - - - -
+## Entscheidungen / Abweichungen
 
-# Station 54 — Storage Adapters & Checksums (Plan, Phase E2b)
-
-## Kontext
-
-- Status: read-only (completed).
-
-- Branch: `feature/station54-storage-adapters-checksums`.
-- PR: https://github.com/christiansamuels932/dogule1/pull/60
-- Ziel: Implementierungs-Layout für Storage-Adapter und Checksumms festlegen (Candidate-Only), keine Runtime-/Storage-Schreiboperationen.
-
-## Ergebnis (kurz)
-
-- `tools/migration/STATION54_IMPLEMENTATION_PLAN.md` ergänzt: Ziel-Layout `storage_candidate/v1/<module>/data.jsonl` + Checksums, TargetAdapter-API (temp→fsync→rename, abort cleanup), SHA-256-Hashes mit kanonischem JSON, Merkle-Regeln (id-sortiert, Empty-Root = SHA-256("")), CLI-Migrate-Flags/Defaults, read-only Registry-Nutzung (Proposals nur in registry_candidate), Report-Pfade deterministisch, Validierungs-Scope = Schema-only (FK/Invariant/PII in 55), Safety-Guidelines (nur Candidate-Root).
-- `.gitignore` erweitert um `storage_candidate/` (Candidate-Ausgaben werden nicht eingecheckt).
-
-## Tests
-
-- Keine (Dokumentationsstation, keine Codeänderungen).
-
-## Notizen
-
-- Station 53 (dry-run) muss landen, bevor 54 Schreibpfade nutzt; 54 bleibt candidate-only/offline. Untracked Artefakte (`dist-station40.tar.gz`, `dogule1-alpha/`) unverändert.
-
-# - - - - - - - - - - - - - - - - - - - -
-
-# Station 55 — Integrity Scanner & CI Integration (Phase E2c)
-
-## Kontext
-
-- Status: read-only (completed).
-
-- Branch: `feature/station55-integrity-scanner-plan`.
-- PR: https://github.com/christiansamuels932/dogule1/pull/61
-- Ziel: Read-only Integrity-Scanner + CLI-Befehle (scan-all/module/pii/drift/verify-checksums) für Candidate-Storage, CI-ready; keine Migration-Writes oder Registry-Mutationen.
-
-## Ergebnis (kurz)
-
-- CLI erweitert um Scan-Kommandos (schema/FK/invariants/PII/drift + separate verify-checksums) mit deterministischen Reports (`storage_reports/latest-scan/`); Exit-Regel: BLOCKER → exit 1, sonst 0.
-- Validatoren implementiert: Schema (schemaVersion=1, version vorhanden), FK-Auflösung gegen Candidate-Daten, Invarianten (Zeitspanne, capacity>=bookedCount, non-negative price/betrag, Kurs/Trainer-Erfordernisse), Checksums (SHA-256 + Merkle, empty-root = SHA-256("")), Schema-Drift, PII-Leak-Check (kein PII in Checksums/Reports).
-- Registry bleibt read-only; keine Runtime-/Mock-DB-Schreibzugriffe; Reports gitignored.
-
-## Tests
-
-- `pnpm exec eslint tools/migration` ✅
-- Scan-Läufe nicht ausgeführt (Tooling-Implementierung ohne Ausführung).
-
-## Notizen
-
-- Läufe sollen auf `storage_candidate/v1` erfolgen; CI-Jobs folgen in dieser Station. Untracked Artefakte (`dist-station40.tar.gz`, `dogule1-alpha/`) unverändert.
-
-# - - - - - - - - - - - - - - - - - - - -
-
-# Station 53–55 — Migration Tooling Execution (Dry-Run, Migrate, Scan)
-
-## Kontext
-
-- Status: read-only (completed).
-
-- Branch: `53-55-Code`
-- Ziel: Station-53–55 Tooling tatsächlich ausführen/härten (Dry-Run + Migrate + Scan) mit deterministischen Outputs, Atomik via Temp-Root→Rename, Checksum/Merkle, Registry-gestützte FK-Rewrites.
-- Registry: synthetische Platzhalter (`migration/mapping/*.json`) erstellt für alle Module; finale UUID-Zuweisungen müssen noch planerisch bestätigt/ersetzt werden.
-
-## Ergebnis (kurz)
-
-- `migrate.js` implementiert: liest Mock-DB, wendet Registry auf IDs/FKs an, erzwingt `schemaVersion=1`/`version=0`, schreibt Kandidat nur unter `storage_candidate/v1` via temp-root + atomic rename, erzeugt Entity-Checksums + Merkle (`checksums/entities.jsonl`, `merkle.json`) und deterministisches `checksums/run.json` (`runId`, `generatedAt` fix).
-- CLI erweitert (`node tools/migration/cli.js migrate`), Dry-Run/Scan bleiben bestehen; Scan toleriert leere Registry nur bei leeren Modulen.
-- Determinismus belegt: zwei `migrate` Läufe mit identischem `MIGRATE_RUN_ID=run-1` erzeugen byte-identische Trees (`diff -r` leer).
-- Rollback-Drill: `MIGRATE_FAIL_AFTER_MODULE=kurse` → erwarteter Abbruch, Temp-Root wird entfernt, bestehender Kandidat bleibt unverändert.
-- Kandidat + Checksums aktuell unter `storage_candidate/v1`; `run.json` nutzt `generatedAt: "00000000T000000Z"`.
-- Mappings abgeleitet aus Mock-DB (Option A = Mock als Legacy): `migration/mapping/*.json` jetzt deterministisch aus Mock-IDs → uuidv7 (per Hash-Seeding).
-
-## Tests
-
-- `node tools/migration/cli.js dry-run` ✅ (0 BLOCKER)
-- `node tools/migration/cli.js migrate` ✅ (kandidat geschrieben, checksums/merkle)
-- `node tools/migration/cli.js scan-all` ✅ (0 BLOCKER/WARNING)
-- Determinismus: zwei Läufe (`MIGRATE_RUN_ID=run-1`) + `diff -r storage_candidate/v1_run1 storage_candidate/v1_run2` → keine Unterschiede
-- Rollback-Injection: `MIGRATE_FAIL_AFTER_MODULE=kurse MIGRATE_RUN_ID=fail-test node tools/migration/cli.js migrate` ❌ erwartet; Temp-Verzeichnis bereinigt
-- `pnpm lint` ✅ (nach Ignore-Erweiterung für build/output/reports)
+- Keine Schemaänderungen in `kalender` (Events behalten nur `kursId`; Trainer wird immer über Kurs aufgelöst).
+- Keine Router/Layout-Anpassungen; nur Moduloberflächen erweitert.
+- Keine neuen Mock-Daten; bestehende Kurs→Kalender-Synchronisation reicht für Trainerableitung.
 
 ## Issues
 
-- UUID-Mappings leiten sich deterministisch aus Mock-IDs ab; falls echte Legacy-Daten auftauchen, müssen sie ersetzt werden.
-- Fsync-Pfad (temp→fsync→rename) fehlt noch; aktuell rename-atomik ohne fsync.
-- Vitest nicht erneut ausgeführt (vorbekanntes Worker-Exit-Problem bleibt offen).
-- Node-Warnung zu fehlendem `"type": "module"` weiter vorhanden (bewusst unverändert).
+- Node-Hinweis beim Integrity-Check (fehlendes `"type": "module"` in package.json) bewusst akzeptiert; keine Aktion.
 
 ## Notizen
 
-- Kandidat-/Report-Pfade gitignored (`storage_candidate/`, `storage_reports/`).
-- CUTOVER-Playbook/Station-56-Report noch zu schreiben; wird in Station 56 erwartet.
+- Station 36 abgeschlossen. PR “Station 36.X – Update Log” offen: https://github.com/christiansamuels932/dogule1/pull/48.
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 35 — Connect Trainer ↔ Finanzen (re-scoped)
+
+## Kontext
+
+- Status: read-only (completed).
+
+- Branch: `feature/station35-trainer-finanzen`
+- Ziel: Trainer-Metadaten in Finanzen (read-only), optional `kursId` in Zahlungen, keine Schemaerweiterung darüber hinaus.
+
+## Ergebnis (kurz)
+
+- Finanzen-Liste/Detail zeigen Trainer-Meta/Links für Kurs-Zahlungen; Trainer-Detail Umsatz-Karte (Summen Bezahlt/Offen/Saldo + letzte Einträge) mit Finanzen-Links.
+- Neue API-Helper `resolveFinanzenWithRelations`, `getFinanzenReportForTrainer`; Integrity-Check validiert `kursId` falls vorhanden.
+- Nicht kursgebundene Zahlungen bleiben unverändert; Kurs ohne Trainer zeigt Hinweis; Trainer-Umsatzkarte leer bei keinem Umsatz.
+
+## Tests
+
+- `pnpm lint` ✅
+- `pnpm vitest run --root . modules/shared/api/finanzen.trainer.test.js` ✅
+- `pnpm build` ✅
+- Manuelle Checks durchgeführt.
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 35.1 — CI Lint Fix (Trainer ↔ Finanzen)
+
+## Kontext
+
+- Status: read-only (completed).
+
+- Branch: `feature/station35-trainer-finanzen`
+- Ziel: Lint-Fehler (unused helper) beheben.
+
+## Ergebnis (kurz)
+
+- Unbenutzten Helper `formatScheduleTimeRange` entfernt; Aufruf bleibt bei `formatTimeRange`.
+
+## Tests
+
+- `pnpm lint` ✅
+
+## Notizen
+
+- Rein technischer Cleanup, keine funktionalen Änderungen.
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 33 — Connect Kurse ↔ Kalender
+
+## Kontext
+
+- Status: read-only (completed).
+
+- Branch: `feature/station33-kurse-kalender`
+- Ziel: Kalender-Ereignisse strikt aus Kursen ableiten/synchronisieren.
+
+## Ergebnis (kurz)
+
+- Kalender upsert/remove per Kurs; `syncKalenderWithKurse` räumt Waisen.
+- Event-Payload lokal → ISO, nur MASTER-Felder.
+- UI: Event-Blocks verlinken zu `#/kurse/<id>`, Event-Detail zeigt Kurs-Infos + „Zum Kurs/Zum Tag“.
+
+## Tests
+
+- `pnpm lint` ✅
+- `pnpm vitest run` ✅
+- `pnpm build` ✅
+- Manuell: Kurs erstellen → Event erscheint; Zeit ändern → Event verschiebt; Löschen nach Entlinken entfernt Event; Event-Detail-Link ok.
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 32 — Connect Kurse ↔ Trainer
+
+## Kontext
+
+- Status: read-only (completed).
+
+- Branch: `feature/station31-hunde-kurse` (fortgeführt)
+- Ziel: Trainer-Zuweisung validieren, Kurse ↔ Trainer Navigation, Delete-Guards.
+
+## Ergebnis (kurz)
+
+- Kurse laden/prüfen Trainerliste, Trainerkarte im Kursdetail (ID/Code/Kontakt), UI-Fehler bei ungültigem Trainer.
+- Trainer-Detail listet Kurseinsatz; Trainer-Löschen blockiert bei Zuweisungen und zeigt Kursliste, Integrity-Check im Fehlerfall.
+- Aktionen-Karten mit primärem „Neuer …“-Button vereinheitlicht.
+
+## Tests
+
+- `pnpm lint` ✅
+- `pnpm vitest run` ✅
+- `pnpm build` ✅
+- Manuell: Kursdetail → Trainer-Link, Trainerdetail → Kurse, Kurs-Create/Edit mit Trainer, Delete-Guard.
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 32a — Build-Fix Trainer FK Export
+
+## Kontext
+
+- Status: read-only (completed).
+
+- Branch: `feature/station31-hunde-kurse`
+- Ziel: CI-Build-Fix nach fehlendem Export und FK-Check.
+
+## Ergebnis (kurz)
+
+- `modules/shared/api/kurse.js` exportiert `getKurseForTrainer`.
+- Trainer-FK-Checks verschärft; Integrity-Check erweitert.
+
+## Tests
+
+- `pnpm lint` ✅
+- `pnpm vitest run` ✅
+- `pnpm build` ✅
+- Commit: `fix: enforce trainer FK and export getKurseForTrainer`.
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 31 — Connect Hunde ↔ Kurse
+
+## Kontext
+
+- Status: read-only (completed).
+
+- Branch: `feature/station31-hunde-kurse`
+- Ziel: Kurse in Hundedetail, Hunde in Kursdetail; Besitzerinfos konsistent.
+
+## Ergebnis (kurz)
+
+- Hunde-Detail listet Kurse inkl. Links; Kurs-Detail listet teilnehmende Hunde inkl. Besitzerinfos.
+- Alle Hundedarstellungen zeigen Besitzer (Code/Name) + Ort aus Kundenadresse; Kurs-Formular-Suche/Chips ebenso.
+
+## Tests
+
+- `pnpm lint` ✅
+- `pnpm vitest run` ✅
+- `pnpm build` ✅
+- PR ausstehend.
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 30 — Connect Kunden ↔ Kurse (Hunde-basiert)
+
+## Kontext
+
+- Status: read-only (completed).
+
+- Branch: `feature/station30-kunden-kurse`
+- Ziel: Teilnehmermodell auf Hunde-only, abgeleitete Kundenanzeigen.
+
+## Ergebnis (kurz)
+
+- Kurse validieren `hundIds`, `kundenIds` entfernt; Integrity-Check aktualisiert.
+- Kunden-Detail verlinkt Kurse über Hunde.
+- Kurs-UI zeigt Teilnehmerkunden abgeleitet aus Hundebesitzern.
+- Neues Typeahead im Kurs-Formular: Spalten Kunden/Hunde; Kunde-Klick fügt alle eigenen Hunde hinzu, Hund-Klick Einzelhund; Chips/Leeren; leere Auswahl erlaubt.
+
+## Tests
+
+- `pnpm lint` ✅
+- `pnpm vitest run` ✅
+- `pnpm build` ✅
+- PR erstellt (Station abgeschlossen).
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 29 — Connect Kunden ↔ Hunde
+
+## Kontext
+
+- Status: read-only (completed).
+
+- Branch: `feature/station29-kunden-hunde`
+- Ziel: Bidirektionale Navigation Kunden↔Hunde, FK-Sicherung.
+
+## Ergebnis (kurz)
+
+- Kunden-Detail zeigt verlinkte Hunde (ID/Code); Hunde-Liste/Detail verlinkt Besitzer, Rücksprung nach Delete.
+- Hund-API erzwingt gültige `kundenId` bei Create/Update.
+- Self-Test-Checkliste um Station-29-Block ergänzt.
+
+## Tests
+
+- `runIntegrityCheck` ✅
+- `pnpm lint` ✅
+- `pnpm test` ✅
+- `pnpm build` ✅
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 28 — Waren Single-Module Completion (Phase A)
+
+## Kontext
+
+- Status: read-only (completed).
+
+- Branch: `feature/station28-waren`
+- Ziel: Waren-CRUD Phase-A-fertig (keine Relationen).
+
+## Ergebnis (kurz)
+
+- Routen `#/waren`/`new`/`<id>`/`<id>/edit`.
+- Listen/Detail/Form/Delete über Shared Cards/Buttons/Notices/Form-Rows.
+- Deutsche UI, Loading/Error/Empty/Not-Found, Fokus/H1/H2 korrekt.
+- Keine Routing-/Console-Warnungen; nutzt zentrale Waren-API.
+
+## Tests
+
+- `pnpm lint` ✅
+- `pnpm build` ✅
+- Manuelle Self-Test: CRUD inkl. Delete ✅
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 27 — Finanzen Single-Module Completion (Phase A)
+
+## Kontext
+
+- Status: read-only (completed).
+
+- Branch: `feature/station27-finanzen`
+- Ziel: Finanzen-CRUD komplettieren.
+
+## Ergebnis (kurz)
+
+- Hash-Routen `#/finanzen`/`new`/`<id>`/`<id>/edit`.
+- Shared-Formular: ID read-only + Code-Override, Felder Kunde/Typ/Betrag/Datum/Beschreibung.
+- Filter + Summary beibehalten; Detail mit Edit/Delete-Actions, Inline-Löschbestätigung.
+- Typen vereinheitlicht auf „Bezahlt/Offen“, Kundenlabels aus zentraler Map.
+- Shared Notices/Empty, Fokus/Scroll-Reset, deutsche UI.
+
+## Tests
+
+- `pnpm lint` ✅
+- `pnpm test` ✅
+- `pnpm build` ✅
+- Manuelle Self-Test: CRUD end-to-end inkl. Delete ✅, Console clean.
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 25 — Finanzen Phase A (Listen/Detail/Filter – Skeleton)
+
+## Kontext
+
+- Status: read-only (completed).
+
+- Branch: `feature/station25-finanzen`
+- Ziel: Phase-A-Skelett für Finanzen (ohne CRUD/Deletes, vorbereitet für Station 27).
+
+## Ergebnis (kurz)
+
+- `initModule` mit Scroll/Fokus/Hash-Segmente.
+- Loading/Error/Empty via Shared Notices.
+- Summary-Karte (Summe Zahlungen/Offen/Saldo), Filter-Karte (Kunde/Typ).
+- Einträge-Tabelle mit Kundenauflösung und Hash-Details.
+- Detail-Card mit Kunde-Link + Back-Link.
+
+## Tests
+
+- `pnpm lint` ✅
+- `pnpm build` ✅
+- Manuell: `#/finanzen`, `#/finanzen/<id>` console-clean.
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 24 — Trainer Single-Module Completion (Phase A)
+
+## Kontext
+
+- Status: read-only (completed).
+
+- Branch: `feature/station24-trainer`
+- Ziel: Trainer-Modul Phase-A-fertig (CRUD, Validierung, Shared Components).
+
+## Ergebnis (kurz)
+
+- h1/h2-Hierarchie sauber, Router-Mount unverändert.
+- IDs sequenziell `t<n>` API-seitig; UI zeigt ID read-only, Code-Override-Toggle in Create/Edit.
+- Verfügbarkeiten als interaktives Textarea mit Persistenz.
+- Form-Buttons triggern Submit (`requestSubmit`), CRUD wieder funktionsfähig.
+- Detail/List zeigen ID/Code/Kontakt/Notizen/Verfügbarkeiten.
+
+## Tests
+
+- `pnpm lint` ✅
+- `pnpm build` ✅
+- Manuelle UI-Validierung Phase-A: CRUD, Validierung, Empty/Error, Navigation, Shared-Styles ✅
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 20 — Dashboard Phase A
+
+## Kontext
+
+- Status: read-only (completed).
+
+- Ziel: Dashboard auf zentrale Mock-API umstellen, Phase-A-Ready.
+
+## Ergebnis (kurz)
+
+- Dashboard-Zählungen nutzen zentrale Kunden/Hunde/Kurse-Daten.
+- Fallback-Texte vereinheitlicht, Scroll/Focus beim Laden.
+- Status-Karte via Shared Notice; Self-Test für Dashboard abgeschlossen.
+
+## Tests
+
+- `pnpm lint` ✅
+- `pnpm build` ✅
+
+## Notizen
+
+- MASTER ergänzt: Module gelten nur nach vollständigem GUI + manueller Freigabe als abgeschlossen.
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 19 — Module Self-Test Preparation (Phase A)
+
+## Kontext
+
+- Status: read-only (completed).
+
+- Ziel: Pflicht-Checkliste für Phase-A-Module etablieren.
+- Artefakt: `PHASEA_SELFTEST_CHECKLIST.md` erstellt und im MASTER verankert.
+
+## Ergebnis (kurz)
+
+- Checkliste deckt Router/Layout/Shared Components/CRUD/Empty/Error/Accessibility/Integrity ab.
+- MASTER verweist auf Checkliste als Voraussetzung für alle Phase-A-Stationen.
+
+## Notizen
+
+- Keine Codeänderungen an Modulen; Dokumentationsstation abgeschlossen.
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 18 — Status Quo Cleanup & Router/Layout/Build/Mock DB Konsolidierung
+
+## Kontext
+
+- Status: read-only (completed).
+
+- Phase-1 Abschluss: Vereinheitlichung und Hardening der Basis.
+- Scope: UI/ID-Regeln angleichen, Vite-Build stabilisieren, Router/Layout finalisieren, Mock-DB zentralisieren.
+
+## Ergebnis (kurz)
+
+- Dashboard/Kunden/Hunde/Kurse vereinheitlicht; ID/Code-Regeln dokumentiert (id fix, code editierbar).
+- Router final: Clean Hash Router mit `import.meta.glob`, Fehlerzustände, Navigation-Highlighting.
+- Layout final: Statische Layout-Injektion, Mount nur in `#dogule-main`.
+- Build final: Vite-only, relative Pfade, keine Hybrid-Templates.
+- Mock-DB: Alle Daten zentral in `modules/shared/api/db/index.js`; Integrity-Check aktiv.
+- NAS-Platzhalter/Doku hinterlegt.
+
+## Notizen
+
+- Phase 1 QA-Checkliste angelegt; dient als laufender Prüfanker.
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 1–17 — Foundations & Early Linking (Historisch)
+
+## Kontext
+
+- Status: read-only (completed).
+
+- Zeitraum: Phase 1 Baseline bis Kurs-Finanzflächen.
+- Branches/PRs: diverse, bereits gemergt; keine offenen PRs mehr aus dieser Phase.
+- Scope: Tooling, Router/Layout, Shared Components, zentrale Mock-API, CRUD für Kunden/Hunde/Kurse, erste Finanzen-Ansichten, frühe Verknüpfungen (Kunden↔Hunde↔Kurse), Build/NAS-Vorbereitung.
+
+## Ergebnis (kurz)
+
+- Tooling/CI/Husky/Commitlint aufgesetzt, Module scaffolded, Hash-Router + persistentes Layout, Shared UI-Komponenten, zentrale Mock-DB/CRUD.
+- CRUD: Kunden, Hunde, Kurse; Finanzen-Karten für Kunden/Hunde/Kurse (readonly).
+- Verknüpfungen: Kunden↔Hunde, Hunde↔Kurse, Kunden↔Kurse (teilnehmerbezogen), Kurs-Finanzflächen.
+- Build: Vite-only mit relativen Pfaden; NAS-Platzhalter; Integrity-Check etabliert.
+
+## Notizen
+
+- Alle Stationen 1–17 abgeschlossen, keine offenen Issues aus dieser Phase bekannt.
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - -
 
@@ -2268,369 +2662,3 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 # - - - - - - - - - - - - - - - - - - - -
 
 # - - - - - - - - - - - - - - - - - - - -
-
-# Station 56 — Migration Rehearsal & Cutover Prep (E2d)
-
-## Kontext
-
-- Status: read-only (completed).
-
-- Branch: `53-55-Code`.
-- Ziel: End-to-end Rehearsal der Station-53–55 Toolchain (dry-run → migrate → scan, Checksums/Merkle, FK/Invariant/PII), Determinismusbeweis, Rollback-Drill, Playbook-Aktualisierung.
-- Inputs: Mock-DB (`modules/shared/api/db/index.js`) + Registries (`migration/mapping/*.json`) fixiert; Candidate-Root `storage_candidate/v1/`; `MIGRATE_RUN_ID=run-local`.
-
-## Ergebnis (kurz)
-
-- Rehearsal auf sauberem Workspace ausgeführt: `dry-run` → `migrate` → `scan-all` → 0 BLOCKER/WARNING; Candidate + Reports unter `storage_candidate/v1` und `storage_reports/latest-*`.
-- Determinismus bestätigt: Candidate gelöscht, erneut `dry-run`/`migrate`/`scan-all`, `diff -r storage_candidate/v1-run1 storage_candidate/v1` leer (byte-identisch).
-- Rollback-Drill: `MIGRATE_FAIL_AFTER_MODULE=kurse node tools/migration/cli.js migrate` bricht wie erwartet ab, Temp-Root entfernt, kein `storage_candidate/v1` hinterlassen; anschließender Clean-Run wieder grün.
-- Hashes dokumentiert (`run.json`): kunden `e4237d40…317d`, hunde `66740e0d…511`, kurse `85c4ff57…8dd`, trainer `5a797283…437`, kalender `40035969…ef2`, finanzen `b2797674…1aa`, waren `297c6599…7b0`, kommunikation `e3b0c442…b855`.
-- `CUTOVER_PLAYBOOK.md` und `STATION56_REHEARSAL_REPORT.md` auf Station-56-Rehearsal-Stand aktualisiert (Determinismus- und Rollback-Schritte aufgenommen).
-
-## Tests
-
-- `node tools/migration/cli.js dry-run` ✅
-- `node tools/migration/cli.js migrate` ✅ (run-local)
-- `node tools/migration/cli.js scan-all` ✅
-- `diff -r storage_candidate/v1-run1 storage_candidate/v1` ✅ (Determinismus)
-- `MIGRATE_FAIL_AFTER_MODULE=kurse node tools/migration/cli.js migrate` ❌ erwartet (Rollback-Drill; hinterließ kein `storage_candidate/v1`)
-
-## Notizen
-
-- Artefakte gitignored: `storage_candidate/v1/`, `storage_reports/latest-*`.
-- Bekannte Warnung unverändert akzeptiert: Node-Hinweis zu fehlendem `"type": "module"` in package.json.
-- Registries weiter Platzhalter aus Mock-IDs; echte UUID-Freigabe vor realem Cutover notwendig.
-
-# - - - - - - - - - - - - - - - - - - - -
-
-# - - - - - - - - - - - - - - - - - - - -
-
-# Station 61 — Legacy Data Capture
-
-## Kontext
-
-- Status: read-only (completed).
-
-- Branch: `feature/station61-legacy-capture`.
-- Scope: Station 61 forensic capture of DogTabs legacy data; freeze raw inputs only (no parsing/mapping/cleanup).
-
-## Ergebnis (kurz)
-
-- Raw DogTabs payload copied byte-for-byte into `migration/legacy/station61/capture_20251219_185854Z` (capturedAt 2025-12-19T18:58:54Z UTC) with `raw/`, `README.md`, `manifest.json`, and `checksums.sha256`.
-- Checksums cover all files except the checksum file itself; manifest lists size/hash per raw file; capture naming follows `capture_YYYYMMDD_HHMMSSZ`.
-- CI guard `tools/ci/legacyStation61Guard.js` added and wired into the lint workflow (fetch-depth 0) to forbid modifications to existing `capture_*` directories; guard run locally using env-fed git status output (Node child_process blocked here) → pass.
-- Legacy data remains unfiltered/unsorted; reserved for later mapping/cleanup stations.
-
-## Tests
-
-- `node tools/ci/legacyStation61Guard.js` with env-provided git status output ✅ (pnpm unavailable locally)
-
-## Notizen
-
-- Dogtaps raw payload parked in `migration/legacy/station61/capture_20251219_185854Z/raw/`; folder is gitignored and only stored for reference (no processing / no per-file listing here).
-
-- Repo-doc gap: `agents.md` remains missing; Station 61 directory is input-only/immutable after commit.
-
-# - - - - - - - - - - - - - - - - - - - -
-
-# Station 76.5 — NAS Deployment (Staging for Manual Test)
-
-## Kontext
-
-- Status: read-only (completed).
-
-- Branch: `feature/station76.5-nas-deployment`.
-- Scope: deploy MariaDB-backed app to NAS, expose public staging, and validate readiness for Station 77 manual tests.
-- Access scope: public (`https://4c31.synology.me/dogule1-staging/`).
-- NAS profile: Synology DS218play (DSM 7.3.2-86009), SAN.
-
-## Ergebnis (kurz)
-
-- Created reproducible NAS runbook in `NAS_STATION76_5_SETUP.md`; captured environment, access scope, and rollback steps.
-- Repo deployed to NAS (`/volume1/dogule1nasfolder/dogule1`), dependencies installed, `pnpm build` completed, and `dist/` deployed to `/volume1/web/dogule1-staging/`.
-- API server running on NAS (`node tools/server/apiServer.js`), reverse proxy exposed at `https://4c31.synology.me:8443/api`.
-- Added CORS support to API server and configured `DOGULE1_CORS_ORIGINS=https://4c31.synology.me`.
-- NAS MariaDB refreshed from local export; full dataset restored and dashboard counts validated.
-- Deployment report recorded in `NAS_STATION76_5_REPORT.md`.
-
-## Tests
-
-- `curl http://127.0.0.1:5177/api/kunden` ✅
-- `curl --resolve 4c31.synology.me:8443:192.168.1.116 https://4c31.synology.me:8443/api/kunden` ✅
-- Manual UI smoke: Kunden + Hunde create OK; counts updated ✅
-
-## Issues
-
-- CORS blocked cross-port API access; resolved by adding CORS headers in `tools/server/apiServer.js` and setting `DOGULE1_CORS_ORIGINS`.
-- Reverse proxy UI lacked path-based routing; API exposed on port 8443 instead of `/api` on 443.
-
-## Notizen
-
-- Rollback procedure documented in `NAS_STATION76_5_SETUP.md` (stop API, clear staging folder, disable proxy/close port).
-- Station 77 prerequisite met: NAS staging environment is live and stable.
-- Future task logged: add persistent boot-time API service via DSM Task Scheduler (not implemented yet).
-
-# - - - - - - - - - - - - - - - - - - - -
-
-# Station 76.6 — Post-Remediation Verification
-
-## Kontext
-
-- Status: read-only (completed).
-
-- Branch: `feature/station76.5-nas-deployment`.
-- Scope: verify Hunde `Geburtsdatum`/`Herkunft` UI rendering, confirm Kunden list column sorting, and re-run tests after XLSX dependency removal.
-
-## Ergebnis (kurz)
-
-- Verified Kunden → Hunde list shows `Geburtsdatum` values and `Herkunft` labels (not numeric codes).
-- Verified Hund detail view renders `Geburtsdatum` and `Herkunft` correctly.
-- Confirmed Kunden list column "Hunde, Name" is present and sortable.
-- `pnpm test` and `pnpm build` pass after XLSX removal.
-
-## Tests
-
-- Manual UI check: Kunden list → Kunde → Hunde list; Hund detail ✅
-- Manual UI check: Kunden list column "Hunde, Name" sortable ✅
-- `pnpm test` ✅
-- `pnpm build` ✅
-
-## Notizen
-
-- Manual verification only; no code changes.
-
-# - - - - - - - - - - - - - - - - - - - -
-
-# Station 76.7 — NAS Manual Test + Battleplan Update
-
-## Kontext
-
-- Status: read-only (completed).
-
-- Branch: `feature/station76.5-nas-deployment`.
-- Scope: validate NAS staging manual test pass with live API, and record battleplan updates for NAS autostart + role-based logins.
-
-## Ergebnis (kurz)
-
-- Confirmed NAS API was down (502); started `tools/server/apiServer.js` on NAS to restore data access.
-- Verified reverse proxy and local API health; full manual test pass on NAS staging completed.
-- Added battleplan notes: NAS autostart requirement for MariaDB + API server, and Trainer/Admin role-based login requirement for Kommunikation.
-
-## Tests
-
-- NAS local API: `curl http://127.0.0.1:5177/api/kunden` ✅
-- NAS reverse proxy: `curl https://4c31.synology.me:8443/api/kunden` ✅
-- Manual NAS staging test (Kunden/Hunde/Kurse/Trainer/Kalender/Finanzen/Waren + navigation) ✅
-
-## Notizen
-
-- API server must be running on NAS for the frontend to load data.
-
-# - - - - - - - - - - - - - - - - - - - -
-
-# Station 76.8 — NAS Autostart Follow-up
-
-## Kontext
-
-- Status: read-only (completed).
-- Branch: `feature/station76.6-nas-followup`.
-- Scope: make NAS staging self-starting by documenting API + MariaDB autostart steps and providing an API boot script.
-
-## Ergebnis (kurz)
-
-- Added NAS API boot script at `tools/ops/nas-api-server.sh` (waits for MariaDB socket, then starts API).
-- Updated NAS runbook with DSM Task Scheduler boot task instructions and MariaDB autostart checklist.
-
-## Tests
-
-- Not run (documentation + ops script only).
-
-## Notizen
-
-- Task Scheduler must run at boot to keep staging alive after NAS restarts.
-
-# - - - - - - - - - - - - - - - - - - - -
-
-# Station 76.9 — NAS Git Deploy Key Workflow
-
-## Kontext
-
-- Status: read-only (completed).
-- Branch: `feature/station76.6-nas-followup`.
-- Scope: switch NAS updates to a GitHub Deploy Key workflow and document `git pull` deployment steps.
-
-## Ergebnis (kurz)
-
-- Added a detailed NAS git workflow in `NAS_STATION76_5_SETUP.md` (deploy key creation, remote config, pull-based updates).
-- Clarified that `git fetch` does not update the working tree; `git pull` is required for deployments.
-
-## Tests
-
-- Not run (documentation-only).
-
-## Notizen
-
-- NAS updates should avoid scp/rsync for repo changes; use `git pull` after merges.
-
-# - - - - - - - - - - - - - - - - - - - -
-
-# Station 76.10 — NAS Healthcheck Script
-
-## Kontext
-
-- Status: read-only (completed).
-- Branch: `feature/station76.6-nas-followup`.
-- Scope: add a lightweight boot-time healthcheck script for NAS API/MariaDB and log results to `api.log`.
-
-## Ergebnis (kurz)
-
-- Added `tools/ops/nas-api-healthcheck.sh` for socket + API checks.
-- `tools/ops/nas-api-server.sh` now triggers the healthcheck after starting the API.
-- Runbook updated with executable steps for the new healthcheck.
-
-## Tests
-
-- Not run (ops script only).
-
-## Notizen
-
-- Healthcheck uses `curl` and the MariaDB socket path to validate readiness.
-
-# - - - - - - - - - - - - - - - - - - - -
-
-# Station 76.11 — Contabo VPS Setup (Battleplan Added)
-
-## Kontext
-
-- Status: read-only (completed).
-- Branch: `feature/station76.6-nas-followup`.
-- Scope: add a new battleplan station for migrating hosting from NAS to Contabo VPS with production-grade setup and step-by-step operator runbook.
-
-## Ergebnis (kurz)
-
-- Added Station 76.7 “Contabo VPS Setup (Production-Grade Hosting)” to `BATTLEPLAN_STATIONS_71_PLUS.md`.
-- Station scope includes VPS provisioning, OS hardening, firewall, MariaDB + Node API services, static hosting with reverse proxy, TLS, backup/rollback, and verified runbook.
-
-## Tests
-
-- Not run (documentation-only).
-
-## Notizen
-
-- Next agent should create `CONTABO_VPS_SETUP.md` and execute the runbook on the VPS.
-
-# - - - - - - - - - - - - - - - - - - - -
-
-# Station 76.12 — Handover Notes (Contabo VPS)
-
-## Kontext
-
-- Status: read-only (completed).
-- Branch: `feature/station76.6-nas-followup`.
-- Scope: record handover notes for the Contabo VPS station so a new agent can continue without context loss.
-
-## Ergebnis (kurz)
-
-- New battleplan entry: Station 76.7 “Contabo VPS Setup (Production-Grade Hosting)” in `BATTLEPLAN_STATIONS_71_PLUS.md`.
-- `status.md` Station 76.11 notes that the runbook must be created and executed.
-- Next deliverable: `CONTABO_VPS_SETUP.md` with full provisioning + service setup steps.
-- VPS work should include: SSH keys only, firewall hardening, MariaDB + API systemd units, static hosting with reverse proxy, TLS, backups, and reboot validation.
-
-## Tests
-
-- Not run (handover note only).
-
-## Notizen
-
-- Use this as the single source of truth for the next agent’s kickoff.
-
-# - - - - - - - - - - - - - - - - - - - -
-
-# Station 76.13 — Contabo VPS Runbook Draft
-
-## Kontext
-
-- Status: read-only (completed).
-- Branch: `feature/station76.7-contabo-runbook`.
-- Scope: draft a step-by-step Contabo VPS runbook aligned with battleplan and NAS learnings; documentation only (no VPS execution).
-
-## Ergebnis (kurz)
-
-- Expanded `CONTABO_VPS_SETUP.md` with DNS cutover, deploy key setup, SSH service reload fixes, MariaDB backup/restore hardening, and explicit `DOGULE1_REQUIRE_MARIADB` config.
-- Runbook now includes VPS verification, update workflow, backups, rollback, and reboot validation in one linear checklist.
-
-## Tests
-
-- Not run (documentation-only).
-
-## Notizen
-
-- VPS execution and validation are still pending; this entry only covers the runbook update.
-
-# - - - - - - - - - - - - - - - - - - - -
-
-# Station 85 — App header card (FontanasLogo + DOGULE title)
-
-## Kontext
-
-- Status: read-only (completed).
-- Branch: `84XCleanUp`.
-- Scope: add header card with Fontanas logo and DOGULE title.
-
-## Ergebnis (kurz)
-
-- Header card shows the Fontanas logo (181x73) on the left and large white "DOGULE" text on the right within the same frame.
-- Layout updated in shared header styling to reflect the new sizing.
-
-## Tests
-
-- Manual UI check: Dashboard and one module page ✅
-
-## Notizen
-
-- None.
-
-# - - - - - - - - - - - - - - - - - - - -
-
-# Station 86 — Align left-nav module list with overview grid
-
-## Kontext
-
-- Status: read-only (completed).
-- Branch: `station86-align-nav`.
-- Scope: align left-nav module titles with module names in the overview grid.
-
-## Ergebnis (kurz)
-
-- Adjusted left-nav padding to align module titles with overview grid labels.
-
-## Tests
-
-- Manual UI check: left-nav alignment ✅
-
-## Notizen
-
-- None.
-
-# - - - - - - - - - - - - - - - - - - - -
-
-# Station 87 — Remove module title + description blocks
-
-## Kontext
-
-- Status: read-only (completed).
-- Branch: `station87-remove-module-headers`.
-- Scope: remove module title/description blocks and align Zertifikate layout with other modules.
-
-## Ergebnis (kurz)
-
-- Removed top title/description header blocks across module pages.
-- Zertifikate list/detail/create now follow the same action-card + content-card structure as other modules.
-
-## Tests
-
-- Manual UI check: Dashboard, Kunden, Hunde, Kurse, Trainer, Zertifikate ✅
-
-## Notizen
-
-- None.

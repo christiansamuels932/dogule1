@@ -1,16 +1,13 @@
 // Kurse module – list/detail flows with mock API
 /* globals document, console, window */
 import {
-  createBadge,
   createButton,
   createCard,
   createEmptyState,
   createFormRow,
   createNotice,
-  createSectionHeader,
 } from "../shared/components/components.js";
 
-const createSection = createSectionHeader;
 const createEmpty = () => createEmptyState("Keine Daten vorhanden.", "", {});
 const createErrorNotice = () =>
   createNotice("Fehler beim Laden der Daten.", {
@@ -23,9 +20,6 @@ import {
   createKurs,
   updateKurs,
   deleteKurs,
-  getHundeForKurs,
-  getKunde,
-  listFinanzenByKundeId,
   listFinanzen,
   listTrainer,
 } from "../shared/api/index.js";
@@ -214,10 +208,6 @@ async function renderDetail(section, id) {
     detailBody.innerHTML = "";
     detailBody.appendChild(createDefinitionList(rows));
     detailSection.appendChild(detailCard);
-    const participantContext = await buildParticipantContext(kurs);
-    const kundenFinanzen = await buildKursKundenFinanzen(participantContext.participants);
-    section.__kursFinanzen = kundenFinanzen;
-
     const actionsCard = createStandardCard("Aktionen");
     const actionsBody = actionsCard.querySelector(".ui-card__body");
     const actionsWrap = document.createElement("div");
@@ -255,9 +245,6 @@ async function renderDetail(section, id) {
     actionsWrap.append(editBtn, zertifikatBtn, deleteBtn, backBtn);
     actionsBody.appendChild(actionsWrap);
     detailSection.appendChild(actionsCard);
-
-    appendParticipantsSection(detailSection, participantContext);
-    appendFinanceSections(detailSection, kundenFinanzen);
   } catch (error) {
     console.error("[KURSE_ERR_DETAIL]", error);
     const errorCard = createStandardCard("Stammdaten");
@@ -270,354 +257,6 @@ async function renderDetail(section, id) {
   }
 
   focusHeading(section);
-}
-
-async function buildParticipantContext(kurs = {}) {
-  const result = { participants: [], hasMissing: false, loadError: false };
-  if (!kurs?.id) return result;
-  try {
-    const hunde = await getHundeForKurs(kurs.id);
-    result.participants = Array.isArray(hunde) ? hunde : [];
-    result.hasMissing = result.participants.some((participant) => participant?._missing);
-  } catch (error) {
-    console.error("[KURSE_ERR_LINKED_HUNDE]", error);
-    result.loadError = true;
-  }
-  return result;
-}
-
-function appendParticipantsSection(
-  section,
-  { participants = [], hasMissing = false, loadError } = {}
-) {
-  const participantSection = document.createElement("section");
-  participantSection.className = "kurse-linked-section";
-  participantSection.appendChild(
-    createSectionHeader({
-      title: "Teilnehmende Hunde",
-      subtitle: "",
-      level: 2,
-    })
-  );
-  const cardFragment = createCard({
-    eyebrow: "",
-    title: "",
-    body: "",
-    footer: "",
-  });
-  const card = cardFragment.querySelector(".ui-card") || cardFragment.firstElementChild;
-  if (card) {
-    const body = card.querySelector(".ui-card__body");
-    body.innerHTML = "";
-    if (loadError) {
-      body.appendChild(createErrorNotice());
-    } else {
-      if (hasMissing) {
-        body.appendChild(
-          createNotice("Teilnehmerliste enthält ungültige Einträge. Bitte Kurs bearbeiten.", {
-            variant: "warn",
-            role: "alert",
-          })
-        );
-      }
-      if (!participants.length) {
-        body.appendChild(createEmpty());
-      } else {
-        const sorted = [...participants].sort(participantSorter);
-        sorted.forEach((participant) => {
-          const row = renderParticipantRow(participant);
-          if (row) body.appendChild(row);
-        });
-      }
-    }
-    participantSection.appendChild(card);
-  }
-  section.appendChild(participantSection);
-}
-
-function participantSorter(a, b) {
-  if (a?._missing && b?._missing) return 0;
-  if (a?._missing) return 1;
-  if (b?._missing) return -1;
-  const codeA = (a?.code || a?.id || "").toLowerCase();
-  const codeB = (b?.code || b?.id || "").toLowerCase();
-  if (codeA === codeB) return 0;
-  return codeA > codeB ? 1 : -1;
-}
-
-function renderParticipantRow(participant) {
-  if (participant?._missing) {
-    const wrapper = document.createElement("div");
-    wrapper.className = "kurse-participant kurse-participant--missing";
-    const icon = createBadge("!", "warn");
-    icon.classList.add("kurse-participant__warning");
-    const label = document.createElement("span");
-    label.className = "kurse-participant__label";
-    label.textContent = "Unbekannter Hund (verwaiste Zuordnung)";
-    const idNote = document.createElement("span");
-    idNote.className = "kurse-participant__meta";
-    idNote.textContent = participant.id ? `ID: ${participant.id}` : "";
-    wrapper.append(icon, label);
-    if (participant.id) {
-      wrapper.appendChild(idNote);
-    }
-    return wrapper;
-  }
-  const displayCode = participant.code || participant.id || "–";
-  const name = participant.name || "Unbenannter Hund";
-  const ownerText = formatParticipantOwner(participant.owner, participant.kundenId);
-
-  const cardFragment = createCard({
-    eyebrow: displayCode,
-    title: name,
-    body: "",
-    footer: "",
-  });
-  const card = cardFragment.querySelector(".ui-card") || cardFragment.firstElementChild;
-  if (!card) return null;
-  card.classList.add("kurse-linked-hund");
-  const body = card.querySelector(".ui-card__body");
-  if (body) {
-    body.innerHTML = "";
-    const meta = document.createElement("div");
-    meta.className = "kurse-linked-hund__meta";
-    const ownerRow = document.createElement("p");
-    ownerRow.textContent = `Besitzer: ${ownerText}`;
-    const idRow = document.createElement("p");
-    idRow.textContent = `ID: ${participant.id || "–"}`;
-    meta.append(ownerRow, idRow);
-    body.appendChild(meta);
-  }
-  const link = document.createElement("a");
-  link.href = `#/hunde/${participant.id}`;
-  link.className = "kurse-linked-hund__link";
-  link.appendChild(card);
-  return link;
-}
-
-function formatParticipantOwner(owner, kundenId) {
-  if (!owner && !kundenId) return "–";
-  if (owner) {
-    const name = formatCustomerName(owner);
-    const code = getCustomerDisplayCode(owner);
-    const town = formatCustomerTown(owner);
-    const townPart = town ? ` · ${town}` : "";
-    return `${code} · ${name}${townPart}`;
-  }
-  return kundenId;
-}
-
-const KURSE_FINANCE_SECTION_TITLES = ["Finanzübersicht", "Offene Beträge", "Zahlungshistorie"];
-
-async function buildKursKundenFinanzen(participants = []) {
-  const seen = new Set();
-  const candidates = [];
-  (Array.isArray(participants) ? participants : []).forEach((participant) => {
-    if (participant?._missing) return;
-    const owner = participant?.owner;
-    const kundeId = owner?.id || participant?.kundenId;
-    if (!kundeId || seen.has(kundeId)) return;
-    seen.add(kundeId);
-    candidates.push(owner?.id ? owner : { id: kundeId });
-  });
-  const financeResults = [];
-  if (!candidates.length) return financeResults;
-  for (const kunde of candidates) {
-    const kundeId = kunde?.id;
-    if (!kundeId) continue;
-    let kundeData = kunde;
-    if (!kundeData.vorname && !kundeData.nachname && !kundeData.code && kundeData.id) {
-      try {
-        const fetched = await getKunde(kundeData.id);
-        if (fetched) {
-          kundeData = fetched;
-        }
-      } catch (error) {
-        console.error("[KURSE_ERR_FINANZ_KUNDE]", error);
-      }
-    }
-    let finanzen = [];
-    try {
-      finanzen = await listFinanzenByKundeId(kundeId);
-    } catch (finanzenError) {
-      console.error("[KURSE_ERR_FINANZ_FETCH]", finanzenError);
-    }
-    const zahlungen = finanzen.filter((entry) => entry.typ === "bezahlt");
-    const offeneBetraege = finanzen.filter((entry) => entry.typ === "offen");
-    const lastZahlung = zahlungen.length ? zahlungen[zahlungen.length - 1] : null;
-    financeResults.push({
-      kundeId: kundeId,
-      label: formatCustomerName(kundeData) || `Kunde ${kundeId}`,
-      code: getCustomerDisplayCode(kundeData),
-      offeneBetraege,
-      zahlungen,
-      lastZahlung,
-    });
-  }
-  return financeResults;
-}
-
-function appendFinanceSections(section, kundenFinanzen = []) {
-  if (!section) return;
-  const financeData = Array.isArray(kundenFinanzen) ? kundenFinanzen : [];
-  const renderers = {
-    Finanzübersicht: renderKursFinanzOverviewContent,
-    "Offene Beträge": renderKursOffeneBetraegeContent,
-    Zahlungshistorie: renderKursZahlungshistorieContent,
-  };
-  KURSE_FINANCE_SECTION_TITLES.forEach((title) => {
-    const financeSection = document.createElement("section");
-    financeSection.className = "kurse-linked-section kurse-finanz-section";
-    financeSection.appendChild(
-      createSection({
-        title,
-        subtitle: "",
-        level: 2,
-      })
-    );
-    const cardFragment = createCard({
-      eyebrow: "",
-      title: "",
-      body: "",
-      footer: "",
-    });
-    const card = cardFragment.querySelector(".ui-card") || cardFragment.firstElementChild;
-    if (!card) return;
-    const body = card.querySelector(".ui-card__body");
-    if (body) {
-      body.innerHTML = "";
-      const renderer = renderers[title];
-      const rendered = typeof renderer === "function" ? renderer(body, financeData) : false;
-      if (!rendered) {
-        body.appendChild(createEmpty());
-      }
-    }
-    financeSection.appendChild(card);
-    section.appendChild(financeSection);
-  });
-}
-
-function renderKursFinanzOverviewContent(container, financeData = []) {
-  if (!financeData.length) return false;
-  financeData.forEach((entry) => {
-    const label = entryLabel(entry, financeData);
-    const infoRow = createFinanceRow(
-      label,
-      entry.lastZahlung
-        ? `Letzte Zahlung: ${formatFinanceAmount(entry.lastZahlung.betrag)} · Datum: ${formatDateTime(
-            entry.lastZahlung.datum
-          )}`
-        : "Keine letzte Zahlung"
-    );
-    container.appendChild(infoRow);
-  });
-  return true;
-}
-
-function renderKursOffeneBetraegeContent(container, financeData = []) {
-  const offeneEntries = [];
-  financeData.forEach((entry) => {
-    entry.offeneBetraege.forEach((offen) => {
-      offeneEntries.push({
-        kundeId: entry.kundeId,
-        label: entry.label,
-        code: entry.code,
-        eintrag: offen,
-      });
-    });
-  });
-  if (!offeneEntries.length) {
-    container.appendChild(createEmpty());
-    return true;
-  }
-  offeneEntries.forEach(({ kundeId, label: kundeLabel, code, eintrag }) => {
-    const label = entryLabel({ kundeId, label: kundeLabel, code }, financeData);
-    const infoRow = createFinanceRow(
-      label,
-      `Betrag: ${formatFinanceAmount(eintrag.betrag)} · Datum: ${formatDateTime(eintrag.datum)}`
-    );
-    container.appendChild(infoRow);
-  });
-  return true;
-}
-
-function renderKursZahlungshistorieContent(container, financeData = []) {
-  const zahlungen = [];
-  financeData.forEach((entry) => {
-    entry.zahlungen.forEach((zahlung) => {
-      zahlungen.push({
-        kundeId: entry.kundeId,
-        label: entry.label,
-        code: entry.code,
-        eintrag: zahlung,
-      });
-    });
-  });
-  zahlungen.sort((a, b) => {
-    const timeA = new Date(a.eintrag.datum).getTime();
-    const timeB = new Date(b.eintrag.datum).getTime();
-    return Number.isNaN(timeB) ? 1 : Number.isNaN(timeA) ? -1 : timeB - timeA;
-  });
-  if (!zahlungen.length) {
-    container.appendChild(createEmpty());
-    return true;
-  }
-  zahlungen.forEach(({ kundeId, label: kundeLabel, code, eintrag }) => {
-    const label = entryLabel({ kundeId, label: kundeLabel, code }, financeData);
-    const infoRow = createFinanceRow(
-      label,
-      `Zahlung: ${formatFinanceAmount(eintrag.betrag)} · Datum: ${formatDateTime(eintrag.datum)}`
-    );
-    container.appendChild(infoRow);
-  });
-  return true;
-}
-
-function entryLabel(entry, financeData = []) {
-  const baseLabel = entry.label || `Kunde ${entry.kundeId}`;
-  const prefix = entry.code || findFinanceCode(financeData, entry.kundeId);
-  return prefix ? `${prefix} · ${baseLabel}` : baseLabel;
-}
-
-function findFinanceCode(financeData = [], kundeId = "") {
-  const match = financeData.find((item) => item.kundeId === kundeId);
-  return match?.code || "";
-}
-
-function createFinanceRow(label, text) {
-  const row = document.createElement("div");
-  row.className = "kurse-finanz-row";
-  const labelEl = document.createElement("strong");
-  labelEl.textContent = label;
-  const textEl = document.createElement("span");
-  textEl.textContent = text;
-  row.append(labelEl, textEl);
-  return row;
-}
-
-function formatCustomerName(kunde = {}) {
-  const name = `${kunde.nachname ?? ""} ${kunde.vorname ?? ""}`.trim();
-  return name || kunde.email || "Unbenannter Kunde";
-}
-
-function extractTown(address = "") {
-  if (typeof address !== "string") return "";
-  const parts = address
-    .split(",")
-    .map((part) => part.trim())
-    .filter(Boolean);
-  if (!parts.length) return "";
-  const townRaw = parts[parts.length - 1];
-  const cleaned = townRaw.replace(/^\d+\s*/, "").trim();
-  return cleaned || townRaw;
-}
-
-function formatCustomerTown(kunde = {}) {
-  return extractTown(kunde.adresse || kunde.address || "");
-}
-
-function getCustomerDisplayCode(kunde = {}) {
-  return kunde.code || kunde.kundenCode || kunde.id || "–";
 }
 
 function formatTrainerLabel(trainer = {}, fallbackName = "", fallbackId = "") {
@@ -1324,12 +963,6 @@ function formatPrice(value) {
     currency: "CHF",
     minimumFractionDigits: 2,
   }).format(amount);
-}
-
-function formatFinanceAmount(value) {
-  const amount = Number(value);
-  if (!Number.isFinite(amount)) return "CHF 0.00";
-  return `CHF ${amount.toFixed(2)}`;
 }
 
 function generateNextKursCode(list = []) {

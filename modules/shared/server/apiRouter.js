@@ -11,6 +11,7 @@ import { createAuthService } from "../auth/authService.js";
 import { resolveAuthConfig } from "../auth/config.js";
 import { createUserStore, getSeedUsers } from "../auth/users.js";
 import { getKommunikationActions, isApiAllowed, normalizeRole } from "../auth/rbac.js";
+import { createStorage } from "../storage/storage.js";
 
 function jsonResponse(res, statusCode, body) {
   res.statusCode = statusCode;
@@ -98,13 +99,31 @@ function buildReq(req, { body, params, query }) {
   };
 }
 
-async function handleAuthRoutes(req, res, auth) {
+async function handleAuthRoutes(req, res, auth, options = {}) {
   const reqUrl = req?.url || "";
   if (!reqUrl.startsWith("/api/auth")) return false;
   const body = await readJsonBody(req);
   const method = (req.method || "GET").toUpperCase();
+  if (reqUrl === "/api/auth/options" && method === "GET") {
+    try {
+      const result = options.listAuthOptions
+        ? await options.listAuthOptions({ requestId: resolveRequestId(req) })
+        : { users: [] };
+      jsonResponse(res, 200, result);
+    } catch {
+      jsonResponse(res, 500, { message: "options_failed" });
+    }
+    return true;
+  }
   if (reqUrl === "/api/auth/login" && method === "POST") {
     try {
+      if (options.ensureTrainerUsers) {
+        try {
+          await options.ensureTrainerUsers({ requestId: resolveRequestId(req) });
+        } catch {
+          // Non-blocking: allow login even if trainer sync fails.
+        }
+      }
       const result = await auth.login(body.username || "", body.password || "", {
         requestId: resolveRequestId(req),
       });
@@ -263,8 +282,14 @@ export function createApiRouter(options = {}) {
   const seedUsers = getSeedUsers();
   const userStore = options.userStore || createUserStore(seedUsers);
   const authService = createAuthService({ config: authConfig, userStore });
-  const trainerSeed = seedUsers.find((user) => user.role === "trainer");
-  const trainerPasswordHash = trainerSeed?.passwordHash || "";
+  const storage =
+    options.storage ||
+    createStorage({
+      mode: options.mode || "mariadb",
+      ...options.storageOptions,
+    });
+  const adminTrainerCode = "TR-001";
+  const adminTrainerName = "Fontana Richard";
 
   const buildTrainerUsername = (trainer) => {
     const email = String(trainer?.email || "")
@@ -284,8 +309,24 @@ export function createApiRouter(options = {}) {
     return "";
   };
 
-  const provisionTrainerLogin = (trainer) => {
-    if (!trainer?.id || !trainerPasswordHash) return null;
+  const resolveTrainerRole = (trainer) => {
+    const code = String(trainer?.code || "")
+      .trim()
+      .toUpperCase();
+    const name = String(trainer?.name || "")
+      .trim()
+      .toLowerCase();
+    if (code === adminTrainerCode || name === adminTrainerName.toLowerCase()) {
+      return "admin";
+    }
+    return "trainer";
+  };
+
+  const ensureTrainerUser = (trainer) => {
+    if (!trainer?.id) return null;
+    const userId = `user-${trainer.id}`;
+    const existing = userStore.getUserById(userId);
+    if (existing) return existing;
     let base = buildTrainerUsername(trainer);
     if (!base) {
       base = `trainer-${trainer.id.slice(0, 6)}`;
@@ -297,25 +338,69 @@ export function createApiRouter(options = {}) {
       username = `${base}-${suffix}`;
     }
     const user = {
-      id: `user-${trainer.id}`,
+      id: userId,
       username,
-      role: "trainer",
-      passwordHash: trainerPasswordHash,
+      role: resolveTrainerRole(trainer),
+      passwordHash: "",
       requires2fa: false,
     };
     if (!userStore.addUser(user)) return null;
-    return { username, tempPassword: "trainerpass" };
+    return user;
+  };
+
+  const ensureTrainerUsers = async () => {
+    if (!storage?.trainer?.list) return [];
+    const trainers = await storage.trainer.list();
+    return trainers.map(ensureTrainerUser).filter(Boolean);
+  };
+
+  const listAuthOptions = async () => {
+    const trainers = await storage.trainer.list();
+    const optionsList = [];
+    const seen = new Set();
+    const developerUser = userStore.getUserByUsername("Developer");
+    if (developerUser) {
+      optionsList.push({
+        id: developerUser.id,
+        username: developerUser.username,
+        label: "Developer",
+        role: developerUser.role,
+      });
+      seen.add(developerUser.username);
+    }
+
+    const trainerOptions = trainers
+      .map((trainer) => {
+        const user = ensureTrainerUser(trainer);
+        if (!user || seen.has(user.username)) return null;
+        const name = String(trainer?.name || "").trim();
+        const code = String(trainer?.code || "").trim();
+        const label = code && name ? `${name} (${code})` : name || code || user.username;
+        seen.add(user.username);
+        return {
+          id: user.id,
+          username: user.username,
+          label,
+          role: user.role,
+        };
+      })
+      .filter(Boolean)
+      .sort((a, b) => a.label.localeCompare(b.label, "de"));
+
+    optionsList.push(...trainerOptions);
+    return { users: optionsList };
   };
 
   const defaultAfterCreate = async ({ entity, record }) => {
     if (entity !== "trainer") return record;
-    const login = provisionTrainerLogin(record);
-    if (!login) return record;
-    return { ...record, login };
+    const user = ensureTrainerUser(record);
+    if (!user) return record;
+    return { ...record, login: { username: user.username } };
   };
 
   const core = createCoreApiRouter({
     ...(options.core || {}),
+    storage,
     afterCreate: options.afterCreate || defaultAfterCreate,
   });
   const kommunikation = createKommunikationApiRouter(options.kommunikation || {});
@@ -323,7 +408,13 @@ export function createApiRouter(options = {}) {
   async function handle(req, res) {
     const reqUrl = req?.url || "";
     if (!reqUrl.startsWith("/api/")) return false;
-    if (await handleAuthRoutes(req, res, authService)) return true;
+    if (
+      await handleAuthRoutes(req, res, authService, {
+        listAuthOptions,
+        ensureTrainerUsers,
+      })
+    )
+      return true;
 
     const token = extractAccessToken(req);
     if (!token) {
