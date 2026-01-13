@@ -34,7 +34,7 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 ## Kontext
 
-- Status: in progress.
+- Status: completed.
 - Branch: `feature/station84u-nas-update-workflow`.
 - Scope: implement UI/login updates, validate manual NAS update flow, and document a minimal update workflow.
 - Preconditions: NAS pilot running with reverse proxy (`4c31.synology.me:8443`), manual drag & drop updates.
