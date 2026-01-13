@@ -2565,3 +2565,26 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 ## Notizen
 
 - VPS execution and validation are still pending; this entry only covers the runbook update.
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 85 — App header card (FontanasLogo + DOGULE title)
+
+## Kontext
+
+- Status: read-only (completed).
+- Branch: `84XCleanUp`.
+- Scope: add header card with Fontanas logo and DOGULE title.
+
+## Ergebnis (kurz)
+
+- Header card shows the Fontanas logo (181x73) on the left and large white "DOGULE" text on the right within the same frame.
+- Layout updated in shared header styling to reflect the new sizing.
+
+## Tests
+
+- Manual UI check: Dashboard and one module page ✅
+
+## Notizen
+
+- None.

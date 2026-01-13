@@ -1,6 +1,6 @@
 Current State
 
-- SAMDARD cleanup complete: docs preserved in attachments/, status_log synced from origin, and stations battleplan updated.
+- Station 85 verified: header card renders correctly on Dashboard and a module page.
 
 Blockers
 
@@ -8,4 +8,4 @@ Blockers
 
 Next Action
 
-- Start Station 85 implementation (app header card).
+- Start Station 86 implementation (align left-nav module list with overview grid).
