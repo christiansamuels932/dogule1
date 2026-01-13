@@ -828,6 +828,7 @@ async function renderDetail(root, id) {
     { label: "E-Mail", value: kunde.email },
     { label: "Telefon", value: kunde.telefon },
     { label: "Adresse", value: kunde.adresse },
+    { label: "Heimatort", value: kunde.heimatort ?? kunde.heimatOrt },
     { label: "Ausweis-ID", value: kunde.ausweisId || kunde.ausweisID },
     { label: "Status", value: formatKundenStatus(kunde.status) },
     {
