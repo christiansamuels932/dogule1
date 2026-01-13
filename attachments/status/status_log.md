@@ -2588,3 +2588,25 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 ## Notizen
 
 - None.
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 86 — Align left-nav module list with overview grid
+
+## Kontext
+
+- Status: read-only (completed).
+- Branch: `station86-align-nav`.
+- Scope: align left-nav module titles with module names in the overview grid.
+
+## Ergebnis (kurz)
+
+- Adjusted left-nav padding to align module titles with overview grid labels.
+
+## Tests
+
+- Manual UI check: left-nav alignment ✅
+
+## Notizen
+
+- None.
