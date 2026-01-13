@@ -1,6 +1,7 @@
 import { resolveAuthConfig } from "./config.js";
 import { AUTH_ERROR_CODES, AuthError } from "./errors.js";
 import { createSignedToken, verifySignedToken, nowMs, randomId } from "./tokens.js";
+import { hashPassword } from "./hash.js";
 import { createUserStore, getSeedUsers } from "./users.js";
 
 function noopAudit() {}
@@ -38,6 +39,7 @@ export function createAuthService(options = {}) {
   const sessionById = new Map();
   const revokedRefresh = new Set();
   const failures = new Map(); // username -> { attempts: number[], lockoutUntil: number|null }
+  const resetCodes = new Map(); // username -> { code, expiresAt, attempts, maxAttempts, userId }
   const clock = options.now || nowMs;
 
   function requireEnabled() {
@@ -296,12 +298,104 @@ export function createAuthService(options = {}) {
     }
   }
 
+  function buildResetCode(length = 6) {
+    const digits = [];
+    for (let i = 0; i < length; i += 1) {
+      digits.push(Math.floor(Math.random() * 10));
+    }
+    return digits.join("");
+  }
+
+  async function requestPasswordReset(username, options = {}, auditContext = {}) {
+    requireEnabled();
+    const user = userStore.getUserByUsername(username);
+    if (!user) {
+      audit(
+        buildAuditPayload({
+          actionId: "auth.reset.request",
+          actorId: username,
+          actorRole: "unknown",
+          target: { module: "auth", id: username },
+          result: "denied",
+          context: auditContext,
+        })
+      );
+      throw new AuthError(AUTH_ERROR_CODES.INVALID_CREDENTIALS, "Invalid credentials");
+    }
+    const ttlMs = Number.isFinite(options.ttlMs) ? options.ttlMs : 10 * 60 * 1000;
+    const codeLength = Number.isFinite(options.codeLength) ? options.codeLength : 6;
+    const code = buildResetCode(codeLength);
+    const entry = {
+      code,
+      expiresAt: clock() + ttlMs,
+      attempts: 0,
+      maxAttempts: 5,
+      userId: user.id,
+    };
+    resetCodes.set(username, entry);
+    audit(
+      buildAuditPayload({
+        actionId: "auth.reset.request",
+        actorId: user.id,
+        actorRole: user.role,
+        target: { module: "auth", id: user.id },
+        result: "success",
+        context: auditContext,
+      })
+    );
+    return { code, expiresAt: entry.expiresAt };
+  }
+
+  async function confirmPasswordReset(username, code, newPassword, auditContext = {}) {
+    requireEnabled();
+    const entry = resetCodes.get(username);
+    if (!entry) {
+      throw new AuthError(AUTH_ERROR_CODES.RESET_CODE_INVALID, "Reset code invalid");
+    }
+    if (clock() > entry.expiresAt) {
+      resetCodes.delete(username);
+      throw new AuthError(AUTH_ERROR_CODES.RESET_CODE_EXPIRED, "Reset code expired");
+    }
+    if (!code || String(code).trim() !== entry.code) {
+      entry.attempts += 1;
+      if (entry.attempts >= entry.maxAttempts) {
+        resetCodes.delete(username);
+      } else {
+        resetCodes.set(username, entry);
+      }
+      throw new AuthError(AUTH_ERROR_CODES.RESET_CODE_INVALID, "Reset code invalid");
+    }
+    const nextPassword = String(newPassword || "").trim();
+    if (!nextPassword) {
+      throw new AuthError(AUTH_ERROR_CODES.RESET_PASSWORD_INVALID, "Password invalid");
+    }
+    const hash = await hashPassword(nextPassword, config.hash);
+    const ok = userStore.updateUser({ id: entry.userId, passwordHash: hash });
+    resetCodes.delete(username);
+    if (!ok) {
+      throw new AuthError(AUTH_ERROR_CODES.DENIED, "User missing");
+    }
+    audit(
+      buildAuditPayload({
+        actionId: "auth.reset.confirm",
+        actorId: entry.userId,
+        actorRole: "system",
+        target: { module: "auth", id: entry.userId },
+        result: "success",
+        context: auditContext,
+      })
+    );
+    return { ok: true };
+  }
+
   return {
     config,
     login,
     refresh,
     logout,
     validateAccessToken,
-    _internal: { failures, sessionById, revokedRefresh },
+    requestPasswordReset,
+    confirmPasswordReset,
+    _internal: { failures, sessionById, revokedRefresh, resetCodes },
   };
 }

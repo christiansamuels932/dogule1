@@ -3,15 +3,19 @@ import { URL } from "node:url";
 import path from "node:path";
 import crypto from "node:crypto";
 import { Buffer } from "node:buffer";
+import nodemailer from "nodemailer";
 import { createGroupchatApiHandlers } from "../../kommunikation/groupchat/apiRoutes.js";
 import { createInfochannelApiHandlers } from "../../kommunikation/infochannel/apiRoutes.js";
 import { createAutomationApiHandlers } from "../../kommunikation/automation/apiRoutes.js";
+import { resolveAutomationConfig } from "../../kommunikation/automation/config.js";
 import { createCoreApiRouter } from "./coreApiRouter.js";
 import { createAuthService } from "../auth/authService.js";
 import { resolveAuthConfig } from "../auth/config.js";
+import { AUTH_ERROR_CODES } from "../auth/errors.js";
 import { createUserStore, getSeedUsers } from "../auth/users.js";
 import { getKommunikationActions, isApiAllowed, normalizeRole } from "../auth/rbac.js";
 import { createStorage } from "../storage/storage.js";
+import { rateLimit, logRateLimitHit } from "../ratelimit/limiter.js";
 
 function jsonResponse(res, statusCode, body) {
   res.statusCode = statusCode;
@@ -24,6 +28,66 @@ function jsonResponse(res, statusCode, body) {
   } else if (typeof res.send === "function") {
     res.send(payload);
   }
+}
+
+const RESET_TARGET_EMAIL = process.env.DOGULE1_AUTH_RESET_EMAIL || "christiansamuels932@gmail.com";
+
+function resolveResetEmailConfig() {
+  const config = resolveAutomationConfig({});
+  return {
+    senderEmail: config.senderEmail || config.smtpUser,
+    senderName: config.senderName || "",
+    replyTo: config.replyTo || "",
+    smtpHost: config.smtpHost,
+    smtpPort: config.smtpPort,
+    smtpSecure: config.smtpSecure,
+    smtpUser: config.smtpUser,
+    smtpPassword: config.smtpPassword,
+  };
+}
+
+function ensureResetSmtpReady(config) {
+  if (!config.smtpHost || !config.smtpUser || !config.smtpPassword || !config.senderEmail) {
+    const error = new Error("smtp_not_ready");
+    error.code = "SMTP_NOT_READY";
+    throw error;
+  }
+}
+
+async function sendResetEmail({ username, code, expiresAt }) {
+  const config = resolveResetEmailConfig();
+  ensureResetSmtpReady(config);
+  const port = config.smtpPort ? Number(config.smtpPort) : undefined;
+  const transport = nodemailer.createTransport({
+    host: config.smtpHost,
+    port: port || (config.smtpSecure ? 465 : 587),
+    secure: Boolean(config.smtpSecure),
+    auth: {
+      user: config.smtpUser,
+      pass: config.smtpPassword,
+    },
+  });
+  const sender = config.senderName
+    ? `${config.senderName} <${config.senderEmail}>`
+    : config.senderEmail;
+  const expiresAtText = new Date(expiresAt).toLocaleString("de-CH", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
+  const text = [
+    "Dogule Passwort Reset",
+    "",
+    `Benutzer: ${username}`,
+    `Code: ${code}`,
+    `Gueltig bis: ${expiresAtText}`,
+  ].join("\n");
+  await transport.sendMail({
+    from: sender,
+    to: RESET_TARGET_EMAIL,
+    replyTo: config.replyTo || undefined,
+    subject: "Dogule Passwort Reset",
+    text,
+  });
 }
 
 async function readJsonBody(req) {
@@ -112,6 +176,89 @@ async function handleAuthRoutes(req, res, auth, options = {}) {
       jsonResponse(res, 200, result);
     } catch {
       jsonResponse(res, 500, { message: "options_failed" });
+    }
+    return true;
+  }
+  if (reqUrl === "/api/auth/reset/request" && method === "POST") {
+    const username = String(body.username || "").trim();
+    if (!username) {
+      jsonResponse(res, 400, { message: "username_required" });
+      return true;
+    }
+    const limiter = rateLimit({
+      actionId: "auth.reset.request",
+      key: `auth.reset.request:${username}`,
+      limit: 3,
+      windowMs: 10 * 60 * 1000,
+    });
+    if (!limiter.allowed) {
+      logRateLimitHit({
+        actionId: "auth.reset.request",
+        actor: { id: username, role: "unknown" },
+        requestId: resolveRequestId(req),
+        key: `auth.reset.request:${username}`,
+      });
+      jsonResponse(res, 429, { message: "rate_limited", resetAt: limiter.resetAt });
+      return true;
+    }
+    try {
+      const reset = await auth.requestPasswordReset(
+        username,
+        {},
+        { requestId: resolveRequestId(req) }
+      );
+      await sendResetEmail({ username, code: reset.code, expiresAt: reset.expiresAt });
+      jsonResponse(res, 200, { ok: true, email: RESET_TARGET_EMAIL, expiresAt: reset.expiresAt });
+    } catch (error) {
+      if (error?.code === "SMTP_NOT_READY") {
+        jsonResponse(res, 400, { message: "smtp_not_ready" });
+      } else if (error?.code === AUTH_ERROR_CODES.INVALID_CREDENTIALS) {
+        jsonResponse(res, 401, { message: "invalid_credentials", code: error?.code });
+      } else {
+        jsonResponse(res, 500, { message: "reset_failed", code: error?.code });
+      }
+    }
+    return true;
+  }
+  if (reqUrl === "/api/auth/reset/confirm" && method === "POST") {
+    const username = String(body.username || "").trim();
+    const code = String(body.code || "").trim();
+    const password = String(body.password || "").trim();
+    if (!username || !code || !password) {
+      jsonResponse(res, 400, { message: "missing_fields" });
+      return true;
+    }
+    const limiter = rateLimit({
+      actionId: "auth.reset.confirm",
+      key: `auth.reset.confirm:${username}`,
+      limit: 5,
+      windowMs: 10 * 60 * 1000,
+    });
+    if (!limiter.allowed) {
+      logRateLimitHit({
+        actionId: "auth.reset.confirm",
+        actor: { id: username, role: "unknown" },
+        requestId: resolveRequestId(req),
+        key: `auth.reset.confirm:${username}`,
+      });
+      jsonResponse(res, 429, { message: "rate_limited", resetAt: limiter.resetAt });
+      return true;
+    }
+    try {
+      const result = await auth.confirmPasswordReset(username, code, password, {
+        requestId: resolveRequestId(req),
+      });
+      jsonResponse(res, 200, result);
+    } catch (error) {
+      if (error?.code === AUTH_ERROR_CODES.RESET_CODE_EXPIRED) {
+        jsonResponse(res, 400, { message: "reset_code_expired", code: error?.code });
+      } else if (error?.code === AUTH_ERROR_CODES.RESET_CODE_INVALID) {
+        jsonResponse(res, 400, { message: "reset_code_invalid", code: error?.code });
+      } else if (error?.code === AUTH_ERROR_CODES.RESET_PASSWORD_INVALID) {
+        jsonResponse(res, 400, { message: "reset_password_invalid", code: error?.code });
+      } else {
+        jsonResponse(res, 500, { message: "reset_failed", code: error?.code });
+      }
     }
     return true;
   }

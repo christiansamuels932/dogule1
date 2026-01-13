@@ -22,6 +22,22 @@ export function createUserStore(seed = USERS) {
       byId.set(user.id, user);
       return true;
     },
+    updateUser: (user) => {
+      if (!user?.id) return false;
+      const existing = byId.get(user.id);
+      if (!existing) return false;
+      const nextUsername = user.username || existing.username;
+      if (nextUsername !== existing.username && byUsername.has(nextUsername)) {
+        return false;
+      }
+      if (nextUsername !== existing.username) {
+        byUsername.delete(existing.username);
+      }
+      const updated = { ...existing, ...user, username: nextUsername };
+      byId.set(updated.id, updated);
+      byUsername.set(updated.username, updated);
+      return true;
+    },
   };
 }
 

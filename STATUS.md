@@ -32,6 +32,31 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 # - - - - - - - - - - - - - - - - - - - -
 
+# Station 89 — Login password reset with email code
+
+## Kontext
+
+- Status: read-only (completed).
+- Branch: `feature/station89`.
+- Scope: add password reset flow with email confirmation code to `christiansamuels932@gmail.com`.
+- Preconditions: SMTP credentials configured via automation SMTP env vars.
+
+## Ergebnis (kurz)
+
+- Added reset UI flow on login (request code → confirm code + new password) and new auth reset endpoints.
+- Server generates time-limited reset codes, rate-limits requests, and sends via SMTP using automation config.
+- Passwords are hashed and stored in user store on successful confirmation.
+
+## Tests
+
+- Not run (manual).
+
+## Notizen
+
+- SMTP must be configured (`DOGULE1_AUTOMATION_SMTP_*`) for emails to send.
+
+# - - - - - - - - - - - - - - - - - - - -
+
 # Station 88 — Login dropdown + simplified roles
 
 ## Kontext
