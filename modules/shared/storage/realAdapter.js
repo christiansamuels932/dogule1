@@ -569,6 +569,7 @@ function normalizeKurs(data = {}, existing) {
     level: data.level ?? existing?.level ?? "",
     price: data.price ?? existing?.price ?? "",
     notes: data.notes ?? existing?.notes ?? "",
+    zertifikatHintergrund: data.zertifikatHintergrund ?? existing?.zertifikatHintergrund ?? "",
     hundIds: normalizeIds(data.hundIds ?? existing?.hundIds ?? []),
     schemaVersion: 1,
     ...timestamps,

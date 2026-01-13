@@ -1,6 +1,6 @@
 // READ-ONLY: Zertifikate renderer is locked. If you edit this file, log a note in status.md.
 /* globals URL, Blob, window */
-const CERT_BG_URL = new URL("../../Material/zertifikat_bg_a4_300dpi.png", import.meta.url).href;
+import { resolveCertificateBackgroundUrl } from "../shared/certificates/backgrounds.js";
 
 const LAYOUT = {
   textColor: "#232323",
@@ -40,7 +40,7 @@ const LAYOUT = {
     },
     kursTeilnahmeSatz: { x: 16, y: 39.7, w: 68, h: 4, fontSize: 11.5, align: "center" },
     kursTheorie: {
-      x: 19.2,
+      x: 15.9,
       y: 46.8,
       w: 36,
       h: 12,
@@ -49,7 +49,7 @@ const LAYOUT = {
       maxLines: 6,
     },
     kursPraxis: {
-      x: 53.7,
+      x: 50.4,
       y: 46.8,
       w: 36,
       h: 12,
@@ -87,6 +87,7 @@ const REQUIRED_FIELDS = [
   "kursOrtSnapshot",
   "kursInhaltTheorieSnapshot",
   "kursInhaltPraxisSnapshot",
+  "zertifikatHintergrund",
   "ausstellungsdatum",
   "trainer1NameSnapshot",
   "trainer1TitelSnapshot",
@@ -118,6 +119,10 @@ function resolveGratulationWord(gender) {
 
 export function validateCertificateSnapshot(snapshot = {}) {
   const missing = REQUIRED_FIELDS.filter((key) => !(snapshot[key] || "").toString().trim());
+  const backgroundUrl = resolveCertificateBackgroundUrl(snapshot.zertifikatHintergrund || "");
+  if (!backgroundUrl && !missing.includes("zertifikatHintergrund")) {
+    missing.push("zertifikatHintergrund");
+  }
   if ((snapshot.trainer2NameSnapshot || "").toString().trim()) {
     if (!(snapshot.trainer2TitelSnapshot || "").toString().trim()) {
       missing.push("trainer2TitelSnapshot");
@@ -138,6 +143,7 @@ export function buildCertificateHtml(snapshot = {}) {
   const theorieLines = parseBulletLines(snapshot.kursInhaltTheorieSnapshot);
   const praxisLines = parseBulletLines(snapshot.kursInhaltPraxisSnapshot);
   const formattedDate = formatDate(snapshot.ausstellungsdatum);
+  const backgroundUrl = resolveCertificateBackgroundUrl(snapshot.zertifikatHintergrund || "");
 
   return `<!doctype html>
   <html lang="de">
@@ -157,7 +163,7 @@ export function buildCertificateHtml(snapshot = {}) {
           position: relative;
           width: 210mm;
           height: 297mm;
-          background: url("${CERT_BG_URL}") no-repeat center top;
+          background: url("${backgroundUrl}") no-repeat center top;
           background-size: cover;
         }
         .text-block {

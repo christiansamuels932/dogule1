@@ -24,6 +24,12 @@ import {
   listTrainer,
 } from "../shared/api/index.js";
 import { runIntegrityCheck } from "../shared/api/db/integrityCheck.js";
+import {
+  describeCertificateBackground,
+  getCertificateBackgroundForKurs,
+  getCertificateBackgroundOptions,
+  resolveCertificateBackgroundUrl,
+} from "../shared/certificates/backgrounds.js";
 
 let kursCache = [];
 let trainerCache = [];
@@ -87,6 +93,19 @@ function createStandardCard(title = "", eyebrow = "") {
     footer: "",
   });
   return fragment.querySelector(".ui-card") || fragment.firstElementChild;
+}
+
+function createZertifikatHintergrundPreview(value = "") {
+  const url = resolveCertificateBackgroundUrl(value);
+  if (!url) return null;
+  const wrap = document.createElement("div");
+  wrap.className = "kurse-zertifikat-preview";
+  const image = document.createElement("img");
+  image.className = "kurse-zertifikat-preview__image";
+  image.alt = "Vorschau Zertifikat Hintergrund";
+  image.src = url;
+  wrap.appendChild(image);
+  return wrap;
 }
 
 export async function initModule(container, routeContext = { segments: [] }) {
@@ -189,6 +208,7 @@ async function renderDetail(section, id) {
     injectToast(detailSection);
     const detailCard = createStandardCard("Stammdaten");
     const detailBody = detailCard.querySelector(".ui-card__body");
+    const zertifikatHintergrund = getCertificateBackgroundForKurs(kurs);
     const rows = [
       { label: "ID", value: kurs.id },
       { label: "Kurscode", value: kurs.code },
@@ -200,6 +220,12 @@ async function renderDetail(section, id) {
       { label: "Preis", value: formatPrice(kurs.price) },
       { label: "Status", value: formatStatusLabel(kurs.status) },
       { label: "Notizen", value: kurs.notes },
+      {
+        label: "Zertifikat Hintergrund",
+        value: zertifikatHintergrund
+          ? describeCertificateBackground(zertifikatHintergrund)
+          : "Kein Zertifikat-Hintergrund zugewiesen",
+      },
       { label: "Kursinhalt Theorie", value: kurs.inhaltTheorie },
       { label: "Kursinhalt Praxis", value: kurs.inhaltPraxis },
       { label: "Erstellt am", value: formatDateTime(kurs.createdAt) },
@@ -208,6 +234,18 @@ async function renderDetail(section, id) {
     detailBody.innerHTML = "";
     detailBody.appendChild(createDefinitionList(rows));
     detailSection.appendChild(detailCard);
+    const preview = createZertifikatHintergrundPreview(zertifikatHintergrund);
+    if (preview) {
+      const backgroundCard = createStandardCard("Zertifikat Hintergrund");
+      const backgroundBody = backgroundCard.querySelector(".ui-card__body");
+      backgroundBody.innerHTML = "";
+      backgroundBody.appendChild(preview);
+      detailSection.appendChild(backgroundCard);
+    } else {
+      detailSection.appendChild(
+        createNotice("Kein Zertifikat-Hintergrund zugewiesen.", { variant: "warn", role: "status" })
+      );
+    }
     const actionsCard = createStandardCard("Aktionen");
     const actionsBody = actionsCard.querySelector(".ui-card__body");
     const actionsWrap = document.createElement("div");
@@ -521,7 +559,7 @@ async function renderForm(section, view, id) {
     if (!field.config.describedByText) {
       hint.classList.add("sr-only");
     }
-    refs[field.name] = { input, hint };
+    refs[field.name] = { input, hint, row };
     if (field.name === "kursCode") {
       input.setAttribute("aria-readonly", "true");
       const toggleButton = createButton({
@@ -549,6 +587,35 @@ async function renderForm(section, view, id) {
     }
     form.appendChild(row);
   });
+
+  const backgroundRef = refs.zertifikatHintergrund;
+  if (backgroundRef?.row) {
+    const preview = document.createElement("div");
+    preview.className = "kurse-zertifikat-preview";
+    const previewImage = document.createElement("img");
+    previewImage.className = "kurse-zertifikat-preview__image";
+    previewImage.alt = "Vorschau Zertifikat Hintergrund";
+    const previewEmpty = document.createElement("p");
+    previewEmpty.className = "kurse-zertifikat-preview__empty";
+    previewEmpty.textContent = "Kein Zertifikat-Hintergrund zugewiesen.";
+    preview.append(previewImage, previewEmpty);
+    backgroundRef.row.appendChild(preview);
+
+    const updatePreview = () => {
+      const url = resolveCertificateBackgroundUrl(backgroundRef.input.value);
+      if (url) {
+        previewImage.src = url;
+        previewImage.hidden = false;
+        previewEmpty.hidden = true;
+      } else {
+        previewImage.removeAttribute("src");
+        previewImage.hidden = true;
+        previewEmpty.hidden = false;
+      }
+    };
+    updatePreview();
+    backgroundRef.input.addEventListener("change", updatePreview);
+  }
 
   const actions = document.createElement("div");
   actions.className = "module-actions kurse-form-actions";
@@ -1068,6 +1135,7 @@ function buildFormFields(existing = {}, { defaultCode = "", trainerOptions = [] 
       : [];
   const additionalTrainerIds = existingTrainerIds.filter((id) => id !== existingTrainerId);
   const additionalTrainerId = additionalTrainerIds[0] || "";
+  const backgroundValue = getCertificateBackgroundForKurs(existing);
   return [
     {
       name: "kursId",
@@ -1195,6 +1263,18 @@ function buildFormFields(existing = {}, { defaultCode = "", trainerOptions = [] 
           label: option.label,
           selected: option.value === statusValue,
         })),
+      },
+    },
+    {
+      name: "zertifikatHintergrund",
+      value: backgroundValue,
+      config: {
+        id: "kurs-zertifikat-hintergrund",
+        label: "Zertifikat Hintergrund (PNG)",
+        control: "select",
+        required: false,
+        describedByText: "PNG muss in attachments/material/Material liegen.",
+        options: getCertificateBackgroundOptions(backgroundValue),
       },
     },
     {
@@ -1334,6 +1414,7 @@ function buildPayload(values, trainerList = []) {
     aufbauend: ensureString(values.aufbauend, ""),
     price: ensureString(values.price, ""),
     notes: ensureString(values.notes, ""),
+    zertifikatHintergrund: ensureString(values.zertifikatHintergrund, ""),
     inhaltTheorie: ensureString(values.inhaltTheorie, ""),
     inhaltPraxis: ensureString(values.inhaltPraxis, ""),
   };

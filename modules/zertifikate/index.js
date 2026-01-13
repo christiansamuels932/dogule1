@@ -7,7 +7,7 @@ import {
 } from "../shared/api/zertifikate.js";
 import { listKunden } from "../shared/api/kunden.js";
 import { listHunde } from "../shared/api/hunde.js";
-import { listKurse } from "../shared/api/kurse.js";
+import { listKurse, getKurs } from "../shared/api/kurse.js";
 import { listTrainer } from "../shared/api/trainer.js";
 import {
   createCard,
@@ -18,6 +18,7 @@ import {
 } from "../shared/components/components.js";
 import { openCertificatePdf, validateCertificateSnapshot } from "./certificatePdf.js";
 import { recordAutomationEvent } from "../kommunikation/automation/client.js";
+import { getCertificateBackgroundForKurs } from "../shared/certificates/backgrounds.js";
 
 export function initModule(container, routeInfo = {}) {
   if (!container) return;
@@ -46,7 +47,12 @@ export function initModule(container, routeInfo = {}) {
 }
 
 function parseRoute(segments = []) {
-  const parts = Array.isArray(segments) ? segments.filter(Boolean) : [];
+  const parts = Array.isArray(segments)
+    ? segments
+        .filter(Boolean)
+        .map((segment) => String(segment).split("?")[0])
+        .filter(Boolean)
+    : [];
   if (!parts.length) {
     return { mode: "list", detailId: null };
   }
@@ -304,14 +310,33 @@ async function renderDetailView(section, id) {
   const pdfBtn = createButton({ label: "PDF export", variant: "secondary" });
   pdfBtn.type = "button";
   pdfBtn.disabled = false;
-  pdfBtn.addEventListener("click", () => {
+  pdfBtn.addEventListener("click", async () => {
     exportStatus.innerHTML = "";
     exportStatus.appendChild(
       createNotice("PDF wird vorbereitet...", { variant: "info", role: "status" })
     );
     try {
-      const missing = validateCertificateSnapshot(zertifikat);
+      let kurs = null;
+      if (zertifikat.kursId) {
+        try {
+          kurs = await getKurs(zertifikat.kursId);
+        } catch (loadError) {
+          console.warn("[ZERTIFIKAT_KURS_LOAD_FAIL]", loadError);
+        }
+      }
+      const kursBackground = kurs ? getCertificateBackgroundForKurs(kurs) : "";
+      const snapshot = { ...zertifikat, zertifikatHintergrund: kursBackground };
+      const missing = validateCertificateSnapshot(snapshot);
       if (missing.length) {
+        if (missing.includes("zertifikatHintergrund")) {
+          exportStatus.appendChild(
+            createNotice("Kein Zertifikat-Hintergrund zugewiesen.", {
+              variant: "warn",
+              role: "alert",
+            })
+          );
+          return;
+        }
         exportStatus.appendChild(
           createNotice(`PDF kann nicht erstellt werden. Fehlende Felder: ${missing.join(", ")}.`, {
             variant: "warn",
@@ -320,7 +345,7 @@ async function renderDetailView(section, id) {
         );
         return;
       }
-      openCertificatePdf(zertifikat);
+      openCertificatePdf(snapshot);
     } catch (error) {
       const message =
         error?.code === "POPUP_BLOCKED"
@@ -980,6 +1005,10 @@ function validate(values = {}, { kurse = [], trainer = [] } = {}) {
     errors.kursOrtSnapshot = "Bitte Kurs Ort angeben.";
   }
   const kurs = Array.isArray(kurse) ? kurse.find((entry) => entry.id === values.kursId) : null;
+  const kursBackground = kurs ? getCertificateBackgroundForKurs(kurs) : "";
+  if (values.kursId && kurs && !kursBackground) {
+    errors.kursId = errors.kursId || "Kein Zertifikat-Hintergrund zugewiesen.";
+  }
   const kursTheorie = (kurs?.inhaltTheorie || "").trim();
   const kursPraxis = (kurs?.inhaltPraxis || "").trim();
   if (values.kursId && !kursTheorie) {

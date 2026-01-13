@@ -228,6 +228,7 @@ function mapKursRow(row) {
     notes: row.notes,
     inhaltTheorie: row.inhalt_theorie,
     inhaltPraxis: row.inhalt_praxis,
+    zertifikatHintergrund: row.zertifikat_hintergrund,
     hundIds: parseJson(row.hund_ids, []),
     kundenIds: parseJson(row.kunden_ids, []),
     outlookEventId: row.outlook_event_id,
@@ -456,9 +457,7 @@ function normalizeKurs(data = {}, existing) {
     return normalized;
   };
   const ort = toStringValue(data.ort ?? data.location ?? existing?.ort ?? existing?.location);
-  const location = toStringValue(
-    data.location ?? data.ort ?? existing?.location ?? existing?.ort
-  );
+  const location = toStringValue(data.location ?? data.ort ?? existing?.location ?? existing?.ort);
   return {
     id: data.id || existing?.id || uuidv7(),
     code: toStringValue(data.code ?? existing?.code),
@@ -485,6 +484,9 @@ function normalizeKurs(data = {}, existing) {
     notes: toStringValue(data.notes ?? existing?.notes),
     inhaltTheorie: toStringValue(data.inhaltTheorie ?? existing?.inhaltTheorie),
     inhaltPraxis: toStringValue(data.inhaltPraxis ?? existing?.inhaltPraxis),
+    zertifikatHintergrund: toStringValue(
+      data.zertifikatHintergrund ?? existing?.zertifikatHintergrund
+    ),
     hundIds: toArrayValue(data.hundIds ?? existing?.hundIds),
     kundenIds: toArrayValue(data.kundenIds ?? existing?.kundenIds),
     outlookEventId: toStringValue(data.outlookEventId ?? existing?.outlookEventId),
@@ -610,10 +612,8 @@ function normalizeZertifikat(data = {}, existing) {
     trainer1TitelSnapshot: toStringValue(
       data.trainer1TitelSnapshot ?? existing?.trainer1TitelSnapshot
     ),
-    trainer2NameSnapshot:
-      data.trainer2NameSnapshot ?? existing?.trainer2NameSnapshot ?? null,
-    trainer2TitelSnapshot:
-      data.trainer2TitelSnapshot ?? existing?.trainer2TitelSnapshot ?? null,
+    trainer2NameSnapshot: data.trainer2NameSnapshot ?? existing?.trainer2NameSnapshot ?? null,
+    trainer2TitelSnapshot: data.trainer2TitelSnapshot ?? existing?.trainer2TitelSnapshot ?? null,
     bemerkungen: toStringValue(data.bemerkungen ?? existing?.bemerkungen),
     createdAt,
     updatedAt: nowIso(),
@@ -1030,6 +1030,7 @@ export function createMariaDbAdapter(options = {}) {
       record.notes,
       record.inhaltTheorie,
       record.inhaltPraxis,
+      record.zertifikatHintergrund,
       toJson(record.hundIds),
       toJson(record.kundenIds),
       record.outlookEventId,
@@ -1046,7 +1047,7 @@ export function createMariaDbAdapter(options = {}) {
     ];
     try {
       await pool.query(
-        "INSERT INTO kurse (id, code, title, trainer_name, trainer_id, trainer_ids, date, start_time, end_time, location, ort, status, abo_form, alter_hund, aufbauend, capacity, booked_count, level, price, notes, inhalt_theorie, inhalt_praxis, hund_ids, kunden_ids, outlook_event_id, outlook_date, outlook_start, outlook_end, outlook_location, inventory_flag, portfolio_flag, created_at, updated_at, schema_version, version) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO kurse (id, code, title, trainer_name, trainer_id, trainer_ids, date, start_time, end_time, location, ort, status, abo_form, alter_hund, aufbauend, capacity, booked_count, level, price, notes, inhalt_theorie, inhalt_praxis, zertifikat_hintergrund, hund_ids, kunden_ids, outlook_event_id, outlook_date, outlook_start, outlook_end, outlook_location, inventory_flag, portfolio_flag, created_at, updated_at, schema_version, version) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         params
       );
       return record;
@@ -1083,6 +1084,7 @@ export function createMariaDbAdapter(options = {}) {
         record.notes,
         record.inhaltTheorie,
         record.inhaltPraxis,
+        record.zertifikatHintergrund,
         toJson(record.hundIds),
         toJson(record.kundenIds),
         record.outlookEventId,
@@ -1098,7 +1100,7 @@ export function createMariaDbAdapter(options = {}) {
         record.id,
       ];
       await pool.query(
-        "UPDATE kurse SET code=?, title=?, trainer_name=?, trainer_id=?, trainer_ids=?, date=?, start_time=?, end_time=?, location=?, ort=?, status=?, abo_form=?, alter_hund=?, aufbauend=?, capacity=?, booked_count=?, level=?, price=?, notes=?, inhalt_theorie=?, inhalt_praxis=?, hund_ids=?, kunden_ids=?, outlook_event_id=?, outlook_date=?, outlook_start=?, outlook_end=?, outlook_location=?, inventory_flag=?, portfolio_flag=?, updated_at=?, schema_version=?, version=? WHERE id=?",
+        "UPDATE kurse SET code=?, title=?, trainer_name=?, trainer_id=?, trainer_ids=?, date=?, start_time=?, end_time=?, location=?, ort=?, status=?, abo_form=?, alter_hund=?, aufbauend=?, capacity=?, booked_count=?, level=?, price=?, notes=?, inhalt_theorie=?, inhalt_praxis=?, zertifikat_hintergrund=?, hund_ids=?, kunden_ids=?, outlook_event_id=?, outlook_date=?, outlook_start=?, outlook_end=?, outlook_location=?, inventory_flag=?, portfolio_flag=?, updated_at=?, schema_version=?, version=? WHERE id=?",
         params
       );
       return record;

@@ -214,6 +214,27 @@ h3,
   align-items: center;
 }
 
+.kurse-zertifikat-preview {
+  margin-top: 0.65rem;
+  padding: 0.65rem;
+  border: 1px dashed var(--color-border);
+  border-radius: 0.75rem;
+  background: var(--color-paper);
+}
+
+.kurse-zertifikat-preview__image {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.5rem;
+}
+
+.kurse-zertifikat-preview__empty {
+  margin: 0;
+  color: var(--color-muted-2);
+  font-size: 0.85rem;
+}
+
 .kurse-toolbar-actions,
 .module-actions {
   display: flex;
