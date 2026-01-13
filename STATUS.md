@@ -1,6 +1,6 @@
 Current State
 
-- Station 85 verified: header card renders correctly on Dashboard and a module page.
+- Station 86 verified: left-nav module list aligns with overview grid labels.
 
 Blockers
 
@@ -8,4 +8,4 @@ Blockers
 
 Next Action
 
-- Start Station 86 implementation (align left-nav module list with overview grid).
+- Start Station 87 implementation (remove module title + description blocks).
