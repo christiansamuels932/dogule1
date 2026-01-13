@@ -85,34 +85,6 @@ function findTrainerById(trainerId, trainerList = trainerCache) {
   return list.find((trainer) => trainer.id === safeId) || null;
 }
 
-function createMainHeading(title, subtitle = "") {
-  const fragment = createSectionHeader({
-    title,
-    subtitle,
-    level: 1,
-  });
-  const sectionEl = fragment.querySelector(".ui-section") || fragment.firstElementChild;
-  const subtitleEl = sectionEl?.querySelector(".ui-section__subtitle") || null;
-  const originalTitleEl = sectionEl?.querySelector(".ui-section__title") || null;
-  const heading = document.createElement("h1");
-  heading.className = originalTitleEl?.className || "ui-section__title";
-  heading.textContent = originalTitleEl?.textContent || title || "";
-  if (originalTitleEl?.id) {
-    heading.id = originalTitleEl.id;
-  }
-  if (originalTitleEl) {
-    originalTitleEl.replaceWith(heading);
-  } else if (sectionEl) {
-    const header = sectionEl.querySelector(".ui-section__header") || sectionEl;
-    header.prepend(heading);
-  }
-  if (subtitleEl) {
-    subtitleEl.textContent = subtitle || "";
-    subtitleEl.hidden = !subtitle;
-  }
-  return { fragment, sectionEl, heading, subtitleEl };
-}
-
 function createStandardCard(title = "", eyebrow = "") {
   const fragment = createCard({
     eyebrow,
@@ -143,8 +115,6 @@ export async function initModule(container, routeContext = { segments: [] }) {
     console.error("[KURSE_ERR_VIEW]", error);
     section.innerHTML = "";
     scrollToTop();
-    const { fragment: headingFragment } = createMainHeading("Kurse", "Fehler beim Laden");
-    section.appendChild(headingFragment);
     const errorCardFragment = createCard({
       eyebrow: "",
       title: "",
@@ -208,13 +178,6 @@ async function renderDetail(section, id) {
   await fetchTrainer(true);
   const detailSection = document.createElement("section");
   detailSection.className = "dogule-section kurse-section kurse-detail";
-  detailSection.appendChild(
-    createSectionHeader({
-      title: "Kurs",
-      subtitle: "",
-      level: 1,
-    })
-  );
   section.appendChild(detailSection);
 
   try {
@@ -229,10 +192,6 @@ async function renderDetail(section, id) {
       kurs = hydrated[0] || kurs;
     }
 
-    const subtitleEl = detailSection.querySelector(".ui-section__subtitle");
-    if (subtitleEl) {
-      subtitleEl.textContent = kurs.title || "";
-    }
     injectToast(detailSection);
     const detailCard = createStandardCard("Stammdaten");
     const detailBody = detailCard.querySelector(".ui-card__body");
@@ -764,11 +723,6 @@ async function renderForm(section, view, id) {
   const mode = view === "create" ? "create" : "edit";
   section.innerHTML = "";
   scrollToTop();
-  const { fragment: headingFragment } = createMainHeading(
-    mode === "create" ? "Kurs erstellen" : "Kurs bearbeiten",
-    mode === "create" ? "Lege einen neuen Kurs an." : "Passe die Kursdaten an."
-  );
-  section.appendChild(headingFragment);
   injectToast(section);
   await fetchTrainer(true);
 

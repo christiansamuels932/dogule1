@@ -2610,3 +2610,26 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 ## Notizen
 
 - None.
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 87 — Remove module title + description blocks
+
+## Kontext
+
+- Status: read-only (completed).
+- Branch: `station87-remove-module-headers`.
+- Scope: remove module title/description blocks and align Zertifikate layout with other modules.
+
+## Ergebnis (kurz)
+
+- Removed top title/description header blocks across module pages.
+- Zertifikate list/detail/create now follow the same action-card + content-card structure as other modules.
+
+## Tests
+
+- Manual UI check: Dashboard, Kunden, Hunde, Kurse, Trainer, Zertifikate ✅
+
+## Notizen
+
+- None.

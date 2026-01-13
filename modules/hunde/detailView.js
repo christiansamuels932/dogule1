@@ -20,14 +20,8 @@ export async function createHundeDetailView(container, hundId) {
   container.classList.add("hunde-view");
   window.scrollTo(0, 0);
 
-  const headerFragment = createSectionHeader({
-    title: "Hund",
-    subtitle: "",
-    level: 1,
-  });
   const detailSection = document.createElement("section");
   detailSection.className = "dogule-section hunde-section hunde-detail";
-  detailSection.appendChild(headerFragment);
   container.appendChild(detailSection);
   injectHundToast(container);
 
@@ -41,10 +35,6 @@ export async function createHundeDetailView(container, hundId) {
   if (!cardElement) return;
   detailSection.appendChild(cardElement);
   const body = cardElement.querySelector(".ui-card__body");
-  const headerSection =
-    headerFragment.querySelector(".ui-section") || headerFragment.firstElementChild;
-  const headerSubtitle = headerSection?.querySelector(".ui-section__subtitle");
-
   try {
     if (!hundId) {
       throw new Error("Keine Hunde-ID angegeben");
@@ -89,11 +79,6 @@ export async function createHundeDetailView(container, hundId) {
       }
     }
 
-    const hundName = hund.name || "Unbenannter Hund";
-    if (headerSubtitle) {
-      headerSubtitle.textContent = hundName;
-      headerSubtitle.hidden = false;
-    }
     const titleEl = cardElement.querySelector(".ui-card__title");
     if (titleEl) titleEl.textContent = "Stammdaten";
     body.innerHTML = "";
