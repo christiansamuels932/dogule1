@@ -11,6 +11,7 @@ import { listHunde, createHund } from "../shared/api/hunde.js";
 import { listKurse } from "../shared/api/kurse.js";
 import { listFinanzen } from "../shared/api/finanzen.js";
 import { listWarenByKundeId } from "../shared/api/waren.js";
+import { listZertifikate } from "../shared/api/zertifikate.js";
 import { exportTableToXlsx } from "../shared/utils/xlsxExport.js";
 import {
   createSectionHeader,
@@ -898,51 +899,18 @@ async function renderDetail(root, id) {
     console.error("[KUNDEN_ERR_HUNDE_LOAD]", error);
   }
 
-  let linkedKurse = [];
-  let kurseLoadFailed = false;
+  let zertifikate = [];
+  let zertifikateLoadFailed = false;
   try {
-    const kurse = await listKurse();
-    const hundIds = new Set(linkedHunde.map((hund) => hund.id));
-    const filtered = kurse.filter((kurs) => {
-      const hasHundBezug =
-        Array.isArray(kurs.hundIds) && kurs.hundIds.some((hundId) => hundIds.has(hundId));
-      return hasHundBezug;
-    });
-    const unique = [];
-    const seen = new Set();
-    filtered.forEach((kurs) => {
-      if (seen.has(kurs.id)) return;
-      seen.add(kurs.id);
-      unique.push(kurs);
-    });
-    linkedKurse = unique;
+    const allZertifikate = await listZertifikate();
+    zertifikate = allZertifikate.filter((entry) => entry.kundeId === id);
   } catch (error) {
-    kurseLoadFailed = true;
-    console.error("[KUNDEN_ERR_KURSE_LOAD]", error);
+    zertifikateLoadFailed = true;
+    console.error("[KUNDEN_ERR_ZERTIFIKATE_LOAD]", error);
   }
 
   root.appendChild(renderKundenHundeSection(linkedHunde, hundeLoadFailed));
-  root.appendChild(renderKundenKurseSection(linkedKurse, kurseLoadFailed));
-  let finanzen = [];
-  let finanzenLoadFailed = false;
-  try {
-    finanzen = await loadFinanzen(id);
-  } catch (error) {
-    finanzenLoadFailed = true;
-    console.error("[KUNDEN_ERR_FINANZEN_LOAD]", error);
-  }
-  root.appendChild(renderFinanzOverview(finanzen, finanzenLoadFailed));
-  root.appendChild(renderOffeneBetraege(finanzen, finanzenLoadFailed));
-  root.appendChild(renderZahlungshistorie(finanzen, finanzenLoadFailed));
-  let waren = [];
-  let warenLoadFailed = false;
-  try {
-    waren = await listWarenByKundeId(id);
-  } catch (error) {
-    warenLoadFailed = true;
-    console.error("[KUNDEN_ERR_WAREN_LOAD]", error);
-  }
-  root.appendChild(renderWarenSection(waren, warenLoadFailed));
+  root.appendChild(renderKundenZertifikateSection(zertifikate, zertifikateLoadFailed));
 
   deleteBtn.addEventListener("click", async () => {
     if (deleteBtn.disabled) return;
@@ -1708,230 +1676,34 @@ function generateNextKundenCode(list = []) {
   return `K-${String(nextNumber).padStart(3, "0")}`;
 }
 
-function renderKundenKurseSection(kurse = [], hasError = false) {
+function renderKundenZertifikateSection(zertifikate = [], hasError = false) {
   const section = createSectionBlock({
-    title: "Kurse dieses Kunden",
+    title: "Zertifikate",
     subtitle: "",
     level: 2,
   });
-  const card = createStandardCard("Kurse");
+  const card = createStandardCard("Zertifikate");
   const body = card.querySelector(".ui-card__body");
   body.innerHTML = "";
 
   if (hasError) {
     showErrorNotice(body);
-  } else if (!kurse.length) {
-    appendSharedEmptyState(body);
-  } else {
-    kurse.forEach((kurs) => {
-      const kursCardFragment = createCard({
-        eyebrow: formatDateTime(kurs.date),
-        title: kurs.title || "Ohne Titel",
-        body: "",
-        footer: "",
-      });
-      const kursCard =
-        kursCardFragment.querySelector(".ui-card") || kursCardFragment.firstElementChild;
-      if (!kursCard) return;
-      const cardBody = kursCard.querySelector(".ui-card__body");
-      if (cardBody) {
-        cardBody.innerHTML = "";
-        const ort = document.createElement("p");
-        ort.textContent = kurs.location || "Ort folgt";
-        const meta = document.createElement("p");
-        meta.className = "kunden-kurs-meta";
-        const kursCode = kurs.code || kurs.kursId || "–";
-        meta.textContent = `ID: ${kurs.id || "–"} · Code: ${kursCode} · Hunde: ${formatIdList(kurs.hundIds)}`;
-        cardBody.append(ort, meta);
-      }
-      kursCard.classList.add("kunden-kurs-item");
-      const kursLink = document.createElement("a");
-      kursLink.className = "kunden-kurs-link";
-      kursLink.href = `#/kurse/${kurs.id}`;
-      kursLink.setAttribute("aria-label", `Kurs ${kurs.title || kurs.id} öffnen`);
-      kursLink.appendChild(kursCard);
-      body.appendChild(kursLink);
-    });
-  }
-
-  section.appendChild(card);
-  return section;
-}
-
-function formatIdList(value) {
-  if (Array.isArray(value) && value.length) return value.join(", ");
-  if (typeof value === "string" && value.trim()) return value;
-  return "–";
-}
-
-async function loadFinanzen(kundeId) {
-  const finanzen = await listFinanzen();
-  return finanzen.filter((entry) => entry.kundeId === kundeId);
-}
-
-function renderFinanzOverview(finanzen = [], hasError = false) {
-  const section = createSectionBlock({
-    title: "Finanzübersicht",
-    subtitle: "",
-    level: 2,
-  });
-  const card = createStandardCard("Zusammenfassung");
-  const body = card.querySelector(".ui-card__body");
-  body.innerHTML = "";
-
-  if (hasError) {
-    showErrorNotice(body);
-  } else if (!finanzen.length) {
-    appendSharedEmptyState(body);
-  } else {
-    const payments = finanzen
-      .filter((entry) => entry.typ === "bezahlt")
-      .slice()
-      .reverse();
-    const latest = payments.length ? payments[payments.length - 1] : null;
-    const openSum = finanzen
-      .filter((entry) => entry.typ === "offen")
-      .reduce((total, entry) => total + Number(entry.betrag || 0), 0);
-    const infoList = document.createElement("dl");
-    infoList.className = "kunden-finanz-info";
-    const addInfoRow = (label, value) => {
-      const dt = document.createElement("dt");
-      dt.textContent = label;
-      const dd = document.createElement("dd");
-      dd.textContent = value;
-      infoList.append(dt, dd);
-    };
-    addInfoRow(
-      "Letzte Zahlung",
-      latest
-        ? `${formatDateTime(latest.datum)} – CHF ${Number(latest.betrag || 0).toFixed(2)}`
-        : "Keine Zahlungen"
-    );
-    addInfoRow("Offen gesamt", `CHF ${openSum.toFixed(2)}`);
-    body.appendChild(infoList);
-    if (latest?.beschreibung) {
-      const note = document.createElement("p");
-      note.textContent = latest.beschreibung;
-      body.appendChild(note);
-    }
-  }
-
-  section.appendChild(card);
-  return section;
-}
-
-function renderOffeneBetraege(finanzen = [], hasError = false) {
-  const section = createSectionBlock({
-    title: "Offene Beträge",
-    subtitle: "",
-    level: 2,
-  });
-  const card = createStandardCard("Offene Posten");
-  const body = card.querySelector(".ui-card__body");
-  body.innerHTML = "";
-
-  if (hasError) {
-    showErrorNotice(body);
-  } else {
-    const openEntries = finanzen.filter((entry) => entry.typ === "offen");
-    if (!openEntries.length) {
-      appendSharedEmptyState(body);
-    } else {
-      const sum = openEntries.reduce((total, entry) => total + Number(entry.betrag || 0), 0);
-      const summary = document.createElement("p");
-      const summaryLabel = document.createElement("span");
-      summaryLabel.textContent = "Total offen:";
-      summary.append(summaryLabel, document.createTextNode(` CHF ${sum.toFixed(2)}`));
-      body.appendChild(summary);
-
-      const list = document.createElement("ul");
-      list.className = "kunden-offene-liste";
-      openEntries.forEach((entry) => {
-        const item = document.createElement("li");
-        const title = document.createElement("span");
-        title.textContent = entry.beschreibung || "Posten";
-        const amountText = document.createTextNode(
-          ` – CHF ${Number(entry.betrag || 0).toFixed(2)} (${formatDateTime(entry.datum)})`
-        );
-        item.append(title, amountText);
-        list.appendChild(item);
-      });
-      body.appendChild(list);
-    }
-  }
-
-  section.appendChild(card);
-  return section;
-}
-
-function renderZahlungshistorie(finanzen = [], hasError = false) {
-  const section = createSectionBlock({
-    title: "Zahlungshistorie",
-    subtitle: "",
-    level: 2,
-  });
-  const card = createStandardCard("Zahlungen");
-  const body = card.querySelector(".ui-card__body");
-  body.innerHTML = "";
-
-  if (hasError) {
-    showErrorNotice(body);
-  } else {
-    const payments = finanzen.filter((entry) => entry.typ === "bezahlt");
-    if (!payments.length) {
-      appendSharedEmptyState(body);
-    } else {
-      const list = document.createElement("ul");
-      list.className = "kunden-zahlungsliste";
-      payments.forEach((entry) => {
-        const item = document.createElement("li");
-        const time = document.createElement("span");
-        time.textContent = formatDateTime(entry.datum);
-        const amountText = document.createTextNode(
-          ` – CHF ${Number(entry.betrag || 0).toFixed(2)} (${entry.beschreibung || "Zahlung"})`
-        );
-        item.append(time, amountText);
-        list.appendChild(item);
-      });
-      body.appendChild(list);
-    }
-  }
-
-  section.appendChild(card);
-  return section;
-}
-
-function renderWarenSection(waren = [], hasError = false) {
-  const section = createSectionBlock({
-    title: "Waren",
-    subtitle: "",
-    level: 2,
-  });
-  const card = createStandardCard("Warenverkäufe");
-  const body = card.querySelector(".ui-card__body");
-  body.innerHTML = "";
-
-  if (hasError) {
-    showErrorNotice(body);
-  } else if (!waren.length) {
+  } else if (!zertifikate.length) {
     appendSharedEmptyState(body);
   } else {
     const list = document.createElement("ul");
-    list.className = "kunden-waren-liste";
-    waren.forEach((verkauf) => {
+    list.className = "kunden-zertifikate-liste";
+    zertifikate.forEach((zertifikat) => {
       const item = document.createElement("li");
-      const title = document.createElement("span");
-      title.textContent = verkauf.produktName || "Produkt";
-      const meta = document.createElement("span");
-      meta.textContent = ` – ${formatDateTime(verkauf.datum)} · CHF ${formatCurrency(
-        verkauf.preis
-      )}`;
-      item.append(title, meta);
-      if (verkauf.beschreibung) {
-        const desc = document.createElement("div");
-        desc.textContent = verkauf.beschreibung;
-        item.appendChild(desc);
-      }
+      const link = document.createElement("a");
+      link.href = `#/zertifikate/${zertifikat.id}`;
+      link.className = "kunden-zertifikate-link";
+      const label = zertifikat.kursTitelSnapshot || zertifikat.code || "Zertifikat";
+      const meta = zertifikat.ausstellungsdatum
+        ? ` · ${formatDateTime(zertifikat.ausstellungsdatum)}`
+        : "";
+      link.textContent = `${label}${meta}`;
+      item.appendChild(link);
       list.appendChild(item);
     });
     body.appendChild(list);
@@ -1979,12 +1751,6 @@ function valueOrDash(value) {
   if (value === null || value === undefined) return "–";
   const str = typeof value === "string" ? value.trim() : String(value);
   return str || "–";
-}
-
-function formatCurrency(value) {
-  const amount = Number(value);
-  if (!Number.isFinite(amount)) return "0.00";
-  return amount.toFixed(2);
 }
 
 function formatDateTime(value) {

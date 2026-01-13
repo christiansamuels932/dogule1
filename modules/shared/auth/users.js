@@ -1,26 +1,9 @@
 const USERS = [
   {
-    id: "user-rifo",
-    username: "Rifo",
-    role: "admin",
-    passwordHash:
-      "pbkdf2$sha-256$120000$pW9nCcsmY88i5Z+zM4XPaQ==$nfneGOFusc4/PskQiqVfmUDne0LNsPR2Q+AU/Pq1NSw=",
-    requires2fa: false,
-  },
-  {
-    id: "user-trainer",
-    username: "trainer",
-    role: "trainer",
-    passwordHash:
-      "pbkdf2$sha256$120000$BJESFsjzmHdkzaV5sQbg5w==$Jusw6IPvULL4YACbJ4XpDY9sdMe6jX5g1PXvjX807P4=",
-    requires2fa: false,
-  },
-  {
     id: "user-developer",
-    username: "developer",
+    username: "Developer",
     role: "developer",
-    passwordHash:
-      "pbkdf2$sha-256$120000$u6ioECtBb2jEpZ3GYIqAfA==$MQuLfN2sD06UvJkZLlGbXWU2F5Lj0e4jVJgoNe3M7LE=",
+    passwordHash: "",
     requires2fa: false,
   },
 ];

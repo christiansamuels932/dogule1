@@ -13,32 +13,23 @@ const ALL_MODULES = [
 
 const ROLE_MODULES = {
   admin: ALL_MODULES,
-  staff: ALL_MODULES,
   developer: ALL_MODULES,
-  trainer: ["dashboard", "kurse", "kalender", "kommunikation"],
+  trainer: ["kunden", "hunde"],
 };
 
 const API_ACCESS = {
   admin: { read: ALL_MODULES, write: ALL_MODULES },
-  staff: { read: ALL_MODULES, write: ALL_MODULES },
   developer: { read: ALL_MODULES, write: ALL_MODULES },
   trainer: {
-    read: ["kunden", "hunde", "kurse", "trainer", "kalender"],
-    write: ["kurse", "kalender"],
+    read: ["kunden", "hunde"],
+    write: ["kunden", "hunde"],
   },
 };
 
 const KOMMUNIKATION_ACTIONS = {
   admin: ["*"],
-  staff: ["*"],
   developer: ["*"],
-  trainer: [
-    "kommunikation.chat.read",
-    "kommunikation.chat.send",
-    "kommunikation.chat.readMarker.set",
-    "kommunikation.infochannel.view",
-    "kommunikation.infochannel.confirm",
-  ],
+  trainer: [],
 };
 
 export function normalizeRole(role) {
