@@ -55,6 +55,29 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 # - - - - - - - - - - - - - - - - - - - -
 
+# Station 90 — Kunden: Heimatort in Detailview (read-only)
+
+## Kontext
+
+- Status: completed.
+- Branch: `feature/station90`.
+- Scope: add read-only Heimatort field to Kunden detail view.
+
+## Ergebnis (kurz)
+
+- Kunden detail “Stammdaten” now shows Heimatort with standard placeholder for empty values.
+- Field reads from `heimatort` with fallback to `heimatOrt`.
+
+## Tests
+
+- Not run (manual).
+
+## Notizen
+
+- None.
+
+# - - - - - - - - - - - - - - - - - - - -
+
 # Station 89 — Login password reset with email code
 
 ## Kontext
