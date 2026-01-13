@@ -32,6 +32,28 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 # - - - - - - - - - - - - - - - - - - - -
 
+# Station 89 — Login password reset with email code
+
+## Kontext
+
+- Status: read-only (completed).
+- Branch: `feature/station89`.
+- Scope: note manual password reset process (no self-service reset).
+
+## Ergebnis (kurz)
+
+- Removed self-service reset UI/endpoints and reset helpers; password resets are handled manually by an admin.
+
+## Tests
+
+- Not run (manual).
+
+## Notizen
+
+- Manual reset only (no email or TOTP flow).
+
+# - - - - - - - - - - - - - - - - - - - -
+
 # Station 88 — Login dropdown + simplified roles
 
 ## Kontext
