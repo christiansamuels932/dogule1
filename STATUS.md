@@ -42,7 +42,7 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 ## Ergebnis (kurz)
 
-- Removed self-service reset UI and endpoints; password resets are handled manually by an admin.
+- Removed self-service reset UI/endpoints and reset helpers; password resets are handled manually by an admin.
 
 ## Tests
 
