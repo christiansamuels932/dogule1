@@ -38,14 +38,11 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 - Status: read-only (completed).
 - Branch: `feature/station89`.
-- Scope: add password reset flow with email confirmation code to `christiansamuels932@gmail.com`.
-- Preconditions: SMTP credentials configured via automation SMTP env vars.
+- Scope: note manual password reset process (no self-service reset).
 
 ## Ergebnis (kurz)
 
-- Added reset UI flow on login (request code → confirm code + new password) and new auth reset endpoints.
-- Server generates time-limited reset codes, rate-limits requests, and sends via SMTP using automation config.
-- Passwords are hashed and stored in user store on successful confirmation.
+- Removed self-service reset UI and endpoints; password resets are handled manually by an admin.
 
 ## Tests
 
@@ -53,7 +50,7 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 ## Notizen
 
-- SMTP must be configured (`DOGULE1_AUTOMATION_SMTP_*`) for emails to send.
+- Manual reset only (no email or TOTP flow).
 
 # - - - - - - - - - - - - - - - - - - - -
 
