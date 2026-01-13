@@ -4,7 +4,6 @@ import {
   createCard,
   createFormRow,
   createNotice,
-  createSectionHeader,
 } from "../shared/components/components.js";
 import { createHund, updateHund, listHunde } from "../shared/api/hunde.js";
 import { listKunden } from "../shared/api/kunden.js";
@@ -40,16 +39,6 @@ export async function createHundeFormView(container, options = {}) {
   section.className = "dogule-section hunde-form-section";
   container.appendChild(section);
 
-  section.appendChild(
-    createSectionHeader({
-      title: "Hunde",
-      subtitle:
-        mode === "create"
-          ? "Neuer Hund – Erfasse einen neuen Hund für deine Hundeschule."
-          : "Hund bearbeiten – Passe die Daten dieses Hundes an.",
-      level: 1,
-    })
-  );
   injectHundToast(section);
 
   let existing = null;

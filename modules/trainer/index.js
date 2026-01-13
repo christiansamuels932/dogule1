@@ -249,13 +249,6 @@ async function renderList(section) {
 }
 
 async function renderDetail(section, id) {
-  const header = createSectionHeader({
-    title: "Trainer",
-    subtitle: "Details",
-    level: 2,
-  });
-  section.appendChild(header);
-
   const actionsCard = createCard({
     eyebrow: "",
     title: "Aktionen",

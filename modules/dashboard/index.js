@@ -8,7 +8,6 @@ import {
   createCard,
   createEmptyState,
   createNotice,
-  createSectionHeader,
 } from "../shared/components/components.js";
 import { listKunden } from "../shared/api/kunden.js";
 import { listHunde } from "../shared/api/hunde.js";
@@ -20,13 +19,6 @@ export async function initModule(container) {
 
   const overviewSection = document.createElement("section");
   overviewSection.className = "dogule-section";
-  overviewSection.appendChild(
-    createSectionHeader({
-      title: "Übersicht",
-      subtitle: "",
-      level: 2,
-    })
-  );
   const statusCardFragment = createCard({
     eyebrow: "",
     title: "Systemstatus",

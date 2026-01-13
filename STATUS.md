@@ -1,6 +1,6 @@
 Current State
 
-- Station 86 verified: left-nav module list aligns with overview grid labels.
+- Station 87 verified: module pages show no top title/description block; Zertifikate layout matches other modules.
 
 Blockers
 
@@ -8,4 +8,4 @@ Blockers
 
 Next Action
 
-- Start Station 87 implementation (remove module title + description blocks).
+- Start Station 88 implementation (update login credentials and roles).

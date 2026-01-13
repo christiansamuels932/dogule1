@@ -15,7 +15,6 @@ import {
   createEmptyState,
   createButton,
   createFormRow,
-  createSectionHeader,
 } from "../shared/components/components.js";
 import { openCertificatePdf, validateCertificateSnapshot } from "./certificatePdf.js";
 import { recordAutomationEvent } from "../kommunikation/automation/client.js";
@@ -32,22 +31,12 @@ export function initModule(container, routeInfo = {}) {
   if (mode === "list") {
     renderListView(section);
   } else if (mode === "create") {
-    section.appendChild(
-      createSectionHeader({ title: "Zertifikat erstellen", subtitle: "", level: 2 })
-    );
     renderCreateView(section);
   } else if (mode === "detail") {
-    section.appendChild(
-      createSectionHeader({ title: "Zertifikat", subtitle: "Details", level: 2 })
-    );
     renderDetailView(section, detailId);
   } else if (mode === "edit") {
-    section.appendChild(
-      createSectionHeader({ title: "Zertifikat bearbeiten", subtitle: "", level: 2 })
-    );
     renderEditView(section, detailId);
   } else {
-    section.appendChild(createSectionHeader({ title: "Übersicht", subtitle: "", level: 2 }));
     renderListView(section);
   }
 
@@ -78,6 +67,8 @@ function parseHashQuery() {
 }
 
 async function renderListView(section) {
+  const actionsCard = createStandardCard("Aktionen");
+  const actionsBody = actionsCard?.querySelector(".ui-card__body");
   const actionsRow = document.createElement("div");
   actionsRow.className = "module-actions";
   const createBtn = createButton({
@@ -88,11 +79,17 @@ async function renderListView(section) {
     },
   });
   actionsRow.appendChild(createBtn);
-  section.appendChild(actionsRow);
+  if (actionsBody) {
+    actionsBody.innerHTML = "";
+    actionsBody.appendChild(actionsRow);
+  }
+  if (actionsCard) {
+    section.appendChild(actionsCard);
+  }
 
   const cardFragment = createCard({
     eyebrow: "",
-    title: "Zertifikate",
+    title: "Zertifikateübersicht",
     body: "",
     footer: "",
   });
@@ -188,8 +185,8 @@ async function renderDetailView(section, id) {
     detailBody.innerHTML = "";
     detailBody.appendChild(createNotice("Lade Zertifikat...", { variant: "info", role: "status" }));
   }
-  if (detailCard) section.appendChild(detailCard);
   if (actionsCard) section.appendChild(actionsCard);
+  if (detailCard) section.appendChild(detailCard);
 
   if (!id) {
     if (detailBody) {
@@ -250,12 +247,6 @@ async function renderDetailView(section, id) {
       })
     );
     return;
-  }
-
-  const subtitle = section.querySelector(".ui-section__subtitle");
-  if (subtitle) {
-    subtitle.textContent = zertifikat.code || "Details";
-    subtitle.hidden = !subtitle.textContent;
   }
 
   if (detailBody) {
@@ -368,13 +359,7 @@ function buildDetailGroup(title, rows = []) {
 }
 
 async function renderCreateView(section, { mode = "create", existing = null } = {}) {
-  const formCardFragment = createCard({
-    eyebrow: "",
-    title: "Zertifikat erstellen",
-    body: "",
-    footer: "",
-  });
-  const formCard = formCardFragment.querySelector(".ui-card") || formCardFragment.firstElementChild;
+  const formCard = createStandardCard("Stammdaten");
   const formBody = formCard.querySelector(".ui-card__body");
   formBody.innerHTML = "";
   const statusSlot = document.createElement("div");

@@ -790,13 +790,6 @@ async function renderDetail(root, id) {
     root.innerHTML = "";
     const fallbackSection = document.createElement("section");
     fallbackSection.className = "dogule-section kunden-section kunden-detail";
-    fallbackSection.appendChild(
-      createSectionHeader({
-        title: "Kunde",
-        subtitle: "",
-        level: 1,
-      })
-    );
     const errorCard = createStandardCard("Stammdaten");
     const errorBody = errorCard.querySelector(".ui-card__body");
     showErrorNotice(errorBody);
@@ -809,13 +802,6 @@ async function renderDetail(root, id) {
   root.innerHTML = "";
   const detailSection = document.createElement("section");
   detailSection.className = "dogule-section kunden-section kunden-detail";
-  detailSection.appendChild(
-    createSectionHeader({
-      title: "Kunde",
-      subtitle: kunde ? formatFullName(kunde) : "",
-      level: 1,
-    })
-  );
 
   if (!kunde) {
     detailSection.appendChild(
@@ -1088,8 +1074,8 @@ async function renderForm(root, view, id) {
 
   root.innerHTML = "";
   const section = createSectionBlock({
-    title: mode === "create" ? "Neuer Kunde" : "Kunde bearbeiten",
-    subtitle: mode === "edit" ? formatFullName(existing) : "Formular für neue Kundendaten",
+    title: "",
+    subtitle: "",
     level: 1,
   });
   injectToast(section);
