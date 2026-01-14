@@ -4,12 +4,14 @@ import {
   createNotice,
   createSectionHeader,
   createEmptyState,
+  createFormRow,
   createButton,
 } from "../shared/components/components.js";
 import { deleteHund, listHunde } from "../shared/api/hunde.js";
 import { getKunde } from "../shared/api/kunden.js";
 import { getKurseForHund } from "../shared/api/kurse.js";
 import { listZertifikate } from "../shared/api/zertifikate.js";
+import { createRapporteDraft } from "../shared/api/rapporteDrafts.js";
 import {
   listHistorieEntries,
   updateHistorieEntry,
@@ -19,6 +21,97 @@ import { getSession } from "../shared/auth/client.js";
 import { runIntegrityCheck } from "../shared/api/db/integrityCheck.js";
 import { injectHundToast, setHundToast } from "./formView.js";
 import { formatHerkunft } from "./herkunft.js";
+
+function pad2(value) {
+  return String(value).padStart(2, "0");
+}
+
+function toLocalDateTimeInputValue(date = new Date()) {
+  return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}T${pad2(
+    date.getHours()
+  )}:${pad2(date.getMinutes())}`;
+}
+
+function buildRapportDraftCard({ targetId, kundeId }) {
+  const cardFragment = createCard({
+    eyebrow: "",
+    title: "Rapport (Entwurf)",
+    body: "",
+    footer: "",
+  });
+  const card = cardFragment.querySelector(".ui-card") || cardFragment.firstElementChild;
+  if (!card) return null;
+  const body = card.querySelector(".ui-card__body");
+  if (!body) return card;
+  body.innerHTML = "";
+
+  const form = document.createElement("form");
+  form.className = "hunde-rapport-form";
+  const occurredRow = createFormRow({
+    id: `hunde-rapport-occurred-${targetId}`,
+    label: "Datum/Zeit",
+    control: "input",
+    type: "datetime-local",
+    value: toLocalDateTimeInputValue(),
+  });
+  const textRow = createFormRow({
+    id: `hunde-rapport-text-${targetId}`,
+    label: "Rapport",
+    control: "textarea",
+    placeholder: "Kurztext zum Rapport",
+    required: true,
+  });
+  const occurredInput = occurredRow.querySelector("input");
+  const textInput = textRow.querySelector("textarea");
+
+  const actions = document.createElement("div");
+  actions.className = "module-actions";
+  const submitBtn = createButton({ label: "Entwurf senden", variant: "primary" });
+  submitBtn.type = "submit";
+  actions.appendChild(submitBtn);
+
+  const status = document.createElement("div");
+
+  form.append(occurredRow, textRow, actions, status);
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    status.innerHTML = "";
+    const text = String(textInput?.value || "").trim();
+    if (!text) {
+      status.appendChild(
+        createNotice("Bitte einen Rapporttext eingeben.", { variant: "warn", role: "alert" })
+      );
+      return;
+    }
+    const occurredAtRaw = String(occurredInput?.value || "").trim();
+    const occurredAt = occurredAtRaw
+      ? new Date(occurredAtRaw).toISOString()
+      : new Date().toISOString();
+    submitBtn.disabled = true;
+    try {
+      await createRapporteDraft({
+        targetType: "hunde",
+        targetId,
+        kundeId,
+        text,
+        occurredAt,
+      });
+      status.appendChild(createNotice("Rapport eingereicht.", { variant: "ok", role: "status" }));
+      if (occurredInput) occurredInput.disabled = true;
+      if (textInput) textInput.disabled = true;
+      submitBtn.disabled = true;
+    } catch (error) {
+      console.error("[HUNDE_ERR_RAPPORT_CREATE]", error);
+      status.appendChild(
+        createNotice("Rapport konnte nicht eingereicht werden.", { variant: "warn", role: "alert" })
+      );
+      submitBtn.disabled = false;
+    }
+  });
+
+  body.appendChild(form);
+  return card;
+}
 
 export async function createHundeDetailView(container, hundId) {
   if (!container) return;
@@ -147,6 +240,17 @@ export async function createHundeDetailView(container, hundId) {
         actionsBody.appendChild(actionsWrap);
       }
       detailSection.appendChild(actionsEl);
+    }
+    const role = getSession()?.user?.role || "";
+    const canCreateRapport = role === "admin" || role === "developer" || role === "trainer";
+    if (canCreateRapport) {
+      const rapportCard = buildRapportDraftCard({
+        targetId: hund.id,
+        kundeId: kundeInfo.id || hund.kundenId,
+      });
+      if (rapportCard) {
+        detailSection.appendChild(rapportCard);
+      }
     }
     const zertifikateSection = await buildZertifikateSection(hund.id);
     container.appendChild(zertifikateSection);

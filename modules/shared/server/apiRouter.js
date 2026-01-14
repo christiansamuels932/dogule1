@@ -904,6 +904,193 @@ export function createApiRouter(options = {}) {
     return true;
   }
 
+  function extractFirstName(value) {
+    const raw = String(value || "").trim();
+    if (!raw) return "";
+    return raw.split(/\s+/)[0] || "";
+  }
+
+  function resolveTrainerIdFromActorId(actorId) {
+    const raw = String(actorId || "").trim();
+    if (!raw) return "";
+    return raw.startsWith("user-") ? raw.slice(5) : raw;
+  }
+
+  async function handleRapporteRoutes(req, res) {
+    const reqUrl = req?.url || "";
+    if (!reqUrl.startsWith("/api/rapporte/")) return false;
+
+    const query = extractQuery(reqUrl);
+    const body = await readJsonBody(req);
+    const path = reqUrl.split("?")[0];
+    const method = (req.method || "GET").toUpperCase();
+    const requestId = resolveRequestId(req);
+    const actorId = req.headers["x-dogule-actor-id"] || "";
+    const actorRole = normalizeRole(req.headers["x-dogule-actor-role"] || "");
+
+    if (path === "/api/rapporte/drafts") {
+      if (method === "GET") {
+        try {
+          const listQuery =
+            actorRole === "trainer" ? { ...query, authorId: actorId } : { ...query };
+          const drafts = await storage.rapporteDrafts.list({ query: listQuery, requestId });
+          jsonResponse(res, 200, drafts);
+        } catch (error) {
+          jsonResponse(res, 500, { message: "rapporte_list_failed", code: error?.code });
+        }
+        return true;
+      }
+      if (method === "POST") {
+        try {
+          const targetType = String(body?.targetType || body?.target_type || "").trim();
+          const targetId = String(body?.targetId || body?.target_id || "").trim();
+          if (!targetType || !targetId) {
+            jsonResponse(res, 400, { message: "target_required" });
+            return true;
+          }
+          let kundeId = String(body?.kundeId || body?.kunde_id || "").trim();
+          if (targetType === "kunden") {
+            kundeId = targetId;
+          } else if (targetType === "hunde") {
+            const hund = await storage.hunde.get(targetId, { requestId });
+            kundeId = hund?.kundenId || "";
+          }
+          if (!kundeId) {
+            jsonResponse(res, 400, { message: "kunde_required" });
+            return true;
+          }
+          const created = await storage.rapporteDrafts.create(
+            {
+              status: "submitted",
+              targetType,
+              targetId,
+              kundeId,
+              text: body?.text,
+              occurredAt: body?.occurredAt || new Date().toISOString(),
+              authorId: actorId,
+              authorRole: actorRole || "",
+            },
+            { requestId }
+          );
+          jsonResponse(res, 201, created);
+        } catch (error) {
+          jsonResponse(res, 400, { message: "rapporte_create_failed", code: error?.code });
+        }
+        return true;
+      }
+    }
+
+    const draftMatch = path.match(/^\/api\/rapporte\/drafts\/([^/]+)$/);
+    if (draftMatch) {
+      const id = draftMatch[1];
+      if (method === "GET") {
+        try {
+          const record = await storage.rapporteDrafts.get(id, { requestId });
+          if (actorRole === "trainer" && record?.authorId !== actorId) {
+            jsonResponse(res, 403, { message: "forbidden" });
+            return true;
+          }
+          jsonResponse(res, 200, record);
+        } catch (error) {
+          jsonResponse(res, error?.code === "NOT_FOUND" ? 404 : 500, { message: "not_found" });
+        }
+        return true;
+      }
+      if (method === "DELETE") {
+        if (!(actorRole === "admin" || actorRole === "developer")) {
+          jsonResponse(res, 403, { message: "forbidden" });
+          return true;
+        }
+        try {
+          const result = await storage.rapporteDrafts.delete(id, { requestId });
+          jsonResponse(res, 200, result);
+        } catch (error) {
+          jsonResponse(res, 500, { message: "rapporte_delete_failed", code: error?.code });
+        }
+        return true;
+      }
+    }
+
+    const approveMatch = path.match(/^\/api\/rapporte\/drafts\/([^/]+)\/approve$/);
+    if (approveMatch && method === "POST") {
+      if (!(actorRole === "admin" || actorRole === "developer")) {
+        jsonResponse(res, 403, { message: "forbidden" });
+        return true;
+      }
+      const id = approveMatch[1];
+      await withKeyLock(`rapporte:approve:${id}`, async () => {
+        try {
+          const draft = await storage.rapporteDrafts.get(id, { requestId });
+          const occurredAt = draft?.occurredAt || new Date().toISOString();
+          let authorName = "";
+          if (draft?.authorId) {
+            const trainerId = resolveTrainerIdFromActorId(draft.authorId);
+            if (trainerId) {
+              try {
+                const trainer = await storage.trainer.get(trainerId, { requestId });
+                authorName = extractFirstName(trainer?.name || "");
+              } catch {
+                authorName = "";
+              }
+            }
+          }
+          const suffix = authorName ? ` (Trainer: ${authorName})` : "";
+          const text = `Rapport - ${(draft?.text || "").trim()}${suffix}`.trim();
+          if (draft?.kundeId) {
+            await storage.historie.create(
+              {
+                entityType: "kunden",
+                entityId: draft.kundeId,
+                occurredAt,
+                authorId: draft.authorId || "",
+                authorRole: draft.authorRole || "",
+                text,
+              },
+              { requestId }
+            );
+          }
+          if (draft?.targetType === "hunde" && draft?.targetId) {
+            await storage.historie.create(
+              {
+                entityType: "hunde",
+                entityId: draft.targetId,
+                occurredAt,
+                authorId: draft.authorId || "",
+                authorRole: draft.authorRole || "",
+                text,
+              },
+              { requestId }
+            );
+          }
+          await storage.rapporteDrafts.delete(id, { requestId });
+          jsonResponse(res, 200, { ok: true });
+        } catch (error) {
+          jsonResponse(res, 400, { message: "rapporte_approve_failed", code: error?.code });
+        }
+      });
+      return true;
+    }
+
+    const rejectMatch = path.match(/^\/api\/rapporte\/drafts\/([^/]+)\/reject$/);
+    if (rejectMatch && method === "POST") {
+      if (!(actorRole === "admin" || actorRole === "developer")) {
+        jsonResponse(res, 403, { message: "forbidden" });
+        return true;
+      }
+      const id = rejectMatch[1];
+      try {
+        const result = await storage.rapporteDrafts.delete(id, { requestId });
+        jsonResponse(res, 200, result);
+      } catch (error) {
+        jsonResponse(res, 500, { message: "rapporte_reject_failed", code: error?.code });
+      }
+      return true;
+    }
+
+    jsonResponse(res, 404, { message: "not_found" });
+    return true;
+  }
+
   async function handle(req, res) {
     const reqUrl = req?.url || "";
     if (!reqUrl.startsWith("/api/")) return false;
@@ -939,7 +1126,7 @@ export function createApiRouter(options = {}) {
     }
 
     const entityMatch = reqUrl.match(
-      /^\/api\/(dashboard|kunden|hunde|kurse|trainer|kalender|finanzen|waren|zertifikate|anmeldung|historie)(?:\/|$)/
+      /^\/api\/(dashboard|kunden|hunde|kurse|trainer|kalender|finanzen|waren|zertifikate|anmeldung|rapporte|historie)(?:\/|$)/
     );
     if (entityMatch) {
       const entity = entityMatch[1];
@@ -953,6 +1140,7 @@ export function createApiRouter(options = {}) {
 
     if (await handleDashboardRoutes(req, res)) return true;
     if (await handleAnmeldungRoutes(req, res)) return true;
+    if (await handleRapporteRoutes(req, res)) return true;
     if (await handleHistorieRoutes(req, res)) return true;
     if (await core.handle(req, res)) return true;
     return kommunikation.handle(req, res);
