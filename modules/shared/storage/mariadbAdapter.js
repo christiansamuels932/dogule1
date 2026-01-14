@@ -133,6 +133,7 @@ function mapKundeRow(row) {
     code: row.code,
     vorname: row.vorname,
     nachname: row.nachname,
+    geburtsdatum: row.geburtsdatum,
     geschlecht: row.geschlecht,
     email: row.email,
     telefon: row.telefon,
@@ -402,6 +403,7 @@ function normalizeKunde(data = {}, existing) {
     code: toStringValue(data.code ?? existing?.code),
     vorname: toStringValue(data.vorname ?? existing?.vorname),
     nachname: toStringValue(data.nachname ?? existing?.nachname),
+    geburtsdatum: toStringValue(data.geburtsdatum ?? existing?.geburtsdatum),
     geschlecht,
     email: toStringValue(data.email ?? existing?.email),
     telefon: toStringValue(data.telefon ?? existing?.telefon),
@@ -795,6 +797,7 @@ export function createMariaDbAdapter(options = {}) {
       record.code,
       record.vorname,
       record.nachname,
+      record.geburtsdatum,
       record.geschlecht,
       record.email,
       record.telefon,
@@ -811,7 +814,7 @@ export function createMariaDbAdapter(options = {}) {
     ];
     try {
       await pool.query(
-        "INSERT INTO kunden (id, code, vorname, nachname, geschlecht, email, telefon, adresse, status, ausweis_id, foto_url, begleitpersonen, notizen, created_at, updated_at, schema_version, version) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO kunden (id, code, vorname, nachname, geburtsdatum, geschlecht, email, telefon, adresse, status, ausweis_id, foto_url, begleitpersonen, notizen, created_at, updated_at, schema_version, version) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         params
       );
       return record;
@@ -829,6 +832,7 @@ export function createMariaDbAdapter(options = {}) {
         record.code,
         record.vorname,
         record.nachname,
+        record.geburtsdatum,
         record.geschlecht,
         record.email,
         record.telefon,
@@ -844,7 +848,7 @@ export function createMariaDbAdapter(options = {}) {
         record.id,
       ];
       await pool.query(
-        "UPDATE kunden SET code=?, vorname=?, nachname=?, geschlecht=?, email=?, telefon=?, adresse=?, status=?, ausweis_id=?, foto_url=?, begleitpersonen=?, notizen=?, updated_at=?, schema_version=?, version=? WHERE id=?",
+        "UPDATE kunden SET code=?, vorname=?, nachname=?, geburtsdatum=?, geschlecht=?, email=?, telefon=?, adresse=?, status=?, ausweis_id=?, foto_url=?, begleitpersonen=?, notizen=?, updated_at=?, schema_version=?, version=? WHERE id=?",
         params
       );
       return record;
@@ -860,6 +864,73 @@ export function createMariaDbAdapter(options = {}) {
       return { ok: true, id };
     } catch (error) {
       throw toStorageError(error, `Failed to delete kunden ${id}`);
+    }
+  }
+
+  function normalizeBirthdayHandledEntry(data = {}, existing) {
+    const createdAt = existing?.createdAt || data.createdAt || nowIso();
+    return {
+      id: data.id || existing?.id || uuidv7(),
+      day: toStringValue(data.day ?? existing?.day),
+      entityType: toStringValue(data.entityType ?? existing?.entityType),
+      entityId: toStringValue(data.entityId ?? existing?.entityId),
+      action: toStringValue(data.action ?? existing?.action),
+      authorId: toStringValue(data.authorId ?? existing?.authorId),
+      authorRole: toStringValue(data.authorRole ?? existing?.authorRole),
+      createdAt,
+      updatedAt: nowIso(),
+      schemaVersion: Number(data.schemaVersion ?? existing?.schemaVersion ?? 1),
+      version: Number(data.version ?? existing?.version ?? 0),
+    };
+  }
+
+  async function listBirthdayHandledEntries(day) {
+    const normalizedDay = toStringValue(day).trim();
+    if (!normalizedDay) return [];
+    try {
+      return await listAll(
+        pool,
+        "SELECT entity_type, entity_id, action FROM dashboard_birthdays_handled WHERE day = ?",
+        [normalizedDay],
+        (row) => ({
+          entityType: row.entity_type,
+          entityId: row.entity_id,
+          action: row.action,
+        })
+      );
+    } catch (error) {
+      throw toStorageError(error, "Failed to list dashboard_birthdays_handled");
+    }
+  }
+
+  async function upsertBirthdayHandledEntry(data = {}) {
+    const record = normalizeBirthdayHandledEntry(data, null);
+    ensureRequiredFields(
+      record,
+      ["day", "entityType", "entityId", "action"],
+      "Birthday handle missing fields"
+    );
+    const params = [
+      record.id,
+      record.day,
+      record.entityType,
+      record.entityId,
+      record.action,
+      record.authorId,
+      record.authorRole,
+      record.createdAt,
+      record.updatedAt,
+      record.schemaVersion,
+      record.version,
+    ];
+    try {
+      await pool.query(
+        "INSERT INTO dashboard_birthdays_handled (id, day, entity_type, entity_id, action, author_id, author_role, created_at, updated_at, schema_version, version) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE action=VALUES(action), author_id=VALUES(author_id), author_role=VALUES(author_role), updated_at=VALUES(updated_at), schema_version=VALUES(schema_version), version=VALUES(version)",
+        params
+      );
+      return record;
+    } catch (error) {
+      throw toStorageError(error, "Failed to upsert dashboard_birthdays_handled");
     }
   }
 
@@ -1817,6 +1888,47 @@ export function createMariaDbAdapter(options = {}) {
     }
   }
 
+  async function updateHistorieEntry(id, patch = {}) {
+    try {
+      const existing = await fetchOne(
+        pool,
+        "SELECT * FROM historie_entries WHERE id = ?",
+        [id],
+        mapHistorieEntryRow
+      );
+      if (!existing) return null;
+      const record = normalizeHistorieEntry(
+        {
+          ...existing,
+          ...patch,
+          id: existing.id,
+          entityType: existing.entityType,
+          entityId: existing.entityId,
+          authorId: existing.authorId,
+          authorRole: existing.authorRole,
+          createdAt: existing.createdAt,
+        },
+        existing
+      );
+      ensureRequiredFields(record, ["entityId", "text"], "Historie Eintrag benötigt Ziel und Text");
+      const params = [
+        record.occurredAt,
+        record.text,
+        record.updatedAt,
+        record.schemaVersion,
+        record.version,
+        record.id,
+      ];
+      await pool.query(
+        "UPDATE historie_entries SET occurred_at=?, text=?, updated_at=?, schema_version=?, version=? WHERE id=?",
+        params
+      );
+      return record;
+    } catch (error) {
+      throw toStorageError(error, `Failed to update historie_entries ${id}`);
+    }
+  }
+
   async function deleteHistorieEntry(id) {
     try {
       await ensureExists(pool, "historie_entries", id);
@@ -1898,13 +2010,13 @@ export function createMariaDbAdapter(options = {}) {
       list: listHistorie,
       get: getHistorieEntry,
       create: createHistorieEntry,
-      update: () => {
-        throw new StorageError(
-          STORAGE_ERROR_CODES.INVALID_MODE,
-          "historie_entries are append-only"
-        );
-      },
+      update: (arg) =>
+        updateHistorieEntry(arg?.id || arg, arg?.data || arg?.payload || arg?.data || arg),
       delete: deleteHistorieEntry,
+    },
+    dashboardBirthdays: {
+      listHandled: listBirthdayHandledEntries,
+      upsertHandled: upsertBirthdayHandledEntry,
     },
     pool,
   };

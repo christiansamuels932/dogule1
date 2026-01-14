@@ -8,6 +8,7 @@ const EDITABLE_DEFAULTS = {
   code: "",
   vorname: "",
   nachname: "",
+  geburtsdatum: "",
   geschlecht: "",
   email: "",
   telefon: "",
@@ -62,7 +63,11 @@ function inferGeschlechtFromVorname(vorname) {
 }
 
 const applyGeschlechtAutofill = (payload = {}) => {
-  if (payload.geschlecht !== undefined && payload.geschlecht !== null && payload.geschlecht !== "") {
+  if (
+    payload.geschlecht !== undefined &&
+    payload.geschlecht !== null &&
+    payload.geschlecht !== ""
+  ) {
     return payload;
   }
   const inferred = inferGeschlechtFromVorname(payload.vorname);

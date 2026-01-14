@@ -32,6 +32,34 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 # - - - - - - - - - - - - - - - - - - - -
 
+# Station 93 — Dashboard birthdays + mailto
+
+## Kontext
+
+- Status: completed (manual verification done).
+- Branch: `93`.
+- Scope: Dashboard “Heutige Geburtstage” with global once-per-day handling and mailto preparation.
+
+## Ergebnis (kurz)
+
+- Added `kunden.geburtsdatum` and a global handled table (`dashboard_birthdays_handled`).
+- Dashboard shows today’s birthdays for Kunden + Hunde with actions:
+  - “Verwerfen” hides entry for the day and writes a Historie entry on the Kunde.
+  - “Geburtstagsemail” shows a confirmation first, then opens `mailto:` (no auto-send) and writes Historie on the Kunde.
+- Historie entries are now editable/deletable (admin/developer) and list newest → oldest; Zertifikate shown above Historie (below Hunde).
+
+## Tests
+
+- `pnpm lint` ✅
+- `pnpm vitest run` ✅
+- `pnpm build` ✅
+
+## Notizen
+
+- MariaDB migration applied: `tools/mariadb/migrations/93_0_dashboard_birthdays.sql`.
+
+# - - - - - - - - - - - - - - - - - - - -
+
 # Station 92 — Modul Anmeldung (Completion)
 
 ## Kontext

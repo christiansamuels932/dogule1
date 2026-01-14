@@ -1,5 +1,5 @@
 /* global URLSearchParams */
-import { list, create } from "./crud.js";
+import { list, create, update, remove } from "./crud.js";
 import { isHttpMode, httpRequest } from "./httpClient.js";
 
 const TABLE = "historieEntries";
@@ -26,4 +26,21 @@ export async function createHistorieEntry(data = {}) {
   }
   const occurredAt = data.occurredAt || new Date().toISOString();
   return create(TABLE, { ...data, occurredAt });
+}
+
+export async function updateHistorieEntry(id, patch = {}) {
+  if (!id) return null;
+  if (isHttpMode()) {
+    return httpRequest(`/historie/${id}`, { method: "PATCH", body: patch });
+  }
+  const updated = await update(TABLE, id, patch);
+  return updated || null;
+}
+
+export async function deleteHistorieEntry(id) {
+  if (!id) return { ok: false };
+  if (isHttpMode()) {
+    return httpRequest(`/historie/${id}`, { method: "DELETE" });
+  }
+  return remove(TABLE, id);
 }

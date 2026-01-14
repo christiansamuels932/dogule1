@@ -10,7 +10,12 @@ import { deleteHund, listHunde } from "../shared/api/hunde.js";
 import { getKunde } from "../shared/api/kunden.js";
 import { getKurseForHund } from "../shared/api/kurse.js";
 import { listZertifikate } from "../shared/api/zertifikate.js";
-import { listHistorieEntries } from "../shared/api/historie.js";
+import {
+  listHistorieEntries,
+  updateHistorieEntry,
+  deleteHistorieEntry,
+} from "../shared/api/historie.js";
+import { getSession } from "../shared/auth/client.js";
 import { runIntegrityCheck } from "../shared/api/db/integrityCheck.js";
 import { injectHundToast, setHundToast } from "./formView.js";
 import { formatHerkunft } from "./herkunft.js";
@@ -143,10 +148,10 @@ export async function createHundeDetailView(container, hundId) {
       }
       detailSection.appendChild(actionsEl);
     }
-    const historieSection = await buildHistorieSection(hund.id);
-    container.appendChild(historieSection);
     const zertifikateSection = await buildZertifikateSection(hund.id);
     container.appendChild(zertifikateSection);
+    const historieSection = await buildHistorieSection(hund.id);
+    container.appendChild(historieSection);
   } catch (error) {
     console.error("[HUNDE_ERR_DETAIL_LOAD]", error);
     body.innerHTML = "";
@@ -203,14 +208,80 @@ async function buildHistorieSection(hundId) {
     } else if (!entries.length) {
       body.appendChild(createEmptyState("Keine Daten vorhanden.", ""));
     } else {
+      const role = getSession()?.user?.role || "";
+      const canEdit = role === "admin" || role === "developer";
+      entries = entries
+        .slice()
+        .sort((a, b) => String(b.occurredAt || "").localeCompare(String(a.occurredAt || "")));
       const list = document.createElement("ul");
       list.className = "hunde-historie-list";
       entries.forEach((entry) => {
         const item = document.createElement("li");
+        item.className = "hunde-historie-item";
+        const line = document.createElement("div");
+        line.className = "hunde-historie-line";
         const date = entry.occurredAt ? formatDateTime(entry.occurredAt) : "";
         const author = entry.authorRole ? String(entry.authorRole) : "";
-        const text = entry.text || "";
-        item.textContent = [date, author, text].filter(Boolean).join(" · ");
+        const text = (entry.text || "").trim();
+        const label = document.createElement("span");
+        label.textContent = [date, author, text].filter(Boolean).join(" · ");
+        line.appendChild(label);
+
+        if (canEdit) {
+          const actions = document.createElement("div");
+          actions.className = "module-actions";
+          const editBtn = createButton({ label: "Bearbeiten", variant: "secondary" });
+          editBtn.type = "button";
+          const deleteBtn = createButton({ label: "Löschen", variant: "secondary" });
+          deleteBtn.type = "button";
+
+          editBtn.addEventListener("click", async () => {
+            const next = window.prompt("Historie-Eintrag bearbeiten:", entry.text || "");
+            if (next === null) return;
+            const trimmed = String(next).trim();
+            if (!trimmed) {
+              window.alert("Text darf nicht leer sein.");
+              return;
+            }
+            editBtn.disabled = true;
+            deleteBtn.disabled = true;
+            try {
+              const updated = await updateHistorieEntry(entry.id, { text: trimmed });
+              entry.text = updated?.text ?? trimmed;
+              label.textContent = [date, author, (entry.text || "").trim()]
+                .filter(Boolean)
+                .join(" · ");
+            } catch (error) {
+              console.error("[HUNDE_ERR_HISTORIE_EDIT]", error);
+              window.alert("Änderung fehlgeschlagen (siehe Konsole).");
+            } finally {
+              editBtn.disabled = false;
+              deleteBtn.disabled = false;
+            }
+          });
+
+          deleteBtn.addEventListener("click", async () => {
+            const ok = window.confirm("Historie-Eintrag wirklich löschen?");
+            if (!ok) return;
+            editBtn.disabled = true;
+            deleteBtn.disabled = true;
+            try {
+              await deleteHistorieEntry(entry.id);
+              item.remove();
+            } catch (error) {
+              console.error("[HUNDE_ERR_HISTORIE_DELETE]", error);
+              window.alert("Löschen fehlgeschlagen (siehe Konsole).");
+            } finally {
+              editBtn.disabled = false;
+              deleteBtn.disabled = false;
+            }
+          });
+
+          actions.append(editBtn, deleteBtn);
+          line.appendChild(actions);
+        }
+
+        item.appendChild(line);
         list.appendChild(item);
       });
       body.appendChild(list);

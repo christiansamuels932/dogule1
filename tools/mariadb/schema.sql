@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS kunden (
   code VARCHAR(64) NOT NULL DEFAULT '',
   vorname VARCHAR(128) NOT NULL DEFAULT '',
   nachname VARCHAR(128) NOT NULL DEFAULT '',
+  geburtsdatum VARCHAR(32) NOT NULL DEFAULT '',
   geschlecht VARCHAR(32) NULL,
   email VARCHAR(255) NOT NULL DEFAULT '',
   telefon VARCHAR(64) NOT NULL DEFAULT '',
@@ -297,4 +298,21 @@ CREATE TABLE IF NOT EXISTS historie_entries (
   PRIMARY KEY (id),
   KEY idx_historie_target (entity_type, entity_id),
   KEY idx_historie_occurred (occurred_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS dashboard_birthdays_handled (
+  id CHAR(36) NOT NULL,
+  day VARCHAR(16) NOT NULL,
+  entity_type VARCHAR(16) NOT NULL,
+  entity_id CHAR(36) NOT NULL,
+  action VARCHAR(32) NOT NULL,
+  author_id VARCHAR(64) NOT NULL DEFAULT '',
+  author_role VARCHAR(32) NOT NULL DEFAULT '',
+  created_at VARCHAR(32) NOT NULL,
+  updated_at VARCHAR(32) NOT NULL,
+  schema_version INT NOT NULL DEFAULT 1,
+  version INT NOT NULL DEFAULT 0,
+  PRIMARY KEY (id),
+  UNIQUE KEY idx_birthdays_day_target (day, entity_type, entity_id),
+  KEY idx_birthdays_day (day)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
