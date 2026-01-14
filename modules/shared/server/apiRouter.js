@@ -291,6 +291,26 @@ export function createApiRouter(options = {}) {
   const adminTrainerCode = "TR-001";
   const adminTrainerName = "Fontana Richard";
 
+  const locks = new Map();
+  async function withKeyLock(key, fn) {
+    const previous = locks.get(key) || Promise.resolve();
+    let release = null;
+    const current = new Promise((resolve) => {
+      release = resolve;
+    });
+    const chain = previous.then(() => current);
+    locks.set(key, chain);
+    await previous;
+    try {
+      return await fn();
+    } finally {
+      release?.();
+      if (locks.get(key) === chain) {
+        locks.delete(key);
+      }
+    }
+  }
+
   const buildTrainerUsername = (trainer) => {
     const email = String(trainer?.email || "")
       .trim()
@@ -405,6 +425,250 @@ export function createApiRouter(options = {}) {
   });
   const kommunikation = createKommunikationApiRouter(options.kommunikation || {});
 
+  async function handleHistorieRoutes(req, res) {
+    const reqUrl = req?.url || "";
+    if (!reqUrl.startsWith("/api/historie")) return false;
+
+    const query = extractQuery(reqUrl);
+    const body = await readJsonBody(req);
+    const path = reqUrl.split("?")[0];
+    const method = (req.method || "GET").toUpperCase();
+    const requestId = resolveRequestId(req);
+
+    if (path === "/api/historie" && method === "GET") {
+      try {
+        const entries = await storage.historie.list({ query, requestId });
+        jsonResponse(res, 200, entries);
+      } catch {
+        jsonResponse(res, 500, { message: "historie_list_failed" });
+      }
+      return true;
+    }
+
+    if (path === "/api/historie" && method === "POST") {
+      try {
+        const actorId = req.headers["x-dogule-actor-id"] || "";
+        const actorRole = req.headers["x-dogule-actor-role"] || "";
+        const created = await storage.historie.create(
+          {
+            entityType: body.entityType,
+            entityId: body.entityId,
+            occurredAt: body.occurredAt,
+            authorId: actorId,
+            authorRole: actorRole,
+            text: body.text,
+          },
+          { requestId }
+        );
+        jsonResponse(res, 201, created);
+      } catch (error) {
+        jsonResponse(res, 400, { message: "historie_create_failed", code: error?.code });
+      }
+      return true;
+    }
+
+    jsonResponse(res, 404, { message: "not_found" });
+    return true;
+  }
+
+  async function handleAnmeldungRoutes(req, res) {
+    const reqUrl = req?.url || "";
+    if (!reqUrl.startsWith("/api/anmeldung/")) return false;
+
+    const query = extractQuery(reqUrl);
+    const body = await readJsonBody(req);
+    const path = reqUrl.split("?")[0];
+    const method = (req.method || "GET").toUpperCase();
+    const requestId = resolveRequestId(req);
+
+    if (path === "/api/anmeldung/drafts") {
+      if (method === "GET") {
+        try {
+          const drafts = await storage.anmeldung.list({ query, requestId });
+          jsonResponse(res, 200, drafts);
+        } catch (error) {
+          jsonResponse(res, 500, { message: "anmeldung_list_failed", code: error?.code });
+        }
+        return true;
+      }
+      if (method === "POST") {
+        try {
+          const created = await storage.anmeldung.create(body, { requestId });
+          jsonResponse(res, 201, created);
+        } catch (error) {
+          jsonResponse(res, 400, { message: "anmeldung_create_failed", code: error?.code });
+        }
+        return true;
+      }
+    }
+
+    const draftMatch = path.match(/^\/api\/anmeldung\/drafts\/([^/]+)$/);
+    if (draftMatch) {
+      const id = draftMatch[1];
+      if (method === "GET") {
+        try {
+          const record = await storage.anmeldung.get(id, { requestId });
+          jsonResponse(res, 200, record);
+        } catch (error) {
+          jsonResponse(res, error?.code === "NOT_FOUND" ? 404 : 500, { message: "not_found" });
+        }
+        return true;
+      }
+      if (method === "PUT" || method === "PATCH") {
+        try {
+          const updated = await storage.anmeldung.update({ id, data: body }, { requestId });
+          if (!updated) {
+            jsonResponse(res, 404, { message: "not_found" });
+            return true;
+          }
+          jsonResponse(res, 200, updated);
+        } catch (error) {
+          jsonResponse(res, 400, { message: "anmeldung_update_failed", code: error?.code });
+        }
+        return true;
+      }
+      if (method === "DELETE") {
+        try {
+          const result = await storage.anmeldung.delete(id, { requestId });
+          jsonResponse(res, 200, result);
+        } catch {
+          jsonResponse(res, 500, { message: "anmeldung_delete_failed" });
+        }
+        return true;
+      }
+    }
+
+    const kundeMatch = path.match(/^\/api\/anmeldung\/drafts\/([^/]+)\/kunde$/);
+    if (kundeMatch && method === "POST") {
+      const draftId = kundeMatch[1];
+      await withKeyLock(`anmeldung:kunde:${draftId}`, async () => {
+        try {
+          const draft = await storage.anmeldung.get(draftId, { requestId });
+          if (draft?.kundeId) {
+            const kunde = await storage.kunden.get(draft.kundeId, { requestId });
+            jsonResponse(res, 200, { draft, kunde });
+            return;
+          }
+          if (!draft?.hundPayload) {
+            jsonResponse(res, 400, { message: "hund_required" });
+            return;
+          }
+          if (!draft?.kursId) {
+            jsonResponse(res, 400, { message: "kurs_required" });
+            return;
+          }
+          const kundePayload = draft.kundePayload || {};
+          const kunde = await storage.kunden.create(kundePayload, { requestId });
+          const updatedDraft = await storage.anmeldung.update(
+            {
+              id: draftId,
+              data: {
+                status: "kunde_created",
+                kundeId: kunde.id,
+                kursTitle: draft.kursTitle || "",
+              },
+            },
+            { requestId }
+          );
+          jsonResponse(res, 200, { draft: updatedDraft, kunde });
+        } catch (error) {
+          jsonResponse(res, 400, { message: "kunde_create_failed", code: error?.code });
+        }
+      });
+      return true;
+    }
+
+    const hundMatch = path.match(/^\/api\/anmeldung\/drafts\/([^/]+)\/hund$/);
+    if (hundMatch && method === "POST") {
+      const draftId = hundMatch[1];
+      await withKeyLock(`anmeldung:hund:${draftId}`, async () => {
+        try {
+          const draft = await storage.anmeldung.get(draftId, { requestId });
+          if (!draft?.kundeId) {
+            jsonResponse(res, 400, { message: "kunde_required" });
+            return;
+          }
+          if (!draft?.kursId) {
+            jsonResponse(res, 400, { message: "kurs_required" });
+            return;
+          }
+          if (draft?.hundId) {
+            jsonResponse(res, 200, { ok: true, kundeId: draft.kundeId, hundId: draft.hundId });
+            try {
+              await storage.anmeldung.delete(draftId, { requestId });
+            } catch {
+              // non-blocking
+            }
+            return;
+          }
+
+          const hundPayload = { ...(draft.hundPayload || {}), kundenId: draft.kundeId };
+          const hund = await storage.hunde.create(hundPayload, { requestId });
+
+          await storage.anmeldung.update(
+            { id: draftId, data: { status: "completed", hundId: hund.id } },
+            { requestId }
+          );
+
+          const actorId = req.headers["x-dogule-actor-id"] || "";
+          const actorRole = req.headers["x-dogule-actor-role"] || "";
+          const kursTitle = draft.kursTitle || "";
+          const now = new Date();
+          const today = `${String(now.getDate()).padStart(2, "0")}.${String(
+            now.getMonth() + 1
+          ).padStart(2, "0")}.${now.getFullYear()}`;
+          const titlePart = kursTitle ? ` "${kursTitle}"` : "";
+          const text = `Neue Anmeldung für den Kurs${titlePart} – ${today}`;
+
+          try {
+            await storage.historie.create(
+              {
+                entityType: "kunden",
+                entityId: draft.kundeId,
+                occurredAt: new Date().toISOString(),
+                authorId: actorId,
+                authorRole: actorRole,
+                text,
+              },
+              { requestId }
+            );
+          } catch {
+            // non-blocking
+          }
+          try {
+            await storage.historie.create(
+              {
+                entityType: "hunde",
+                entityId: hund.id,
+                occurredAt: new Date().toISOString(),
+                authorId: actorId,
+                authorRole: actorRole,
+                text,
+              },
+              { requestId }
+            );
+          } catch {
+            // non-blocking
+          }
+
+          try {
+            await storage.anmeldung.delete(draftId, { requestId });
+          } catch {
+            // non-blocking
+          }
+
+          jsonResponse(res, 200, { ok: true, kundeId: draft.kundeId, hundId: hund.id });
+        } catch (error) {
+          jsonResponse(res, 400, { message: "hund_create_failed", code: error?.code });
+        }
+      });
+      return true;
+    }
+
+    jsonResponse(res, 404, { message: "not_found" });
+    return true;
+  }
+
   async function handle(req, res) {
     const reqUrl = req?.url || "";
     if (!reqUrl.startsWith("/api/")) return false;
@@ -440,7 +704,7 @@ export function createApiRouter(options = {}) {
     }
 
     const entityMatch = reqUrl.match(
-      /^\/api\/(kunden|hunde|kurse|trainer|kalender|finanzen|waren|zertifikate)(?:\/|$)/
+      /^\/api\/(kunden|hunde|kurse|trainer|kalender|finanzen|waren|zertifikate|anmeldung|historie)(?:\/|$)/
     );
     if (entityMatch) {
       const entity = entityMatch[1];
@@ -452,6 +716,8 @@ export function createApiRouter(options = {}) {
       }
     }
 
+    if (await handleAnmeldungRoutes(req, res)) return true;
+    if (await handleHistorieRoutes(req, res)) return true;
     if (await core.handle(req, res)) return true;
     return kommunikation.handle(req, res);
   }

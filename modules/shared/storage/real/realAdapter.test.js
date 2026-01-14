@@ -300,11 +300,11 @@ describe("parity check (mock vs real) minimal create/get for core entities", () 
     );
 
     const mockKurs = await mockStorage.kurse.create(
-      { code: "MK-COURSE", title: "Mock Kurs", trainerId: mockTrainer.id },
+      { code: "MK-COURSE", title: "Mock Kurs", trainerId: mockTrainer.id, ort: "Döttingen" },
       { actorId: "u1", actorRole: "staff", auditContext: { hashPrev: null, hashIndex: 3 } }
     );
     const realKurs = await realStorage.kurse.create(
-      { code: "RK-COURSE", title: "Real Kurs", trainerId: realTrainer.id },
+      { code: "RK-COURSE", title: "Real Kurs", trainerId: realTrainer.id, ort: "Döttingen" },
       { actorId: "u2", actorRole: "staff" }
     );
 

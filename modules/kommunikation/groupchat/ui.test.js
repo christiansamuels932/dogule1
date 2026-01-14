@@ -20,7 +20,7 @@ async function cleanup(dir) {
 }
 
 function setupFetch(api) {
-  global.fetch = async (url, options = {}) => {
+  const handler = async (url, options = {}) => {
     const parsed = new URL(url, "http://localhost");
     const pathname = parsed.pathname;
     const search = Object.fromEntries(parsed.searchParams.entries());
@@ -62,6 +62,9 @@ function setupFetch(api) {
     }
     return new Response(res.body || "", { status: res.statusCode, headers: res.headers });
   };
+
+  global.fetch = handler;
+  window.fetch = handler;
 }
 
 function ensureTemplates() {

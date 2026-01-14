@@ -1,6 +1,7 @@
 export const VALID_MODULES = new Set([
   "auth",
   "dashboard",
+  "anmeldung",
   "kommunikation",
   "kurse",
   "kunden",

@@ -10,6 +10,7 @@ import { deleteHund, listHunde } from "../shared/api/hunde.js";
 import { getKunde } from "../shared/api/kunden.js";
 import { getKurseForHund } from "../shared/api/kurse.js";
 import { listZertifikate } from "../shared/api/zertifikate.js";
+import { listHistorieEntries } from "../shared/api/historie.js";
 import { runIntegrityCheck } from "../shared/api/db/integrityCheck.js";
 import { injectHundToast, setHundToast } from "./formView.js";
 import { formatHerkunft } from "./herkunft.js";
@@ -81,13 +82,8 @@ export async function createHundeDetailView(container, hundId) {
         })
       );
     }
-    body.appendChild(buildDetailList(hund));
+    body.appendChild(buildDetailList(hund, kundeInfo));
     body.appendChild(buildMetaBlock(hund));
-
-    const ownerCard = buildOwnerCard(kundeInfo, kundeLoadFailed);
-    if (ownerCard) {
-      detailSection.appendChild(ownerCard);
-    }
 
     const actionsCard = createCard({
       eyebrow: "",
@@ -147,6 +143,8 @@ export async function createHundeDetailView(container, hundId) {
       }
       detailSection.appendChild(actionsEl);
     }
+    const historieSection = await buildHistorieSection(hund.id);
+    container.appendChild(historieSection);
     const zertifikateSection = await buildZertifikateSection(hund.id);
     container.appendChild(zertifikateSection);
   } catch (error) {
@@ -164,6 +162,62 @@ export async function createHundeDetailView(container, hundId) {
   } finally {
     focusHeading(container);
   }
+}
+
+async function buildHistorieSection(hundId) {
+  const section = document.createElement("section");
+  section.className = "hunde-historie";
+  section.appendChild(
+    createSectionHeader({
+      title: "Historie",
+      subtitle: "",
+      level: 2,
+    })
+  );
+  const cardFragment = createCard({
+    eyebrow: "",
+    title: "",
+    body: "",
+    footer: "",
+  });
+  const card = cardFragment.querySelector(".ui-card") || cardFragment.firstElementChild;
+  if (!card) return section;
+  const body = card.querySelector(".ui-card__body");
+  if (body) {
+    body.innerHTML = "";
+    let entries = [];
+    let loadFailed = false;
+    try {
+      entries = await listHistorieEntries({ entityType: "hunde", entityId: hundId });
+    } catch (error) {
+      loadFailed = true;
+      console.error("[HUNDE_ERR_HISTORIE]", error);
+    }
+    if (loadFailed) {
+      body.appendChild(
+        createNotice("Fehler beim Laden der Daten.", {
+          variant: "warn",
+          role: "alert",
+        })
+      );
+    } else if (!entries.length) {
+      body.appendChild(createEmptyState("Keine Daten vorhanden.", ""));
+    } else {
+      const list = document.createElement("ul");
+      list.className = "hunde-historie-list";
+      entries.forEach((entry) => {
+        const item = document.createElement("li");
+        const date = entry.occurredAt ? formatDateTime(entry.occurredAt) : "";
+        const author = entry.authorRole ? String(entry.authorRole) : "";
+        const text = entry.text || "";
+        item.textContent = [date, author, text].filter(Boolean).join(" · ");
+        list.appendChild(item);
+      });
+      body.appendChild(list);
+    }
+  }
+  section.appendChild(card);
+  return section;
 }
 
 async function buildZertifikateSection(hundId) {
@@ -228,7 +282,7 @@ async function buildZertifikateSection(hundId) {
   return section;
 }
 
-function buildDetailList(hund) {
+function buildDetailList(hund, kundeInfo = null) {
   const list = document.createElement("dl");
   list.className = "hunde-detail-list";
   const rows = [
@@ -251,6 +305,29 @@ function buildDetailList(hund) {
     { label: "Trainingsziele", value: hund.trainingsziele },
     { label: "Notizen", value: hund.notizen },
   ];
+  if (kundeInfo?.id) {
+    const ownerName = [kundeInfo.vorname, kundeInfo.nachname].filter(Boolean).join(" ").trim();
+    rows.splice(2, 0, {
+      label: "Kunden-ID",
+      value: kundeInfo.id,
+      render: () => {
+        const link = document.createElement("a");
+        link.href = `#/kunden/${kundeInfo.id}`;
+        link.textContent = kundeInfo.id;
+        return link;
+      },
+    });
+    rows.splice(3, 0, {
+      label: "Besitzer",
+      value: ownerName,
+      render: () => {
+        const link = document.createElement("a");
+        link.href = `#/kunden/${kundeInfo.id}`;
+        link.textContent = ownerName || kundeInfo.id;
+        return link;
+      },
+    });
+  }
   rows.forEach(({ label, value, render }) => {
     const dt = document.createElement("dt");
     dt.textContent = label;
@@ -272,52 +349,6 @@ function buildMetaBlock(hund) {
     hund.updatedAt
   )}`;
   return meta;
-}
-
-function buildOwnerCard(kundeInfo = {}, hasError = false) {
-  const cardFragment = createCard({
-    eyebrow: "",
-    title: "Besitzer",
-    body: "",
-    footer: "",
-  });
-  const card = cardFragment.querySelector(".ui-card") || cardFragment.firstElementChild;
-  if (!card) return cardFragment;
-  const body = card.querySelector(".ui-card__body");
-  body.innerHTML = "";
-  if (hasError) {
-    body.appendChild(
-      createNotice("Fehler beim Laden der Daten.", { variant: "warn", role: "alert" })
-    );
-  } else if (!kundeInfo.id) {
-    body.appendChild(createEmptyState("Keine Daten vorhanden.", ""));
-  } else {
-    const list = document.createElement("dl");
-    list.className = "kunden-details";
-    const rows = [
-      { label: "Name", value: kundeInfo.nachname },
-      { label: "Vorname", value: kundeInfo.vorname },
-      { label: "Telefon", value: kundeInfo.telefon },
-      { label: "E-Mail", value: kundeInfo.email },
-      { label: "Ort", value: kundeInfo.town },
-    ];
-    rows.forEach(({ label, value }) => {
-      const dt = document.createElement("dt");
-      dt.textContent = label;
-      const dd = document.createElement("dd");
-      dd.textContent = valueOrDash(value);
-      list.append(dt, dd);
-    });
-    body.appendChild(list);
-    const footer = card.querySelector(".ui-card__footer");
-    footer.innerHTML = "";
-    const link = document.createElement("a");
-    link.href = `#/kunden/${kundeInfo.id}`;
-    link.className = "ui-btn ui-btn--secondary";
-    link.textContent = "Zum Kunden";
-    footer.appendChild(link);
-  }
-  return card;
 }
 
 function formatDate(value) {

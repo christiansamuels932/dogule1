@@ -9,6 +9,7 @@ describe("router utils", () => {
 
   it("parses single segment route", () => {
     expect(parseHash("#/kunden")).toEqual({ route: "kunden", segments: [] });
+    expect(parseHash("#/anmeldung")).toEqual({ route: "anmeldung", segments: [] });
   });
 
   it("parses route with id segment", () => {

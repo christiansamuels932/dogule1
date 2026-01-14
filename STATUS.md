@@ -32,6 +32,64 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 # - - - - - - - - - - - - - - - - - - - -
 
+# Station 92 — Modul Anmeldung (Completion)
+
+## Kontext
+
+- Status: completed (manual verification done).
+- Branch: `feature/station92`.
+- Scope: closeout for Station 92 implementation + follow-up UX hardening.
+
+## Ergebnis (kurz)
+
+- End-to-end flow verified: paste email → create draft → save Kunde → save Hund → Historie entries present for both Kunde/Hund.
+- Prevents double-saving Kunde/Hund on finalize (server-side draft locks + UI in-flight guards).
+- Dashboard: removed “Schnellaktionen”/“Kennzahlen” and added on-demand duplicate scanner (report-only).
+- Restored cross-links: Kunde detail shows linked Hunde; Hund detail links to linked Kunde.
+
+## Tests
+
+- `pnpm lint` ✅
+- `pnpm vitest run` ✅
+- `pnpm build` ✅
+
+## Notizen
+
+- Duplicate cleanup remains manual by design (scanner is warning/report only).
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 92 — Modul Anmeldung (Draft Intake + Historie)
+
+## Kontext
+
+- Status: in progress (manual verification pending).
+- Branch: `feature/station92`.
+- Scope: Anmeldung copy-paste intake → drafts → course assignment gate → Kunde/Hund finalize + Historie entries; show Historie in Kunde/Hund detail views.
+
+## Ergebnis (kurz)
+
+- Added new module `Anmeldung` with email paste + parse preview, draft edit screen, Kurs assignment, and actions to create Kunde then Hund.
+- Added MariaDB-backed draft + history storage (`anmeldung_drafts`, `historie_entries`) with new API routes:
+  - Draft CRUD: `/api/anmeldung/drafts` + `/api/anmeldung/drafts/:id`
+  - Finalize: `/api/anmeldung/drafts/:id/kunde` then `/api/anmeldung/drafts/:id/hund`
+  - Historie: `/api/historie` (list/create; filtered by `entityType` + `entityId`)
+- Dashboard now renders draft cards “Neuer Kunde (Entwurf)” and “Neuer Hund (Entwurf)” linking to `#/anmeldung/:draftId`.
+- Kunde/Hund detail views now show Historie + Zertifikate sections (customer-linked Hunde list removed; Hund owner moved into Stammdaten).
+
+## Tests
+
+- `pnpm lint` ✅
+- `pnpm build` ✅
+- `pnpm vitest run` ❌ (3 failing tests observed: `authService` token expiry, `groupchat` retention UI, `realAdapter` parity check requiring Kurs Ort; appears unrelated to Station 92 changes)
+
+## Notizen
+
+- MariaDB schema needs to be applied/updated to create new tables: `mariadb --protocol=socket --socket <...> < tools/mariadb/schema.sql`.
+- Parsing is heuristic until a real sample Anmeldung email format is provided for tightening.
+
+# - - - - - - - - - - - - - - - - - - - -
+
 # Station 91 — Kurs → Zertifikat Hintergrund (PNG)
 
 ## Kontext
