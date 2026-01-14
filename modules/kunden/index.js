@@ -12,6 +12,7 @@ import { listKurse } from "../shared/api/kurse.js";
 import { listFinanzen } from "../shared/api/finanzen.js";
 import { listWarenByKundeId } from "../shared/api/waren.js";
 import { listZertifikate } from "../shared/api/zertifikate.js";
+import { createRapporteDraft } from "../shared/api/rapporteDrafts.js";
 import {
   listHistorieEntries,
   updateHistorieEntry,
@@ -67,6 +68,91 @@ function createUiLink(label, href, variant = "primary") {
     link.classList.add(`ui-btn--${variant}`);
   }
   return link;
+}
+
+function pad2(value) {
+  return String(value).padStart(2, "0");
+}
+
+function toLocalDateTimeInputValue(date = new Date()) {
+  return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}T${pad2(
+    date.getHours()
+  )}:${pad2(date.getMinutes())}`;
+}
+
+function buildRapportDraftCard({ targetType, targetId, kundeId }) {
+  const card = createStandardCard("Rapport (Entwurf)");
+  if (!card) return null;
+  const body = card.querySelector(".ui-card__body");
+  if (!body) return card;
+  body.innerHTML = "";
+
+  const form = document.createElement("form");
+  form.className = "kunden-rapport-form";
+  const occurredRow = createFormRow({
+    id: `kunden-rapport-occurred-${targetId}`,
+    label: "Datum/Zeit",
+    control: "input",
+    type: "datetime-local",
+    value: toLocalDateTimeInputValue(),
+  });
+  const textRow = createFormRow({
+    id: `kunden-rapport-text-${targetId}`,
+    label: "Rapport",
+    control: "textarea",
+    placeholder: "Kurztext zum Rapport",
+    required: true,
+  });
+  const occurredInput = occurredRow.querySelector("input");
+  const textInput = textRow.querySelector("textarea");
+
+  const actions = document.createElement("div");
+  actions.className = "module-actions";
+  const submitBtn = createButton({ label: "Entwurf senden", variant: "primary" });
+  submitBtn.type = "submit";
+  actions.appendChild(submitBtn);
+
+  const status = document.createElement("div");
+
+  form.append(occurredRow, textRow, actions, status);
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    status.innerHTML = "";
+    const text = String(textInput?.value || "").trim();
+    if (!text) {
+      status.appendChild(
+        createNotice("Bitte einen Rapporttext eingeben.", { variant: "warn", role: "alert" })
+      );
+      return;
+    }
+    const occurredAtRaw = String(occurredInput?.value || "").trim();
+    const occurredAt = occurredAtRaw
+      ? new Date(occurredAtRaw).toISOString()
+      : new Date().toISOString();
+    submitBtn.disabled = true;
+    try {
+      await createRapporteDraft({
+        targetType,
+        targetId,
+        kundeId,
+        text,
+        occurredAt,
+      });
+      status.appendChild(createNotice("Rapport eingereicht.", { variant: "ok", role: "status" }));
+      if (occurredInput) occurredInput.disabled = true;
+      if (textInput) textInput.disabled = true;
+      submitBtn.disabled = true;
+    } catch (error) {
+      console.error("[KUNDEN_ERR_RAPPORT_CREATE]", error);
+      status.appendChild(
+        createNotice("Rapport konnte nicht eingereicht werden.", { variant: "warn", role: "alert" })
+      );
+      submitBtn.disabled = false;
+    }
+  });
+
+  body.appendChild(form);
+  return card;
 }
 
 function appendSharedEmptyState(target) {
@@ -894,6 +980,19 @@ async function renderDetail(root, id) {
   actionStatus.className = "kunden-card-status";
   actionsBody.appendChild(actionStatus);
   detailSection.appendChild(actionsCard);
+
+  const role = getSession()?.user?.role || "";
+  const canCreateRapport = role === "admin" || role === "developer" || role === "trainer";
+  if (canCreateRapport) {
+    const rapportCard = buildRapportDraftCard({
+      targetType: "kunden",
+      targetId: id,
+      kundeId: id,
+    });
+    if (rapportCard) {
+      detailSection.appendChild(rapportCard);
+    }
+  }
 
   root.appendChild(detailSection);
 

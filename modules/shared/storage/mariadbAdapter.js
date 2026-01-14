@@ -371,6 +371,25 @@ function mapAnmeldungDraftRow(row) {
   };
 }
 
+function mapRapporteDraftRow(row) {
+  if (!row) return null;
+  return {
+    id: row.id,
+    status: row.status,
+    targetType: row.target_type,
+    targetId: row.target_id,
+    kundeId: row.kunde_id,
+    text: row.text,
+    occurredAt: row.occurred_at,
+    authorId: row.author_id,
+    authorRole: row.author_role,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    schemaVersion: row.schema_version,
+    version: row.version,
+  };
+}
+
 function mapHistorieEntryRow(row) {
   if (!row) return null;
   return {
@@ -680,6 +699,39 @@ function normalizeAnmeldungDraft(data = {}, existing) {
     errors: data.errors ?? existing?.errors ?? null,
     kundeId,
     hundId,
+    createdAt,
+    updatedAt: nowIso(),
+    schemaVersion: Number(data.schemaVersion ?? existing?.schemaVersion ?? 1),
+    version: Number(data.version ?? existing?.version ?? 0),
+  };
+}
+
+function normalizeRapporteDraft(data = {}, existing) {
+  const createdAt = existing?.createdAt || data.createdAt || nowIso();
+  const targetType = toStringValue(data.targetType ?? existing?.targetType);
+  const allowedTargets = new Set(["kunden", "hunde"]);
+  if (!allowedTargets.has(targetType)) {
+    throw new StorageError(STORAGE_ERROR_CODES.INVALID_DATA, "RAPPORT_INVALID_TARGET_TYPE", {
+      details: { targetType },
+    });
+  }
+  const status = toStringValue(data.status ?? existing?.status ?? "submitted");
+  const allowedStatus = new Set(["draft", "submitted"]);
+  if (!allowedStatus.has(status)) {
+    throw new StorageError(STORAGE_ERROR_CODES.INVALID_DATA, "RAPPORT_INVALID_STATUS", {
+      details: { status },
+    });
+  }
+  return {
+    id: data.id || existing?.id || uuidv7(),
+    status,
+    targetType,
+    targetId: toStringValue(data.targetId ?? existing?.targetId),
+    kundeId: toStringValue(data.kundeId ?? existing?.kundeId),
+    text: toStringValue(data.text ?? existing?.text),
+    occurredAt: toStringValue(data.occurredAt ?? existing?.occurredAt ?? nowIso()),
+    authorId: toStringValue(data.authorId ?? existing?.authorId),
+    authorRole: toStringValue(data.authorRole ?? existing?.authorRole),
     createdAt,
     updatedAt: nowIso(),
     schemaVersion: Number(data.schemaVersion ?? existing?.schemaVersion ?? 1),
@@ -1821,6 +1873,106 @@ export function createMariaDbAdapter(options = {}) {
     }
   }
 
+  async function listRapporteDrafts({ query } = {}) {
+    const status = toStringValue(query?.status);
+    const authorId = toStringValue(query?.authorId);
+    const targetType = toStringValue(query?.targetType);
+    const targetId = toStringValue(query?.targetId);
+    const kundeId = toStringValue(query?.kundeId);
+    const params = [];
+    const clauses = [];
+    if (status) {
+      clauses.push("status = ?");
+      params.push(status);
+    }
+    if (authorId) {
+      clauses.push("author_id = ?");
+      params.push(authorId);
+    }
+    if (targetType) {
+      clauses.push("target_type = ?");
+      params.push(targetType);
+    }
+    if (targetId) {
+      clauses.push("target_id = ?");
+      params.push(targetId);
+    }
+    if (kundeId) {
+      clauses.push("kunde_id = ?");
+      params.push(kundeId);
+    }
+    let sql = "SELECT * FROM rapporte_drafts";
+    if (clauses.length) {
+      sql += ` WHERE ${clauses.join(" AND ")}`;
+    }
+    sql += " ORDER BY created_at DESC";
+    try {
+      return await listAll(pool, sql, params, mapRapporteDraftRow);
+    } catch (error) {
+      throw toStorageError(error, "Failed to list rapporte_drafts");
+    }
+  }
+
+  async function getRapporteDraft(id) {
+    try {
+      const record = await fetchOne(
+        pool,
+        "SELECT * FROM rapporte_drafts WHERE id = ?",
+        [id],
+        mapRapporteDraftRow
+      );
+      if (!record) {
+        throw new StorageError(STORAGE_ERROR_CODES.NOT_FOUND, `rapporte_drafts ${id} not found`);
+      }
+      return record;
+    } catch (error) {
+      throw toStorageError(error, `Failed to get rapporte_drafts ${id}`);
+    }
+  }
+
+  async function createRapporteDraft(data = {}) {
+    const record = normalizeRapporteDraft(data, null);
+    ensureRequiredFields(
+      record,
+      ["targetType", "targetId", "kundeId", "text", "occurredAt"],
+      "Rapport benötigt Ziel, Kunde, Text und Datum"
+    );
+    const params = [
+      record.id,
+      record.status,
+      record.targetType,
+      record.targetId,
+      record.kundeId,
+      record.text,
+      record.occurredAt,
+      record.authorId,
+      record.authorRole,
+      record.createdAt,
+      record.updatedAt,
+      record.schemaVersion,
+      record.version,
+    ];
+    try {
+      await pool.query(
+        "INSERT INTO rapporte_drafts (id, status, target_type, target_id, kunde_id, text, occurred_at, author_id, author_role, created_at, updated_at, schema_version, version) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        params
+      );
+      return record;
+    } catch (error) {
+      throw toStorageError(error, "Failed to create rapporte_drafts");
+    }
+  }
+
+  async function deleteRapporteDraft(id) {
+    try {
+      await ensureExists(pool, "rapporte_drafts", id);
+      await pool.query("DELETE FROM rapporte_drafts WHERE id = ?", [id]);
+      return { ok: true, id };
+    } catch (error) {
+      throw toStorageError(error, `Failed to delete rapporte_drafts ${id}`);
+    }
+  }
+
   async function listHistorie({ query } = {}) {
     const entityType = toStringValue(query?.entityType);
     const entityId = toStringValue(query?.entityId);
@@ -2005,6 +2157,12 @@ export function createMariaDbAdapter(options = {}) {
       update: (arg) =>
         updateAnmeldungDraft(arg?.id || arg, arg?.data || arg?.payload || arg?.data || arg),
       delete: deleteAnmeldungDraft,
+    },
+    rapporteDrafts: {
+      list: listRapporteDrafts,
+      get: getRapporteDraft,
+      create: createRapporteDraft,
+      delete: deleteRapporteDraft,
     },
     historie: {
       list: listHistorie,

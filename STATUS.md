@@ -32,6 +32,55 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 # - - - - - - - - - - - - - - - - - - - -
 
+# Station 94 — Rapporte: Trainer draft → Admin confirmation (Tests)
+
+## Kontext
+
+- Status: completed (automated tests run).
+- Branch: `94`.
+- Scope: Station 94 verification after trainer/admin manual checks.
+
+## Ergebnis (kurz)
+
+- Automated checks run for lint, vitest, and build.
+
+## Tests
+
+- `pnpm lint` ✅
+- `pnpm vitest run` ✅ (warning: `--localstorage-file` without a valid path)
+- `pnpm build` ✅
+
+## Issues
+
+- Vitest emits a `--localstorage-file` warning from the groupchat UI test harness; tests still pass.
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 94 — Rapporte: Trainer draft → Admin confirmation
+
+## Kontext
+
+- Status: completed (manual verification done).
+- Branch: `94`.
+- Scope: trainer submits rapport drafts, admin reviews/approves into Historie.
+
+## Ergebnis (kurz)
+
+- Added MariaDB `rapporte_drafts` table + migration.
+- Added API/storage for draft list/create/approve/reject with RBAC.
+- Trainer can submit rapport drafts from Kunde/Hund detail; admin dashboard lists drafts and approves/rejects.
+- Approvals write Historie entries on Kunde (and Hund if target is Hund) with trainer first-name in text.
+
+## Tests
+
+- Not run (manual).
+
+## Notizen
+
+- MariaDB migration applied: `tools/mariadb/migrations/94_0_rapporte_drafts.sql`.
+
+# - - - - - - - - - - - - - - - - - - - -
+
 # Station 93 — Dashboard birthdays + mailto
 
 ## Kontext

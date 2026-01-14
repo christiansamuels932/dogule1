@@ -7,6 +7,12 @@ import { listAnmeldungDrafts } from "../shared/api/anmeldung.js";
 import { listKunden } from "../shared/api/kunden.js";
 import { listHunde } from "../shared/api/hunde.js";
 import { getDashboardBirthdays, handleDashboardBirthday } from "../shared/api/dashboard.js";
+import {
+  listRapporteDrafts,
+  approveRapporteDraft,
+  rejectRapporteDraft,
+} from "../shared/api/rapporteDrafts.js";
+import { getSession } from "../shared/auth/client.js";
 
 export async function initModule(container) {
   container.innerHTML = "";
@@ -34,6 +40,7 @@ export async function initModule(container) {
   }
 
   const birthdaysCard = await buildBirthdaysCard();
+  const rapporteCard = await buildRapporteDraftsCard();
   const draftCards = await buildDraftCards();
   const duplicatesCard = buildDuplicatesCard();
   if (statusCard) {
@@ -41,6 +48,9 @@ export async function initModule(container) {
   }
   if (birthdaysCard) {
     overviewSection.appendChild(birthdaysCard);
+  }
+  if (rapporteCard) {
+    overviewSection.appendChild(rapporteCard);
   }
   if (draftCards) {
     overviewSection.appendChild(draftCards);
@@ -132,6 +142,144 @@ async function buildDraftCards() {
   });
 
   return fragment;
+}
+
+function findKundeNameById(kunden, id) {
+  const kunde = kunden.find((entry) => entry.id === id);
+  if (!kunde) return "";
+  return [kunde.vorname, kunde.nachname].filter(Boolean).join(" ").trim();
+}
+
+async function buildRapporteDraftsCard() {
+  const role = getSession()?.user?.role || "";
+  if (!(role === "admin" || role === "developer")) return null;
+
+  let drafts = [];
+  try {
+    drafts = await listRapporteDrafts();
+  } catch (error) {
+    console.error("DASHBOARD_RAPPORTE_LOAD_FAILED", error);
+    drafts = [];
+  }
+  if (!drafts.length) return null;
+
+  let kunden = [];
+  let hunde = [];
+  try {
+    kunden = await listKunden();
+    hunde = await listHunde();
+  } catch (error) {
+    console.error("DASHBOARD_RAPPORTE_TARGETS_FAILED", error);
+    kunden = [];
+    hunde = [];
+  }
+
+  const cardFragment = createCard({
+    eyebrow: "",
+    title: "Neue Rapporte (Entwurf)",
+    body: "",
+    footer: "",
+  });
+  const card = cardFragment.querySelector(".ui-card") || cardFragment.firstElementChild;
+  if (!card) return null;
+  const body = card.querySelector(".ui-card__body");
+  if (!body) return card;
+
+  const list = document.createElement("ul");
+  list.className = "dashboard-rapporte";
+
+  drafts.forEach((draft) => {
+    const li = document.createElement("li");
+    const row = document.createElement("div");
+    row.className = "dashboard-rapporte__row";
+    const left = document.createElement("div");
+
+    let label = "";
+    let href = "";
+    if (draft.targetType === "kunden") {
+      const name = findKundeNameById(kunden, draft.targetId) || draft.targetId;
+      label = `Kunde: ${name}`;
+      href = `#/kunden/${draft.targetId}`;
+    } else {
+      const hund = hunde.find((entry) => entry.id === draft.targetId);
+      const hundName = hund?.name || hund?.rufname || draft.targetId;
+      const kundeName = findKundeNameById(kunden, hund?.kundenId) || hund?.kundenId || "";
+      label = `Hund: ${hundName}`;
+      href = `#/hunde/${draft.targetId}`;
+      if (kundeName) {
+        label = `${label} (${kundeName})`;
+      }
+    }
+
+    const title = document.createElement("div");
+    const link = document.createElement("a");
+    link.href = href;
+    link.textContent = label;
+    link.className = "dashboard-rapporte__link";
+    title.appendChild(link);
+
+    const meta = document.createElement("div");
+    meta.className = "dashboard-rapporte__meta";
+    const date = draft.occurredAt ? new Date(draft.occurredAt).toLocaleString("de-CH") : "";
+    const author = draft.authorRole || draft.authorId || "";
+    const textPreview = String(draft.text || "").trim();
+    meta.textContent = [date, author, textPreview].filter(Boolean).join(" · ");
+
+    left.append(title, meta);
+
+    const actions = document.createElement("div");
+    actions.className = "dashboard-rapporte__actions module-actions";
+    const approveBtn = createButton({ label: "Bestätigen", variant: "primary" });
+    approveBtn.type = "button";
+    const rejectBtn = createButton({ label: "Verwerfen", variant: "secondary" });
+    rejectBtn.type = "button";
+
+    approveBtn.addEventListener("click", async () => {
+      const ok = window.confirm(`Rapport bestätigen?\n\n${label}`);
+      if (!ok) return;
+      approveBtn.disabled = true;
+      rejectBtn.disabled = true;
+      try {
+        await approveRapporteDraft(draft.id);
+        li.remove();
+        if (!list.children.length) {
+          card.remove();
+        }
+      } catch (error) {
+        console.error("DASHBOARD_RAPPORTE_APPROVE_FAILED", error);
+        approveBtn.disabled = false;
+        rejectBtn.disabled = false;
+        window.alert("Aktion fehlgeschlagen (siehe Konsole).");
+      }
+    });
+
+    rejectBtn.addEventListener("click", async () => {
+      const ok = window.confirm(`Rapport verwerfen?\n\n${label}`);
+      if (!ok) return;
+      approveBtn.disabled = true;
+      rejectBtn.disabled = true;
+      try {
+        await rejectRapporteDraft(draft.id);
+        li.remove();
+        if (!list.children.length) {
+          card.remove();
+        }
+      } catch (error) {
+        console.error("DASHBOARD_RAPPORTE_REJECT_FAILED", error);
+        approveBtn.disabled = false;
+        rejectBtn.disabled = false;
+        window.alert("Aktion fehlgeschlagen (siehe Konsole).");
+      }
+    });
+
+    actions.append(approveBtn, rejectBtn);
+    row.append(left, actions);
+    li.appendChild(row);
+    list.appendChild(li);
+  });
+
+  body.appendChild(list);
+  return card;
 }
 
 function buildMailtoHref({ to, subject, body }) {
