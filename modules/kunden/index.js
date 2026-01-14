@@ -12,6 +12,7 @@ import { listKurse } from "../shared/api/kurse.js";
 import { listFinanzen } from "../shared/api/finanzen.js";
 import { listWarenByKundeId } from "../shared/api/waren.js";
 import { listZertifikate } from "../shared/api/zertifikate.js";
+import { listHistorieEntries } from "../shared/api/historie.js";
 import { exportTableToXlsx } from "../shared/utils/xlsxExport.js";
 import {
   createSectionHeader,
@@ -893,11 +894,23 @@ async function renderDetail(root, id) {
   let linkedHunde = [];
   let hundeLoadFailed = false;
   try {
-    const hunde = await listHunde();
-    linkedHunde = hunde.filter((hund) => hund.kundenId === id);
+    const allHunde = await listHunde();
+    linkedHunde = allHunde.filter((hund) => hund.kundenId === id);
   } catch (error) {
     hundeLoadFailed = true;
+    linkedHunde = [];
     console.error("[KUNDEN_ERR_HUNDE_LOAD]", error);
+  }
+
+  root.appendChild(renderKundenHundeSection(linkedHunde, hundeLoadFailed));
+
+  let historie = [];
+  let historieLoadFailed = false;
+  try {
+    historie = await listHistorieEntries({ entityType: "kunden", entityId: id });
+  } catch (error) {
+    historieLoadFailed = true;
+    console.error("[KUNDEN_ERR_HISTORIE_LOAD]", error);
   }
 
   let zertifikate = [];
@@ -910,7 +923,7 @@ async function renderDetail(root, id) {
     console.error("[KUNDEN_ERR_ZERTIFIKATE_LOAD]", error);
   }
 
-  root.appendChild(renderKundenHundeSection(linkedHunde, hundeLoadFailed));
+  root.appendChild(renderKundenHistorieSection(historie, historieLoadFailed));
   root.appendChild(renderKundenZertifikateSection(zertifikate, zertifikateLoadFailed));
 
   deleteBtn.addEventListener("click", async () => {
@@ -972,6 +985,40 @@ async function renderDetail(root, id) {
   });
 
   focusHeading(root);
+}
+
+function renderKundenHundeSection(hunde = [], hasError = false) {
+  const section = createSectionBlock({
+    title: "Hunde",
+    subtitle: "",
+    level: 2,
+    className: "kunden-details",
+  });
+  const card = createStandardCard("Hunde");
+  const body = card.querySelector(".ui-card__body");
+  if (body) {
+    body.innerHTML = "";
+    if (hasError) {
+      showErrorNotice(body);
+    } else if (!hunde.length) {
+      appendSharedEmptyState(body);
+    } else {
+      const list = document.createElement("ul");
+      list.className = "kunden-hunde-list";
+      hunde.forEach((hund) => {
+        const item = document.createElement("li");
+        const link = document.createElement("a");
+        link.href = `#/hunde/${hund.id}`;
+        const label = formatHundName(hund) || "Unbekannt";
+        link.textContent = label;
+        item.appendChild(link);
+        list.appendChild(item);
+      });
+      body.appendChild(list);
+    }
+  }
+  section.appendChild(card);
+  return section;
 }
 
 async function renderForm(root, view, id) {
@@ -1617,42 +1664,29 @@ function buildHundCode(num) {
   return `H-${String(safe).padStart(3, "0")}`;
 }
 
-function renderKundenHundeSection(hunde = [], hasError = false) {
+function renderKundenHistorieSection(entries = [], hasError = false) {
   const section = createSectionBlock({
-    title: "Hunde dieses Kunden",
+    title: "Historie",
     subtitle: "",
     level: 2,
   });
-  const card = createStandardCard("Hunde");
+  const card = createStandardCard("Historie");
   const body = card.querySelector(".ui-card__body");
   body.innerHTML = "";
 
   if (hasError) {
     showErrorNotice(body);
-  } else if (!hunde.length) {
+  } else if (!entries.length) {
     appendSharedEmptyState(body);
   } else {
     const list = document.createElement("ul");
-    list.className = "kunden-hunde-list";
-    hunde.forEach((hund) => {
+    list.className = "kunden-historie-list";
+    entries.forEach((entry) => {
       const item = document.createElement("li");
-      const link = document.createElement("a");
-      link.href = `#/hunde/${hund.id}`;
-      link.className = "kunden-hunde-link";
-      link.setAttribute("aria-label", `Hund ${hund.name || hund.code || hund.id} öffnen`);
-
-      const title = document.createElement("p");
-      title.className = "kunden-hunde-title";
-      const name = (hund.name || "").trim() || "Unbenannter Hund";
-      const rufname = (hund.rufname || "").trim();
-      title.textContent = rufname ? `${name} (${rufname})` : name;
-
-      const meta = document.createElement("p");
-      meta.className = "kunden-hunde-meta";
-      meta.textContent = `Rasse: ${hund.rasse || "unbekannt"}`;
-
-      link.append(title, meta);
-      item.appendChild(link);
+      const date = entry.occurredAt ? formatDateTime(entry.occurredAt) : "";
+      const author = entry.authorRole ? String(entry.authorRole) : "";
+      const text = (entry.text || "").trim();
+      item.textContent = [date, author, text].filter(Boolean).join(" · ");
       list.appendChild(item);
     });
     body.appendChild(list);

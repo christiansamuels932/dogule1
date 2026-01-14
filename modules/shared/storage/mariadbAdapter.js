@@ -350,6 +350,43 @@ function mapZertifikatRow(row) {
   };
 }
 
+function mapAnmeldungDraftRow(row) {
+  if (!row) return null;
+  return {
+    id: row.id,
+    status: row.status,
+    rawText: row.raw_text,
+    kursId: row.kurs_id,
+    kursTitle: row.kurs_title,
+    kundePayload: parseJson(row.kunde_payload, null),
+    hundPayload: parseJson(row.hund_payload, null),
+    errors: parseJson(row.errors, null),
+    kundeId: row.kunde_id,
+    hundId: row.hund_id,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    schemaVersion: row.schema_version,
+    version: row.version,
+  };
+}
+
+function mapHistorieEntryRow(row) {
+  if (!row) return null;
+  return {
+    id: row.id,
+    entityType: row.entity_type,
+    entityId: row.entity_id,
+    occurredAt: row.occurred_at,
+    authorId: row.author_id,
+    authorRole: row.author_role,
+    text: row.text,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    schemaVersion: row.schema_version,
+    version: row.version,
+  };
+}
+
 function normalizeKunde(data = {}, existing) {
   const createdAt = existing?.createdAt || data.createdAt || nowIso();
   const shouldInfer =
@@ -615,6 +652,56 @@ function normalizeZertifikat(data = {}, existing) {
     trainer2NameSnapshot: data.trainer2NameSnapshot ?? existing?.trainer2NameSnapshot ?? null,
     trainer2TitelSnapshot: data.trainer2TitelSnapshot ?? existing?.trainer2TitelSnapshot ?? null,
     bemerkungen: toStringValue(data.bemerkungen ?? existing?.bemerkungen),
+    createdAt,
+    updatedAt: nowIso(),
+    schemaVersion: Number(data.schemaVersion ?? existing?.schemaVersion ?? 1),
+    version: Number(data.version ?? existing?.version ?? 0),
+  };
+}
+
+function normalizeAnmeldungDraft(data = {}, existing) {
+  const createdAt = existing?.createdAt || data.createdAt || nowIso();
+  const kursIdRaw = data.kursId ?? existing?.kursId ?? null;
+  const kursId = toStringValue(kursIdRaw).trim() || null;
+  const kundeIdRaw = data.kundeId ?? existing?.kundeId ?? null;
+  const kundeId = toStringValue(kundeIdRaw).trim() || null;
+  const hundIdRaw = data.hundId ?? existing?.hundId ?? null;
+  const hundId = toStringValue(hundIdRaw).trim() || null;
+  return {
+    id: data.id || existing?.id || uuidv7(),
+    status: toStringValue(data.status ?? existing?.status ?? "draft"),
+    rawText: toStringValue(data.rawText ?? existing?.rawText),
+    kursId,
+    kursTitle: toStringValue(data.kursTitle ?? existing?.kursTitle),
+    kundePayload: data.kundePayload ?? existing?.kundePayload ?? null,
+    hundPayload: data.hundPayload ?? existing?.hundPayload ?? null,
+    errors: data.errors ?? existing?.errors ?? null,
+    kundeId,
+    hundId,
+    createdAt,
+    updatedAt: nowIso(),
+    schemaVersion: Number(data.schemaVersion ?? existing?.schemaVersion ?? 1),
+    version: Number(data.version ?? existing?.version ?? 0),
+  };
+}
+
+function normalizeHistorieEntry(data = {}, existing) {
+  const createdAt = existing?.createdAt || data.createdAt || nowIso();
+  const entityType = toStringValue(data.entityType ?? existing?.entityType);
+  const allowedTypes = new Set(["kunden", "hunde"]);
+  if (!allowedTypes.has(entityType)) {
+    throw new StorageError(STORAGE_ERROR_CODES.INVALID_DATA, "HISTORIE_INVALID_ENTITY_TYPE", {
+      details: { entityType },
+    });
+  }
+  return {
+    id: data.id || existing?.id || uuidv7(),
+    entityType,
+    entityId: toStringValue(data.entityId ?? existing?.entityId),
+    occurredAt: toStringValue(data.occurredAt ?? existing?.occurredAt ?? nowIso()),
+    authorId: toStringValue(data.authorId ?? existing?.authorId),
+    authorRole: toStringValue(data.authorRole ?? existing?.authorRole),
+    text: toStringValue(data.text ?? existing?.text),
     createdAt,
     updatedAt: nowIso(),
     schemaVersion: Number(data.schemaVersion ?? existing?.schemaVersion ?? 1),
@@ -1557,6 +1644,189 @@ export function createMariaDbAdapter(options = {}) {
     }
   }
 
+  async function listAnmeldungDrafts() {
+    try {
+      return await listAll(
+        pool,
+        "SELECT * FROM anmeldung_drafts ORDER BY created_at DESC",
+        [],
+        mapAnmeldungDraftRow
+      );
+    } catch (error) {
+      throw toStorageError(error, "Failed to list anmeldung_drafts");
+    }
+  }
+
+  async function getAnmeldungDraft(id) {
+    try {
+      const record = await fetchOne(
+        pool,
+        "SELECT * FROM anmeldung_drafts WHERE id = ?",
+        [id],
+        mapAnmeldungDraftRow
+      );
+      if (!record) {
+        throw new StorageError(STORAGE_ERROR_CODES.NOT_FOUND, `anmeldung_drafts ${id} not found`);
+      }
+      return record;
+    } catch (error) {
+      throw toStorageError(error, `Failed to get anmeldung_drafts ${id}`);
+    }
+  }
+
+  async function createAnmeldungDraft(data = {}) {
+    const record = normalizeAnmeldungDraft(data, null);
+    ensureRequiredFields(record, ["rawText"], "Anmeldung Text ist erforderlich");
+    const params = [
+      record.id,
+      record.status,
+      record.rawText,
+      record.kursId,
+      record.kursTitle,
+      toJson(record.kundePayload),
+      toJson(record.hundPayload),
+      toJson(record.errors),
+      record.kundeId,
+      record.hundId,
+      record.createdAt,
+      record.updatedAt,
+      record.schemaVersion,
+      record.version,
+    ];
+    try {
+      await pool.query(
+        "INSERT INTO anmeldung_drafts (id, status, raw_text, kurs_id, kurs_title, kunde_payload, hund_payload, errors, kunde_id, hund_id, created_at, updated_at, schema_version, version) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        params
+      );
+      return record;
+    } catch (error) {
+      throw toStorageError(error, "Failed to create anmeldung_drafts");
+    }
+  }
+
+  async function updateAnmeldungDraft(id, patch = {}) {
+    try {
+      const existing = await fetchOne(
+        pool,
+        "SELECT * FROM anmeldung_drafts WHERE id = ?",
+        [id],
+        mapAnmeldungDraftRow
+      );
+      if (!existing) return null;
+      const record = normalizeAnmeldungDraft({ ...existing, ...patch, id: existing.id }, existing);
+      ensureRequiredFields(record, ["rawText"], "Anmeldung Text ist erforderlich");
+      const params = [
+        record.status,
+        record.rawText,
+        record.kursId,
+        record.kursTitle,
+        toJson(record.kundePayload),
+        toJson(record.hundPayload),
+        toJson(record.errors),
+        record.kundeId,
+        record.hundId,
+        record.updatedAt,
+        record.schemaVersion,
+        record.version,
+        record.id,
+      ];
+      await pool.query(
+        "UPDATE anmeldung_drafts SET status=?, raw_text=?, kurs_id=?, kurs_title=?, kunde_payload=?, hund_payload=?, errors=?, kunde_id=?, hund_id=?, updated_at=?, schema_version=?, version=? WHERE id=?",
+        params
+      );
+      return record;
+    } catch (error) {
+      throw toStorageError(error, `Failed to update anmeldung_drafts ${id}`);
+    }
+  }
+
+  async function deleteAnmeldungDraft(id) {
+    try {
+      await ensureExists(pool, "anmeldung_drafts", id);
+      await pool.query("DELETE FROM anmeldung_drafts WHERE id = ?", [id]);
+      return { ok: true, id };
+    } catch (error) {
+      throw toStorageError(error, `Failed to delete anmeldung_drafts ${id}`);
+    }
+  }
+
+  async function listHistorie({ query } = {}) {
+    const entityType = toStringValue(query?.entityType);
+    const entityId = toStringValue(query?.entityId);
+    const params = [];
+    let sql = "SELECT * FROM historie_entries";
+    if (entityType && entityId) {
+      sql += " WHERE entity_type = ? AND entity_id = ?";
+      params.push(entityType, entityId);
+    } else if (entityType) {
+      sql += " WHERE entity_type = ?";
+      params.push(entityType);
+    } else if (entityId) {
+      sql += " WHERE entity_id = ?";
+      params.push(entityId);
+    }
+    sql += " ORDER BY occurred_at DESC";
+    try {
+      return await listAll(pool, sql, params, mapHistorieEntryRow);
+    } catch (error) {
+      throw toStorageError(error, "Failed to list historie_entries");
+    }
+  }
+
+  async function getHistorieEntry(id) {
+    try {
+      const record = await fetchOne(
+        pool,
+        "SELECT * FROM historie_entries WHERE id = ?",
+        [id],
+        mapHistorieEntryRow
+      );
+      if (!record) {
+        throw new StorageError(STORAGE_ERROR_CODES.NOT_FOUND, `historie_entries ${id} not found`);
+      }
+      return record;
+    } catch (error) {
+      throw toStorageError(error, `Failed to get historie_entries ${id}`);
+    }
+  }
+
+  async function createHistorieEntry(data = {}) {
+    const record = normalizeHistorieEntry(data, null);
+    ensureRequiredFields(record, ["entityId", "text"], "Historie Eintrag benötigt Ziel und Text");
+    const params = [
+      record.id,
+      record.entityType,
+      record.entityId,
+      record.occurredAt,
+      record.authorId,
+      record.authorRole,
+      record.text,
+      record.createdAt,
+      record.updatedAt,
+      record.schemaVersion,
+      record.version,
+    ];
+    try {
+      await pool.query(
+        "INSERT INTO historie_entries (id, entity_type, entity_id, occurred_at, author_id, author_role, text, created_at, updated_at, schema_version, version) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        params
+      );
+      return record;
+    } catch (error) {
+      throw toStorageError(error, "Failed to create historie_entries");
+    }
+  }
+
+  async function deleteHistorieEntry(id) {
+    try {
+      await ensureExists(pool, "historie_entries", id);
+      await pool.query("DELETE FROM historie_entries WHERE id = ?", [id]);
+      return { ok: true, id };
+    } catch (error) {
+      throw toStorageError(error, `Failed to delete historie_entries ${id}`);
+    }
+  }
+
   return {
     kunden: {
       list: listKunden,
@@ -1615,6 +1885,26 @@ export function createMariaDbAdapter(options = {}) {
       update: (arg) =>
         updateZertifikat(arg?.id || arg, arg?.data || arg?.payload || arg?.data || arg),
       delete: deleteZertifikat,
+    },
+    anmeldung: {
+      list: listAnmeldungDrafts,
+      get: getAnmeldungDraft,
+      create: createAnmeldungDraft,
+      update: (arg) =>
+        updateAnmeldungDraft(arg?.id || arg, arg?.data || arg?.payload || arg?.data || arg),
+      delete: deleteAnmeldungDraft,
+    },
+    historie: {
+      list: listHistorie,
+      get: getHistorieEntry,
+      create: createHistorieEntry,
+      update: () => {
+        throw new StorageError(
+          STORAGE_ERROR_CODES.INVALID_MODE,
+          "historie_entries are append-only"
+        );
+      },
+      delete: deleteHistorieEntry,
     },
     pool,
   };

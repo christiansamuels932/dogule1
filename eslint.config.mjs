@@ -5,6 +5,7 @@ export default [
     ignores: [
       ".NAS-Distro/**",
       "dist/**",
+      "exports/**",
       "dogule1-alpha/**",
       "storage_candidate/**",
       "storage_reports/**",
@@ -17,6 +18,7 @@ export default [
       ".NAS-Distro/**",
       "node_modules/**",
       "dist/**",
+      "exports/**",
       ".husky/**",
       "pnpm-lock.yaml",
       "dogule1-alpha/**",

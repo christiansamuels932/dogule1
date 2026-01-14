@@ -1,5 +1,6 @@
 const ALL_MODULES = [
   "dashboard",
+  "anmeldung",
   "kunden",
   "hunde",
   "kurse",
@@ -11,6 +12,8 @@ const ALL_MODULES = [
   "waren",
 ];
 
+const ALL_API_ENTITIES = [...ALL_MODULES, "historie"];
+
 const ROLE_MODULES = {
   admin: ALL_MODULES,
   developer: ALL_MODULES,
@@ -18,8 +21,8 @@ const ROLE_MODULES = {
 };
 
 const API_ACCESS = {
-  admin: { read: ALL_MODULES, write: ALL_MODULES },
-  developer: { read: ALL_MODULES, write: ALL_MODULES },
+  admin: { read: ALL_API_ENTITIES, write: ALL_API_ENTITIES },
+  developer: { read: ALL_API_ENTITIES, write: ALL_API_ENTITIES },
   trainer: {
     read: ["kunden", "hunde"],
     write: ["kunden", "hunde"],
