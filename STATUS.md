@@ -113,6 +113,7 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 ## Notizen
 
+- Superseded by the Station 92 completion block above (final manual verification passed and tests are green there).
 - MariaDB schema needs to be applied/updated to create new tables: `mariadb --protocol=socket --socket <...> < tools/mariadb/schema.sql`.
 - Parsing is heuristic until a real sample Anmeldung email format is provided for tightening.
 
