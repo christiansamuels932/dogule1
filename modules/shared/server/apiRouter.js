@@ -467,6 +467,241 @@ export function createApiRouter(options = {}) {
       return true;
     }
 
+    const entryMatch = path.match(/^\/api\/historie\/([^/]+)$/);
+    if (entryMatch) {
+      const id = entryMatch[1];
+      if (method === "GET") {
+        try {
+          const entry = await storage.historie.get(id, { requestId });
+          jsonResponse(res, 200, entry);
+        } catch (error) {
+          jsonResponse(res, error?.code === "NOT_FOUND" ? 404 : 500, { message: "not_found" });
+        }
+        return true;
+      }
+      if (method === "PATCH" || method === "PUT") {
+        try {
+          const updated = await storage.historie.update({ id, data: body }, { requestId });
+          if (!updated) {
+            jsonResponse(res, 404, { message: "not_found" });
+            return true;
+          }
+          jsonResponse(res, 200, updated);
+        } catch (error) {
+          jsonResponse(res, 400, { message: "historie_update_failed", code: error?.code });
+        }
+        return true;
+      }
+      if (method === "DELETE") {
+        try {
+          const result = await storage.historie.delete(id, { requestId });
+          jsonResponse(res, 200, result);
+        } catch (error) {
+          jsonResponse(res, 400, { message: "historie_delete_failed", code: error?.code });
+        }
+        return true;
+      }
+    }
+
+    jsonResponse(res, 404, { message: "not_found" });
+    return true;
+  }
+
+  function pad2(value) {
+    return String(value).padStart(2, "0");
+  }
+
+  function todayKeyLocal() {
+    const now = new Date();
+    return `${now.getFullYear()}-${pad2(now.getMonth() + 1)}-${pad2(now.getDate())}`;
+  }
+
+  function todayDdMmYyyyLocal() {
+    const now = new Date();
+    return `${pad2(now.getDate())}.${pad2(now.getMonth() + 1)}.${now.getFullYear()}`;
+  }
+
+  function extractDayMonth(value) {
+    const raw = String(value || "").trim();
+    if (!raw) return null;
+    const ddmmyyyy = raw.match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
+    if (ddmmyyyy) return { day: ddmmyyyy[1], month: ddmmyyyy[2] };
+    const ddmm = raw.match(/^(\d{2})\.(\d{2})$/);
+    if (ddmm) return { day: ddmm[1], month: ddmm[2] };
+    const iso = raw.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (iso) return { day: iso[3], month: iso[2] };
+    const slash = raw.match(/^(\d{2})\/(\d{2})(?:\/(\d{4}))?$/);
+    if (slash) return { day: slash[1], month: slash[2] };
+    return null;
+  }
+
+  function dayMonthKey(value) {
+    const parsed = extractDayMonth(value);
+    if (!parsed) return "";
+    return `${parsed.day}.${parsed.month}`;
+  }
+
+  async function handleDashboardRoutes(req, res) {
+    const reqUrl = req?.url || "";
+    if (!reqUrl.startsWith("/api/dashboard/")) return false;
+
+    const query = extractQuery(reqUrl);
+    const body = await readJsonBody(req);
+    const path = reqUrl.split("?")[0];
+    const method = (req.method || "GET").toUpperCase();
+    const requestId = resolveRequestId(req);
+
+    if (path === "/api/dashboard/birthdays" && method === "GET") {
+      try {
+        const day = todayKeyLocal();
+        const today = dayMonthKey(todayDdMmYyyyLocal());
+        const handled = await storage.dashboardBirthdays.listHandled(day, { requestId });
+        const handledKeys = new Set(
+          (handled || []).map((entry) => `${entry.entityType}:${entry.entityId}`)
+        );
+
+        const [kunden, hunde] = await Promise.all([
+          storage.kunden.list({ query, requestId }),
+          storage.hunde.list({ query, requestId }),
+        ]);
+
+        const kundenById = new Map((kunden || []).map((kunde) => [kunde.id, kunde]));
+
+        const kundenToday = (kunden || [])
+          .filter((kunde) => dayMonthKey(kunde.geburtsdatum) === today)
+          .filter((kunde) => !handledKeys.has(`kunden:${kunde.id}`))
+          .map((kunde) => ({
+            id: kunde.id,
+            vorname: kunde.vorname,
+            nachname: kunde.nachname,
+            email: kunde.email,
+            geburtsdatum: kunde.geburtsdatum,
+          }));
+
+        const hundeToday = (hunde || [])
+          .filter((hund) => dayMonthKey(hund.geburtsdatum) === today)
+          .filter((hund) => !handledKeys.has(`hunde:${hund.id}`))
+          .map((hund) => {
+            const kunde = hund.kundenId ? kundenById.get(hund.kundenId) : null;
+            return {
+              id: hund.id,
+              name: hund.name,
+              rufname: hund.rufname,
+              geburtsdatum: hund.geburtsdatum,
+              kundenId: hund.kundenId,
+              kunde: kunde
+                ? {
+                    id: kunde.id,
+                    vorname: kunde.vorname,
+                    nachname: kunde.nachname,
+                    email: kunde.email,
+                  }
+                : null,
+            };
+          })
+          .filter((entry) => Boolean(entry.kundenId));
+
+        jsonResponse(res, 200, { day, kunden: kundenToday, hunde: hundeToday });
+      } catch (error) {
+        jsonResponse(res, 500, { message: "dashboard_birthdays_failed", code: error?.code });
+      }
+      return true;
+    }
+
+    if (path === "/api/dashboard/birthdays/handle" && method === "POST") {
+      await withKeyLock(
+        `dashboard:birthdays:${todayKeyLocal()}:${body?.entityType}:${body?.entityId}`,
+        async () => {
+          try {
+            const entityType = String(body.entityType || "").trim();
+            const entityId = String(body.entityId || "").trim();
+            const action = String(body.action || "").trim();
+            if (!entityType || !entityId || !action) {
+              jsonResponse(res, 400, { message: "invalid_payload" });
+              return;
+            }
+            if (!["kunden", "hunde"].includes(entityType)) {
+              jsonResponse(res, 400, { message: "invalid_entity" });
+              return;
+            }
+            if (!["dismissed", "mailto_prepared"].includes(action)) {
+              jsonResponse(res, 400, { message: "invalid_action" });
+              return;
+            }
+
+            const day = todayKeyLocal();
+            const handled = await storage.dashboardBirthdays.listHandled(day, { requestId });
+            const alreadyHandled = (handled || []).some(
+              (entry) => entry.entityType === entityType && entry.entityId === entityId
+            );
+            if (alreadyHandled) {
+              jsonResponse(res, 200, { ok: true, already: true });
+              return;
+            }
+
+            const actorId = req.headers["x-dogule-actor-id"] || "";
+            const actorRole = req.headers["x-dogule-actor-role"] || "";
+
+            const todayLabel = todayDdMmYyyyLocal();
+            const actionLabel = action === "dismissed" ? "Verworfen" : "E-Mail vorbereitet";
+
+            let kundeId = null;
+            let subjectName = "";
+            if (entityType === "kunden") {
+              const kunde = await storage.kunden.get(entityId, { requestId });
+              if (action === "mailto_prepared" && !String(kunde.email || "").trim()) {
+                jsonResponse(res, 400, { message: "missing_email" });
+                return;
+              }
+              kundeId = kunde.id;
+              subjectName = [kunde.vorname, kunde.nachname].filter(Boolean).join(" ").trim();
+            } else {
+              const hund = await storage.hunde.get(entityId, { requestId });
+              if (!hund?.kundenId) {
+                jsonResponse(res, 400, { message: "kunde_required" });
+                return;
+              }
+              kundeId = hund.kundenId;
+              subjectName = hund.name || hund.rufname || hund.id;
+              if (action === "mailto_prepared") {
+                const kunde = await storage.kunden.get(kundeId, { requestId });
+                if (!String(kunde?.email || "").trim()) {
+                  jsonResponse(res, 400, { message: "missing_email" });
+                  return;
+                }
+              }
+            }
+
+            const text = `Geburtstag ${entityType === "kunden" ? "Kunde" : "Hund"} ${subjectName} – ${actionLabel} – ${todayLabel}`;
+            await storage.historie.create(
+              {
+                entityType: "kunden",
+                entityId: kundeId,
+                occurredAt: new Date().toISOString(),
+                authorId: actorId,
+                authorRole: actorRole,
+                text,
+              },
+              { requestId }
+            );
+
+            await storage.dashboardBirthdays.upsertHandled(
+              { day, entityType, entityId, action, authorId: actorId, authorRole: actorRole },
+              { requestId }
+            );
+
+            jsonResponse(res, 200, { ok: true });
+          } catch (error) {
+            jsonResponse(res, 400, {
+              message: "dashboard_birthdays_handle_failed",
+              code: error?.code,
+            });
+          }
+        }
+      );
+      return true;
+    }
+
     jsonResponse(res, 404, { message: "not_found" });
     return true;
   }
@@ -704,7 +939,7 @@ export function createApiRouter(options = {}) {
     }
 
     const entityMatch = reqUrl.match(
-      /^\/api\/(kunden|hunde|kurse|trainer|kalender|finanzen|waren|zertifikate|anmeldung|historie)(?:\/|$)/
+      /^\/api\/(dashboard|kunden|hunde|kurse|trainer|kalender|finanzen|waren|zertifikate|anmeldung|historie)(?:\/|$)/
     );
     if (entityMatch) {
       const entity = entityMatch[1];
@@ -716,6 +951,7 @@ export function createApiRouter(options = {}) {
       }
     }
 
+    if (await handleDashboardRoutes(req, res)) return true;
     if (await handleAnmeldungRoutes(req, res)) return true;
     if (await handleHistorieRoutes(req, res)) return true;
     if (await core.handle(req, res)) return true;

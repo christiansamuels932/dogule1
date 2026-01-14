@@ -12,7 +12,12 @@ import { listKurse } from "../shared/api/kurse.js";
 import { listFinanzen } from "../shared/api/finanzen.js";
 import { listWarenByKundeId } from "../shared/api/waren.js";
 import { listZertifikate } from "../shared/api/zertifikate.js";
-import { listHistorieEntries } from "../shared/api/historie.js";
+import {
+  listHistorieEntries,
+  updateHistorieEntry,
+  deleteHistorieEntry,
+} from "../shared/api/historie.js";
+import { getSession } from "../shared/auth/client.js";
 import { exportTableToXlsx } from "../shared/utils/xlsxExport.js";
 import {
   createSectionHeader,
@@ -825,6 +830,7 @@ async function renderDetail(root, id) {
     { label: "ID", value: kunde.id },
     { label: "Kundencode", value: kunde.kundenCode },
     { label: "Name", value: formatFullName(kunde) },
+    { label: "Geburtsdatum", value: kunde.geburtsdatum },
     { label: "Geschlecht", value: formatKundenGeschlecht(kunde.geschlecht) },
     { label: "E-Mail", value: kunde.email },
     { label: "Telefon", value: kunde.telefon },
@@ -923,8 +929,8 @@ async function renderDetail(root, id) {
     console.error("[KUNDEN_ERR_ZERTIFIKATE_LOAD]", error);
   }
 
-  root.appendChild(renderKundenHistorieSection(historie, historieLoadFailed));
   root.appendChild(renderKundenZertifikateSection(zertifikate, zertifikateLoadFailed));
+  root.appendChild(renderKundenHistorieSection(historie, historieLoadFailed));
 
   deleteBtn.addEventListener("click", async () => {
     if (deleteBtn.disabled) return;
@@ -1144,6 +1150,11 @@ async function renderForm(root, view, id) {
       label: "Nachname*",
       required: true,
       placeholder: "z. B. Keller",
+    },
+    {
+      name: "geburtsdatum",
+      label: "Geburtsdatum",
+      placeholder: "z. B. 31.12.1990",
     },
     {
       name: "status",
@@ -1679,14 +1690,80 @@ function renderKundenHistorieSection(entries = [], hasError = false) {
   } else if (!entries.length) {
     appendSharedEmptyState(body);
   } else {
+    const role = getSession()?.user?.role || "";
+    const canEdit = role === "admin" || role === "developer";
+    entries = entries
+      .slice()
+      .sort((a, b) => String(b.occurredAt || "").localeCompare(String(a.occurredAt || "")));
     const list = document.createElement("ul");
     list.className = "kunden-historie-list";
     entries.forEach((entry) => {
       const item = document.createElement("li");
+      item.className = "kunden-historie-item";
+      const line = document.createElement("div");
+      line.className = "kunden-historie-line";
       const date = entry.occurredAt ? formatDateTime(entry.occurredAt) : "";
       const author = entry.authorRole ? String(entry.authorRole) : "";
       const text = (entry.text || "").trim();
-      item.textContent = [date, author, text].filter(Boolean).join(" · ");
+      const label = document.createElement("span");
+      label.textContent = [date, author, text].filter(Boolean).join(" · ");
+      line.appendChild(label);
+
+      if (canEdit) {
+        const actions = document.createElement("div");
+        actions.className = "module-actions";
+        const editBtn = createButton({ label: "Bearbeiten", variant: "secondary" });
+        editBtn.type = "button";
+        const deleteBtn = createButton({ label: "Löschen", variant: "secondary" });
+        deleteBtn.type = "button";
+
+        editBtn.addEventListener("click", async () => {
+          const next = window.prompt("Historie-Eintrag bearbeiten:", entry.text || "");
+          if (next === null) return;
+          const trimmed = String(next).trim();
+          if (!trimmed) {
+            window.alert("Text darf nicht leer sein.");
+            return;
+          }
+          editBtn.disabled = true;
+          deleteBtn.disabled = true;
+          try {
+            const updated = await updateHistorieEntry(entry.id, { text: trimmed });
+            entry.text = updated?.text ?? trimmed;
+            label.textContent = [date, author, (entry.text || "").trim()]
+              .filter(Boolean)
+              .join(" · ");
+          } catch (error) {
+            console.error("[KUNDEN_ERR_HISTORIE_EDIT]", error);
+            window.alert("Änderung fehlgeschlagen (siehe Konsole).");
+          } finally {
+            editBtn.disabled = false;
+            deleteBtn.disabled = false;
+          }
+        });
+
+        deleteBtn.addEventListener("click", async () => {
+          const ok = window.confirm("Historie-Eintrag wirklich löschen?");
+          if (!ok) return;
+          editBtn.disabled = true;
+          deleteBtn.disabled = true;
+          try {
+            await deleteHistorieEntry(entry.id);
+            item.remove();
+          } catch (error) {
+            console.error("[KUNDEN_ERR_HISTORIE_DELETE]", error);
+            window.alert("Löschen fehlgeschlagen (siehe Konsole).");
+          } finally {
+            editBtn.disabled = false;
+            deleteBtn.disabled = false;
+          }
+        });
+
+        actions.append(editBtn, deleteBtn);
+        line.appendChild(actions);
+      }
+
+      item.appendChild(line);
       list.appendChild(item);
     });
     body.appendChild(list);

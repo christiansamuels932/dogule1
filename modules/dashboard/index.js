@@ -6,6 +6,7 @@ import { createButton, createCard, createNotice } from "../shared/components/com
 import { listAnmeldungDrafts } from "../shared/api/anmeldung.js";
 import { listKunden } from "../shared/api/kunden.js";
 import { listHunde } from "../shared/api/hunde.js";
+import { getDashboardBirthdays, handleDashboardBirthday } from "../shared/api/dashboard.js";
 
 export async function initModule(container) {
   container.innerHTML = "";
@@ -32,10 +33,14 @@ export async function initModule(container) {
     );
   }
 
+  const birthdaysCard = await buildBirthdaysCard();
   const draftCards = await buildDraftCards();
   const duplicatesCard = buildDuplicatesCard();
   if (statusCard) {
     overviewSection.appendChild(statusCard);
+  }
+  if (birthdaysCard) {
+    overviewSection.appendChild(birthdaysCard);
   }
   if (draftCards) {
     overviewSection.appendChild(draftCards);
@@ -127,6 +132,180 @@ async function buildDraftCards() {
   });
 
   return fragment;
+}
+
+function buildMailtoHref({ to, subject, body }) {
+  const params = new window.URLSearchParams();
+  if (subject) params.set("subject", subject);
+  if (body) params.set("body", body);
+  const suffix = params.toString();
+  return `mailto:${encodeURIComponent(to || "")}${suffix ? `?${suffix}` : ""}`;
+}
+
+async function buildBirthdaysCard() {
+  let data = null;
+  try {
+    data = await getDashboardBirthdays();
+  } catch (error) {
+    console.error("DASHBOARD_BIRTHDAYS_LOAD_FAILED", error);
+    data = null;
+  }
+  const kunden = Array.isArray(data?.kunden) ? data.kunden : [];
+  const hunde = Array.isArray(data?.hunde) ? data.hunde : [];
+  if (!kunden.length && !hunde.length) return null;
+
+  const cardFragment = createCard({
+    eyebrow: "",
+    title: "Heutige Geburtstage",
+    body: "",
+    footer: "",
+  });
+  const card = cardFragment.querySelector(".ui-card") || cardFragment.firstElementChild;
+  if (!card) return null;
+  const body = card.querySelector(".ui-card__body");
+  if (!body) return card;
+
+  const list = document.createElement("ul");
+  list.className = "dashboard-birthdays";
+
+  const appendItem = ({
+    label,
+    meta,
+    href,
+    email,
+    entityType,
+    entityId,
+    mailtoSubject,
+    mailtoBody,
+  }) => {
+    const li = document.createElement("li");
+    const row = document.createElement("div");
+    row.className = "dashboard-birthdays__row";
+
+    const left = document.createElement("div");
+    const title = document.createElement("div");
+    const link = document.createElement("a");
+    link.href = href;
+    link.textContent = label;
+    link.className = "dashboard-birthdays__link";
+    title.appendChild(link);
+    const small = document.createElement("div");
+    small.className = "dashboard-birthdays__meta";
+    small.textContent = meta || "";
+    left.append(title, small);
+
+    const actions = document.createElement("div");
+    actions.className = "dashboard-birthdays__actions module-actions";
+    const dismissBtn = createButton({ label: "Verwerfen", variant: "secondary" });
+    dismissBtn.type = "button";
+    const mailBtn = createButton({ label: "Geburtstagsemail", variant: "primary" });
+    mailBtn.type = "button";
+    mailBtn.disabled = !String(email || "").trim();
+
+    dismissBtn.addEventListener("click", async () => {
+      const ok = window.confirm(`Geburtstagseintrag verwerfen?\n\n${label}`);
+      if (!ok) return;
+      dismissBtn.disabled = true;
+      mailBtn.disabled = true;
+      try {
+        await handleDashboardBirthday({ entityType, entityId, action: "dismissed" });
+        li.remove();
+      } catch (error) {
+        console.error("DASHBOARD_BIRTHDAYS_DISMISS_FAILED", error);
+        dismissBtn.disabled = false;
+        mailBtn.disabled = !String(email || "").trim();
+        window.alert("Aktion fehlgeschlagen (siehe Konsole).");
+      }
+    });
+
+    mailBtn.addEventListener("click", async () => {
+      const ok = window.confirm(
+        `Geburtstagsemail vorbereiten?\n\nEmpfänger: ${email || "—"}\n\nHinweis: Es wird nichts automatisch versendet – es öffnet nur dein Mailprogramm.`
+      );
+      if (!ok) return;
+      dismissBtn.disabled = true;
+      mailBtn.disabled = true;
+      try {
+        await handleDashboardBirthday({ entityType, entityId, action: "mailto_prepared" });
+        const hrefMailto = buildMailtoHref({ to: email, subject: mailtoSubject, body: mailtoBody });
+        window.location.href = hrefMailto;
+        li.remove();
+      } catch (error) {
+        console.error("DASHBOARD_BIRTHDAYS_MAILTO_FAILED", error);
+        dismissBtn.disabled = false;
+        mailBtn.disabled = !String(email || "").trim();
+        window.alert("Aktion fehlgeschlagen (siehe Konsole).");
+      }
+    });
+
+    actions.append(mailBtn, dismissBtn);
+    row.append(left, actions);
+    li.appendChild(row);
+    list.appendChild(li);
+  };
+
+  kunden.forEach((kunde) => {
+    const name = [kunde.vorname, kunde.nachname].filter(Boolean).join(" ").trim() || "Unbekannt";
+    const email = kunde.email || "";
+    const subject = `Alles Gute zum Geburtstag, ${kunde.vorname || name}!`;
+    const bodyText = [
+      `Herzlichen Glückwunsch zum Geburtstag, ${kunde.vorname || name}.`,
+      "",
+      "Fontanas Dogschool wünscht Dir das Allerbeste und möchte gerne ((Geschenkidee))  offerieren.",
+      "",
+      "Wir schätzen Dein Vertrauen in uns und hoffen, Dich noch viele Geburtstage bei uns zu haben.",
+      "",
+      "Beste Grüsse",
+      "Richard Fontana",
+    ].join("\n");
+    appendItem({
+      label: `Kunde: ${name}`,
+      meta: kunde.geburtsdatum ? `Geburtsdatum: ${kunde.geburtsdatum}` : "",
+      href: `#/kunden/${kunde.id}`,
+      email,
+      entityType: "kunden",
+      entityId: kunde.id,
+      mailtoSubject: subject,
+      mailtoBody: bodyText,
+    });
+  });
+
+  hunde.forEach((hund) => {
+    const hundName = hund.name || hund.rufname || "Unbekannt";
+    const kunde = hund.kunde || null;
+    const kundeName = kunde
+      ? [kunde.vorname, kunde.nachname].filter(Boolean).join(" ").trim() || kunde.id
+      : hund.kundenId;
+    const email = kunde?.email || "";
+    const subject = `Alles Gute zum Geburtstag, ${hundName}!`;
+    const bodyText = [
+      `Herzlichen Glückwunsch zum Geburtstag, ${hundName}.`,
+      "",
+      `Fontanas Dogschool wünscht ${kunde?.vorname || kundeName} und Dir  das Allerbeste und wir hoffen, Dich noch viele Geburtstage bei uns zu haben.`,
+      "",
+      "Beste Grüsse",
+    ]
+      .filter(Boolean)
+      .join("\n");
+    appendItem({
+      label: `Hund: ${hundName}`,
+      meta: [
+        kundeName ? `Besitzer: ${kundeName}` : "",
+        hund.geburtsdatum ? `Geburtsdatum: ${hund.geburtsdatum}` : "",
+      ]
+        .filter(Boolean)
+        .join(" · "),
+      href: `#/hunde/${hund.id}`,
+      email,
+      entityType: "hunde",
+      entityId: hund.id,
+      mailtoSubject: subject,
+      mailtoBody: bodyText,
+    });
+  });
+
+  body.appendChild(list);
+  return card;
 }
 
 function normalizeValue(value) {
