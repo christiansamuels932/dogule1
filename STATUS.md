@@ -36,7 +36,7 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 ## Kontext
 
-- Status: completed.
+- Status: completed (manual verification done).
 - Branch: `96`.
 - Scope: hide Kalender/Finanzen/Waren in UI and block direct access for all roles.
 
@@ -55,6 +55,11 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 ## Issues
 
 - Vitest logs a `--localstorage-file` warning and groupchat read-marker warnings; tests still pass.
+
+## Notizen
+
+- Manual checks completed: nav hides Kalender/Finanzen/Waren; direct hashes `#/kalender`, `#/finanzen`, `#/waren` are blocked/redirected; legacy module index hides those links; dashboard shows only allowed modules.
+- Follow-up: birthday mail warnings for Kunde status `deaktiviert` and Hund status `verstorben` verified on dashboard (prominent warning + confirmation dialog warning).
 
 # - - - - - - - - - - - - - - - - - - - -
 
