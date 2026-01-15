@@ -1,5 +1,5 @@
 // Simple hash-based router for Dogule1
-/* globals window, document, console, DOMParser, requestAnimationFrame, fetch */
+/* globals window, document, console, DOMParser, requestAnimationFrame, fetch, AbortController, performance */
 import "../../modules/shared/shared.css";
 import "../../modules/shared/layout.css";
 import fontanasLogoUrl from "./assets/fontanas-logo.png";
