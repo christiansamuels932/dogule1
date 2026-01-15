@@ -1120,9 +1120,14 @@ async function renderChatDetail(host, actor) {
     if (truncationNotice) truncationNotice.hidden = true;
     list.innerHTML = "";
     chatState.isLoading = true;
+    const existingMessages = chatState.messages || [];
     try {
       const data = await groupchatClient.listMessages({ limit: MESSAGE_PAGE_LIMIT });
-      chatState.messages = data.messages || [];
+      const fetchedMessages = data.messages || [];
+      const transientMessages = existingMessages.filter(
+        (msg) => msg && (msg.status === "pending" || msg.status === "failed")
+      );
+      chatState.messages = fetchedMessages.concat(transientMessages);
       chatState.nextCursor = data.nextCursor || null;
       chatState.unreadCount = data.unreadCount || 0;
       if (

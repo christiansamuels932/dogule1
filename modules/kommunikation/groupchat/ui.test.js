@@ -16,7 +16,7 @@ async function makeTempRoot() {
 }
 
 async function cleanup(dir) {
-  await fs.rm(dir, { recursive: true, force: true });
+  await fs.rm(dir, { recursive: true, force: true, maxRetries: 3, retryDelay: 50 });
 }
 
 function setupFetch(api) {

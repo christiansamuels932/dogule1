@@ -33,6 +33,16 @@ let kundenCache = [];
 const TOAST_KEY = "__DOGULE_KUNDEN_TOAST__";
 const COLUMN_STORAGE_KEY = "__DOGULE_KUNDEN_COLUMNS__";
 
+function isAdminOrDeveloper(role) {
+  return role === "admin" || role === "developer";
+}
+
+function canCreateRapportForRole(role) {
+  return (
+    role === "admin" || role === "developer" || role === "trainer" || role === "trainer_rapport"
+  );
+}
+
 function createSectionBlock({ title, subtitle = "", level = 2, className = "" } = {}) {
   const section = document.createElement("section");
   const baseClass = "dogule-section kunden-section";
@@ -334,6 +344,8 @@ function focusHeading(root) {
 async function renderList(root) {
   if (!root) return;
   root.innerHTML = "";
+  const role = getSession()?.user?.role || "";
+  const canManage = isAdminOrDeveloper(role);
 
   const section = createSectionBlock({
     title: "",
@@ -342,39 +354,42 @@ async function renderList(root) {
   });
   injectToast(section);
 
-  const actionsCard = createStandardCard("Aktionen");
-  const actionBody = actionsCard.querySelector(".ui-card__body");
-  actionBody.innerHTML = "";
-  const actionWrap = document.createElement("div");
-  actionWrap.className = "module-actions";
+  let actionsCard = null;
   let exportHandler = null;
   let toggleColumnsHandler = null;
   let toggleColumnsButton = null;
-  actionWrap.appendChild(
-    createButton({
-      label: "Neuer Kunde",
-      variant: "primary",
-      onClick: () => {
-        window.location.hash = "#/kunden/new";
-      },
-    })
-  );
-  actionWrap.appendChild(
-    createButton({
-      label: "Export XLSX",
-      variant: "secondary",
-      onClick: () => exportHandler?.(),
-    })
-  );
-  toggleColumnsButton = createButton({
-    label: "Spalten anpassen",
-    variant: "quiet",
-    onClick: () => toggleColumnsHandler?.(),
-  });
-  toggleColumnsButton.type = "button";
-  toggleColumnsButton.setAttribute("aria-expanded", "false");
-  actionWrap.appendChild(toggleColumnsButton);
-  actionBody.appendChild(actionWrap);
+  if (canManage) {
+    actionsCard = createStandardCard("Aktionen");
+    const actionBody = actionsCard.querySelector(".ui-card__body");
+    actionBody.innerHTML = "";
+    const actionWrap = document.createElement("div");
+    actionWrap.className = "module-actions";
+    actionWrap.appendChild(
+      createButton({
+        label: "Neuer Kunde",
+        variant: "primary",
+        onClick: () => {
+          window.location.hash = "#/kunden/new";
+        },
+      })
+    );
+    actionWrap.appendChild(
+      createButton({
+        label: "Export XLSX",
+        variant: "secondary",
+        onClick: () => exportHandler?.(),
+      })
+    );
+    toggleColumnsButton = createButton({
+      label: "Spalten anpassen",
+      variant: "quiet",
+      onClick: () => toggleColumnsHandler?.(),
+    });
+    toggleColumnsButton.type = "button";
+    toggleColumnsButton.setAttribute("aria-expanded", "false");
+    actionWrap.appendChild(toggleColumnsButton);
+    actionBody.appendChild(actionWrap);
+  }
 
   const listCard = createStandardCard("Kundenliste");
   const listBody = listCard.querySelector(".ui-card__body");
@@ -388,7 +403,8 @@ async function renderList(root) {
   } catch (error) {
     console.error("[KUNDEN_ERR_LIST_LOAD]", error);
     showErrorNotice(listBody);
-    section.append(actionsCard, listCard);
+    if (actionsCard) section.appendChild(actionsCard);
+    section.appendChild(listCard);
     root.appendChild(section);
     focusHeading(root);
     return;
@@ -862,7 +878,8 @@ async function renderList(root) {
     };
   }
 
-  section.append(actionsCard, listCard);
+  if (actionsCard) section.appendChild(actionsCard);
+  section.appendChild(listCard);
   root.appendChild(section);
   focusHeading(root);
 }
@@ -944,28 +961,34 @@ async function renderDetail(root, id) {
   const actionsBody = actionsCard.querySelector(".ui-card__body");
   const actionsWrap = document.createElement("div");
   actionsWrap.className = "module-actions";
-  const editBtn = createButton({
-    label: "Bearbeiten",
-    variant: "primary",
-  });
-  editBtn.type = "button";
-  editBtn.addEventListener("click", () => {
-    window.location.hash = `#/kunden/${id}/edit`;
-  });
-  const zertifikatBtn = createButton({
-    label: "Zertifikat erstellen",
-    variant: "secondary",
-  });
-  zertifikatBtn.type = "button";
-  zertifikatBtn.addEventListener("click", () => {
-    window.location.hash = `#/zertifikate/new?kundeId=${encodeURIComponent(id)}`;
-  });
-  const deleteBtn = createButton({
-    label: "Löschen",
-    variant: "secondary",
-  });
-  deleteBtn.type = "button";
-  deleteBtn.dataset.action = "delete";
+  const role = getSession()?.user?.role || "";
+  const canManage = isAdminOrDeveloper(role);
+  let deleteBtn = null;
+  if (canManage) {
+    const editBtn = createButton({
+      label: "Bearbeiten",
+      variant: "primary",
+    });
+    editBtn.type = "button";
+    editBtn.addEventListener("click", () => {
+      window.location.hash = `#/kunden/${id}/edit`;
+    });
+    const zertifikatBtn = createButton({
+      label: "Zertifikat erstellen",
+      variant: "secondary",
+    });
+    zertifikatBtn.type = "button";
+    zertifikatBtn.addEventListener("click", () => {
+      window.location.hash = `#/zertifikate/new?kundeId=${encodeURIComponent(id)}`;
+    });
+    deleteBtn = createButton({
+      label: "Löschen",
+      variant: "secondary",
+    });
+    deleteBtn.type = "button";
+    deleteBtn.dataset.action = "delete";
+    actionsWrap.append(editBtn, zertifikatBtn, deleteBtn);
+  }
   const backBtn = createButton({
     label: "Zur Übersicht",
     variant: "quiet",
@@ -974,15 +997,14 @@ async function renderDetail(root, id) {
   backBtn.addEventListener("click", () => {
     window.location.hash = "#/kunden";
   });
-  actionsWrap.append(editBtn, zertifikatBtn, deleteBtn, backBtn);
+  actionsWrap.append(backBtn);
   actionsBody.appendChild(actionsWrap);
   const actionStatus = document.createElement("div");
   actionStatus.className = "kunden-card-status";
   actionsBody.appendChild(actionStatus);
   detailSection.appendChild(actionsCard);
 
-  const role = getSession()?.user?.role || "";
-  const canCreateRapport = role === "admin" || role === "developer" || role === "trainer";
+  const canCreateRapport = canCreateRapportForRole(role);
   if (canCreateRapport) {
     const rapportCard = buildRapportDraftCard({
       targetType: "kunden",
@@ -995,6 +1017,12 @@ async function renderDetail(root, id) {
   }
 
   root.appendChild(detailSection);
+
+  const canViewExtras = isAdminOrDeveloper(role);
+  if (!canViewExtras) {
+    focusHeading(root);
+    return;
+  }
 
   let linkedHunde = [];
   let hundeLoadFailed = false;
@@ -1031,7 +1059,7 @@ async function renderDetail(root, id) {
   root.appendChild(renderKundenZertifikateSection(zertifikate, zertifikateLoadFailed));
   root.appendChild(renderKundenHistorieSection(historie, historieLoadFailed));
 
-  deleteBtn.addEventListener("click", async () => {
+  deleteBtn?.addEventListener("click", async () => {
     if (deleteBtn.disabled) return;
     actionStatus.innerHTML = "";
     try {
@@ -1130,6 +1158,25 @@ async function renderForm(root, view, id) {
   if (!root) return;
   if (typeof window !== "undefined" && typeof window.scrollTo === "function") {
     window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+  const role = getSession()?.user?.role || "";
+  if (!isAdminOrDeveloper(role)) {
+    root.innerHTML = "";
+    const section = createSectionBlock({
+      title: "Kundenformular",
+      subtitle: "Zugriff verweigert.",
+      level: 1,
+    });
+    section.appendChild(
+      createNotice("Nur Admins dürfen Kunden anlegen oder bearbeiten.", {
+        variant: "warn",
+        role: "alert",
+      })
+    );
+    section.appendChild(createUiLink("Zur Kundenliste", "#/kunden", "quiet"));
+    root.appendChild(section);
+    focusHeading(root);
+    return;
   }
   try {
     if (!kundenCache.length) {
