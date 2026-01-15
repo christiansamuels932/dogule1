@@ -578,6 +578,7 @@ export function createApiRouter(options = {}) {
             nachname: kunde.nachname,
             email: kunde.email,
             geburtsdatum: kunde.geburtsdatum,
+            status: kunde.status,
           }));
 
         const hundeToday = (hunde || [])
@@ -590,6 +591,7 @@ export function createApiRouter(options = {}) {
               name: hund.name,
               rufname: hund.rufname,
               geburtsdatum: hund.geburtsdatum,
+              status: hund.status,
               kundenId: hund.kundenId,
               kunde: kunde
                 ? {
@@ -597,6 +599,7 @@ export function createApiRouter(options = {}) {
                     vorname: kunde.vorname,
                     nachname: kunde.nachname,
                     email: kunde.email,
+                    status: kunde.status,
                   }
                 : null,
             };

@@ -316,6 +316,12 @@ async function buildBirthdaysCard() {
   const list = document.createElement("ul");
   list.className = "dashboard-birthdays";
 
+  const normalizeStatus = (value) =>
+    String(value || "")
+      .trim()
+      .toLowerCase();
+  const warnLabel = (text) => `WARNUNG: ${text}`;
+
   const appendItem = ({
     label,
     meta,
@@ -325,6 +331,7 @@ async function buildBirthdaysCard() {
     entityId,
     mailtoSubject,
     mailtoBody,
+    warningText,
   }) => {
     const li = document.createElement("li");
     const row = document.createElement("div");
@@ -341,6 +348,17 @@ async function buildBirthdaysCard() {
     small.className = "dashboard-birthdays__meta";
     small.textContent = meta || "";
     left.append(title, small);
+    if (warningText) {
+      const warningFragment = createNotice(warnLabel(warningText), {
+        variant: "warn",
+        role: "alert",
+      });
+      const warningEl = warningFragment.firstElementChild;
+      if (warningEl) {
+        warningEl.classList.add("dashboard-birthdays__warning");
+      }
+      left.appendChild(warningFragment);
+    }
 
     const actions = document.createElement("div");
     actions.className = "dashboard-birthdays__actions module-actions";
@@ -367,8 +385,9 @@ async function buildBirthdaysCard() {
     });
 
     mailBtn.addEventListener("click", async () => {
+      const warningLine = warningText ? `\n\nWARNUNG: ${warningText}` : "";
       const ok = window.confirm(
-        `Geburtstagsemail vorbereiten?\n\nEmpfänger: ${email || "—"}\n\nHinweis: Es wird nichts automatisch versendet – es öffnet nur dein Mailprogramm.`
+        `Geburtstagsemail vorbereiten?\n\nEmpfänger: ${email || "—"}${warningLine}\n\nHinweis: Es wird nichts automatisch versendet – es öffnet nur dein Mailprogramm.`
       );
       if (!ok) return;
       dismissBtn.disabled = true;
@@ -395,6 +414,8 @@ async function buildBirthdaysCard() {
   kunden.forEach((kunde) => {
     const name = [kunde.vorname, kunde.nachname].filter(Boolean).join(" ").trim() || "Unbekannt";
     const email = kunde.email || "";
+    const kundenStatus = normalizeStatus(kunde.status);
+    const warningText = kundenStatus === "deaktiviert" ? "Kunde ist deaktiviert." : "";
     const subject = `Alles Gute zum Geburtstag, ${kunde.vorname || name}!`;
     const bodyText = [
       `Herzlichen Glückwunsch zum Geburtstag, ${kunde.vorname || name}.`,
@@ -415,12 +436,21 @@ async function buildBirthdaysCard() {
       entityId: kunde.id,
       mailtoSubject: subject,
       mailtoBody: bodyText,
+      warningText,
     });
   });
 
   hunde.forEach((hund) => {
     const hundName = hund.name || hund.rufname || "Unbekannt";
     const kunde = hund.kunde || null;
+    const hundStatus = normalizeStatus(hund.status);
+    const kundenStatus = normalizeStatus(kunde?.status);
+    const warningText = [
+      hundStatus === "verstorben" ? "Hund ist verstorben." : "",
+      kundenStatus === "deaktiviert" ? "Kunde ist deaktiviert." : "",
+    ]
+      .filter(Boolean)
+      .join(" ");
     const kundeName = kunde
       ? [kunde.vorname, kunde.nachname].filter(Boolean).join(" ").trim() || kunde.id
       : hund.kundenId;
@@ -449,6 +479,7 @@ async function buildBirthdaysCard() {
       entityId: hund.id,
       mailtoSubject: subject,
       mailtoBody: bodyText,
+      warningText,
     });
   });
 

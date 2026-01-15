@@ -33,6 +33,7 @@ All projects governed by SAMDARD.md follow these non-negotiable principles:
 - Reality over plans. Standards evolve only after real use. No speculative tooling or hypothetical upgrades.
 - Finish before improving. Shipping a usable version has priority over refactoring, optimizing, or beautifying.
 - Repeatability over optimization. A process that can be repeated reliably is more valuable than a faster but fragile one.
+- Every project must have automated checks for Build, Dependency Audit, and Lint on pull requests.
 
 Violation of these principles is considered a process failure, not a technical one.
 
@@ -46,6 +47,7 @@ Violation of these principles is considered a process failure, not a technical o
 - Scope is frozen once Implementation begins.
 - Tool use is within CTB; Layer 2 tools require TECH_BASELINE.md.
 - Any change affecting scope, tools, structure, or workflow is reflected in STATUS.md.
+- Commits and pushes are handled by Codex (not the user).
 
 =========================================
 
