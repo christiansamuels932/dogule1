@@ -32,6 +32,7 @@ Station 93 — Dashboard birthdays + Outlook mailto flow
 Station 94 — Rapporte: Trainer draft → Admin confirmation
 Station 95 — Trainer minimal login (Rapport-only)
 Station 96 — Hide modules Kalender/Finanzen/Waren (UI + direct access block)
+Station 97 — NAS Deployment
 
 Battleplan (Stations 85+):
 

@@ -9,3 +9,7 @@ Dogtabs Data/
 .pnpm-home/
 .local/
 **/.directory
+.pw.txt
+config/dogule1.passwords
+dogule1.passwords
+.NAS-Distro/config/dogule1.passwords

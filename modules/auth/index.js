@@ -13,11 +13,11 @@ import {
   getDefaultModuleForRole,
 } from "../shared/auth/client.js";
 
-async function loginUser(username) {
+async function loginUser(username, password) {
   const res = await fetch("/api/auth/login", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ username }),
+    body: JSON.stringify({ username, password }),
   });
   const text = await res.text();
   const data = text ? JSON.parse(text) : null;
@@ -184,6 +184,20 @@ async function renderLogin(container, { selectedUser = "" } = {}) {
   userInput.name = "username";
   form.appendChild(userRow);
 
+  const passwordRow = createFormRow({
+    id: "auth-password",
+    label: "Passwort",
+    control: "input",
+    type: "password",
+    required: true,
+  });
+  const passwordInput = passwordRow.querySelector("input");
+  if (passwordInput) {
+    passwordInput.name = "password";
+    passwordInput.autocomplete = "current-password";
+  }
+  form.appendChild(passwordRow);
+
   const footer = card.querySelector(".ui-card__footer");
   footer.innerHTML = "";
   const actions = document.createElement("div");
@@ -208,10 +222,19 @@ async function renderLogin(container, { selectedUser = "" } = {}) {
       );
       return;
     }
+    if (!String(passwordInput?.value || "").trim()) {
+      statusSlot.appendChild(
+        createNotice("Bitte ein Passwort eingeben.", {
+          variant: "warn",
+          role: "alert",
+        })
+      );
+      return;
+    }
     submit.disabled = true;
     submit.textContent = "Anmelden ...";
     try {
-      const result = await loginUser(userInput.value.trim());
+      const result = await loginUser(userInput.value.trim(), passwordInput.value);
       saveSession(result);
       const target = getDefaultModuleForRole(result.user?.role);
       window.location.hash = `#/${target}`;
@@ -223,6 +246,7 @@ async function renderLogin(container, { selectedUser = "" } = {}) {
           role: "alert",
         })
       );
+      if (passwordInput) passwordInput.value = "";
     } finally {
       submit.disabled = false;
       submit.textContent = "Anmelden";

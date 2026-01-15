@@ -1,16 +1,13 @@
 // Kurse module – list/detail flows with mock API
 /* globals document, console, window */
 import {
-  createBadge,
   createButton,
   createCard,
   createEmptyState,
   createFormRow,
   createNotice,
-  createSectionHeader,
 } from "../shared/components/components.js";
 
-const createSection = createSectionHeader;
 const createEmpty = () => createEmptyState("Keine Daten vorhanden.", "", {});
 const createErrorNotice = () =>
   createNotice("Fehler beim Laden der Daten.", {
@@ -23,13 +20,16 @@ import {
   createKurs,
   updateKurs,
   deleteKurs,
-  getHundeForKurs,
-  getKunde,
-  listFinanzenByKundeId,
   listFinanzen,
   listTrainer,
 } from "../shared/api/index.js";
 import { runIntegrityCheck } from "../shared/api/db/integrityCheck.js";
+import {
+  describeCertificateBackground,
+  getCertificateBackgroundForKurs,
+  getCertificateBackgroundOptions,
+  resolveCertificateBackgroundUrl,
+} from "../shared/certificates/backgrounds.js";
 
 let kursCache = [];
 let trainerCache = [];
@@ -85,34 +85,6 @@ function findTrainerById(trainerId, trainerList = trainerCache) {
   return list.find((trainer) => trainer.id === safeId) || null;
 }
 
-function createMainHeading(title, subtitle = "") {
-  const fragment = createSectionHeader({
-    title,
-    subtitle,
-    level: 1,
-  });
-  const sectionEl = fragment.querySelector(".ui-section") || fragment.firstElementChild;
-  const subtitleEl = sectionEl?.querySelector(".ui-section__subtitle") || null;
-  const originalTitleEl = sectionEl?.querySelector(".ui-section__title") || null;
-  const heading = document.createElement("h1");
-  heading.className = originalTitleEl?.className || "ui-section__title";
-  heading.textContent = originalTitleEl?.textContent || title || "";
-  if (originalTitleEl?.id) {
-    heading.id = originalTitleEl.id;
-  }
-  if (originalTitleEl) {
-    originalTitleEl.replaceWith(heading);
-  } else if (sectionEl) {
-    const header = sectionEl.querySelector(".ui-section__header") || sectionEl;
-    header.prepend(heading);
-  }
-  if (subtitleEl) {
-    subtitleEl.textContent = subtitle || "";
-    subtitleEl.hidden = !subtitle;
-  }
-  return { fragment, sectionEl, heading, subtitleEl };
-}
-
 function createStandardCard(title = "", eyebrow = "") {
   const fragment = createCard({
     eyebrow,
@@ -121,6 +93,19 @@ function createStandardCard(title = "", eyebrow = "") {
     footer: "",
   });
   return fragment.querySelector(".ui-card") || fragment.firstElementChild;
+}
+
+function createZertifikatHintergrundPreview(value = "") {
+  const url = resolveCertificateBackgroundUrl(value);
+  if (!url) return null;
+  const wrap = document.createElement("div");
+  wrap.className = "kurse-zertifikat-preview";
+  const image = document.createElement("img");
+  image.className = "kurse-zertifikat-preview__image";
+  image.alt = "Vorschau Zertifikat Hintergrund";
+  image.src = url;
+  wrap.appendChild(image);
+  return wrap;
 }
 
 export async function initModule(container, routeContext = { segments: [] }) {
@@ -143,8 +128,6 @@ export async function initModule(container, routeContext = { segments: [] }) {
     console.error("[KURSE_ERR_VIEW]", error);
     section.innerHTML = "";
     scrollToTop();
-    const { fragment: headingFragment } = createMainHeading("Kurse", "Fehler beim Laden");
-    section.appendChild(headingFragment);
     const errorCardFragment = createCard({
       eyebrow: "",
       title: "",
@@ -208,13 +191,6 @@ async function renderDetail(section, id) {
   await fetchTrainer(true);
   const detailSection = document.createElement("section");
   detailSection.className = "dogule-section kurse-section kurse-detail";
-  detailSection.appendChild(
-    createSectionHeader({
-      title: "Kurs",
-      subtitle: "",
-      level: 1,
-    })
-  );
   section.appendChild(detailSection);
 
   try {
@@ -229,13 +205,10 @@ async function renderDetail(section, id) {
       kurs = hydrated[0] || kurs;
     }
 
-    const subtitleEl = detailSection.querySelector(".ui-section__subtitle");
-    if (subtitleEl) {
-      subtitleEl.textContent = kurs.title || "";
-    }
     injectToast(detailSection);
     const detailCard = createStandardCard("Stammdaten");
     const detailBody = detailCard.querySelector(".ui-card__body");
+    const zertifikatHintergrund = getCertificateBackgroundForKurs(kurs);
     const rows = [
       { label: "ID", value: kurs.id },
       { label: "Kurscode", value: kurs.code },
@@ -247,6 +220,12 @@ async function renderDetail(section, id) {
       { label: "Preis", value: formatPrice(kurs.price) },
       { label: "Status", value: formatStatusLabel(kurs.status) },
       { label: "Notizen", value: kurs.notes },
+      {
+        label: "Zertifikat Hintergrund",
+        value: zertifikatHintergrund
+          ? describeCertificateBackground(zertifikatHintergrund)
+          : "Kein Zertifikat-Hintergrund zugewiesen",
+      },
       { label: "Kursinhalt Theorie", value: kurs.inhaltTheorie },
       { label: "Kursinhalt Praxis", value: kurs.inhaltPraxis },
       { label: "Erstellt am", value: formatDateTime(kurs.createdAt) },
@@ -255,10 +234,26 @@ async function renderDetail(section, id) {
     detailBody.innerHTML = "";
     detailBody.appendChild(createDefinitionList(rows));
     detailSection.appendChild(detailCard);
-    const participantContext = await buildParticipantContext(kurs);
-    const kundenFinanzen = await buildKursKundenFinanzen(participantContext.participants);
-    section.__kursFinanzen = kundenFinanzen;
-
+    const preview = createZertifikatHintergrundPreview(zertifikatHintergrund);
+    if (preview) {
+      const backgroundCard = createStandardCard("Zertifikat Hintergrund");
+      const backgroundBody = backgroundCard.querySelector(".ui-card__body");
+      const collapsible = document.createElement("details");
+      collapsible.className = "dogule-collapsible";
+      const summary = document.createElement("summary");
+      summary.textContent = "Zertifikat Hintergrund anzeigen";
+      const content = document.createElement("div");
+      content.className = "dogule-collapsible__content";
+      content.appendChild(preview);
+      collapsible.append(summary, content);
+      backgroundBody.innerHTML = "";
+      backgroundBody.appendChild(collapsible);
+      detailSection.appendChild(backgroundCard);
+    } else {
+      detailSection.appendChild(
+        createNotice("Kein Zertifikat-Hintergrund zugewiesen.", { variant: "warn", role: "status" })
+      );
+    }
     const actionsCard = createStandardCard("Aktionen");
     const actionsBody = actionsCard.querySelector(".ui-card__body");
     const actionsWrap = document.createElement("div");
@@ -296,9 +291,6 @@ async function renderDetail(section, id) {
     actionsWrap.append(editBtn, zertifikatBtn, deleteBtn, backBtn);
     actionsBody.appendChild(actionsWrap);
     detailSection.appendChild(actionsCard);
-
-    appendParticipantsSection(detailSection, participantContext);
-    appendFinanceSections(detailSection, kundenFinanzen);
   } catch (error) {
     console.error("[KURSE_ERR_DETAIL]", error);
     const errorCard = createStandardCard("Stammdaten");
@@ -311,354 +303,6 @@ async function renderDetail(section, id) {
   }
 
   focusHeading(section);
-}
-
-async function buildParticipantContext(kurs = {}) {
-  const result = { participants: [], hasMissing: false, loadError: false };
-  if (!kurs?.id) return result;
-  try {
-    const hunde = await getHundeForKurs(kurs.id);
-    result.participants = Array.isArray(hunde) ? hunde : [];
-    result.hasMissing = result.participants.some((participant) => participant?._missing);
-  } catch (error) {
-    console.error("[KURSE_ERR_LINKED_HUNDE]", error);
-    result.loadError = true;
-  }
-  return result;
-}
-
-function appendParticipantsSection(
-  section,
-  { participants = [], hasMissing = false, loadError } = {}
-) {
-  const participantSection = document.createElement("section");
-  participantSection.className = "kurse-linked-section";
-  participantSection.appendChild(
-    createSectionHeader({
-      title: "Teilnehmende Hunde",
-      subtitle: "",
-      level: 2,
-    })
-  );
-  const cardFragment = createCard({
-    eyebrow: "",
-    title: "",
-    body: "",
-    footer: "",
-  });
-  const card = cardFragment.querySelector(".ui-card") || cardFragment.firstElementChild;
-  if (card) {
-    const body = card.querySelector(".ui-card__body");
-    body.innerHTML = "";
-    if (loadError) {
-      body.appendChild(createErrorNotice());
-    } else {
-      if (hasMissing) {
-        body.appendChild(
-          createNotice("Teilnehmerliste enthält ungültige Einträge. Bitte Kurs bearbeiten.", {
-            variant: "warn",
-            role: "alert",
-          })
-        );
-      }
-      if (!participants.length) {
-        body.appendChild(createEmpty());
-      } else {
-        const sorted = [...participants].sort(participantSorter);
-        sorted.forEach((participant) => {
-          const row = renderParticipantRow(participant);
-          if (row) body.appendChild(row);
-        });
-      }
-    }
-    participantSection.appendChild(card);
-  }
-  section.appendChild(participantSection);
-}
-
-function participantSorter(a, b) {
-  if (a?._missing && b?._missing) return 0;
-  if (a?._missing) return 1;
-  if (b?._missing) return -1;
-  const codeA = (a?.code || a?.id || "").toLowerCase();
-  const codeB = (b?.code || b?.id || "").toLowerCase();
-  if (codeA === codeB) return 0;
-  return codeA > codeB ? 1 : -1;
-}
-
-function renderParticipantRow(participant) {
-  if (participant?._missing) {
-    const wrapper = document.createElement("div");
-    wrapper.className = "kurse-participant kurse-participant--missing";
-    const icon = createBadge("!", "warn");
-    icon.classList.add("kurse-participant__warning");
-    const label = document.createElement("span");
-    label.className = "kurse-participant__label";
-    label.textContent = "Unbekannter Hund (verwaiste Zuordnung)";
-    const idNote = document.createElement("span");
-    idNote.className = "kurse-participant__meta";
-    idNote.textContent = participant.id ? `ID: ${participant.id}` : "";
-    wrapper.append(icon, label);
-    if (participant.id) {
-      wrapper.appendChild(idNote);
-    }
-    return wrapper;
-  }
-  const displayCode = participant.code || participant.id || "–";
-  const name = participant.name || "Unbenannter Hund";
-  const ownerText = formatParticipantOwner(participant.owner, participant.kundenId);
-
-  const cardFragment = createCard({
-    eyebrow: displayCode,
-    title: name,
-    body: "",
-    footer: "",
-  });
-  const card = cardFragment.querySelector(".ui-card") || cardFragment.firstElementChild;
-  if (!card) return null;
-  card.classList.add("kurse-linked-hund");
-  const body = card.querySelector(".ui-card__body");
-  if (body) {
-    body.innerHTML = "";
-    const meta = document.createElement("div");
-    meta.className = "kurse-linked-hund__meta";
-    const ownerRow = document.createElement("p");
-    ownerRow.textContent = `Besitzer: ${ownerText}`;
-    const idRow = document.createElement("p");
-    idRow.textContent = `ID: ${participant.id || "–"}`;
-    meta.append(ownerRow, idRow);
-    body.appendChild(meta);
-  }
-  const link = document.createElement("a");
-  link.href = `#/hunde/${participant.id}`;
-  link.className = "kurse-linked-hund__link";
-  link.appendChild(card);
-  return link;
-}
-
-function formatParticipantOwner(owner, kundenId) {
-  if (!owner && !kundenId) return "–";
-  if (owner) {
-    const name = formatCustomerName(owner);
-    const code = getCustomerDisplayCode(owner);
-    const town = formatCustomerTown(owner);
-    const townPart = town ? ` · ${town}` : "";
-    return `${code} · ${name}${townPart}`;
-  }
-  return kundenId;
-}
-
-const KURSE_FINANCE_SECTION_TITLES = ["Finanzübersicht", "Offene Beträge", "Zahlungshistorie"];
-
-async function buildKursKundenFinanzen(participants = []) {
-  const seen = new Set();
-  const candidates = [];
-  (Array.isArray(participants) ? participants : []).forEach((participant) => {
-    if (participant?._missing) return;
-    const owner = participant?.owner;
-    const kundeId = owner?.id || participant?.kundenId;
-    if (!kundeId || seen.has(kundeId)) return;
-    seen.add(kundeId);
-    candidates.push(owner?.id ? owner : { id: kundeId });
-  });
-  const financeResults = [];
-  if (!candidates.length) return financeResults;
-  for (const kunde of candidates) {
-    const kundeId = kunde?.id;
-    if (!kundeId) continue;
-    let kundeData = kunde;
-    if (!kundeData.vorname && !kundeData.nachname && !kundeData.code && kundeData.id) {
-      try {
-        const fetched = await getKunde(kundeData.id);
-        if (fetched) {
-          kundeData = fetched;
-        }
-      } catch (error) {
-        console.error("[KURSE_ERR_FINANZ_KUNDE]", error);
-      }
-    }
-    let finanzen = [];
-    try {
-      finanzen = await listFinanzenByKundeId(kundeId);
-    } catch (finanzenError) {
-      console.error("[KURSE_ERR_FINANZ_FETCH]", finanzenError);
-    }
-    const zahlungen = finanzen.filter((entry) => entry.typ === "bezahlt");
-    const offeneBetraege = finanzen.filter((entry) => entry.typ === "offen");
-    const lastZahlung = zahlungen.length ? zahlungen[zahlungen.length - 1] : null;
-    financeResults.push({
-      kundeId: kundeId,
-      label: formatCustomerName(kundeData) || `Kunde ${kundeId}`,
-      code: getCustomerDisplayCode(kundeData),
-      offeneBetraege,
-      zahlungen,
-      lastZahlung,
-    });
-  }
-  return financeResults;
-}
-
-function appendFinanceSections(section, kundenFinanzen = []) {
-  if (!section) return;
-  const financeData = Array.isArray(kundenFinanzen) ? kundenFinanzen : [];
-  const renderers = {
-    Finanzübersicht: renderKursFinanzOverviewContent,
-    "Offene Beträge": renderKursOffeneBetraegeContent,
-    Zahlungshistorie: renderKursZahlungshistorieContent,
-  };
-  KURSE_FINANCE_SECTION_TITLES.forEach((title) => {
-    const financeSection = document.createElement("section");
-    financeSection.className = "kurse-linked-section kurse-finanz-section";
-    financeSection.appendChild(
-      createSection({
-        title,
-        subtitle: "",
-        level: 2,
-      })
-    );
-    const cardFragment = createCard({
-      eyebrow: "",
-      title: "",
-      body: "",
-      footer: "",
-    });
-    const card = cardFragment.querySelector(".ui-card") || cardFragment.firstElementChild;
-    if (!card) return;
-    const body = card.querySelector(".ui-card__body");
-    if (body) {
-      body.innerHTML = "";
-      const renderer = renderers[title];
-      const rendered = typeof renderer === "function" ? renderer(body, financeData) : false;
-      if (!rendered) {
-        body.appendChild(createEmpty());
-      }
-    }
-    financeSection.appendChild(card);
-    section.appendChild(financeSection);
-  });
-}
-
-function renderKursFinanzOverviewContent(container, financeData = []) {
-  if (!financeData.length) return false;
-  financeData.forEach((entry) => {
-    const label = entryLabel(entry, financeData);
-    const infoRow = createFinanceRow(
-      label,
-      entry.lastZahlung
-        ? `Letzte Zahlung: ${formatFinanceAmount(entry.lastZahlung.betrag)} · Datum: ${formatDateTime(
-            entry.lastZahlung.datum
-          )}`
-        : "Keine letzte Zahlung"
-    );
-    container.appendChild(infoRow);
-  });
-  return true;
-}
-
-function renderKursOffeneBetraegeContent(container, financeData = []) {
-  const offeneEntries = [];
-  financeData.forEach((entry) => {
-    entry.offeneBetraege.forEach((offen) => {
-      offeneEntries.push({
-        kundeId: entry.kundeId,
-        label: entry.label,
-        code: entry.code,
-        eintrag: offen,
-      });
-    });
-  });
-  if (!offeneEntries.length) {
-    container.appendChild(createEmpty());
-    return true;
-  }
-  offeneEntries.forEach(({ kundeId, label: kundeLabel, code, eintrag }) => {
-    const label = entryLabel({ kundeId, label: kundeLabel, code }, financeData);
-    const infoRow = createFinanceRow(
-      label,
-      `Betrag: ${formatFinanceAmount(eintrag.betrag)} · Datum: ${formatDateTime(eintrag.datum)}`
-    );
-    container.appendChild(infoRow);
-  });
-  return true;
-}
-
-function renderKursZahlungshistorieContent(container, financeData = []) {
-  const zahlungen = [];
-  financeData.forEach((entry) => {
-    entry.zahlungen.forEach((zahlung) => {
-      zahlungen.push({
-        kundeId: entry.kundeId,
-        label: entry.label,
-        code: entry.code,
-        eintrag: zahlung,
-      });
-    });
-  });
-  zahlungen.sort((a, b) => {
-    const timeA = new Date(a.eintrag.datum).getTime();
-    const timeB = new Date(b.eintrag.datum).getTime();
-    return Number.isNaN(timeB) ? 1 : Number.isNaN(timeA) ? -1 : timeB - timeA;
-  });
-  if (!zahlungen.length) {
-    container.appendChild(createEmpty());
-    return true;
-  }
-  zahlungen.forEach(({ kundeId, label: kundeLabel, code, eintrag }) => {
-    const label = entryLabel({ kundeId, label: kundeLabel, code }, financeData);
-    const infoRow = createFinanceRow(
-      label,
-      `Zahlung: ${formatFinanceAmount(eintrag.betrag)} · Datum: ${formatDateTime(eintrag.datum)}`
-    );
-    container.appendChild(infoRow);
-  });
-  return true;
-}
-
-function entryLabel(entry, financeData = []) {
-  const baseLabel = entry.label || `Kunde ${entry.kundeId}`;
-  const prefix = entry.code || findFinanceCode(financeData, entry.kundeId);
-  return prefix ? `${prefix} · ${baseLabel}` : baseLabel;
-}
-
-function findFinanceCode(financeData = [], kundeId = "") {
-  const match = financeData.find((item) => item.kundeId === kundeId);
-  return match?.code || "";
-}
-
-function createFinanceRow(label, text) {
-  const row = document.createElement("div");
-  row.className = "kurse-finanz-row";
-  const labelEl = document.createElement("strong");
-  labelEl.textContent = label;
-  const textEl = document.createElement("span");
-  textEl.textContent = text;
-  row.append(labelEl, textEl);
-  return row;
-}
-
-function formatCustomerName(kunde = {}) {
-  const name = `${kunde.nachname ?? ""} ${kunde.vorname ?? ""}`.trim();
-  return name || kunde.email || "Unbenannter Kunde";
-}
-
-function extractTown(address = "") {
-  if (typeof address !== "string") return "";
-  const parts = address
-    .split(",")
-    .map((part) => part.trim())
-    .filter(Boolean);
-  if (!parts.length) return "";
-  const townRaw = parts[parts.length - 1];
-  const cleaned = townRaw.replace(/^\d+\s*/, "").trim();
-  return cleaned || townRaw;
-}
-
-function formatCustomerTown(kunde = {}) {
-  return extractTown(kunde.adresse || kunde.address || "");
-}
-
-function getCustomerDisplayCode(kunde = {}) {
-  return kunde.code || kunde.kundenCode || kunde.id || "–";
 }
 
 function formatTrainerLabel(trainer = {}, fallbackName = "", fallbackId = "") {
@@ -764,11 +408,6 @@ async function renderForm(section, view, id) {
   const mode = view === "create" ? "create" : "edit";
   section.innerHTML = "";
   scrollToTop();
-  const { fragment: headingFragment } = createMainHeading(
-    mode === "create" ? "Kurs erstellen" : "Kurs bearbeiten",
-    mode === "create" ? "Lege einen neuen Kurs an." : "Passe die Kursdaten an."
-  );
-  section.appendChild(headingFragment);
   injectToast(section);
   await fetchTrainer(true);
 
@@ -928,7 +567,7 @@ async function renderForm(section, view, id) {
     if (!field.config.describedByText) {
       hint.classList.add("sr-only");
     }
-    refs[field.name] = { input, hint };
+    refs[field.name] = { input, hint, row };
     if (field.name === "kursCode") {
       input.setAttribute("aria-readonly", "true");
       const toggleButton = createButton({
@@ -956,6 +595,35 @@ async function renderForm(section, view, id) {
     }
     form.appendChild(row);
   });
+
+  const backgroundRef = refs.zertifikatHintergrund;
+  if (backgroundRef?.row) {
+    const preview = document.createElement("div");
+    preview.className = "kurse-zertifikat-preview";
+    const previewImage = document.createElement("img");
+    previewImage.className = "kurse-zertifikat-preview__image";
+    previewImage.alt = "Vorschau Zertifikat Hintergrund";
+    const previewEmpty = document.createElement("p");
+    previewEmpty.className = "kurse-zertifikat-preview__empty";
+    previewEmpty.textContent = "Kein Zertifikat-Hintergrund zugewiesen.";
+    preview.append(previewImage, previewEmpty);
+    backgroundRef.row.appendChild(preview);
+
+    const updatePreview = () => {
+      const url = resolveCertificateBackgroundUrl(backgroundRef.input.value);
+      if (url) {
+        previewImage.src = url;
+        previewImage.hidden = false;
+        previewEmpty.hidden = true;
+      } else {
+        previewImage.removeAttribute("src");
+        previewImage.hidden = true;
+        previewEmpty.hidden = false;
+      }
+    };
+    updatePreview();
+    backgroundRef.input.addEventListener("change", updatePreview);
+  }
 
   const actions = document.createElement("div");
   actions.className = "module-actions kurse-form-actions";
@@ -1372,12 +1040,6 @@ function formatPrice(value) {
   }).format(amount);
 }
 
-function formatFinanceAmount(value) {
-  const amount = Number(value);
-  if (!Number.isFinite(amount)) return "CHF 0.00";
-  return `CHF ${amount.toFixed(2)}`;
-}
-
 function generateNextKursCode(list = []) {
   let max = 0;
   list.forEach((kurs) => {
@@ -1481,6 +1143,7 @@ function buildFormFields(existing = {}, { defaultCode = "", trainerOptions = [] 
       : [];
   const additionalTrainerIds = existingTrainerIds.filter((id) => id !== existingTrainerId);
   const additionalTrainerId = additionalTrainerIds[0] || "";
+  const backgroundValue = getCertificateBackgroundForKurs(existing);
   return [
     {
       name: "kursId",
@@ -1608,6 +1271,18 @@ function buildFormFields(existing = {}, { defaultCode = "", trainerOptions = [] 
           label: option.label,
           selected: option.value === statusValue,
         })),
+      },
+    },
+    {
+      name: "zertifikatHintergrund",
+      value: backgroundValue,
+      config: {
+        id: "kurs-zertifikat-hintergrund",
+        label: "Zertifikat Hintergrund (PNG)",
+        control: "select",
+        required: false,
+        describedByText: "PNG muss in attachments/material/Material liegen.",
+        options: getCertificateBackgroundOptions(backgroundValue),
       },
     },
     {
@@ -1747,6 +1422,7 @@ function buildPayload(values, trainerList = []) {
     aufbauend: ensureString(values.aufbauend, ""),
     price: ensureString(values.price, ""),
     notes: ensureString(values.notes, ""),
+    zertifikatHintergrund: ensureString(values.zertifikatHintergrund, ""),
     inhaltTheorie: ensureString(values.inhaltTheorie, ""),
     inhaltPraxis: ensureString(values.inhaltPraxis, ""),
   };

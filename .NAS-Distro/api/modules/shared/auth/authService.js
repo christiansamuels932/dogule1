@@ -1,7 +1,7 @@
 import { resolveAuthConfig } from "./config.js";
-import { verifyPassword } from "./hash.js";
 import { AUTH_ERROR_CODES, AuthError } from "./errors.js";
 import { createSignedToken, verifySignedToken, nowMs, randomId } from "./tokens.js";
+import { verifyPassword } from "./hash.js";
 import { createUserStore, getSeedUsers } from "./users.js";
 
 function noopAudit() {}
@@ -176,10 +176,16 @@ export function createAuthService(options = {}) {
       );
       throw new AuthError(AUTH_ERROR_CODES.REQUIRE_2FA, "Admin requires 2FA");
     }
-    const allowDeveloperNoPassword = user.role === "developer" && !String(password || "").trim();
-    const ok = allowDeveloperNoPassword
-      ? true
-      : await verifyPassword(password, user.passwordHash, config.hash);
+    const hasPassword = Boolean(user.passwordHash);
+    const passwordInput = String(password || "");
+    let ok = false;
+    if (hasPassword && passwordInput) {
+      try {
+        ok = await verifyPassword(passwordInput, user.passwordHash, config.hash);
+      } catch {
+        ok = false;
+      }
+    }
     if (!ok) {
       const info = recordFailure(username);
       const locked = info.lockoutUntil && info.lockoutUntil > clock();

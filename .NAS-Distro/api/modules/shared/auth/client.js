@@ -4,6 +4,14 @@ import { getKommunikationActions, getAllowedModules } from "./rbac.js";
 const STORAGE_KEY = "dogule1.auth.session";
 let cachedSession = null;
 
+function resolveStorage() {
+  if (typeof localStorage === "undefined" || !localStorage) return null;
+  if (typeof localStorage.getItem !== "function") return null;
+  if (typeof localStorage.setItem !== "function") return null;
+  if (typeof localStorage.removeItem !== "function") return null;
+  return localStorage;
+}
+
 function safeParse(value) {
   if (!value) return null;
   try {
@@ -15,8 +23,9 @@ function safeParse(value) {
 
 export function loadSession() {
   if (cachedSession) return cachedSession;
-  if (typeof localStorage === "undefined") return null;
-  const raw = localStorage.getItem(STORAGE_KEY);
+  const storage = resolveStorage();
+  if (!storage) return null;
+  const raw = storage.getItem(STORAGE_KEY);
   const parsed = safeParse(raw);
   cachedSession = parsed && parsed.accessToken ? parsed : null;
   return cachedSession;
@@ -24,17 +33,15 @@ export function loadSession() {
 
 export function saveSession(session) {
   cachedSession = session;
-  if (typeof localStorage !== "undefined") {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(session));
-  }
+  const storage = resolveStorage();
+  if (storage) storage.setItem(STORAGE_KEY, JSON.stringify(session));
   syncWindowAuth(session);
 }
 
 export function clearSession() {
   cachedSession = null;
-  if (typeof localStorage !== "undefined") {
-    localStorage.removeItem(STORAGE_KEY);
-  }
+  const storage = resolveStorage();
+  if (storage) storage.removeItem(STORAGE_KEY);
   syncWindowAuth(null);
 }
 

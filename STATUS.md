@@ -32,6 +32,65 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 # - - - - - - - - - - - - - - - - - - - -
 
+# Station 97 — NAS Deployment (Schema Drift Hardening + Kurs Preview Fold)
+
+## Kontext
+
+- Status: completed (manual verification done on NAS).
+- Branch: `97`.
+- Scope: stop repeating NAS breakage caused by MariaDB schema drift; improve Kurs detail UX.
+
+## Ergebnis (kurz)
+
+- NAS autostart hardened: `.NAS-Distro/api/start_if_needed.sh` now uses a lock to avoid repeated parallel starts (previously `EADDRINUSE :5177` spam) and runs `api/tools/mariadb/nas-ensure-schema.sh` before starting the API.
+- Added `tools/mariadb/nas-ensure-schema.sh` and deployed via `.NAS-Distro/api/tools/mariadb/`:
+  - Applies `schema.sql` and all `migrations/*.sql`.
+  - Force-creates missing tables `rapporte_drafts` and `anmeldung_drafts` using the NAS collation (and retries `rapporte_drafts` without FK if the FK is rejected).
+  - Logs to `/volume1/dogule1nasfolder/logs/schema.log`.
+- Resolved NAS-only failures:
+  - Kurs save 500 (`storage_error`) caused by schema mismatch (missing `kurse.zertifikat_hintergrund`).
+  - Rapport draft submit 400 caused by missing `rapporte_drafts`.
+  - Anmeldung drafts 500 caused by missing `anmeldung_drafts`.
+- Kurs detail UX: Zertifikat Hintergrund preview is now collapsed by default and only expands on click.
+
+## Tests
+
+- Local: `pnpm build` ✅
+- NAS: manual verification only.
+
+## Notizen
+
+- Canonical rule reinforced: `.NAS-Distro` is the source of truth; copy subfolders (`app/`, `api/`, `config/`) to NAS to avoid drift.
+- MariaDB tooling on NAS: `mysql` client was used (not `mariadb`); `!` in passwords requires quoting.
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 97 — NAS Deployment (Password File Migration)
+
+## Kontext
+
+- Status: completed (manual verification done).
+- Branch: `97`.
+- Scope: move NAS login passwords to a deterministic config file and remove `.pw.txt` dependency.
+
+## Ergebnis (kurz)
+
+- Auth now reads `username:password` entries from `DOGULE1_PASSWORD_FILE` (defaults to `config/dogule1.passwords`).
+- Password seeding now overwrites existing hashes to avoid stale credentials after password changes.
+- NAS deploy workflow updated to require `DOGULE1_PASSWORD_FILE` in `config/dogule1.env` and a mirrored `.NAS-Distro`.
+- NAS autostart script cleaned and kept in `.NAS-Distro/api/start_if_needed.sh`.
+
+## Tests
+
+- Not run (manual NAS verification only).
+
+## Notizen
+
+- Manual NAS steps: copy `.NAS-Distro` to `/volume1/dogule1nasfolder`, ensure `config/dogule1.passwords` exists, add `DOGULE1_PASSWORD_FILE` to `config/dogule1.env`, restart API, and rebooted NAS to confirm login success.
+- Old `.pw.txt` flow is deprecated and no longer used.
+
+# - - - - - - - - - - - - - - - - - - - -
+
 # Station 96 — Hide modules Kalender/Finanzen/Waren
 
 ## Kontext
@@ -60,6 +119,35 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 - Manual checks completed: nav hides Kalender/Finanzen/Waren; direct hashes `#/kalender`, `#/finanzen`, `#/waren` are blocked/redirected; legacy module index hides those links; dashboard shows only allowed modules.
 - Follow-up: birthday mail warnings for Kunde status `deaktiviert` and Hund status `verstorben` verified on dashboard (prominent warning + confirmation dialog warning).
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 97 — NAS Deployment (Password Login Prep)
+
+## Kontext
+
+- Status: in progress.
+- Branch: `97`.
+- Scope: require password-based logins for all users and prep NAS deployment notes.
+
+## Ergebnis (kurz)
+
+- Auth now verifies passwords from `.pw.txt` (PBKDF2) for seed users and trainer logins.
+- Login UI requires a password input; dropdown user selection remains.
+- NAS update workflow notes updated to track `.NAS-Distro` path and password file handling.
+
+## Tests
+
+- `pnpm lint` ✅
+- `pnpm vitest run` ✅ (warning: `--localstorage-file` without a valid path)
+
+## Issues
+
+- Vitest logs a `--localstorage-file` warning and groupchat read-marker warnings; tests still pass.
+
+## Notizen
+
+- `.pw.txt` is ignored by git and must be present alongside the API process working directory at runtime (e.g., NAS).
 
 # - - - - - - - - - - - - - - - - - - - -
 

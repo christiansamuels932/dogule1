@@ -29,6 +29,21 @@ async function loginUser(username, password) {
   return data;
 }
 
+async function fetchAuthOptions() {
+  const res = await fetch("/api/auth/options", {
+    method: "GET",
+    headers: { "Content-Type": "application/json" },
+  });
+  const text = await res.text();
+  const data = text ? JSON.parse(text) : null;
+  if (!res.ok) {
+    const err = new Error(data?.message || "options_failed");
+    err.code = data?.code || "OPTIONS_FAILED";
+    throw err;
+  }
+  return Array.isArray(data?.users) ? data.users : [];
+}
+
 async function logoutUser(refreshToken) {
   if (!refreshToken) return;
   await fetch("/api/auth/logout", {
@@ -42,6 +57,45 @@ function buildStatusSlot() {
   const slot = document.createElement("div");
   slot.className = "auth-status";
   return slot;
+}
+
+async function loadUserOptions(selectEl, statusSlot, controls = [], selectedUser = "") {
+  selectEl.innerHTML = "";
+  const baseOption = document.createElement("option");
+  baseOption.value = "";
+  baseOption.textContent = "Bitte auswählen";
+  baseOption.selected = true;
+  selectEl.appendChild(baseOption);
+
+  try {
+    const users = await fetchAuthOptions();
+    users.forEach((user) => {
+      const option = document.createElement("option");
+      option.value = user.username || "";
+      option.textContent = user.label || user.username || "";
+      if (!option.value) return;
+      selectEl.appendChild(option);
+    });
+    if (selectedUser) {
+      selectEl.value = selectedUser;
+    }
+    if (!users.length) {
+      statusSlot.appendChild(
+        createNotice("Keine Login-Optionen gefunden.", { variant: "warn", role: "alert" })
+      );
+    }
+  } catch (error) {
+    console.error("[AUTH_OPTIONS_FAILED]", error);
+    statusSlot.appendChild(
+      createNotice("Login-Optionen konnten nicht geladen werden.", {
+        variant: "warn",
+        role: "alert",
+      })
+    );
+    controls.forEach((control) => {
+      control.disabled = true;
+    });
+  }
 }
 
 function renderLoggedIn(container, session) {
@@ -91,22 +145,13 @@ function renderLoggedIn(container, session) {
   container.appendChild(section);
 }
 
-export async function initModule(container) {
-  if (!container) return;
-  container.innerHTML = "";
-
-  const existing = getSession();
-  if (existing?.user?.role) {
-    renderLoggedIn(container, existing);
-    return;
-  }
-
+async function renderLogin(container, { selectedUser = "" } = {}) {
   const section = document.createElement("section");
   section.className = "dogule-section auth-section";
   section.appendChild(
     createSectionHeader({
       title: "Anmelden",
-      subtitle: "Bitte mit Benutzername und Passwort anmelden.",
+      subtitle: "Bitte Benutzer auswählen.",
       level: 1,
     })
   );
@@ -131,24 +176,27 @@ export async function initModule(container) {
 
   const userRow = createFormRow({
     id: "auth-username",
-    label: "Benutzername",
-    placeholder: "z. B. Rifo",
+    label: "Benutzer",
+    control: "select",
     required: true,
   });
-  const userInput = userRow.querySelector("input");
+  const userInput = userRow.querySelector("select");
   userInput.name = "username";
   form.appendChild(userRow);
 
-  const passRow = createFormRow({
+  const passwordRow = createFormRow({
     id: "auth-password",
     label: "Passwort",
+    control: "input",
     type: "password",
-    placeholder: "Passwort",
     required: true,
   });
-  const passInput = passRow.querySelector("input");
-  passInput.name = "password";
-  form.appendChild(passRow);
+  const passwordInput = passwordRow.querySelector("input");
+  if (passwordInput) {
+    passwordInput.name = "password";
+    passwordInput.autocomplete = "current-password";
+  }
+  form.appendChild(passwordRow);
 
   const footer = card.querySelector(".ui-card__footer");
   footer.innerHTML = "";
@@ -157,16 +205,36 @@ export async function initModule(container) {
   const submit = createButton({ label: "Anmelden", variant: "primary" });
   submit.type = "submit";
   submit.setAttribute("form", form.id);
-  actions.appendChild(submit);
+  actions.append(submit);
   footer.appendChild(actions);
+
+  await loadUserOptions(userInput, statusSlot, [submit], selectedUser);
 
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
     statusSlot.innerHTML = "";
+    if (!userInput.value.trim()) {
+      statusSlot.appendChild(
+        createNotice("Bitte einen Benutzer auswählen.", {
+          variant: "warn",
+          role: "alert",
+        })
+      );
+      return;
+    }
+    if (!String(passwordInput?.value || "").trim()) {
+      statusSlot.appendChild(
+        createNotice("Bitte ein Passwort eingeben.", {
+          variant: "warn",
+          role: "alert",
+        })
+      );
+      return;
+    }
     submit.disabled = true;
     submit.textContent = "Anmelden ...";
     try {
-      const result = await loginUser(userInput.value.trim(), passInput.value);
+      const result = await loginUser(userInput.value.trim(), passwordInput.value);
       saveSession(result);
       const target = getDefaultModuleForRole(result.user?.role);
       window.location.hash = `#/${target}`;
@@ -178,6 +246,7 @@ export async function initModule(container) {
           role: "alert",
         })
       );
+      if (passwordInput) passwordInput.value = "";
     } finally {
       submit.disabled = false;
       submit.textContent = "Anmelden";
@@ -186,4 +255,17 @@ export async function initModule(container) {
 
   section.appendChild(card);
   container.appendChild(section);
+}
+
+export async function initModule(container) {
+  if (!container) return;
+  container.innerHTML = "";
+
+  const existing = getSession();
+  if (existing?.user?.role) {
+    renderLoggedIn(container, existing);
+    return;
+  }
+
+  await renderLogin(container);
 }
