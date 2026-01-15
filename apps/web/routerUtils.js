@@ -6,10 +6,7 @@ export const VALID_MODULES = new Set([
   "kurse",
   "kunden",
   "hunde",
-  "kalender",
   "trainer",
-  "finanzen",
-  "waren",
   "zertifikate",
 ]);
 

@@ -12,6 +12,8 @@ const ALL_MODULES = [
   "waren",
 ];
 
+const DISABLED_MODULES = new Set(["kalender", "finanzen", "waren"]);
+
 const ALL_API_ENTITIES = [...ALL_MODULES, "rapporte", "historie"];
 
 const ROLE_MODULES = {
@@ -48,12 +50,14 @@ export function normalizeRole(role) {
 
 export function getAllowedModules(role) {
   const normalized = normalizeRole(role);
-  return ROLE_MODULES[normalized] ? [...ROLE_MODULES[normalized]] : [];
+  if (!ROLE_MODULES[normalized]) return [];
+  return ROLE_MODULES[normalized].filter((moduleId) => !DISABLED_MODULES.has(moduleId));
 }
 
 export function isModuleAllowed(role, moduleId) {
   const normalized = normalizeRole(role);
   if (!normalized || !moduleId) return false;
+  if (DISABLED_MODULES.has(moduleId)) return false;
   const allowed = ROLE_MODULES[normalized] || [];
   return allowed.includes(moduleId);
 }

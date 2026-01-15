@@ -32,6 +32,32 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 # - - - - - - - - - - - - - - - - - - - -
 
+# Station 96 — Hide modules Kalender/Finanzen/Waren
+
+## Kontext
+
+- Status: completed.
+- Branch: `96`.
+- Scope: hide Kalender/Finanzen/Waren in UI and block direct access for all roles.
+
+## Ergebnis (kurz)
+
+- Removed Kalender/Finanzen/Waren from layout navigation and the legacy module index page.
+- Disabled access to those modules via RBAC and route parsing, redirecting direct hashes to the default module.
+- Kept module internals and API behavior unchanged; only visibility and access were adjusted.
+
+## Tests
+
+- `pnpm lint` ✅
+- `pnpm vitest run` ✅ (warning: `--localstorage-file` without a valid path)
+- `pnpm build` ✅
+
+## Issues
+
+- Vitest logs a `--localstorage-file` warning and groupchat read-marker warnings; tests still pass.
+
+# - - - - - - - - - - - - - - - - - - - -
+
 # Station 95 — Trainer minimal login (Rapport-only) (Detailed)
 
 ## Kontext
