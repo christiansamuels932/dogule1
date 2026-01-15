@@ -18,6 +18,7 @@ const ROLE_MODULES = {
   admin: ALL_MODULES,
   developer: ALL_MODULES,
   trainer: ["kunden", "hunde"],
+  trainer_rapport: ["kunden", "hunde"],
 };
 
 const API_ACCESS = {
@@ -27,12 +28,17 @@ const API_ACCESS = {
     read: ["kunden", "hunde", "rapporte"],
     write: ["kunden", "hunde", "rapporte"],
   },
+  trainer_rapport: {
+    read: ["kunden", "hunde", "rapporte"],
+    write: ["rapporte"],
+  },
 };
 
 const KOMMUNIKATION_ACTIONS = {
   admin: ["*"],
   developer: ["*"],
   trainer: [],
+  trainer_rapport: [],
 };
 
 export function normalizeRole(role) {

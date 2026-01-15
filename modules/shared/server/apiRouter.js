@@ -339,7 +339,7 @@ export function createApiRouter(options = {}) {
     if (code === adminTrainerCode || name === adminTrainerName.toLowerCase()) {
       return "admin";
     }
-    return "trainer";
+    return "trainer_rapport";
   };
 
   const ensureTrainerUser = (trainer) => {
@@ -395,7 +395,9 @@ export function createApiRouter(options = {}) {
         if (!user || seen.has(user.username)) return null;
         const name = String(trainer?.name || "").trim();
         const code = String(trainer?.code || "").trim();
-        const label = code && name ? `${name} (${code})` : name || code || user.username;
+        const baseLabel = code && name ? `${name} (${code})` : name || code || user.username;
+        const suffix = user.role === "trainer_rapport" ? " - Rapport" : "";
+        const label = `${baseLabel}${suffix}`;
         seen.add(user.username);
         return {
           id: user.id,
@@ -927,12 +929,12 @@ export function createApiRouter(options = {}) {
     const requestId = resolveRequestId(req);
     const actorId = req.headers["x-dogule-actor-id"] || "";
     const actorRole = normalizeRole(req.headers["x-dogule-actor-role"] || "");
+    const isRapportTrainer = actorRole === "trainer" || actorRole === "trainer_rapport";
 
     if (path === "/api/rapporte/drafts") {
       if (method === "GET") {
         try {
-          const listQuery =
-            actorRole === "trainer" ? { ...query, authorId: actorId } : { ...query };
+          const listQuery = isRapportTrainer ? { ...query, authorId: actorId } : { ...query };
           const drafts = await storage.rapporteDrafts.list({ query: listQuery, requestId });
           jsonResponse(res, 200, drafts);
         } catch (error) {
@@ -986,7 +988,7 @@ export function createApiRouter(options = {}) {
       if (method === "GET") {
         try {
           const record = await storage.rapporteDrafts.get(id, { requestId });
-          if (actorRole === "trainer" && record?.authorId !== actorId) {
+          if (isRapportTrainer && record?.authorId !== actorId) {
             jsonResponse(res, 403, { message: "forbidden" });
             return true;
           }

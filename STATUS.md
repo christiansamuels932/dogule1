@@ -32,6 +32,88 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 # - - - - - - - - - - - - - - - - - - - -
 
+# Station 95 — Trainer minimal login (Rapport-only) (Detailed)
+
+## Kontext
+
+- Status: completed.
+- Branch: `95`.
+- Scope: minimal trainer role for rapport draft creation only; restrict access surface to Kunden/Hunde lookup + Rapporte drafts.
+- Prerequisites: Station 94 Rapporte drafts + admin approval flow already in place.
+
+## Ergebnis (kurz)
+
+- Added `trainer_rapport` role for trainer logins (non-admin trainers) and surfaced it in login options with " - Rapport" suffix to signal limited access.
+- RBAC: `trainer_rapport` allows Kunden/Hunde read access plus Rapporte read (own drafts) and write (draft create); no other module/API access.
+- Rapporte API: draft list/get stays filtered to own drafts for rapport-only trainers; approve/reject remain admin/developer only.
+- Kunden UI: rapport-only trainers see detail + rapport draft card, but no create/edit/delete actions, no list actions, and no Historie/Zertifikate/linked Hunde sections.
+- Hunde UI: rapport-only trainers see detail + rapport draft card, but no create/edit/delete actions, no list actions, and no Historie/Zertifikate sections; Hunde form access is blocked.
+- Groupchat UI test stabilization: retain pending/failed messages while loading chat history; retry temp-dir cleanup to avoid ENOTEMPTY on test teardown.
+
+## Tests
+
+- `pnpm lint` ✅
+- `pnpm vitest run` ✅ (warning: `--localstorage-file` without a valid path)
+- `pnpm build` ✅
+
+## Issues
+
+- Vitest emits a `--localstorage-file` warning from the groupchat UI test harness; tests still pass.
+
+## Notizen
+
+- Groupchat UI tests log "Failed to update read marker" during runs; no failures observed.
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 95 — Trainer minimal login (Rapport-only) (Tests)
+
+## Kontext
+
+- Status: completed (automated tests run).
+- Branch: `95`.
+- Scope: Station 95 verification.
+
+## Ergebnis (kurz)
+
+- Automated checks run for lint, vitest, and build.
+
+## Tests
+
+- `pnpm lint` ✅
+- `pnpm vitest run` ✅ (warning: `--localstorage-file` without a valid path)
+- `pnpm build` ✅
+
+## Issues
+
+- Vitest emits a `--localstorage-file` warning from the groupchat UI test harness; tests still pass.
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 95 — Trainer minimal login (Rapport-only)
+
+## Kontext
+
+- Status: completed.
+- Branch: `95`.
+- Scope: minimal trainer role for rapport-only access.
+
+## Ergebnis (kurz)
+
+- Added `trainer_rapport` role mapping for trainer logins with rapport-only labeling in login options.
+- Restricted rapport-only trainers to Kunden/Hunde read access and Rapporte draft create; other module/API access blocked.
+- Kunden/Hunde UI hides create/edit/delete actions and Historie/Zertifikate for rapport-only trainers while keeping Rapport draft entry.
+
+## Tests
+
+- Not run (manual).
+
+## Notizen
+
+- None.
+
+# - - - - - - - - - - - - - - - - - - - -
+
 # Station 94 — Rapporte: Trainer draft → Admin confirmation (Tests)
 
 ## Kontext

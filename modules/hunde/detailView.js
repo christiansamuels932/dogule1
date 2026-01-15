@@ -22,6 +22,16 @@ import { runIntegrityCheck } from "../shared/api/db/integrityCheck.js";
 import { injectHundToast, setHundToast } from "./formView.js";
 import { formatHerkunft } from "./herkunft.js";
 
+function isAdminOrDeveloper(role) {
+  return role === "admin" || role === "developer";
+}
+
+function canCreateRapportForRole(role) {
+  return (
+    role === "admin" || role === "developer" || role === "trainer" || role === "trainer_rapport"
+  );
+}
+
 function pad2(value) {
   return String(value).padStart(2, "0");
 }
@@ -183,6 +193,11 @@ export async function createHundeDetailView(container, hundId) {
     body.appendChild(buildDetailList(hund, kundeInfo));
     body.appendChild(buildMetaBlock(hund));
 
+    const role = getSession()?.user?.role || "";
+    const canManage = isAdminOrDeveloper(role);
+    const canCreateRapport = canCreateRapportForRole(role);
+    const canViewExtras = isAdminOrDeveloper(role);
+
     const actionsCard = createCard({
       eyebrow: "",
       title: "Aktionen",
@@ -194,30 +209,32 @@ export async function createHundeDetailView(container, hundId) {
       const actionsBody = actionsEl.querySelector(".ui-card__body");
       const actionsWrap = document.createElement("div");
       actionsWrap.className = "module-actions";
-      const editBtn = createButton({ label: "Bearbeiten", variant: "primary" });
-      editBtn.type = "button";
-      editBtn.addEventListener("click", () => {
-        window.location.hash = `#/hunde/${hund.id}/edit`;
-      });
-      actionsWrap.appendChild(editBtn);
+      if (canManage) {
+        const editBtn = createButton({ label: "Bearbeiten", variant: "primary" });
+        editBtn.type = "button";
+        editBtn.addEventListener("click", () => {
+          window.location.hash = `#/hunde/${hund.id}/edit`;
+        });
+        actionsWrap.appendChild(editBtn);
 
-      const zertifikatBtn = createButton({ label: "Zertifikat erstellen", variant: "secondary" });
-      zertifikatBtn.type = "button";
-      zertifikatBtn.addEventListener("click", () => {
-        const params = new URLSearchParams();
-        params.set("hundId", hund.id);
-        if (kundeInfo?.id) {
-          params.set("kundeId", kundeInfo.id);
-        }
-        window.location.hash = `#/zertifikate/new?${params.toString()}`;
-      });
-      actionsWrap.appendChild(zertifikatBtn);
+        const zertifikatBtn = createButton({ label: "Zertifikat erstellen", variant: "secondary" });
+        zertifikatBtn.type = "button";
+        zertifikatBtn.addEventListener("click", () => {
+          const params = new URLSearchParams();
+          params.set("hundId", hund.id);
+          if (kundeInfo?.id) {
+            params.set("kundeId", kundeInfo.id);
+          }
+          window.location.hash = `#/zertifikate/new?${params.toString()}`;
+        });
+        actionsWrap.appendChild(zertifikatBtn);
 
-      const deleteBtn = createButton({ label: "Löschen", variant: "secondary" });
-      deleteBtn.addEventListener("click", () =>
-        handleDeleteHund(container, hund.id, kundeInfo.id, deleteBtn)
-      );
-      actionsWrap.appendChild(deleteBtn);
+        const deleteBtn = createButton({ label: "Löschen", variant: "secondary" });
+        deleteBtn.addEventListener("click", () =>
+          handleDeleteHund(container, hund.id, kundeInfo.id, deleteBtn)
+        );
+        actionsWrap.appendChild(deleteBtn);
+      }
 
       if (kundeInfo.id) {
         const kundeBtn = createButton({ label: "Zum Kunden", variant: "secondary" });
@@ -241,8 +258,6 @@ export async function createHundeDetailView(container, hundId) {
       }
       detailSection.appendChild(actionsEl);
     }
-    const role = getSession()?.user?.role || "";
-    const canCreateRapport = role === "admin" || role === "developer" || role === "trainer";
     if (canCreateRapport) {
       const rapportCard = buildRapportDraftCard({
         targetId: hund.id,
@@ -252,10 +267,12 @@ export async function createHundeDetailView(container, hundId) {
         detailSection.appendChild(rapportCard);
       }
     }
-    const zertifikateSection = await buildZertifikateSection(hund.id);
-    container.appendChild(zertifikateSection);
-    const historieSection = await buildHistorieSection(hund.id);
-    container.appendChild(historieSection);
+    if (canViewExtras) {
+      const zertifikateSection = await buildZertifikateSection(hund.id);
+      container.appendChild(zertifikateSection);
+      const historieSection = await buildHistorieSection(hund.id);
+      container.appendChild(historieSection);
+    }
   } catch (error) {
     console.error("[HUNDE_ERR_DETAIL_LOAD]", error);
     body.innerHTML = "";
