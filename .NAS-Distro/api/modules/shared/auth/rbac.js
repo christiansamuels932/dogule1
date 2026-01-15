@@ -1,5 +1,6 @@
 const ALL_MODULES = [
   "dashboard",
+  "anmeldung",
   "kunden",
   "hunde",
   "kurse",
@@ -11,34 +12,35 @@ const ALL_MODULES = [
   "waren",
 ];
 
+const DISABLED_MODULES = new Set(["kalender", "finanzen", "waren"]);
+
+const ALL_API_ENTITIES = [...ALL_MODULES, "rapporte", "historie"];
+
 const ROLE_MODULES = {
   admin: ALL_MODULES,
-  staff: ALL_MODULES,
   developer: ALL_MODULES,
-  trainer: ["dashboard", "kurse", "kalender", "kommunikation"],
+  trainer: ["kunden", "hunde"],
+  trainer_rapport: ["kunden", "hunde"],
 };
 
 const API_ACCESS = {
-  admin: { read: ALL_MODULES, write: ALL_MODULES },
-  staff: { read: ALL_MODULES, write: ALL_MODULES },
-  developer: { read: ALL_MODULES, write: ALL_MODULES },
+  admin: { read: ALL_API_ENTITIES, write: ALL_API_ENTITIES },
+  developer: { read: ALL_API_ENTITIES, write: ALL_API_ENTITIES },
   trainer: {
-    read: ["kunden", "hunde", "kurse", "trainer", "kalender"],
-    write: ["kurse", "kalender"],
+    read: ["kunden", "hunde", "rapporte"],
+    write: ["kunden", "hunde", "rapporte"],
+  },
+  trainer_rapport: {
+    read: ["kunden", "hunde", "rapporte"],
+    write: ["rapporte"],
   },
 };
 
 const KOMMUNIKATION_ACTIONS = {
   admin: ["*"],
-  staff: ["*"],
   developer: ["*"],
-  trainer: [
-    "kommunikation.chat.read",
-    "kommunikation.chat.send",
-    "kommunikation.chat.readMarker.set",
-    "kommunikation.infochannel.view",
-    "kommunikation.infochannel.confirm",
-  ],
+  trainer: [],
+  trainer_rapport: [],
 };
 
 export function normalizeRole(role) {
@@ -48,12 +50,14 @@ export function normalizeRole(role) {
 
 export function getAllowedModules(role) {
   const normalized = normalizeRole(role);
-  return ROLE_MODULES[normalized] ? [...ROLE_MODULES[normalized]] : [];
+  if (!ROLE_MODULES[normalized]) return [];
+  return ROLE_MODULES[normalized].filter((moduleId) => !DISABLED_MODULES.has(moduleId));
 }
 
 export function isModuleAllowed(role, moduleId) {
   const normalized = normalizeRole(role);
   if (!normalized || !moduleId) return false;
+  if (DISABLED_MODULES.has(moduleId)) return false;
   const allowed = ROLE_MODULES[normalized] || [];
   return allowed.includes(moduleId);
 }

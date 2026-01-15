@@ -198,6 +198,44 @@ h3,
   transform: translateY(-1px);
 }
 
+.dogule-collapsible {
+  border-radius: 12px;
+  border: 1px solid rgba(35, 41, 56, 0.12);
+  background: rgba(255, 255, 255, 0.65);
+  padding: 0.35rem 0.8rem;
+}
+
+.dogule-collapsible > summary {
+  cursor: pointer;
+  font-weight: 600;
+  list-style: none;
+}
+
+.dogule-collapsible > summary::-webkit-details-marker {
+  display: none;
+}
+
+.dogule-collapsible > summary::before {
+  content: "▸";
+  display: inline-block;
+  margin-right: 0.4rem;
+  transform: translateY(-1px);
+}
+
+.dogule-collapsible[open] > summary::before {
+  content: "▾";
+}
+
+.dogule-collapsible__content {
+  margin-top: 0.75rem;
+}
+
+.dogule-collapsible__content img {
+  max-width: 100%;
+  max-height: 380px;
+  object-fit: contain;
+}
+
 .kurse-list__item {
   display: block;
   margin-bottom: 1rem;
@@ -212,6 +250,27 @@ h3,
   flex-wrap: wrap;
   gap: 0.5rem;
   align-items: center;
+}
+
+.kurse-zertifikat-preview {
+  margin-top: 0.65rem;
+  padding: 0.65rem;
+  border: 1px dashed var(--color-border);
+  border-radius: 0.75rem;
+  background: var(--color-paper);
+}
+
+.kurse-zertifikat-preview__image {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.5rem;
+}
+
+.kurse-zertifikat-preview__empty {
+  margin: 0;
+  color: var(--color-muted-2);
+  font-size: 0.85rem;
 }
 
 .kurse-toolbar-actions,

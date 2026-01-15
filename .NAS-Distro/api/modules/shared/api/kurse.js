@@ -31,6 +31,7 @@ const EDITABLE_DEFAULTS = {
   notes: "",
   inhaltTheorie: "",
   inhaltPraxis: "",
+  zertifikatHintergrund: "",
   hundIds: [],
 };
 
@@ -129,8 +130,7 @@ const sanitizeNumber = (value, fallback = 0) => {
 
 const ensureEditableDefaults = (payload = {}) => {
   const normalized = { ...EDITABLE_DEFAULTS, ...normalizeCodePayload(payload) };
-  const ortValue =
-    payload.ort ?? payload.location ?? normalized.ort ?? normalized.location ?? "";
+  const ortValue = payload.ort ?? payload.location ?? normalized.ort ?? normalized.location ?? "";
   const locationValue =
     payload.location ?? payload.ort ?? normalized.location ?? normalized.ort ?? "";
   normalized.ort = typeof ortValue === "string" ? ortValue.trim() : ortValue;

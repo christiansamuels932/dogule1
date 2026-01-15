@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS kunden (
   code VARCHAR(64) NOT NULL DEFAULT '',
   vorname VARCHAR(128) NOT NULL DEFAULT '',
   nachname VARCHAR(128) NOT NULL DEFAULT '',
+  geburtsdatum VARCHAR(32) NOT NULL DEFAULT '',
   geschlecht VARCHAR(32) NULL,
   email VARCHAR(255) NOT NULL DEFAULT '',
   telefon VARCHAR(64) NOT NULL DEFAULT '',
@@ -249,4 +250,92 @@ CREATE TABLE IF NOT EXISTS zertifikate (
   CONSTRAINT fk_zertifikate_kurs FOREIGN KEY (kurs_id) REFERENCES kurse(id)
     ON DELETE RESTRICT
     ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS anmeldung_drafts (
+  id CHAR(36) NOT NULL,
+  status VARCHAR(32) NOT NULL DEFAULT 'draft',
+  raw_text TEXT NOT NULL,
+  kurs_id CHAR(36) NULL,
+  kurs_title VARCHAR(255) NOT NULL DEFAULT '',
+  kunde_payload JSON NULL,
+  hund_payload JSON NULL,
+  errors JSON NULL,
+  kunde_id CHAR(36) NULL,
+  hund_id CHAR(36) NULL,
+  created_at VARCHAR(32) NOT NULL,
+  updated_at VARCHAR(32) NOT NULL,
+  schema_version INT NOT NULL DEFAULT 1,
+  version INT NOT NULL DEFAULT 0,
+  PRIMARY KEY (id),
+  KEY idx_anmeldung_status (status),
+  KEY idx_anmeldung_kurs (kurs_id),
+  KEY idx_anmeldung_kunde (kunde_id),
+  KEY idx_anmeldung_hund (hund_id),
+  CONSTRAINT fk_anmeldung_kurs FOREIGN KEY (kurs_id) REFERENCES kurse(id)
+    ON DELETE SET NULL
+    ON UPDATE CASCADE,
+  CONSTRAINT fk_anmeldung_kunde FOREIGN KEY (kunde_id) REFERENCES kunden(id)
+    ON DELETE SET NULL
+    ON UPDATE CASCADE,
+  CONSTRAINT fk_anmeldung_hund FOREIGN KEY (hund_id) REFERENCES hunde(id)
+    ON DELETE SET NULL
+    ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS rapporte_drafts (
+  id CHAR(36) NOT NULL,
+  status VARCHAR(32) NOT NULL DEFAULT 'submitted',
+  target_type VARCHAR(16) NOT NULL,
+  target_id CHAR(36) NOT NULL,
+  kunde_id CHAR(36) NOT NULL,
+  text TEXT NOT NULL,
+  occurred_at VARCHAR(32) NOT NULL,
+  author_id VARCHAR(64) NOT NULL DEFAULT '',
+  author_role VARCHAR(32) NOT NULL DEFAULT '',
+  created_at VARCHAR(32) NOT NULL,
+  updated_at VARCHAR(32) NOT NULL,
+  schema_version INT NOT NULL DEFAULT 1,
+  version INT NOT NULL DEFAULT 0,
+  PRIMARY KEY (id),
+  KEY idx_rapporte_status (status),
+  KEY idx_rapporte_kunde (kunde_id),
+  KEY idx_rapporte_target (target_type, target_id),
+  CONSTRAINT fk_rapporte_kunde FOREIGN KEY (kunde_id) REFERENCES kunden(id)
+    ON DELETE RESTRICT
+    ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS historie_entries (
+  id CHAR(36) NOT NULL,
+  entity_type VARCHAR(16) NOT NULL,
+  entity_id CHAR(36) NOT NULL,
+  occurred_at VARCHAR(32) NOT NULL,
+  author_id VARCHAR(64) NOT NULL DEFAULT '',
+  author_role VARCHAR(32) NOT NULL DEFAULT '',
+  text TEXT NOT NULL,
+  created_at VARCHAR(32) NOT NULL,
+  updated_at VARCHAR(32) NOT NULL,
+  schema_version INT NOT NULL DEFAULT 1,
+  version INT NOT NULL DEFAULT 0,
+  PRIMARY KEY (id),
+  KEY idx_historie_target (entity_type, entity_id),
+  KEY idx_historie_occurred (occurred_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS dashboard_birthdays_handled (
+  id CHAR(36) NOT NULL,
+  day VARCHAR(16) NOT NULL,
+  entity_type VARCHAR(16) NOT NULL,
+  entity_id CHAR(36) NOT NULL,
+  action VARCHAR(32) NOT NULL,
+  author_id VARCHAR(64) NOT NULL DEFAULT '',
+  author_role VARCHAR(32) NOT NULL DEFAULT '',
+  created_at VARCHAR(32) NOT NULL,
+  updated_at VARCHAR(32) NOT NULL,
+  schema_version INT NOT NULL DEFAULT 1,
+  version INT NOT NULL DEFAULT 0,
+  PRIMARY KEY (id),
+  UNIQUE KEY idx_birthdays_day_target (day, entity_type, entity_id),
+  KEY idx_birthdays_day (day)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

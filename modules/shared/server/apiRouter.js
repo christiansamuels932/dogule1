@@ -2,6 +2,7 @@
 import { URL } from "node:url";
 import path from "node:path";
 import crypto from "node:crypto";
+import fs from "node:fs/promises";
 import { Buffer } from "node:buffer";
 import { createGroupchatApiHandlers } from "../../kommunikation/groupchat/apiRoutes.js";
 import { createInfochannelApiHandlers } from "../../kommunikation/infochannel/apiRoutes.js";
@@ -9,6 +10,7 @@ import { createAutomationApiHandlers } from "../../kommunikation/automation/apiR
 import { createCoreApiRouter } from "./coreApiRouter.js";
 import { createAuthService } from "../auth/authService.js";
 import { resolveAuthConfig } from "../auth/config.js";
+import { hashPassword } from "../auth/hash.js";
 import { createUserStore, getSeedUsers } from "../auth/users.js";
 import { getKommunikationActions, isApiAllowed, normalizeRole } from "../auth/rbac.js";
 import { createStorage } from "../storage/storage.js";
@@ -40,6 +42,36 @@ async function readJsonBody(req) {
   } catch {
     return {};
   }
+}
+
+const PASSWORD_FILE = process.env.DOGULE1_PASSWORD_FILE
+  ? path.resolve(process.env.DOGULE1_PASSWORD_FILE)
+  : path.join(process.cwd(), "config", "dogule1.passwords");
+let passwordConfigLoaded = false;
+let passwordConfigCache = null;
+
+async function loadPasswordConfig() {
+  if (passwordConfigLoaded) return passwordConfigCache;
+  passwordConfigLoaded = true;
+  const byUsername = new Map();
+  try {
+    const raw = await fs.readFile(PASSWORD_FILE, "utf8");
+    raw.split(/\r?\n/).forEach((line) => {
+      const trimmed = String(line || "").trim();
+      if (!trimmed || trimmed.startsWith("#")) return;
+      const separatorIndex = trimmed.indexOf(":");
+      if (separatorIndex <= 0) return;
+      const username = trimmed.slice(0, separatorIndex).trim();
+      const password = trimmed.slice(separatorIndex + 1).trim();
+      if (!username || !password) return;
+      byUsername.set(username, password);
+    });
+  } catch {
+    passwordConfigCache = { byUsername };
+    return passwordConfigCache;
+  }
+  passwordConfigCache = { byUsername };
+  return passwordConfigCache;
 }
 
 function extractQuery(reqUrl) {
@@ -104,6 +136,13 @@ async function handleAuthRoutes(req, res, auth, options = {}) {
   if (!reqUrl.startsWith("/api/auth")) return false;
   const body = await readJsonBody(req);
   const method = (req.method || "GET").toUpperCase();
+  if (options.ensurePasswords) {
+    try {
+      await options.ensurePasswords({ requestId: resolveRequestId(req) });
+    } catch {
+      // Non-blocking: allow auth routes even if password seeding fails.
+    }
+  }
   if (reqUrl === "/api/auth/options" && method === "GET") {
     try {
       const result = options.listAuthOptions
@@ -290,6 +329,7 @@ export function createApiRouter(options = {}) {
     });
   const adminTrainerCode = "TR-001";
   const adminTrainerName = "Fontana Richard";
+  let passwordSeeded = false;
 
   const locks = new Map();
   async function withKeyLock(key, fn) {
@@ -342,11 +382,51 @@ export function createApiRouter(options = {}) {
     return "trainer_rapport";
   };
 
-  const ensureTrainerUser = (trainer) => {
+  const ensurePasswordsSeeded = async () => {
+    if (passwordSeeded) return;
+    const config = await loadPasswordConfig();
+    if (!config) {
+      passwordSeeded = true;
+      return;
+    }
+    const updates = [];
+    config.byUsername.forEach((password, username) => {
+      const user = userStore.getUserByUsername(username);
+      if (!user) return;
+      updates.push(
+        hashPassword(password, authConfig.hash)
+          .then((passwordHash) => {
+            userStore.updateUser({ id: user.id, passwordHash });
+          })
+          .catch(() => {})
+      );
+    });
+    await Promise.all(updates);
+    passwordSeeded = true;
+  };
+
+  const applyTrainerPassword = async (user) => {
+    if (!user) return user;
+    const config = await loadPasswordConfig();
+    const password = config?.byUsername?.get(user.username);
+    if (!password) return user;
+    try {
+      const passwordHash = await hashPassword(password, authConfig.hash);
+      userStore.updateUser({ id: user.id, passwordHash });
+      return userStore.getUserById(user.id) || user;
+    } catch {
+      return user;
+    }
+  };
+
+  const ensureTrainerUser = async (trainer) => {
     if (!trainer?.id) return null;
     const userId = `user-${trainer.id}`;
     const existing = userStore.getUserById(userId);
-    if (existing) return existing;
+    if (existing) {
+      await ensurePasswordsSeeded();
+      return applyTrainerPassword(existing);
+    }
     let base = buildTrainerUsername(trainer);
     if (!base) {
       base = `trainer-${trainer.id.slice(0, 6)}`;
@@ -365,16 +445,20 @@ export function createApiRouter(options = {}) {
       requires2fa: false,
     };
     if (!userStore.addUser(user)) return null;
-    return user;
+    await ensurePasswordsSeeded();
+    return applyTrainerPassword(user);
   };
 
   const ensureTrainerUsers = async () => {
     if (!storage?.trainer?.list) return [];
+    await ensurePasswordsSeeded();
     const trainers = await storage.trainer.list();
-    return trainers.map(ensureTrainerUser).filter(Boolean);
+    const users = await Promise.all(trainers.map((trainer) => ensureTrainerUser(trainer)));
+    return users.filter(Boolean);
   };
 
   const listAuthOptions = async () => {
+    await ensurePasswordsSeeded();
     const trainers = await storage.trainer.list();
     const optionsList = [];
     const seen = new Set();
@@ -389,23 +473,26 @@ export function createApiRouter(options = {}) {
       seen.add(developerUser.username);
     }
 
-    const trainerOptions = trainers
-      .map((trainer) => {
-        const user = ensureTrainerUser(trainer);
-        if (!user || seen.has(user.username)) return null;
-        const name = String(trainer?.name || "").trim();
-        const code = String(trainer?.code || "").trim();
-        const baseLabel = code && name ? `${name} (${code})` : name || code || user.username;
-        const suffix = user.role === "trainer_rapport" ? " - Rapport" : "";
-        const label = `${baseLabel}${suffix}`;
-        seen.add(user.username);
-        return {
-          id: user.id,
-          username: user.username,
-          label,
-          role: user.role,
-        };
-      })
+    const trainerOptions = (
+      await Promise.all(
+        trainers.map(async (trainer) => {
+          const user = await ensureTrainerUser(trainer);
+          if (!user || seen.has(user.username)) return null;
+          const name = String(trainer?.name || "").trim();
+          const code = String(trainer?.code || "").trim();
+          const baseLabel = code && name ? `${name} (${code})` : name || code || user.username;
+          const suffix = user.role === "trainer_rapport" ? " - Rapport" : "";
+          const label = `${baseLabel}${suffix}`;
+          seen.add(user.username);
+          return {
+            id: user.id,
+            username: user.username,
+            label,
+            role: user.role,
+          };
+        })
+      )
+    )
       .filter(Boolean)
       .sort((a, b) => a.label.localeCompare(b.label, "de"));
 
@@ -415,7 +502,7 @@ export function createApiRouter(options = {}) {
 
   const defaultAfterCreate = async ({ entity, record }) => {
     if (entity !== "trainer") return record;
-    const user = ensureTrainerUser(record);
+    const user = await ensureTrainerUser(record);
     if (!user) return record;
     return { ...record, login: { username: user.username } };
   };
@@ -1103,6 +1190,7 @@ export function createApiRouter(options = {}) {
       await handleAuthRoutes(req, res, authService, {
         listAuthOptions,
         ensureTrainerUsers,
+        ensurePasswords: ensurePasswordsSeeded,
       })
     )
       return true;

@@ -81,3 +81,13 @@ export async function httpUpdate(entity, id, data) {
 export async function httpDelete(entity, id) {
   return doFetch(`/${entity}/${id}`, { method: "DELETE", authHeaders: getAuthHeaders() });
 }
+
+export async function httpRequest(path, options = {}) {
+  const resolvedPath = path.startsWith("/") ? path : `/${path}`;
+  return doFetch(resolvedPath, {
+    method: options.method || "GET",
+    body: options.body,
+    headers: options.headers,
+    authHeaders: options.authHeaders || getAuthHeaders(),
+  });
+}

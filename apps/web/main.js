@@ -21,9 +21,15 @@ import { getRouteInfoFromHash } from "./routerUtils.js";
 const moduleLoaders = import.meta.glob("../../modules/*/index.js", { eager: false });
 const TEMPLATE_HOST_ID = "dogule-shared-templates";
 const INTEGRITY_FLAG = "__DOGULE_INTEGRITY_CHECK_DONE__";
+const STATUS_ENDPOINT = "/healthz";
+const STATUS_CHECK_INTERVAL_MS = 15000;
+const STATUS_CHECK_TIMEOUT_MS = 3500;
+const STATUS_SLOW_THRESHOLD_MS = 1200;
 let layoutMain = null;
 let layoutPromise = null;
 let templatesPromise = null;
+let statusIntervalId = null;
+let statusRequestActive = false;
 
 function ensureIntegrityOnce() {
   if (!import.meta?.env?.DEV) return;
@@ -230,6 +236,7 @@ async function mountLayout() {
     // Purpose: unify page frame and route changes without reloading or losing layout.
     applyLayoutBody(layoutDoc.body);
     hydrateBranding();
+    startStatusMonitor();
 
     layoutMain = document.getElementById("dogule-main");
     if (!layoutMain) {
@@ -247,6 +254,74 @@ function hydrateBranding() {
   const logo = document.getElementById("dogule-logo");
   if (logo) {
     logo.src = fontanasLogoUrl;
+  }
+}
+
+function startStatusMonitor() {
+  if (statusIntervalId) return;
+  const badge = document.getElementById("dogule-status");
+  if (!badge) return;
+  setStatusBadge(badge, "checking");
+  const runCheck = () => checkStatus(badge);
+  runCheck();
+  statusIntervalId = window.setInterval(runCheck, STATUS_CHECK_INTERVAL_MS);
+}
+
+function setStatusBadge(badge, state, latencyMs, statusCode) {
+  const baseClass = "dogule-status";
+  const stateClass = `dogule-status--${state}`;
+  badge.className = `${baseClass} ${stateClass}`;
+  let text = "NAS Status";
+  let detail = "";
+  if (state === "ok") {
+    text = "NAS OK";
+    detail = typeof latencyMs === "number" ? ` · ${latencyMs} ms` : "";
+  } else if (state === "slow") {
+    text = "NAS langsam";
+    detail = typeof latencyMs === "number" ? ` · ${latencyMs} ms` : "";
+  } else if (state === "down") {
+    text = "NAS offline";
+    detail = statusCode ? ` · ${statusCode}` : "";
+  } else if (state === "checking") {
+    text = "NAS prüfen";
+  }
+  const label = `${text}${detail}`;
+  badge.textContent = label;
+  badge.setAttribute("aria-label", `NAS Status: ${label}`);
+  badge.setAttribute("title", `Letzte Prüfung: ${label}`);
+}
+
+async function checkStatus(badge) {
+  if (statusRequestActive) return;
+  statusRequestActive = true;
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(() => controller.abort(), STATUS_CHECK_TIMEOUT_MS);
+  const startedAt = performance.now();
+  try {
+    const res = await fetch(STATUS_ENDPOINT, {
+      method: "GET",
+      cache: "no-store",
+      signal: controller.signal,
+    });
+    const elapsed = Math.round(performance.now() - startedAt);
+    if (!res.ok) {
+      setStatusBadge(badge, "down", elapsed, res.status);
+      return;
+    }
+    if (elapsed >= STATUS_SLOW_THRESHOLD_MS) {
+      setStatusBadge(badge, "slow", elapsed);
+      return;
+    }
+    setStatusBadge(badge, "ok", elapsed);
+  } catch (error) {
+    if (error?.name === "AbortError") {
+      setStatusBadge(badge, "down", null, "timeout");
+    } else {
+      setStatusBadge(badge, "down");
+    }
+  } finally {
+    window.clearTimeout(timeoutId);
+    statusRequestActive = false;
   }
 }
 

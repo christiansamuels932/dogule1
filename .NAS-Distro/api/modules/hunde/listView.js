@@ -8,6 +8,7 @@ import {
 } from "../shared/components/components.js";
 import { listHunde } from "../shared/api/hunde.js";
 import { exportTableToXlsx } from "../shared/utils/xlsxExport.js";
+import { getSession } from "../shared/auth/client.js";
 import { injectHundToast } from "./formView.js";
 
 export async function createHundeListView(container) {
@@ -18,10 +19,15 @@ export async function createHundeListView(container) {
   try {
     injectHundToast(container);
 
+    const role = getSession()?.user?.role || "";
+    const canManage = role === "admin" || role === "developer";
     let exportHandler = null;
-    const actionCard = buildActionCard(() => exportHandler?.());
+    const actionCard = canManage ? buildActionCard(() => exportHandler?.()) : null;
     const listCard = buildListCard();
-    container.append(actionCard, listCard);
+    if (actionCard) {
+      container.appendChild(actionCard);
+    }
+    container.appendChild(listCard);
 
     exportHandler = await populateHundeTable(listCard);
     focusHeading(container);

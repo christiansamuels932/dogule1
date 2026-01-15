@@ -5,6 +5,7 @@ import path from "node:path";
 import fs from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { createApiRouter } from "../../modules/shared/server/apiRouter.js";
+import { createHealthHandlers } from "../../modules/shared/server/health.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -21,6 +22,7 @@ const ALLOWED_ORIGINS = (process.env.DOGULE1_CORS_ORIGINS || "")
 process.env.DOGULE1_REQUIRE_MARIADB = process.env.DOGULE1_REQUIRE_MARIADB || "1";
 
 const router = createApiRouter();
+const healthHandlers = createHealthHandlers();
 
 function contentTypeFor(filePath) {
   const ext = path.extname(filePath).toLowerCase();
@@ -73,6 +75,15 @@ const server = http.createServer(async (req, res) => {
     if (req.method === "OPTIONS") {
       res.statusCode = 204;
       res.end();
+      return;
+    }
+    const reqUrl = req.url || "";
+    if (reqUrl.startsWith("/healthz")) {
+      healthHandlers.handleHealthz(req, res);
+      return;
+    }
+    if (reqUrl.startsWith("/readyz")) {
+      healthHandlers.handleReadyz(req, res);
       return;
     }
     const handled = await router.handle(req, res);

@@ -238,8 +238,16 @@ async function renderDetail(section, id) {
     if (preview) {
       const backgroundCard = createStandardCard("Zertifikat Hintergrund");
       const backgroundBody = backgroundCard.querySelector(".ui-card__body");
+      const collapsible = document.createElement("details");
+      collapsible.className = "dogule-collapsible";
+      const summary = document.createElement("summary");
+      summary.textContent = "Zertifikat Hintergrund anzeigen";
+      const content = document.createElement("div");
+      content.className = "dogule-collapsible__content";
+      content.appendChild(preview);
+      collapsible.append(summary, content);
       backgroundBody.innerHTML = "";
-      backgroundBody.appendChild(preview);
+      backgroundBody.appendChild(collapsible);
       detailSection.appendChild(backgroundCard);
     } else {
       detailSection.appendChild(

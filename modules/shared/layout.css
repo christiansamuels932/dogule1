@@ -32,6 +32,54 @@
   flex-wrap: wrap;
 }
 
+.dogule-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.dogule-status {
+  --status-color: rgba(255, 253, 246, 0.75);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.25rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 253, 246, 0.45);
+  background: rgba(255, 253, 246, 0.12);
+  font-size: 0.8rem;
+  letter-spacing: 0.02em;
+  color: var(--color-paper);
+  min-height: 1.6rem;
+}
+
+.dogule-status::before {
+  content: "";
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 999px;
+  background: var(--status-color);
+  box-shadow: 0 0 6px var(--status-color);
+}
+
+.dogule-status--ok {
+  --status-color: #58d39f;
+}
+
+.dogule-status--slow {
+  --status-color: #ffd06a;
+}
+
+.dogule-status--down {
+  --status-color: #ff7a7a;
+}
+
+.dogule-status--checking {
+  --status-color: rgba(255, 253, 246, 0.55);
+}
+
 .dogule-brand-card {
   display: flex;
   align-items: center;

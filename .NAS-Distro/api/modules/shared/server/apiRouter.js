@@ -2,6 +2,7 @@
 import { URL } from "node:url";
 import path from "node:path";
 import crypto from "node:crypto";
+import fs from "node:fs/promises";
 import { Buffer } from "node:buffer";
 import { createGroupchatApiHandlers } from "../../kommunikation/groupchat/apiRoutes.js";
 import { createInfochannelApiHandlers } from "../../kommunikation/infochannel/apiRoutes.js";
@@ -9,8 +10,10 @@ import { createAutomationApiHandlers } from "../../kommunikation/automation/apiR
 import { createCoreApiRouter } from "./coreApiRouter.js";
 import { createAuthService } from "../auth/authService.js";
 import { resolveAuthConfig } from "../auth/config.js";
+import { hashPassword } from "../auth/hash.js";
 import { createUserStore, getSeedUsers } from "../auth/users.js";
 import { getKommunikationActions, isApiAllowed, normalizeRole } from "../auth/rbac.js";
+import { createStorage } from "../storage/storage.js";
 
 function jsonResponse(res, statusCode, body) {
   res.statusCode = statusCode;
@@ -39,6 +42,36 @@ async function readJsonBody(req) {
   } catch {
     return {};
   }
+}
+
+const PASSWORD_FILE = process.env.DOGULE1_PASSWORD_FILE
+  ? path.resolve(process.env.DOGULE1_PASSWORD_FILE)
+  : path.join(process.cwd(), "config", "dogule1.passwords");
+let passwordConfigLoaded = false;
+let passwordConfigCache = null;
+
+async function loadPasswordConfig() {
+  if (passwordConfigLoaded) return passwordConfigCache;
+  passwordConfigLoaded = true;
+  const byUsername = new Map();
+  try {
+    const raw = await fs.readFile(PASSWORD_FILE, "utf8");
+    raw.split(/\r?\n/).forEach((line) => {
+      const trimmed = String(line || "").trim();
+      if (!trimmed || trimmed.startsWith("#")) return;
+      const separatorIndex = trimmed.indexOf(":");
+      if (separatorIndex <= 0) return;
+      const username = trimmed.slice(0, separatorIndex).trim();
+      const password = trimmed.slice(separatorIndex + 1).trim();
+      if (!username || !password) return;
+      byUsername.set(username, password);
+    });
+  } catch {
+    passwordConfigCache = { byUsername };
+    return passwordConfigCache;
+  }
+  passwordConfigCache = { byUsername };
+  return passwordConfigCache;
 }
 
 function extractQuery(reqUrl) {
@@ -98,13 +131,38 @@ function buildReq(req, { body, params, query }) {
   };
 }
 
-async function handleAuthRoutes(req, res, auth) {
+async function handleAuthRoutes(req, res, auth, options = {}) {
   const reqUrl = req?.url || "";
   if (!reqUrl.startsWith("/api/auth")) return false;
   const body = await readJsonBody(req);
   const method = (req.method || "GET").toUpperCase();
+  if (options.ensurePasswords) {
+    try {
+      await options.ensurePasswords({ requestId: resolveRequestId(req) });
+    } catch {
+      // Non-blocking: allow auth routes even if password seeding fails.
+    }
+  }
+  if (reqUrl === "/api/auth/options" && method === "GET") {
+    try {
+      const result = options.listAuthOptions
+        ? await options.listAuthOptions({ requestId: resolveRequestId(req) })
+        : { users: [] };
+      jsonResponse(res, 200, result);
+    } catch {
+      jsonResponse(res, 500, { message: "options_failed" });
+    }
+    return true;
+  }
   if (reqUrl === "/api/auth/login" && method === "POST") {
     try {
+      if (options.ensureTrainerUsers) {
+        try {
+          await options.ensureTrainerUsers({ requestId: resolveRequestId(req) });
+        } catch {
+          // Non-blocking: allow login even if trainer sync fails.
+        }
+      }
       const result = await auth.login(body.username || "", body.password || "", {
         requestId: resolveRequestId(req),
       });
@@ -263,8 +321,35 @@ export function createApiRouter(options = {}) {
   const seedUsers = getSeedUsers();
   const userStore = options.userStore || createUserStore(seedUsers);
   const authService = createAuthService({ config: authConfig, userStore });
-  const trainerSeed = seedUsers.find((user) => user.role === "trainer");
-  const trainerPasswordHash = trainerSeed?.passwordHash || "";
+  const storage =
+    options.storage ||
+    createStorage({
+      mode: options.mode || "mariadb",
+      ...options.storageOptions,
+    });
+  const adminTrainerCode = "TR-001";
+  const adminTrainerName = "Fontana Richard";
+  let passwordSeeded = false;
+
+  const locks = new Map();
+  async function withKeyLock(key, fn) {
+    const previous = locks.get(key) || Promise.resolve();
+    let release = null;
+    const current = new Promise((resolve) => {
+      release = resolve;
+    });
+    const chain = previous.then(() => current);
+    locks.set(key, chain);
+    await previous;
+    try {
+      return await fn();
+    } finally {
+      release?.();
+      if (locks.get(key) === chain) {
+        locks.delete(key);
+      }
+    }
+  }
 
   const buildTrainerUsername = (trainer) => {
     const email = String(trainer?.email || "")
@@ -284,8 +369,64 @@ export function createApiRouter(options = {}) {
     return "";
   };
 
-  const provisionTrainerLogin = (trainer) => {
-    if (!trainer?.id || !trainerPasswordHash) return null;
+  const resolveTrainerRole = (trainer) => {
+    const code = String(trainer?.code || "")
+      .trim()
+      .toUpperCase();
+    const name = String(trainer?.name || "")
+      .trim()
+      .toLowerCase();
+    if (code === adminTrainerCode || name === adminTrainerName.toLowerCase()) {
+      return "admin";
+    }
+    return "trainer_rapport";
+  };
+
+  const ensurePasswordsSeeded = async () => {
+    if (passwordSeeded) return;
+    const config = await loadPasswordConfig();
+    if (!config) {
+      passwordSeeded = true;
+      return;
+    }
+    const updates = [];
+    config.byUsername.forEach((password, username) => {
+      const user = userStore.getUserByUsername(username);
+      if (!user) return;
+      updates.push(
+        hashPassword(password, authConfig.hash)
+          .then((passwordHash) => {
+            userStore.updateUser({ id: user.id, passwordHash });
+          })
+          .catch(() => {})
+      );
+    });
+    await Promise.all(updates);
+    passwordSeeded = true;
+  };
+
+  const applyTrainerPassword = async (user) => {
+    if (!user) return user;
+    const config = await loadPasswordConfig();
+    const password = config?.byUsername?.get(user.username);
+    if (!password) return user;
+    try {
+      const passwordHash = await hashPassword(password, authConfig.hash);
+      userStore.updateUser({ id: user.id, passwordHash });
+      return userStore.getUserById(user.id) || user;
+    } catch {
+      return user;
+    }
+  };
+
+  const ensureTrainerUser = async (trainer) => {
+    if (!trainer?.id) return null;
+    const userId = `user-${trainer.id}`;
+    const existing = userStore.getUserById(userId);
+    if (existing) {
+      await ensurePasswordsSeeded();
+      return applyTrainerPassword(existing);
+    }
     let base = buildTrainerUsername(trainer);
     if (!base) {
       base = `trainer-${trainer.id.slice(0, 6)}`;
@@ -297,33 +438,762 @@ export function createApiRouter(options = {}) {
       username = `${base}-${suffix}`;
     }
     const user = {
-      id: `user-${trainer.id}`,
+      id: userId,
       username,
-      role: "trainer",
-      passwordHash: trainerPasswordHash,
+      role: resolveTrainerRole(trainer),
+      passwordHash: "",
       requires2fa: false,
     };
     if (!userStore.addUser(user)) return null;
-    return { username, tempPassword: "trainerpass" };
+    await ensurePasswordsSeeded();
+    return applyTrainerPassword(user);
+  };
+
+  const ensureTrainerUsers = async () => {
+    if (!storage?.trainer?.list) return [];
+    await ensurePasswordsSeeded();
+    const trainers = await storage.trainer.list();
+    const users = await Promise.all(trainers.map((trainer) => ensureTrainerUser(trainer)));
+    return users.filter(Boolean);
+  };
+
+  const listAuthOptions = async () => {
+    await ensurePasswordsSeeded();
+    const trainers = await storage.trainer.list();
+    const optionsList = [];
+    const seen = new Set();
+    const developerUser = userStore.getUserByUsername("Developer");
+    if (developerUser) {
+      optionsList.push({
+        id: developerUser.id,
+        username: developerUser.username,
+        label: "Developer",
+        role: developerUser.role,
+      });
+      seen.add(developerUser.username);
+    }
+
+    const trainerOptions = (
+      await Promise.all(
+        trainers.map(async (trainer) => {
+          const user = await ensureTrainerUser(trainer);
+          if (!user || seen.has(user.username)) return null;
+          const name = String(trainer?.name || "").trim();
+          const code = String(trainer?.code || "").trim();
+          const baseLabel = code && name ? `${name} (${code})` : name || code || user.username;
+          const suffix = user.role === "trainer_rapport" ? " - Rapport" : "";
+          const label = `${baseLabel}${suffix}`;
+          seen.add(user.username);
+          return {
+            id: user.id,
+            username: user.username,
+            label,
+            role: user.role,
+          };
+        })
+      )
+    )
+      .filter(Boolean)
+      .sort((a, b) => a.label.localeCompare(b.label, "de"));
+
+    optionsList.push(...trainerOptions);
+    return { users: optionsList };
   };
 
   const defaultAfterCreate = async ({ entity, record }) => {
     if (entity !== "trainer") return record;
-    const login = provisionTrainerLogin(record);
-    if (!login) return record;
-    return { ...record, login };
+    const user = await ensureTrainerUser(record);
+    if (!user) return record;
+    return { ...record, login: { username: user.username } };
   };
 
   const core = createCoreApiRouter({
     ...(options.core || {}),
+    storage,
     afterCreate: options.afterCreate || defaultAfterCreate,
   });
   const kommunikation = createKommunikationApiRouter(options.kommunikation || {});
 
+  async function handleHistorieRoutes(req, res) {
+    const reqUrl = req?.url || "";
+    if (!reqUrl.startsWith("/api/historie")) return false;
+
+    const query = extractQuery(reqUrl);
+    const body = await readJsonBody(req);
+    const path = reqUrl.split("?")[0];
+    const method = (req.method || "GET").toUpperCase();
+    const requestId = resolveRequestId(req);
+
+    if (path === "/api/historie" && method === "GET") {
+      try {
+        const entries = await storage.historie.list({ query, requestId });
+        jsonResponse(res, 200, entries);
+      } catch {
+        jsonResponse(res, 500, { message: "historie_list_failed" });
+      }
+      return true;
+    }
+
+    if (path === "/api/historie" && method === "POST") {
+      try {
+        const actorId = req.headers["x-dogule-actor-id"] || "";
+        const actorRole = req.headers["x-dogule-actor-role"] || "";
+        const created = await storage.historie.create(
+          {
+            entityType: body.entityType,
+            entityId: body.entityId,
+            occurredAt: body.occurredAt,
+            authorId: actorId,
+            authorRole: actorRole,
+            text: body.text,
+          },
+          { requestId }
+        );
+        jsonResponse(res, 201, created);
+      } catch (error) {
+        jsonResponse(res, 400, { message: "historie_create_failed", code: error?.code });
+      }
+      return true;
+    }
+
+    const entryMatch = path.match(/^\/api\/historie\/([^/]+)$/);
+    if (entryMatch) {
+      const id = entryMatch[1];
+      if (method === "GET") {
+        try {
+          const entry = await storage.historie.get(id, { requestId });
+          jsonResponse(res, 200, entry);
+        } catch (error) {
+          jsonResponse(res, error?.code === "NOT_FOUND" ? 404 : 500, { message: "not_found" });
+        }
+        return true;
+      }
+      if (method === "PATCH" || method === "PUT") {
+        try {
+          const updated = await storage.historie.update({ id, data: body }, { requestId });
+          if (!updated) {
+            jsonResponse(res, 404, { message: "not_found" });
+            return true;
+          }
+          jsonResponse(res, 200, updated);
+        } catch (error) {
+          jsonResponse(res, 400, { message: "historie_update_failed", code: error?.code });
+        }
+        return true;
+      }
+      if (method === "DELETE") {
+        try {
+          const result = await storage.historie.delete(id, { requestId });
+          jsonResponse(res, 200, result);
+        } catch (error) {
+          jsonResponse(res, 400, { message: "historie_delete_failed", code: error?.code });
+        }
+        return true;
+      }
+    }
+
+    jsonResponse(res, 404, { message: "not_found" });
+    return true;
+  }
+
+  function pad2(value) {
+    return String(value).padStart(2, "0");
+  }
+
+  function todayKeyLocal() {
+    const now = new Date();
+    return `${now.getFullYear()}-${pad2(now.getMonth() + 1)}-${pad2(now.getDate())}`;
+  }
+
+  function todayDdMmYyyyLocal() {
+    const now = new Date();
+    return `${pad2(now.getDate())}.${pad2(now.getMonth() + 1)}.${now.getFullYear()}`;
+  }
+
+  function extractDayMonth(value) {
+    const raw = String(value || "").trim();
+    if (!raw) return null;
+    const ddmmyyyy = raw.match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
+    if (ddmmyyyy) return { day: ddmmyyyy[1], month: ddmmyyyy[2] };
+    const ddmm = raw.match(/^(\d{2})\.(\d{2})$/);
+    if (ddmm) return { day: ddmm[1], month: ddmm[2] };
+    const iso = raw.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (iso) return { day: iso[3], month: iso[2] };
+    const slash = raw.match(/^(\d{2})\/(\d{2})(?:\/(\d{4}))?$/);
+    if (slash) return { day: slash[1], month: slash[2] };
+    return null;
+  }
+
+  function dayMonthKey(value) {
+    const parsed = extractDayMonth(value);
+    if (!parsed) return "";
+    return `${parsed.day}.${parsed.month}`;
+  }
+
+  async function handleDashboardRoutes(req, res) {
+    const reqUrl = req?.url || "";
+    if (!reqUrl.startsWith("/api/dashboard/")) return false;
+
+    const query = extractQuery(reqUrl);
+    const body = await readJsonBody(req);
+    const path = reqUrl.split("?")[0];
+    const method = (req.method || "GET").toUpperCase();
+    const requestId = resolveRequestId(req);
+
+    if (path === "/api/dashboard/birthdays" && method === "GET") {
+      try {
+        const day = todayKeyLocal();
+        const today = dayMonthKey(todayDdMmYyyyLocal());
+        const handled = await storage.dashboardBirthdays.listHandled(day, { requestId });
+        const handledKeys = new Set(
+          (handled || []).map((entry) => `${entry.entityType}:${entry.entityId}`)
+        );
+
+        const [kunden, hunde] = await Promise.all([
+          storage.kunden.list({ query, requestId }),
+          storage.hunde.list({ query, requestId }),
+        ]);
+
+        const kundenById = new Map((kunden || []).map((kunde) => [kunde.id, kunde]));
+
+        const kundenToday = (kunden || [])
+          .filter((kunde) => dayMonthKey(kunde.geburtsdatum) === today)
+          .filter((kunde) => !handledKeys.has(`kunden:${kunde.id}`))
+          .map((kunde) => ({
+            id: kunde.id,
+            vorname: kunde.vorname,
+            nachname: kunde.nachname,
+            email: kunde.email,
+            geburtsdatum: kunde.geburtsdatum,
+            status: kunde.status,
+          }));
+
+        const hundeToday = (hunde || [])
+          .filter((hund) => dayMonthKey(hund.geburtsdatum) === today)
+          .filter((hund) => !handledKeys.has(`hunde:${hund.id}`))
+          .map((hund) => {
+            const kunde = hund.kundenId ? kundenById.get(hund.kundenId) : null;
+            return {
+              id: hund.id,
+              name: hund.name,
+              rufname: hund.rufname,
+              geburtsdatum: hund.geburtsdatum,
+              status: hund.status,
+              kundenId: hund.kundenId,
+              kunde: kunde
+                ? {
+                    id: kunde.id,
+                    vorname: kunde.vorname,
+                    nachname: kunde.nachname,
+                    email: kunde.email,
+                    status: kunde.status,
+                  }
+                : null,
+            };
+          })
+          .filter((entry) => Boolean(entry.kundenId));
+
+        jsonResponse(res, 200, { day, kunden: kundenToday, hunde: hundeToday });
+      } catch (error) {
+        jsonResponse(res, 500, { message: "dashboard_birthdays_failed", code: error?.code });
+      }
+      return true;
+    }
+
+    if (path === "/api/dashboard/birthdays/handle" && method === "POST") {
+      await withKeyLock(
+        `dashboard:birthdays:${todayKeyLocal()}:${body?.entityType}:${body?.entityId}`,
+        async () => {
+          try {
+            const entityType = String(body.entityType || "").trim();
+            const entityId = String(body.entityId || "").trim();
+            const action = String(body.action || "").trim();
+            if (!entityType || !entityId || !action) {
+              jsonResponse(res, 400, { message: "invalid_payload" });
+              return;
+            }
+            if (!["kunden", "hunde"].includes(entityType)) {
+              jsonResponse(res, 400, { message: "invalid_entity" });
+              return;
+            }
+            if (!["dismissed", "mailto_prepared"].includes(action)) {
+              jsonResponse(res, 400, { message: "invalid_action" });
+              return;
+            }
+
+            const day = todayKeyLocal();
+            const handled = await storage.dashboardBirthdays.listHandled(day, { requestId });
+            const alreadyHandled = (handled || []).some(
+              (entry) => entry.entityType === entityType && entry.entityId === entityId
+            );
+            if (alreadyHandled) {
+              jsonResponse(res, 200, { ok: true, already: true });
+              return;
+            }
+
+            const actorId = req.headers["x-dogule-actor-id"] || "";
+            const actorRole = req.headers["x-dogule-actor-role"] || "";
+
+            const todayLabel = todayDdMmYyyyLocal();
+            const actionLabel = action === "dismissed" ? "Verworfen" : "E-Mail vorbereitet";
+
+            let kundeId = null;
+            let subjectName = "";
+            if (entityType === "kunden") {
+              const kunde = await storage.kunden.get(entityId, { requestId });
+              if (action === "mailto_prepared" && !String(kunde.email || "").trim()) {
+                jsonResponse(res, 400, { message: "missing_email" });
+                return;
+              }
+              kundeId = kunde.id;
+              subjectName = [kunde.vorname, kunde.nachname].filter(Boolean).join(" ").trim();
+            } else {
+              const hund = await storage.hunde.get(entityId, { requestId });
+              if (!hund?.kundenId) {
+                jsonResponse(res, 400, { message: "kunde_required" });
+                return;
+              }
+              kundeId = hund.kundenId;
+              subjectName = hund.name || hund.rufname || hund.id;
+              if (action === "mailto_prepared") {
+                const kunde = await storage.kunden.get(kundeId, { requestId });
+                if (!String(kunde?.email || "").trim()) {
+                  jsonResponse(res, 400, { message: "missing_email" });
+                  return;
+                }
+              }
+            }
+
+            const text = `Geburtstag ${entityType === "kunden" ? "Kunde" : "Hund"} ${subjectName} – ${actionLabel} – ${todayLabel}`;
+            await storage.historie.create(
+              {
+                entityType: "kunden",
+                entityId: kundeId,
+                occurredAt: new Date().toISOString(),
+                authorId: actorId,
+                authorRole: actorRole,
+                text,
+              },
+              { requestId }
+            );
+
+            await storage.dashboardBirthdays.upsertHandled(
+              { day, entityType, entityId, action, authorId: actorId, authorRole: actorRole },
+              { requestId }
+            );
+
+            jsonResponse(res, 200, { ok: true });
+          } catch (error) {
+            jsonResponse(res, 400, {
+              message: "dashboard_birthdays_handle_failed",
+              code: error?.code,
+            });
+          }
+        }
+      );
+      return true;
+    }
+
+    jsonResponse(res, 404, { message: "not_found" });
+    return true;
+  }
+
+  async function handleAnmeldungRoutes(req, res) {
+    const reqUrl = req?.url || "";
+    if (!reqUrl.startsWith("/api/anmeldung/")) return false;
+
+    const query = extractQuery(reqUrl);
+    const body = await readJsonBody(req);
+    const path = reqUrl.split("?")[0];
+    const method = (req.method || "GET").toUpperCase();
+    const requestId = resolveRequestId(req);
+
+    if (path === "/api/anmeldung/drafts") {
+      if (method === "GET") {
+        try {
+          const drafts = await storage.anmeldung.list({ query, requestId });
+          jsonResponse(res, 200, drafts);
+        } catch (error) {
+          jsonResponse(res, 500, { message: "anmeldung_list_failed", code: error?.code });
+        }
+        return true;
+      }
+      if (method === "POST") {
+        try {
+          const created = await storage.anmeldung.create(body, { requestId });
+          jsonResponse(res, 201, created);
+        } catch (error) {
+          jsonResponse(res, 400, { message: "anmeldung_create_failed", code: error?.code });
+        }
+        return true;
+      }
+    }
+
+    const draftMatch = path.match(/^\/api\/anmeldung\/drafts\/([^/]+)$/);
+    if (draftMatch) {
+      const id = draftMatch[1];
+      if (method === "GET") {
+        try {
+          const record = await storage.anmeldung.get(id, { requestId });
+          jsonResponse(res, 200, record);
+        } catch (error) {
+          jsonResponse(res, error?.code === "NOT_FOUND" ? 404 : 500, { message: "not_found" });
+        }
+        return true;
+      }
+      if (method === "PUT" || method === "PATCH") {
+        try {
+          const updated = await storage.anmeldung.update({ id, data: body }, { requestId });
+          if (!updated) {
+            jsonResponse(res, 404, { message: "not_found" });
+            return true;
+          }
+          jsonResponse(res, 200, updated);
+        } catch (error) {
+          jsonResponse(res, 400, { message: "anmeldung_update_failed", code: error?.code });
+        }
+        return true;
+      }
+      if (method === "DELETE") {
+        try {
+          const result = await storage.anmeldung.delete(id, { requestId });
+          jsonResponse(res, 200, result);
+        } catch {
+          jsonResponse(res, 500, { message: "anmeldung_delete_failed" });
+        }
+        return true;
+      }
+    }
+
+    const kundeMatch = path.match(/^\/api\/anmeldung\/drafts\/([^/]+)\/kunde$/);
+    if (kundeMatch && method === "POST") {
+      const draftId = kundeMatch[1];
+      await withKeyLock(`anmeldung:kunde:${draftId}`, async () => {
+        try {
+          const draft = await storage.anmeldung.get(draftId, { requestId });
+          if (draft?.kundeId) {
+            const kunde = await storage.kunden.get(draft.kundeId, { requestId });
+            jsonResponse(res, 200, { draft, kunde });
+            return;
+          }
+          if (!draft?.hundPayload) {
+            jsonResponse(res, 400, { message: "hund_required" });
+            return;
+          }
+          if (!draft?.kursId) {
+            jsonResponse(res, 400, { message: "kurs_required" });
+            return;
+          }
+          const kundePayload = draft.kundePayload || {};
+          const kunde = await storage.kunden.create(kundePayload, { requestId });
+          const updatedDraft = await storage.anmeldung.update(
+            {
+              id: draftId,
+              data: {
+                status: "kunde_created",
+                kundeId: kunde.id,
+                kursTitle: draft.kursTitle || "",
+              },
+            },
+            { requestId }
+          );
+          jsonResponse(res, 200, { draft: updatedDraft, kunde });
+        } catch (error) {
+          jsonResponse(res, 400, { message: "kunde_create_failed", code: error?.code });
+        }
+      });
+      return true;
+    }
+
+    const hundMatch = path.match(/^\/api\/anmeldung\/drafts\/([^/]+)\/hund$/);
+    if (hundMatch && method === "POST") {
+      const draftId = hundMatch[1];
+      await withKeyLock(`anmeldung:hund:${draftId}`, async () => {
+        try {
+          const draft = await storage.anmeldung.get(draftId, { requestId });
+          if (!draft?.kundeId) {
+            jsonResponse(res, 400, { message: "kunde_required" });
+            return;
+          }
+          if (!draft?.kursId) {
+            jsonResponse(res, 400, { message: "kurs_required" });
+            return;
+          }
+          if (draft?.hundId) {
+            jsonResponse(res, 200, { ok: true, kundeId: draft.kundeId, hundId: draft.hundId });
+            try {
+              await storage.anmeldung.delete(draftId, { requestId });
+            } catch {
+              // non-blocking
+            }
+            return;
+          }
+
+          const hundPayload = { ...(draft.hundPayload || {}), kundenId: draft.kundeId };
+          const hund = await storage.hunde.create(hundPayload, { requestId });
+
+          await storage.anmeldung.update(
+            { id: draftId, data: { status: "completed", hundId: hund.id } },
+            { requestId }
+          );
+
+          const actorId = req.headers["x-dogule-actor-id"] || "";
+          const actorRole = req.headers["x-dogule-actor-role"] || "";
+          const kursTitle = draft.kursTitle || "";
+          const now = new Date();
+          const today = `${String(now.getDate()).padStart(2, "0")}.${String(
+            now.getMonth() + 1
+          ).padStart(2, "0")}.${now.getFullYear()}`;
+          const titlePart = kursTitle ? ` "${kursTitle}"` : "";
+          const text = `Neue Anmeldung für den Kurs${titlePart} – ${today}`;
+
+          try {
+            await storage.historie.create(
+              {
+                entityType: "kunden",
+                entityId: draft.kundeId,
+                occurredAt: new Date().toISOString(),
+                authorId: actorId,
+                authorRole: actorRole,
+                text,
+              },
+              { requestId }
+            );
+          } catch {
+            // non-blocking
+          }
+          try {
+            await storage.historie.create(
+              {
+                entityType: "hunde",
+                entityId: hund.id,
+                occurredAt: new Date().toISOString(),
+                authorId: actorId,
+                authorRole: actorRole,
+                text,
+              },
+              { requestId }
+            );
+          } catch {
+            // non-blocking
+          }
+
+          try {
+            await storage.anmeldung.delete(draftId, { requestId });
+          } catch {
+            // non-blocking
+          }
+
+          jsonResponse(res, 200, { ok: true, kundeId: draft.kundeId, hundId: hund.id });
+        } catch (error) {
+          jsonResponse(res, 400, { message: "hund_create_failed", code: error?.code });
+        }
+      });
+      return true;
+    }
+
+    jsonResponse(res, 404, { message: "not_found" });
+    return true;
+  }
+
+  function extractFirstName(value) {
+    const raw = String(value || "").trim();
+    if (!raw) return "";
+    return raw.split(/\s+/)[0] || "";
+  }
+
+  function resolveTrainerIdFromActorId(actorId) {
+    const raw = String(actorId || "").trim();
+    if (!raw) return "";
+    return raw.startsWith("user-") ? raw.slice(5) : raw;
+  }
+
+  async function handleRapporteRoutes(req, res) {
+    const reqUrl = req?.url || "";
+    if (!reqUrl.startsWith("/api/rapporte/")) return false;
+
+    const query = extractQuery(reqUrl);
+    const body = await readJsonBody(req);
+    const path = reqUrl.split("?")[0];
+    const method = (req.method || "GET").toUpperCase();
+    const requestId = resolveRequestId(req);
+    const actorId = req.headers["x-dogule-actor-id"] || "";
+    const actorRole = normalizeRole(req.headers["x-dogule-actor-role"] || "");
+    const isRapportTrainer = actorRole === "trainer" || actorRole === "trainer_rapport";
+
+    if (path === "/api/rapporte/drafts") {
+      if (method === "GET") {
+        try {
+          const listQuery = isRapportTrainer ? { ...query, authorId: actorId } : { ...query };
+          const drafts = await storage.rapporteDrafts.list({ query: listQuery, requestId });
+          jsonResponse(res, 200, drafts);
+        } catch (error) {
+          jsonResponse(res, 500, { message: "rapporte_list_failed", code: error?.code });
+        }
+        return true;
+      }
+      if (method === "POST") {
+        try {
+          const targetType = String(body?.targetType || body?.target_type || "").trim();
+          const targetId = String(body?.targetId || body?.target_id || "").trim();
+          if (!targetType || !targetId) {
+            jsonResponse(res, 400, { message: "target_required" });
+            return true;
+          }
+          let kundeId = String(body?.kundeId || body?.kunde_id || "").trim();
+          if (targetType === "kunden") {
+            kundeId = targetId;
+          } else if (targetType === "hunde") {
+            const hund = await storage.hunde.get(targetId, { requestId });
+            kundeId = hund?.kundenId || "";
+          }
+          if (!kundeId) {
+            jsonResponse(res, 400, { message: "kunde_required" });
+            return true;
+          }
+          const created = await storage.rapporteDrafts.create(
+            {
+              status: "submitted",
+              targetType,
+              targetId,
+              kundeId,
+              text: body?.text,
+              occurredAt: body?.occurredAt || new Date().toISOString(),
+              authorId: actorId,
+              authorRole: actorRole || "",
+            },
+            { requestId }
+          );
+          jsonResponse(res, 201, created);
+        } catch (error) {
+          jsonResponse(res, 400, { message: "rapporte_create_failed", code: error?.code });
+        }
+        return true;
+      }
+    }
+
+    const draftMatch = path.match(/^\/api\/rapporte\/drafts\/([^/]+)$/);
+    if (draftMatch) {
+      const id = draftMatch[1];
+      if (method === "GET") {
+        try {
+          const record = await storage.rapporteDrafts.get(id, { requestId });
+          if (isRapportTrainer && record?.authorId !== actorId) {
+            jsonResponse(res, 403, { message: "forbidden" });
+            return true;
+          }
+          jsonResponse(res, 200, record);
+        } catch (error) {
+          jsonResponse(res, error?.code === "NOT_FOUND" ? 404 : 500, { message: "not_found" });
+        }
+        return true;
+      }
+      if (method === "DELETE") {
+        if (!(actorRole === "admin" || actorRole === "developer")) {
+          jsonResponse(res, 403, { message: "forbidden" });
+          return true;
+        }
+        try {
+          const result = await storage.rapporteDrafts.delete(id, { requestId });
+          jsonResponse(res, 200, result);
+        } catch (error) {
+          jsonResponse(res, 500, { message: "rapporte_delete_failed", code: error?.code });
+        }
+        return true;
+      }
+    }
+
+    const approveMatch = path.match(/^\/api\/rapporte\/drafts\/([^/]+)\/approve$/);
+    if (approveMatch && method === "POST") {
+      if (!(actorRole === "admin" || actorRole === "developer")) {
+        jsonResponse(res, 403, { message: "forbidden" });
+        return true;
+      }
+      const id = approveMatch[1];
+      await withKeyLock(`rapporte:approve:${id}`, async () => {
+        try {
+          const draft = await storage.rapporteDrafts.get(id, { requestId });
+          const occurredAt = draft?.occurredAt || new Date().toISOString();
+          let authorName = "";
+          if (draft?.authorId) {
+            const trainerId = resolveTrainerIdFromActorId(draft.authorId);
+            if (trainerId) {
+              try {
+                const trainer = await storage.trainer.get(trainerId, { requestId });
+                authorName = extractFirstName(trainer?.name || "");
+              } catch {
+                authorName = "";
+              }
+            }
+          }
+          const suffix = authorName ? ` (Trainer: ${authorName})` : "";
+          const text = `Rapport - ${(draft?.text || "").trim()}${suffix}`.trim();
+          if (draft?.kundeId) {
+            await storage.historie.create(
+              {
+                entityType: "kunden",
+                entityId: draft.kundeId,
+                occurredAt,
+                authorId: draft.authorId || "",
+                authorRole: draft.authorRole || "",
+                text,
+              },
+              { requestId }
+            );
+          }
+          if (draft?.targetType === "hunde" && draft?.targetId) {
+            await storage.historie.create(
+              {
+                entityType: "hunde",
+                entityId: draft.targetId,
+                occurredAt,
+                authorId: draft.authorId || "",
+                authorRole: draft.authorRole || "",
+                text,
+              },
+              { requestId }
+            );
+          }
+          await storage.rapporteDrafts.delete(id, { requestId });
+          jsonResponse(res, 200, { ok: true });
+        } catch (error) {
+          jsonResponse(res, 400, { message: "rapporte_approve_failed", code: error?.code });
+        }
+      });
+      return true;
+    }
+
+    const rejectMatch = path.match(/^\/api\/rapporte\/drafts\/([^/]+)\/reject$/);
+    if (rejectMatch && method === "POST") {
+      if (!(actorRole === "admin" || actorRole === "developer")) {
+        jsonResponse(res, 403, { message: "forbidden" });
+        return true;
+      }
+      const id = rejectMatch[1];
+      try {
+        const result = await storage.rapporteDrafts.delete(id, { requestId });
+        jsonResponse(res, 200, result);
+      } catch (error) {
+        jsonResponse(res, 500, { message: "rapporte_reject_failed", code: error?.code });
+      }
+      return true;
+    }
+
+    jsonResponse(res, 404, { message: "not_found" });
+    return true;
+  }
+
   async function handle(req, res) {
     const reqUrl = req?.url || "";
     if (!reqUrl.startsWith("/api/")) return false;
-    if (await handleAuthRoutes(req, res, authService)) return true;
+    if (
+      await handleAuthRoutes(req, res, authService, {
+        listAuthOptions,
+        ensureTrainerUsers,
+        ensurePasswords: ensurePasswordsSeeded,
+      })
+    )
+      return true;
 
     const token = extractAccessToken(req);
     if (!token) {
@@ -349,7 +1219,7 @@ export function createApiRouter(options = {}) {
     }
 
     const entityMatch = reqUrl.match(
-      /^\/api\/(kunden|hunde|kurse|trainer|kalender|finanzen|waren|zertifikate)(?:\/|$)/
+      /^\/api\/(dashboard|kunden|hunde|kurse|trainer|kalender|finanzen|waren|zertifikate|anmeldung|rapporte|historie)(?:\/|$)/
     );
     if (entityMatch) {
       const entity = entityMatch[1];
@@ -361,6 +1231,10 @@ export function createApiRouter(options = {}) {
       }
     }
 
+    if (await handleDashboardRoutes(req, res)) return true;
+    if (await handleAnmeldungRoutes(req, res)) return true;
+    if (await handleRapporteRoutes(req, res)) return true;
+    if (await handleHistorieRoutes(req, res)) return true;
     if (await core.handle(req, res)) return true;
     return kommunikation.handle(req, res);
   }

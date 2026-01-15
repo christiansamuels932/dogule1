@@ -4,13 +4,13 @@ import {
   createCard,
   createFormRow,
   createNotice,
-  createSectionHeader,
 } from "../shared/components/components.js";
 import { createHund, updateHund, listHunde } from "../shared/api/hunde.js";
 import { listKunden } from "../shared/api/kunden.js";
 import { runIntegrityCheck } from "../shared/api/db/integrityCheck.js";
 import { HERKUNFT_OPTIONS } from "./herkunft.js";
 import { recordAutomationEvent } from "../kommunikation/automation/client.js";
+import { getSession } from "../shared/auth/client.js";
 
 const TOAST_KEY = "__DOGULE_HUNDE_TOAST__";
 const GESCHLECHT_OPTIONS = [
@@ -35,21 +35,27 @@ export async function createHundeFormView(container, options = {}) {
   if (typeof window !== "undefined" && typeof window.scrollTo === "function") {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
+  const role = getSession()?.user?.role || "";
+  const canManage = role === "admin" || role === "developer";
+  if (!canManage) {
+    const section = document.createElement("section");
+    section.className = "dogule-section hunde-form-section";
+    section.appendChild(
+      createNotice("Nur Admins dürfen Hunde anlegen oder bearbeiten.", {
+        variant: "warn",
+        role: "alert",
+      })
+    );
+    section.appendChild(buildBackButton());
+    container.appendChild(section);
+    focusHeading(section);
+    return;
+  }
 
   const section = document.createElement("section");
   section.className = "dogule-section hunde-form-section";
   container.appendChild(section);
 
-  section.appendChild(
-    createSectionHeader({
-      title: "Hunde",
-      subtitle:
-        mode === "create"
-          ? "Neuer Hund – Erfasse einen neuen Hund für deine Hundeschule."
-          : "Hund bearbeiten – Passe die Daten dieses Hundes an.",
-      level: 1,
-    })
-  );
   injectHundToast(section);
 
   let existing = null;
