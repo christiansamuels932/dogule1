@@ -106,10 +106,6 @@ function noticeConfirmId(noticeId, trainerId) {
   return sha256Hex(`${noticeId}:${trainerId}`).slice(0, 24);
 }
 
-function noticeEventId(noticeId, trainerId, eventType) {
-  return sha256Hex(`${noticeId}:${trainerId}:${eventType}`).slice(0, 24);
-}
-
 function validateLimit(limit) {
   if (limit === undefined || limit === null) return DEFAULT_LIMIT;
   const parsed = Number(limit);
@@ -263,7 +259,7 @@ function deriveTargetIds({ noticeTargetIds, confirmations, trainers, actorId, ac
   return Array.from(targetSet);
 }
 
-async function deleteNoticeById(paths, noticeId, logger, alerter) {
+async function deleteNoticeById(paths, noticeId) {
   const dir = paths.entityDir("kommunikation_infochannel_notice");
   const filePath = path.join(dir, `${noticeId}.json`);
   try {
@@ -676,7 +672,7 @@ export function createInfochannelSal(options = {}) {
     if (!noticeId) {
       throw new InfochannelError("INVALID_INPUT", "notice id required");
     }
-    const removed = await deleteNoticeById(paths, noticeId, logger, alerter);
+    const removed = await deleteNoticeById(paths, noticeId);
     if (!removed) {
       throw new InfochannelError("NOT_FOUND", "notice not found");
     }

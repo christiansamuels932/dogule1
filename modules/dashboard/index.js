@@ -522,6 +522,18 @@ function normalizeValue(value) {
     .toLowerCase();
 }
 
+function extractTown(address = "") {
+  if (typeof address !== "string") return "";
+  const parts = address
+    .split(",")
+    .map((part) => part.trim())
+    .filter(Boolean);
+  if (!parts.length) return "";
+  const townRaw = parts[parts.length - 1];
+  const cleaned = townRaw.replace(/^\\d+\\s*/, "").trim();
+  return cleaned || townRaw;
+}
+
 function groupBy(items, keyFn) {
   const map = new Map();
   items.forEach((item) => {
@@ -583,11 +595,10 @@ function buildDuplicatesCard() {
     };
 
     resultHost.appendChild(
-      makeList("Customers (same email)", kundenDupes, (group) => {
+      makeList("Customers (same name + town)", kundenDupes, (group) => {
         const wrap = document.createElement("div");
-        const email = group.email;
         const strong = document.createElement("strong");
-        strong.textContent = email || "—";
+        strong.textContent = `${group.name || "—"} · ${group.town || "—"}`;
         wrap.appendChild(strong);
         const ul = document.createElement("ul");
         group.items.forEach((kunde) => {
@@ -634,12 +645,27 @@ function buildDuplicatesCard() {
       const [kunden, hunde] = await Promise.all([listKunden(), listHunde()]);
       const kundenById = new Map((kunden || []).map((kunde) => [kunde.id, kunde]));
 
-      const kundenByEmail = groupBy(kunden || [], (kunde) => normalizeValue(kunde.email));
+      const kundenByNameTown = groupBy(kunden || [], (kunde) => {
+        const name = [kunde.nachname, kunde.vorname].filter(Boolean).join(" ").trim();
+        const town = extractTown(kunde.adresse || kunde.address || "");
+        const nameKey = normalizeValue(name);
+        const townKey = normalizeValue(town);
+        if (!nameKey || !townKey) return "";
+        return `${nameKey}|${townKey}`;
+      });
       const kundenDupes = [];
-      kundenByEmail.forEach((items, email) => {
-        if (!email) return;
+      kundenByNameTown.forEach((items, key) => {
+        if (!key) return;
         if (items.length < 2) return;
-        kundenDupes.push({ email, items });
+        const [nameKey, townKey] = key.split("|");
+        const name = items[0]
+          ? [items[0].nachname, items[0].vorname].filter(Boolean).join(" ").trim()
+          : nameKey;
+        const town =
+          items[0]?.adresse || items[0]?.address
+            ? extractTown(items[0].adresse || items[0].address || "")
+            : townKey;
+        kundenDupes.push({ name, town, items });
       });
       kundenDupes.sort((a, b) => b.items.length - a.items.length);
 

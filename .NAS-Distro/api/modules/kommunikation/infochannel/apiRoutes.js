@@ -110,7 +110,6 @@ export function createInfochannelApiHandlers(options = {}) {
         requestId: req?.id || req?.requestId,
       });
     } catch (error) {
-      console.error("[INFOCHANNEL_LIST_FAILED]", error);
       const mapped = mapError(error);
       jsonResponse(res, mapped.status, mapped.body, mapped.headers);
       logApiEvent({
@@ -147,7 +146,6 @@ export function createInfochannelApiHandlers(options = {}) {
         requestId: req?.id || req?.requestId,
       });
     } catch (error) {
-      console.error("[INFOCHANNEL_PUBLISH_FAILED]", error);
       const mapped = mapError(error);
       jsonResponse(res, mapped.status, mapped.body, mapped.headers);
       logApiEvent({
@@ -178,7 +176,6 @@ export function createInfochannelApiHandlers(options = {}) {
         requestId: req?.id || req?.requestId,
       });
     } catch (error) {
-      console.error("[INFOCHANNEL_GET_FAILED]", error);
       const mapped = mapError(error);
       jsonResponse(res, mapped.status, mapped.body, mapped.headers);
       logApiEvent({
@@ -210,7 +207,6 @@ export function createInfochannelApiHandlers(options = {}) {
         requestId: req?.id || req?.requestId,
       });
     } catch (error) {
-      console.error("[INFOCHANNEL_CONFIRM_FAILED]", error);
       const mapped = mapError(error);
       jsonResponse(res, mapped.status, mapped.body, mapped.headers);
       logApiEvent({
@@ -241,7 +237,6 @@ export function createInfochannelApiHandlers(options = {}) {
         requestId: req?.id || req?.requestId,
       });
     } catch (error) {
-      console.error("[INFOCHANNEL_DELETE_FAILED]", error);
       const mapped = mapError(error);
       jsonResponse(res, mapped.status, mapped.body, mapped.headers);
       logApiEvent({
