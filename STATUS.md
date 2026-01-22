@@ -82,6 +82,9 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 - NAS remains passworded; local passwordless is gated by runtime path check (`/volume1`).
 - Schulungen local migration run manually:
   - `mariadb --protocol=socket --socket /run/mysqld/mysqld.sock dogule1 < tools/mariadb/migrations/99_0_schulungen.sql`
+- NAS cleanup (dog duplicates):
+  - Rule: same owner + same name + same birthdate; delete lower `filled_score` row (tie: keep lowest id).
+  - Deleted 112 rows from `hunde` on NAS; verification shows 0 duplicate groups remaining.
 
 # - - - - - - - - - - - - - - - - - - - -
 
