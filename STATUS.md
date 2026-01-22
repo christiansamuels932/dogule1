@@ -32,6 +32,41 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 # - - - - - - - - - - - - - - - - - - - -
 
+# Station 98 — NAS MariaDB DogTabs Kunden/Hunde Refresh
+
+## Kontext
+
+- Status: read-only (completed).
+- Branch: `98`.
+- Scope: update NAS MariaDB kunden/hunde from DogTabs exports (`Kundenliste_2026-01-15 17-30.xls`, `rpt_sel_kundenliste.pdf`), generate NAS-schema CSVs, and preserve existing NAS IDs/links.
+
+## Ergebnis (kurz)
+
+- Started Station 98 and verified NAS MariaDB connection details from `/volume1/dogule1nasfolder/config/dogule1.env`.
+- Generated NAS-schema CSVs from DogTabs XLS/PDF with NAS ID preservation: `attachments/nas_kunden.csv`, `attachments/nas_hunde.csv`, plus merge report `attachments/nas_merge_report.json`.
+- Imported CSVs into NAS MariaDB via staging tables and upserted into `kunden`/`hunde`.
+- Post-import counts on NAS: `kunden=1418`, `hunde=1734`.
+
+## Tests
+
+- Not run (manual NAS import and count checks only).
+
+## Notizen
+
+- NAS MariaDB socket access confirmed for user `dogule1` (password `Dogule1!2026`).
+- NAS exports captured before import: `/volume1/dogule1nasfolder/exports/kunden.tsv`, `/volume1/dogule1nasfolder/exports/hunde.tsv` and copied locally to `attachments/`.
+- Manual owner mapping applied to resolve ambiguous PDF names (e.g., Almeira/Rodrigues, Binzegger, De Pasquale, Fellmann, Fontana, Knecht, Meier, Mohr, Wäspi, Wettstein).
+- Import flow (NAS):
+  - `DROP TABLE IF EXISTS kunden_import; DROP TABLE IF EXISTS hunde_import;`
+  - `CREATE TABLE kunden_import LIKE kunden; CREATE TABLE hunde_import LIKE hunde;`
+  - `LOAD DATA LOCAL INFILE '/volume1/dogule1nasfolder/exports/nas_kunden.csv' INTO TABLE kunden_import ...`
+  - `LOAD DATA LOCAL INFILE '/volume1/dogule1nasfolder/exports/nas_hunde.csv' INTO TABLE hunde_import ...`
+  - Upsert into `kunden`/`hunde` with `INSERT ... ON DUPLICATE KEY UPDATE ...`
+  - Verified counts: `SELECT COUNT(*) FROM kunden; SELECT COUNT(*) FROM hunde;`
+  - Dropped staging tables after verification: `DROP TABLE IF EXISTS kunden_import; DROP TABLE IF EXISTS hunde_import;`
+
+# - - - - - - - - - - - - - - - - - - - -
+
 # Station 97 — NAS Deployment (Schema Drift Hardening + Kurs Preview Fold)
 
 ## Kontext
