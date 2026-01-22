@@ -1,0 +1,401 @@
+id	code	name	rufname	rasse	geschlecht	geburtsdatum	gewicht_kg	groesse_cm	kunden_id	trainingsziele	notizen	felltyp	kastriert	fellfarbe	groesse_typ	herkunft	chip_nummer	created_at	updated_at	schema_version	version	status
+019b6fbf-c2b7-70ad-a276-245efcb19832	DT-1	Jecko		Zwergbullterrier	W	2007-04-30	0.00	NULL	019b6f8b-fc47-768e-bfc8-a0964e841abd		16.12.2011 rifo: Heute xxxxx
+Nä. Mal yyyyy		NULL			Hund	123456789101234			1	0	
+019b6fbf-c2b7-726b-b5e7-6fe986887c79	DT-8	Bonnie zum hohlen Fels	Bonnie	Cairn Terrier	W	2011-04-21	0.00	NULL	019b6f8b-fc47-775d-bc15-1b521ca9ad9b				NULL			Hund				1	0	
+019b6fbf-c2b7-733e-ae98-4e2c5d53f332	DT-10	Sunny	Sunny	Appenzeller x Bordercollie/Bergamasker	M	2007-06-12	0.00	NULL	019b6f8b-fc48-71a6-bd82-806792803290				NULL			Hund				1	0	
+019b6fbf-c2b7-7348-9a88-eb249e87d7da	DT-5	Bella	Bella	Bolonka Zwetna	W	2010-11-18	0.00	NULL	019b6f8b-fc47-73b7-87c6-bfebb369c918				NULL			Hund				1	0	
+019b6fbf-c2b7-73a3-aba1-081fcc2a6c48	DT-2	Keron	Keron	Mittelschnauzer	M	2010-04-29	0.00	NULL	019b6f8b-fc47-7309-a1ba-77f7aed5b220		10.08.2011 rifo: Leinenaggression		1			Hund				1	0	
+019b6fbf-c2b7-74d0-b1e2-19cb7a383c92	DT-7	Lester	Lester	Engl. Cocker Spaniel	M	2008-12-30	0.00	NULL	019b6f8b-fc47-7403-b766-90c1caf66802				NULL			Hund				1	0	
+019b6fbf-c2b7-7594-95c6-7797fb015e55	DT-9	Stone	Stone	Altdeutscher Schäferhund	M	2011-02-12	0.00	NULL	019b6f8b-fc47-70b2-9652-23248f4e1590			langhaar	0	braun-schwarz		Hund	276098104094204			1	0	
+019b6fbf-c2b7-7c31-b540-7257c5fce974	DT-3	Nanook	Nanook	Tibet Terrier	M	2011-05-31	0.00	NULL	019b6f8b-fc47-70b8-89ca-39da6b1c0907				NULL			Hund				1	0	
+019b6fbf-c2b7-7cde-a98c-4a8816427bfb	DT-6	Balou	Balou	Border-Mix	M	2010-08-13	0.00	NULL	019b6f8b-fc47-7769-b2ce-ed0a862b1a59				NULL			Hund				1	0	
+019b6fbf-c2b8-700a-828e-8ea681fb81ef	DT-89	Zeus	Zeus	Biewer Yorkshire Terrier	M	2011-02-08	0.00	NULL	019b6f8b-fc48-7b23-a400-2621ad0194cc				NULL			Hund				1	0	
+019b6fbf-c2b8-700b-b663-9a0695937571	DT-125	Mirio	Miro	Berger Blanc Suisse	M	2011-01-22	0.00	NULL	019b6f8b-fc48-7754-a88f-12c298b29dc7			halblanghaar	0	weiss		Hund	7560981005339724			1	0	
+019b6fbf-c2b8-701b-ba7b-ace9a02d00e0	DT-34	Nero	Nero	Allerlei (Bergamasker/Schnauzer Typ)	M	2010-07-27	0.00	NULL	019b6f8b-fc48-7ae8-bbc2-d29ddb0ea3bd				NULL			Hund				1	0	
+019b6fbf-c2b8-703e-89e4-ac5b5509b9df	DT-117	Tschaba	Tschaba	Belgischer Schäferhund Mix	W	2007-05-01	0.00	NULL	019b6f8b-fc48-7eb2-9d21-685ea96df30d				NULL			Hund				1	0	
+019b6fbf-c2b8-703e-b2f4-de43ad5251bd	DT-85	Onyx	Onyx	Altdeutscher Schäferhund	M	2009-01-01	0.00	NULL	019b6f8b-fc48-7b05-bfcc-7965c7dde5d8				0			Hund				1	0	
+019b6fbf-c2b8-704f-acb4-1e095e9de5cc	DT-69	Pippin	Pippin	Serbische Bracke Mix	M	2004-04-01	0.00	NULL	019b6f8b-fc43-704d-89e9-83e440895c5f		19.08.2011 such: zickt bei andern Hunden. Schlechtes Kommunikationsverhalten.
+19.08.2011 such: läuft in der Jagd mit	halblanghaar	1	black & tan		Hund				1	0	
+019b6fbf-c2b8-709a-a1ff-d5ddfd26619f	DT-101	Ambra	Ambra	Bretonischer Spaniel	W	2008-08-01	0.00	NULL	019b6f8b-fc48-7cf1-a74c-f6eb5cb0f61d		22.08.2011 such: aus Tötungsstation	halblanghaar	1	weiss-rot		Hund	985170000068323			1	0	
+019b6fbf-c2b8-70a2-a8f5-384569e62690	DT-154	Juma	Juma	Tervueren / Belgischer Schäferhund	W	2009-05-27	0.00	NULL	019b6f8b-fc48-7fb8-8b4e-372b16d5ccfb			langhaar	NULL	hellbraun-schwarz		Hund	756098100453954			1	0	
+019b6fbf-c2b8-70f8-8ed8-80c3ed1107f8	DT-48	Adou	Adou	Viszla	M	2005-06-16	0.00	NULL	019b6f8b-fc48-7446-8037-e5ce577b544f				NULL			Hund				1	0	
+019b6fbf-c2b8-710a-9a9f-47cc3b136626	DT-108	Wasco	Wasco	Bergamasker x Labrador	M	2009-01-31	0.00	NULL	019b6f8b-fc48-7d60-8545-3541ba0005ba				NULL			Hund	756 098 100 423 962			1	0	
+019b6fbf-c2b8-714a-9c87-631d19f1fd2d	DT-82	Pippo	Pippo	Lagotto	M	2011-01-12	0.00	NULL	019b6f8b-fc48-7f2f-b087-8b83722589c8			Gelockt	0	bianco-arancio		Hund	756 097 200 152 050			1	0	
+019b6fbf-c2b8-7150-88bd-8f01bf2d55f3	DT-51	Cinco van Stormhaven	Cinco	Holl.Schäferhund kurzhaar	M	2008-12-07	0.00	NULL	019b6f8b-fc48-76bb-87f8-2ece54ff2b11		15.08.2011 such: Hyperaktiver Hund, therapieresistent		1			Hund				1	0	
+019b6fbf-c2b8-715c-9b3d-e94b6ec5c048	DT-64	Chemmhuk vom Holligenwald	Chemmhuk	Beauceron	M	2008-01-05	0.00	NULL	019b6f8b-fc48-7a7f-98a5-a8b53b2664d5				NULL			Hund				1	0	
+019b6fbf-c2b8-717d-aae1-156591bbac64	DT-20	Chyvas	Chyvas	Bordercollie x Labrador	M	2002-02-02	0.00	NULL	019b6f8b-fc48-7f00-8117-f31a3d339969				NULL			Hund				1	0	
+019b6fbf-c2b8-7186-90b9-a7f5a41c628f	DT-67	Cliff of Mosslake	Cliff	Golden Retriever	M	1997-09-24	0.00	NULL	019b6f8b-fc43-73a2-9bb8-4b871c45b1b1				NULL			Hund				1	0	
+019b6fbf-c2b8-718d-85b7-3e3afc035ce0	DT-60	Nala	Nala	Bordercollie x Aussie	W	2008-10-03	0.00	NULL	019b6f8b-fc48-75da-926f-8295d52452a0		17.08.2011 such: Sehr auf Führer fixiert. Typisches Agility-Verhalten		NULL			Hund				1	0	
+019b6fbf-c2b8-71b7-868b-5d2deeabb4f6	DT-46__dup1	Nino	Nino	Belgischer Schäferhund Mix	M	2012-10-23	0.00	NULL	019b6f8b-fc48-75f9-924a-db1f37ca5727			kurzhaar	1	beige		Hund	756098100593209			1	0	
+019b6fbf-c2b8-71f6-8c4d-56ad7f2d5e43	DT-28	Iron of Rhodesian	Eron	Rhodesien Ridgeback	M	2010-02-01	0.00	NULL	019b6f8b-fc43-758d-813a-f9b9a6c59832			kurzhaar	0	red weizen		Hund				1	0	
+019b6fbf-c2b8-71fc-b36b-544b4968d345	DT-49	Miko	Miko	Terrier Mix	M	2007-01-01	0.00	NULL	019b6f8b-fc48-7f57-aeda-5c1a360edb88				NULL			Hund				1	0	
+019b6fbf-c2b8-722c-9466-b13ddcdbf9b0	DT-116	Jack	Jack	Mischling	M	2004-04-01	0.00	NULL	019b6f8b-fc48-7742-ba8b-e8ee40fcfa85		02.09.2011 such: seit Jahren Leinenzwang		NULL			Hund	756 098 100 198 756			1	0	
+019b6fbf-c2b8-724d-94f6-e81f37655b6f	DT-109	Butch	Butch	Berner Sennenhund	M	2009-01-25	0.00	NULL	019b6f8b-fc48-7e24-8b49-1c3b40926dd6				NULL			Hund				1	0	
+019b6fbf-c2b8-7289-ac2c-cb3273ae9857	DT-155	Bender	Bender	Labrador Mix	M	2011-04-12	0.00	NULL	019b6f8b-fc48-7f70-ac16-15bc32eccca8			kurzhaar	NULL			Hund				1	0	
+019b6fbf-c2b8-72a0-8b59-f98244439b04	DT-73	Essi	Essi	West Highland Terrier	W	2005-06-16	0.00	NULL	019b6f8b-fc47-785d-a832-c716ee24a7db				NULL			Hund				1	0	
+019b6fbf-c2b8-72bb-ad55-1763b629c6eb	DT-19	Marlo vom Tenk Hof	Madoxx	Franz. Bulldogge	M	2008-03-28	0.00	NULL	019b6f8b-fc48-7796-b264-e2653f422352				NULL			Hund				1	0	
+019b6fbf-c2b8-72dc-af9d-7a50594d1c36	DT-15	Nubia	Nubia	Jack Russell Terrier	W	2009-03-06	0.00	NULL	019b6f8b-fc48-7599-8e03-1ab3d68442b6		14.08.2011 such: zickig gegen andere Hunde aus Unsicherheit		NULL			Hund				1	0	
+019b6fbf-c2b8-72ec-b850-6e093873e68b	DT-36	Jawango du domaine de straz	Jawango	Mastiff	M	2010-04-04	0.00	NULL	019b6f8b-fc48-752c-bc50-07e73e8afdf5				NULL			Hund				1	0	
+019b6fbf-c2b8-72f0-b162-bafc6b2e85ad	DT-91	Willy	Willy	Mischling Typ Volpino Italiano	M	2010-11-01	0.00	NULL	019b6f8b-fc48-74d6-9720-a976ed5eab66		22.08.2011 such: Der Hund ist sehr keck. Scheut sich nicht zu schnappen		NULL			Hund				1	0	
+019b6fbf-c2b8-72f4-90b4-460a6fdb3d0d	DT-26	Lucy	Lucy	Jack Russell Terrier	W	2009-06-03	0.00	NULL	019b6f8b-fc48-7c61-9a88-fede35ac9ef1				NULL			Hund				1	0	
+019b6fbf-c2b8-72f8-9ecc-b1f2190fb669	DT-153	Pepper	Pepper	Boxer	M	2008-05-19	0.00	NULL	019b6f8b-fc48-7a10-b4b9-4d84b9130bc6			kurzhaar	NULL	dunkel gestromt		Hund	276097 200 855 922			1	0	
+019b6fbf-c2b8-730c-bbd6-f131f9bbe4bb	DT-118	Fanny	Fanny	Deutscher Schäferhund	W	2010-04-21	0.00	NULL	019b6f8b-fc48-7a69-a803-f990c4bcada8		02.09.2011 such: Hund aus Leistungszucht		0			Hund	756 097 200 192 306			1	0	
+019b6fbf-c2b8-7318-95d2-f0f875560aca	DT-111	Mugen	Mugen	Malinios	M	2005-06-20	0.00	NULL	019b6f8b-fc48-75de-9af8-263954d843fe				1			Hund	756 098 100 266 957			1	0	
+019b6fbf-c2b8-733b-ace4-6739901bcadb	DT-95	Coco von der Bernard Ranch	Coco	Chihuahua	M	2009-06-23	0.00	NULL	019b6f8b-fc48-7060-a4b9-7b31dc9404ed				NULL			Hund				1	0	
+019b6fbf-c2b8-734b-9a53-0c05d97588ef	DT-121	Aaron	Aaron	Beauceron	M	2005-03-24	0.00	NULL	019b6f8b-fc48-788f-bb09-38c043199c53		02.09.2011 such: hat zeitweilig Probleme mit Artgenossen, da er massiv gebissen wurde.		0			Hund				1	0	
+019b6fbf-c2b8-734e-b56f-799e606c2917	DT-151	Joy	Joy	Yorkshire Terrier	M	2011-03-21	0.00	NULL	019b6f8b-fc48-79b4-b982-bed6724d9ec0			langhaar	0	schwarz-braun		Hund	756097200191785			1	0	
+019b6fbf-c2b8-7359-875b-eccb8cf47660	DT-23	Darkhan D`Avicenna	Darkhan	Afghanischer Windhund	M	2010-10-27	0.00	NULL	019b6f8b-fc48-75e0-a7de-fcc68fcaebbf			langhaar	0	beige Sattelzeichnung		Hund	276098104083517			1	0	
+019b6fbf-c2b8-737e-87a5-b599dd189809	DT-12	Farina v. Gugelturm	Farina	Dt. Schäferhund	W	2006-05-11	0.00	NULL	019b6f8b-fc43-7288-9b01-ea0b941533ae		14.08.2011 such: Hund im Erwachsenenalter aus schlechter Ausbildung übernommen		NULL			Hund				1	0	
+019b6fbf-c2b8-739a-914a-88062fe80c76	DT-113	Inka	Inka	Altdeutscher Schäferhund	W	2009-01-06	0.00	NULL	019b6f8b-fc48-740e-8f72-7c31594f39d7				NULL			Hund	756 098 100 458 029			1	0	
+019b6fbf-c2b8-73ab-81e0-483e7328dc9e	DT-66	Lenny	Lenny	Appenzeller x Spitz	M	2008-10-14	0.00	NULL	019b6f8b-fc48-76f3-9c16-c5c822dca13d				NULL			Hund				1	0	
+019b6fbf-c2b8-73bf-9314-02653be0c29b	DT-27	Bigi	Bigi	Pekinese	M	2009-10-20	0.00	NULL	019b6f8b-fc48-79ca-a986-e0861f9a9924				NULL			Hund	968 000 005 424 341			1	0	
+019b6fbf-c2b8-73c0-b491-41ab418ccf57	DT-18	Charisma du Champagne	Inoa	Franz. Bulldogge	W	2010-02-17	0.00	NULL	019b6f8b-fc48-7796-b264-e2653f422352			kurzhaar	NULL	dunkel gestromt		Hund				1	0	
+019b6fbf-c2b8-73da-b76b-f378fb940e7c	DT-120	Eila	Eila	Beauceron	W	2009-08-04	0.00	NULL	019b6f8b-fc48-7ef7-915e-a6274a371714				NULL			Hund				1	0	
+019b6fbf-c2b8-7401-bcde-3cec47f94b40	DT-70	Ianka	Ianka	Gr. Schweizer Sennenhund	W	2007-08-07	0.00	NULL	019b6f8b-fc48-783d-b0c8-2b0c8f951099				NULL			Hund				1	0	
+019b6fbf-c2b8-7424-a603-d44aedeb3faf	DT-88	Camaro	Camaro	Pitbull	M	2010-12-31	0.00	NULL	019b6f8b-fc48-7976-bd75-2f1ae0924e9e				NULL			Hund				1	0	
+019b6fbf-c2b8-743a-a323-950121f98cd1	DT-40	Gysmo	Gysmo	Bordercollie x Labrador	M	2008-02-17	0.00	NULL	019b6f8b-fc48-7e31-b08d-27b5c7dd1b6c				NULL			Hund				1	0	
+019b6fbf-c2b8-7445-8590-1959b80614b2	DT-81	Tajga	Tajga	Collie x Aussie	W	2010-06-23	0.00	NULL	019b6f8b-fc48-7c7d-8c28-bac596ff194a				1			Hund				1	0	
+019b6fbf-c2b8-7479-9767-b9dcbb79ebc2	DT-17	Tata-Varudvari Oxford	Willow	Franz. Bulldog	M	2010-08-03	0.00	NULL	019b6f8b-fc48-7796-b264-e2653f422352			kurzhaar	NULL	beige		Hund				1	0	
+019b6fbf-c2b8-74ae-b6d9-9626da7c7d83	DT-87	Hope of Shenjamo	Hope	Labrador	M	2008-06-15	0.00	NULL	019b6f8b-fc43-7254-8314-80dd64001677				0			Hund				1	0	
+019b6fbf-c2b8-74be-a8ae-0f0fdee875f4	DT-24	Pico	Pico	Appenzeller-Mix	M	2006-12-06	0.00	NULL	019b6f8b-fc48-78df-a10d-234a4a1b865d				NULL			Hund				1	0	
+019b6fbf-c2b8-74df-a3f5-f6d507185426	DT-132	Chico	Chico	Mischling	M	2009-12-01	0.00	NULL	019b6f8b-fc48-70c2-99c0-f07ee62d2f0f				NULL			Hund	981 098 102 566 704			1	0	
+019b6fbf-c2b8-74ef-bf72-efe177ce346c	DT-41	Nanni von der Schädelzmatt	Nanni	Entlebucher Sennenhund	W	2009-06-09	0.00	NULL	019b6f8b-fc48-7276-b5ed-99feaaec24fd		15.08.2011 such: Hund hatte gesundheitliche Probleme		NULL			Hund				1	0	
+019b6fbf-c2b8-7511-9a73-7f4ac31c6e74	DT-96	Chanel von der Bernard Ranch	Chanel	Chihuahua	W	2010-02-07	0.00	NULL	019b6f8b-fc48-7060-a4b9-7b31dc9404ed				NULL			Hund				1	0	
+019b6fbf-c2b8-7536-bce4-f3880efc5aa8	DT-58	Luna	Luna	Labrador	W	2007-11-14	0.00	NULL	019b6f8b-fc48-7c47-98d3-1ddebac38627		17.08.2011 such: Zieht an der Leine, keine Erziehung, Ausbildung nur über Futter		NULL			Hund				1	0	
+019b6fbf-c2b8-753b-8a63-9bee164f8cfc	DT-86	Ayun	Ayun	Beauceron x Bernhardiner	M	2009-01-23	0.00	NULL	019b6f8b-fc48-7071-b853-a8a58c3f4a97				0			Hund				1	0	
+019b6fbf-c2b8-7549-8b24-c469fa4c8847	DT-77	Nana	Nana	Golden Retriever	W	2003-04-12	0.00	NULL	019b6f8b-fc48-77a8-9a43-c8b043029c74				NULL			Hund				1	0	
+019b6fbf-c2b8-7553-bb22-c0733c375127	DT-148	Gipsy	Gipsy	Westi x Yorky Mischling	W	2011-06-28	0.00	NULL	019b6f8b-fc48-7293-97fe-e47da8769f90			halblanghaar	NULL	braun mit Brand		Hund	756097200152297			1	0	
+019b6fbf-c2b8-755c-990a-d7cb77d33ed6	DT-47	Yuma	Yuma	Mischling	W	2005-12-01	0.00	NULL	019b6f8b-fc48-73e6-84c9-94f040d9e9ff				NULL			Hund				1	0	
+019b6fbf-c2b8-756e-8ce4-f433eb3cce24	DT-62	Finn of Easter Song	Finn	Flat Coated Retriever	M	2010-04-23	0.00	NULL	019b6f8b-fc48-756a-aaa6-7aa11966fd81		17.08.2011 such: Macht noch Dummy-Training		NULL			Hund				1	0	
+019b6fbf-c2b8-7587-85f5-69ea1e7d6d4b	DT-21	Erich von der Ostfront	Rick	Dt. Schäferhund	M	2008-09-05	0.00	NULL	019b6f8b-fc48-7f00-8117-f31a3d339969		14.08.2011 such: relativ heftiger Rüde, ev. Unterforderung		NULL			Hund				1	0	
+019b6fbf-c2b8-75e2-865c-027db9da1c4b	DT-44	Arthus	Arthus	Weisser Schäfer x Husky	M	2009-12-25	0.00	NULL	019b6f8b-fc48-72ca-944e-e18db4e3487a				NULL			Hund				1	0	
+019b6fbf-c2b8-7600-9fc2-ad953bb5e833	DT-78	Janos vom Rottal	Janos	Gr. Schweizer Sennenhund	M	2003-07-19	0.00	NULL	019b6f8b-fc43-7542-a8b2-2437e4e4f669		19.08.2011 such: laut Frauchen ein Psychopath	kurzhaar	1	tricolor schwarz		Hund				1	0	
+019b6fbf-c2b8-7608-b722-07ff8d7e649b	DT-92	Luna	Luna	Labrador Mix	W	2009-01-28	0.00	NULL	019b6f8b-fc48-7085-8b10-9ac5562d2837				NULL			Hund				1	0	
+019b6fbf-c2b8-760c-ab52-3a8843fb6f13	DT-30	Deiro	Deiro	Appenzeller x Bordercollie	M	2010-11-11	0.00	NULL	019b6f8b-fc48-7390-bc75-8315880db92e				NULL			Hund				1	0	
+019b6fbf-c2b8-760e-aef8-65d5e81e3bbf	DT-157	Devon	Devon	Hovawart	M	2010-03-07	0.00	NULL	019b6f8b-fc43-7340-b69f-e51642c2a1c5			langhaar	0	schwarz-braun		Hund	2760981029311028			1	0	
+019b6fbf-c2b8-7625-9769-2791d5ff883b	DT-123	Ashan	Ashan	Dt. Schäferhund	M		0.00	NULL	019b6f8b-fc48-701b-9df5-a8d503aa7801		10.09.2011 such: Wird Sportmässig gearbeitet. IPO 3. Wurde über Wehrtrieb "ausgebildet" und hat daher z. T. Probleme mit Männern.Ansonsten nicht erzogen. Zieht an der Leine. Ist aber sicher zugänglich		0			Hund				1	0	
+019b6fbf-c2b8-7643-8511-e5f4835a5e06	DT-37	Glynn vom hohlen Fels	Glynn	Cairn Terrier	W	2009-04-05	0.00	NULL	019b6f8b-fc48-756b-8428-d9a1b1e64047				NULL			Hund				1	0	
+019b6fbf-c2b8-7659-b017-95e5027ca333	DT-140	Olita	Olita	Havaneser	W	2011-06-12	0.00	NULL	019b6f8b-fc48-71eb-b1b2-780ac101a6bf			langhaar	NULL	schwarz weisse Abzeichen		Hund	756 098 100 540 571			1	0	
+019b6fbf-c2b8-76c4-8177-ac4183a59cd5	DT-93	Basco von den  Rehbachhexen	Basco	Mittelschnauzer	M	2010-08-12	0.00	NULL	019b6f8b-fc48-77db-ad40-1a342f6ec930				0			Hund				1	0	
+019b6fbf-c2b8-774b-8b57-520479cb34f1	DT-39	Dhoruba	Dhoruba	Rhodesien Ridgeback	M	2007-04-13	0.00	NULL	019b6f8b-fc48-7a73-bf88-e955d1ca6f34				NULL			Hund				1	0	
+019b6fbf-c2b8-77a6-a2ec-c61e22ddfefc	DT-128	Frasco	Frasco	Beauceron	M	2010-06-19	0.00	NULL	019b6f8b-fc48-7dd8-99a0-d06e741a960b			kurzhaar	NULL	schwarz braun		Hund	756098100447519			1	0	
+019b6fbf-c2b8-77ad-b52d-126446ec077a	DT-14	Filou	Filou	Malteser	M	2004-11-09	0.00	NULL	019b6f8b-fc43-78ca-a167-9bee3277aab7				NULL			Hund				1	0	
+019b6fbf-c2b8-77c2-83e1-a79135723072	DT-63	Nuna	Nuna	Weisser Schäfer x Husky	W	2009-12-25	0.00	NULL	019b6f8b-fc48-731f-bf58-8c62a8b26405				NULL			Hund				1	0	
+019b6fbf-c2b8-77dc-ba48-6a633225dcd4	DT-115	Inka	Inka	Altdeutscher Schäferhund	W	2009-01-06	0.00	NULL	019b6f8b-fc48-7347-b758-31c2a14a78eb				NULL			Hund	756 089 100 458 029			1	0	
+019b6fbf-c2b8-7816-961f-833d632aa172	DT-65	Chiara of Plainfairs	Chiara	Flatcoated Retriever	W	2009-01-30	0.00	NULL	019b6f8b-fc48-7126-832b-5feaa60a45b9				NULL			Hund				1	0	
+019b6fbf-c2b8-7832-9b38-bfdf1a42d7c5	DT-150	Cory	Cory	chihuahua Mischling	W	2009-07-01	0.00	NULL	019b6f8b-fc47-707f-b2ba-b08ae31162fa			kurzhaar	1	hellbraun		Hund	941000012655296			1	0	
+019b6fbf-c2b8-783e-af50-572cb56a6393	DT-122	Esperanza	Esperanza	Beauceron	W	2009-04-01	0.00	NULL	019b6f8b-fc48-701b-9df5-a8d503aa7801				NULL			Hund				1	0	
+019b6fbf-c2b8-7844-bf6b-26990d217ed0	DT-105	Samson	Samson	Golden Retriever	M	2009-07-26	0.00	NULL	019b6f8b-fc48-7a93-b137-cc75096c4384		22.08.2011 such: Starker, temperamentvoller Rüde. Wird nicht erzogen. Falscher Hund für diesen Führer		0			Hund				1	0	
+019b6fbf-c2b8-7846-81b4-974c3e4cd2b3	DT-83	Chayenne	Chayenne	Tervueren	W	2010-06-01	0.00	NULL	019b6f8b-fc48-7db7-93ae-3218e59d8868			langhaar	NULL	tricolor braun		Hund				1	0	
+019b6fbf-c2b8-787a-8f46-758c01b92ca1	DT-131	Zera	Zera	Labrador Retriever	W	2008-08-06	0.00	NULL	019b6f8b-fc48-77ac-8a62-5e9484f5bb16			kurzhaar	NULL	schwarz		Hund	756 097 200 092 613			1	0	
+019b6fbf-c2b8-78dd-a1e5-eb522078338b	DT-25	Maisha vom schwarzes Spitzohr	Maisha	Schipperke	W	2009-07-17	0.00	NULL	019b6f8b-fc48-7e9b-b129-e9525e8227d7				NULL			Hund				1	0	
+019b6fbf-c2b8-78f4-bb68-23bf1e758196	DT-156	Devon	Devon	Hovawart	M	2010-03-07	0.00	NULL	019b6f8b-fc43-7340-b69f-e51642c2a1c5			langhaar	0	braun-schwarz		Hund				1	0	
+019b6fbf-c2b8-793f-8975-8c503fa966b6	DT-107	Carlos	Carlos	Gordon Setter	M	2008-03-16	0.00	NULL	019b6f8b-fc48-7845-837d-d7a2b094c41a				NULL			Hund				1	0	
+019b6fbf-c2b8-795d-a537-0550aed7a820	DT-138	Nandi		Schipperke	M	2010-11-01	0.00	NULL	019b6f8b-fc48-7e9b-b129-e9525e8227d7			kurzhaar	NULL			Hund				1	0	
+019b6fbf-c2b8-796f-a778-734ff164dd07	DT-75	Sara		Labrador Mix	W	2007-04-20	0.00	NULL	019b6f8b-fc48-728f-897c-703cbf76cb95				NULL			Hund				1	0	
+019b6fbf-c2b8-79cc-b9da-f4322bcd4bf3	DT-22	Wino vom Stägefässli	Wino	Zwergschnauzer	M	2009-04-01	0.00	NULL	019b6f8b-fc48-7b50-b14e-d33f2abdc0ef				NULL			Hund				1	0	
+019b6fbf-c2b8-7a26-bb64-1645bbd31635	DT-141	Schneeball	Schneeball	Samojede	W	2011-05-20	0.00	NULL	019b6f8b-fc48-71b4-9377-f67a174a3d3b			langhaar	0	weiss		Hund	756097200149193			1	0	
+019b6fbf-c2b8-7a33-ae6d-00068920ea7d	DT-71	Leo	Leo	Pitbull Mix	M	2007-03-01	0.00	NULL	019b6f8b-fc48-7fef-ba79-d77373ed06f4				1			Hund				1	0	
+019b6fbf-c2b8-7a3b-bf8e-634441e5ad9f	DT-50	Queen von der Villa Kunterbunt	Queen	AC weisser Schäferhund	W	2010-06-05	0.00	NULL	019b6f8b-fc48-7336-8e51-657ac2e099af				NULL			Hund				1	0	
+019b6fbf-c2b8-7a5e-b36f-e824e647d8ba	DT-99	Noah von Britho	Noah	Labrador	M	2008-12-25	0.00	NULL	019b6f8b-fc48-71cd-9378-c1569f7e0ed2			kurzhaar	0	schwarz		Hund	756095200119324			1	0	
+019b6fbf-c2b8-7a8f-8012-0c6b68c7bf17	DT-102	Ayda	Ayda	Dt. Dogge	W		0.00	NULL	019b6f8b-fc48-7226-aff2-b22432f22218		22.08.2011 such: Einerseits verspielt, andererseits attackiert sie bei Unaufmerksamkeit des Halterin andere eher schwache Hunde. Wurde angezeigt, musste Hund zeigen, Test bestanden		NULL			Hund				1	0	
+019b6fbf-c2b8-7aa5-8a74-2655c634b860	DT-112	Blue	Blue	Dt. Schäferhund	M	2009-08-20	0.00	NULL	019b6f8b-fc48-70be-a7b5-f736fc39c674				0			Hund				1	0	
+019b6fbf-c2b8-7ac2-baa5-0f0f0e995916	DT-152	Dexter	Dexter	Altdeutscher Schäferhund	M	2007-09-01	0.00	NULL	019b6f8b-fc48-7efd-bc84-2c337710e07e			langhaar	1	schwarz braun		Hund	756097200127163			1	0	
+019b6fbf-c2b8-7af1-b747-cd3d939586f2	DT-45	Sedlarska Naro	Naro	Dt. Schäferhund	M	2010-10-27	0.00	NULL	019b6f8b-fc48-7468-8921-5f4818c77bdf			langhaar	0	schwarz-braun		Hund	756097200167208			1	0	
+019b6fbf-c2b8-7afe-841f-338258058f0d	DT-29	Malouk	Malouk	Labrador	M	2009-09-03	0.00	NULL	019b6f8b-fc48-7209-840b-6b99c964a9f6				NULL			Hund				1	0	
+019b6fbf-c2b8-7b02-8109-2e2cee183d1a	DT-124	Inush	Inush	Cavalier King Charles	W	2010-05-07	0.00	NULL	019b6f8b-fc48-7c46-a85a-8141cfa17f65				0			Hund	756 098 100 448 294			1	0	
+019b6fbf-c2b8-7b04-ba1f-43b0c25f0717	DT-119	Ginger	Ginger	Mischling	W	2004-04-01	0.00	NULL	019b6f8b-fc48-7b21-8a31-76b39276d5da				NULL			Hund	756 097 200 025 622			1	0	
+019b6fbf-c2b8-7b0b-a717-cf004f6de23e	DT-43	Jamie	Jamie	Bolonka Zwetna	M	2009-10-01	0.00	NULL	019b6f8b-fc48-71b0-93c7-ef266c5241ec				NULL			Hund				1	0	
+019b6fbf-c2b8-7b22-8b9f-483f3c865565	DT-31	Harvey Lord of Forest	Harvey	Beagle	M	2009-11-18	0.00	NULL	019b6f8b-fc48-7c3f-9651-e6b57241b794				NULL			Hund				1	0	
+019b6fbf-c2b8-7b35-947e-ddcf105ffa99	DT-13	Haifa am Wupplis	Haifa	Golden Retriever	W	2003-05-07	0.00	NULL	019b6f8b-fc43-7868-9e5d-98de01fb6df0				NULL			Hund				1	0	
+019b6fbf-c2b8-7b3c-95d7-943149bdcdda	DT-79	Bonnie	Bonnie	Bobtail	W	2010-01-01	0.00	NULL	019b6f8b-fc48-7744-b397-2576884f9c8d				NULL			Hund				1	0	
+019b6fbf-c2b8-7b9b-b8d4-3ca3d744a659	DT-135	Levin	Levin	Biewer Yorkshire Terrier x Yorkshire Terrier	M	2011-07-08	0.00	NULL	019b6f8b-fc48-76ee-8bc1-f103a0adfd44			halblanghaar	NULL	tricolor		Hund	756097200103964			1	0	
+019b6fbf-c2b8-7be4-9302-ba73a421f8e3	DT-33	Emma vom Eichblatt	Emma	Rauhhaardackel	W	2008-01-06	0.00	NULL	019b6f8b-fc43-7eb6-8edc-baefa977c67a				NULL			Hund				1	0	
+019b6fbf-c2b8-7c3a-acd6-f8d67b293a9e	DT-94	Gioia von Poptime	Gioia	Boxer	W	2010-05-20	0.00	NULL	019b6f8b-fc48-70cb-82f3-9b516d8fcb7a				NULL			Hund				1	0	
+019b6fbf-c2b8-7c51-a366-d5eefcc05095	DT-142	Lilo	Lilo	Chihuahua langhaariger Schlag	M	2011-03-26	0.00	NULL	019b6f8b-fc48-7391-9532-7463d21c5bc9			langhaar	NULL	braun mit Brand		Hund	939000 010188915			1	0	
+019b6fbf-c2b8-7c53-8c04-f5c751563825	DT-130	Amon	Amon	Hovawart	M	2009-12-05	0.00	NULL	019b6f8b-fc48-744e-ba1d-c4c261ca0b7c			langhaar	1	schwarz		Hund				1	0	
+019b6fbf-c2b8-7c5a-8449-e8aea899f793	DT-158	Kaya	Kaya	Lagotto Romagnolo	W	2010-06-26	0.00	NULL	019b6f8b-fc48-75af-a427-b15b1040d66f				NULL			Hund				1	0	
+019b6fbf-c2b8-7c76-8038-38641f4d4a30	DT-90	Orlando	Orlando	Bolonka Zwetna	M	2011-02-02	0.00	NULL	019b6f8b-fc48-72ab-9dde-447c1eda186a				NULL			Hund				1	0	
+019b6fbf-c2b8-7c8c-91b5-52ed3b5e5616	DT-42	Gorkij von Belaja Gora	Gorkij	Schwarzer Terrier ( Russischer T.)	M	2007-12-04	0.00	NULL	019b6f8b-fc48-734d-9e35-fa17162014e2				NULL			Hund				1	0	
+019b6fbf-c2b8-7c95-a3db-d1e12cea5ebf	DT-38	Sasso vom hohlen Fels	Sasso	Cairn Terrier	M	2009-04-05	0.00	NULL	019b6f8b-fc48-756b-8428-d9a1b1e64047				NULL			Hund				1	0	
+019b6fbf-c2b8-7c95-a5b1-0cb718752be0	DT-11	Billy	Billy	Malinois x Tschechischer Wolfshund	M	2008-07-17	0.00	NULL	019b6f8b-fc48-763e-89d2-de1cede70338				NULL			Hund				1	0	
+019b6fbf-c2b8-7ca7-ae7c-c571dbda023c	DT-16	Kaydee	Kaydee	Französische Bulldogge	W	2011-04-25	0.00	NULL	019b6f8b-fc48-7796-b264-e2653f422352			kurzhaar	NULL	red/pied		Hund	250268720054687			1	0	
+019b6fbf-c2b8-7ca9-8a5a-47993f9601a1	DT-76	Cindy	Cindy	Nova Scotia Duck Tolling Retriever	W	2008-11-15	0.00	NULL	019b6f8b-fc48-7683-b789-fb2902e22cd5				NULL			Hund				1	0	
+019b6fbf-c2b8-7cc4-b8d1-0b31036a5a63	DT-106	Danochi of isamashii Nakama	Danochi	Shiba Inu	W	2007-01-22	0.00	NULL	019b6f8b-fc48-7bfb-8691-05ea28bddb21		22.08.2011 such: eher schwieriger Hund, war schon an verschiedenen Orten in der Hundeschule , die nicht gut für sie waren. u.a. Oberthaler		NULL			Hund				1	0	
+019b6fbf-c2b8-7d16-95c5-2862fa3a7a11	DT-98	Beni	Beni	Labrador x Golden Retriever	M	2009-08-01	0.00	NULL	019b6f8b-fc48-7e5b-b0b6-0a04356f4557				NULL			Hund				1	0	
+019b6fbf-c2b8-7d49-92a6-7c30283f8961	DT-139	Rokky	Rokky	Leonberger x Appenzeller	M	2011-05-05	0.00	NULL	019b6f8b-fc47-7ce5-897d-b28f7e0e8951			langhaar	0	schwarz-braun		Hund	756098100522558			1	0	
+019b6fbf-c2b8-7d4f-830a-921d9fb33881	DT-103	Diesel	Diesel	Kelpie Mix	M	2001-06-01	0.00	NULL	019b6f8b-fc48-7402-9528-2704448d0355				1			Hund				1	0	
+019b6fbf-c2b8-7d5a-8eb1-049d5e6b6ed4	DT-74	Kimi vom Gränzwerg	Kimi	Berner Sennenhund	W	2011-04-25	0.00	NULL	019b6f8b-fc48-74f7-bdf0-c1e1d25281ed				NULL			Hund				1	0	
+019b6fbf-c2b8-7d80-ac57-92dd9d140afe	DT-80	Charly	Charly	Golden Retriever	M	2011-05-02	0.00	NULL	019b6f8b-fc43-74df-880f-33ebd99916d3				NULL			Hund	945000001219528			1	0	
+019b6fbf-c2b8-7d83-b57a-40dd731e73f0	DT-32	Billy	Billy	Appenzeller Mix	M	2010-05-15	0.00	NULL	019b6f8b-fc48-7368-bc4f-6ef52ea844c6				NULL			Hund				1	0	
+019b6fbf-c2b8-7db1-8c40-5849d90d5254	DT-68	Clooney	Clooney	Altdeutscher Schäferhund	M	2010-05-12	0.00	NULL	019b6f8b-fc43-73a2-9bb8-4b871c45b1b1				NULL			Hund				1	0	
+019b6fbf-c2b8-7e22-821b-0420ab0e8c33	DT-97	Lyrco	Lyrco	Mischling (Bulgarien)	M	2010-03-15	0.00	NULL	019b6f8b-fc48-7046-8fc9-4d3f94a10508		22.08.2011 such: Hund aus Tierheim, Deprivat		1			Hund				1	0	
+019b6fbf-c2b8-7e30-ae8b-b008c3daa4f2	DT-143	Jerry	Jerry	Bergamasker x Appenzeller	M	2011-01-15	0.00	NULL	019b6f8b-fc48-74f9-ac51-ab56b36b0120			langhaar	NULL	grau gestromt		Hund	756098100515658			1	0	
+019b6fbf-c2b8-7e4a-995f-0e24fe75edcb	DT-126	Lobo	Lobo	PON	M	2009-10-30	0.00	NULL	019b6f8b-fc48-754e-8f73-3adbc5630a1e			langhaar	0	gefleckt grauer Untergrund		Hund				1	0	
+019b6fbf-c2b8-7e57-83fb-42d24323f7c4	DT-56	Rambo	Rambo	Bordercollie x Berner Sennenhund	M	2009-08-06	0.00	NULL	019b6f8b-fc48-791e-b9a9-26e433abee89				NULL			Hund				1	0	
+019b6fbf-c2b8-7e78-b86c-92853444c756	DT-61	Aurora	Aurora	Cane Corso	W		0.00	NULL	019b6f8b-fc48-7edf-bba7-7fe77d675bee				NULL			Hund				1	0	
+019b6fbf-c2b8-7e84-b507-78fc0bcb9349	DT-114	Rina	Rina	Dobermann x Belg. Schäferhund	W	2006-03-01	0.00	NULL	019b6f8b-fc48-723a-9ab7-c3b04c9c56e2				1			Hund				1	0	
+019b6fbf-c2b8-7e87-9d65-b0f139b6083a	DT-52	Dylan v.Trajectum ad mosam	Dylan	Holl. Schäferhund Langhaar	Rüde	2010-06-12	0.00	NULL	019b6f8b-fc43-7f7a-9a23-a31fda684482			langhaar	0	gold gestromt		züchter			2026-01-13T12:28:06.182Z	1	0	verstorben
+019b6fbf-c2b8-7f09-885a-6a9eb6da80f8	DT-129	Leika	Leika	Zwergpudel	W		0.00	NULL	019b6f8b-fc48-7c07-bc18-cea89e3ceb82				1	grau		Hund				1	0	
+019b6fbf-c2b8-7f16-8d93-696b111e9651	DT-136	Cherry	Cherry	Havaneser	M	2011-09-19	0.00	NULL	019b6f8b-fc48-7c7c-9e9e-f8e6ed643a40			langhaar	NULL	weiss		Hund	276093400218194			1	0	
+019b6fbf-c2b8-7f29-b7be-4a47f5ff12c0	DT-110	Daisy	Daisy	Staffordshire Bullterrier	W	2010-03-01	0.00	NULL	019b6f8b-fc48-7d13-985b-90f2bc0a8446				NULL			Hund				1	0	
+019b6fbf-c2b8-7f2e-bbf1-0266fff9f92b	DT-57	Rocky	Rocky	Bordercollie x Appenzeller	M	2010-03-22	0.00	NULL	019b6f8b-fc48-79d8-b583-8e3cc8c7d43a				NULL			Hund				1	0	
+019b6fbf-c2b8-7f33-9007-8d6bbc9a8c7a	DT-55	Indiana Jones	Indy	Norwich Terrier	M	2010-08-15	0.00	NULL	019b6f8b-fc48-791f-86ca-081116cfe7c8				NULL			Hund				1	0	
+019b6fbf-c2b8-7f5b-877e-38d883704fd2	DT-133	Roxy	Roxy	Labrador x Husky Mix	W	2005-03-04	0.00	NULL	019b6f8b-fc48-74cf-83c4-d92151370136			kurzhaar	NULL	schwarz weisse Abzeichen		Hund	756 097 200 014 236			1	0	
+019b6fbf-c2b8-7f99-881f-dd5c4163c99d	DT-149	Sheela	Sheela	Yorkshire Terrier	W	2008-08-11	0.00	NULL	019b6f8b-fc47-707f-b2ba-b08ae31162fa			langhaar	NULL	black & tan		Hund	756097200088731			1	0	
+019b6fbf-c2b8-7f9c-b708-a07c3b534ca4	DT-53	Bobby	Bobby	Beagle	M	2010-05-22	0.00	NULL	019b6f8b-fc48-7a2e-8320-bd4b516e1e95				NULL			Hund				1	0	
+019b6fbf-c2b8-7fa0-b35c-191b72dfdc90	DT-134	Sira	Sira	Border Collie	W	2011-10-26	0.00	NULL	019b6f8b-fc48-7cac-89dc-8e6a92b8deb1			halblanghaar	0	schwarz weisse Abzeichen		Hund	756 098 100 542 447			1	0	
+019b6fbf-c2b8-7fa9-8721-42903a02a212	DT-100	Ronaldo	Roni	Labrador	M	1999-10-07	0.00	NULL	019b6f8b-fc48-77ac-8a62-5e9484f5bb16				NULL			Hund				1	0	
+019b6fbf-c2b8-7fcd-8dc6-894446c60477	DT-147	Emmy	Emmy	Westi x Yorky Mischling	W	2011-06-28	0.00	NULL	019b6f8b-fc48-7293-97fe-e47da8769f90			langhaar	NULL	braun mit Brand		Hund	756097200147305			1	0	
+019b6fbf-c2b8-7ff1-86c7-27964de7fab9	DT-59	Popy	Popy	Yorkshire Terrier	W	2009-11-03	0.00	NULL	019b6f8b-fc43-7bd6-8690-29300793d432		17.08.2011 such: Hat anfänglich nur gekläfft, weil keine Führung. Am Sonntagsplausch sehr ängstlich.Nun sehr freudiger, aufgestellter lustiger Hund, der mit allen spielt, egal welche Grösse.		NULL			Hund				1	0	
+019b6fbf-c2b8-7ff7-a084-37b6e8be4132	DT-54	Aaron	Aaron	Labrador Mix	M	2011-02-19	0.00	NULL	019b6f8b-fc48-7e3d-82b9-4a2710495a9f				NULL			Hund				1	0	
+019b6fbf-c2b9-7017-88c5-949155f20c33	DT-173	Bianca	Bianca	Chihuahua langhaariger Schlag	W	2010-02-01	0.00	NULL	019b6f8b-fc48-7e96-8835-9c7d8963aa8f			langhaar	0	weiss		Hund	756098100406305			1	0	
+019b6fbf-c2b9-7023-8443-1f46f8a4ad7f	DT-178	Daniels	Daniels	Altdeutscher Schäferhund	M	2011-11-11	0.00	NULL	019b6f8b-fc48-7fcc-89a6-29023d6539f9			langhaar	0	Braun schwarz		Hund				1	0	
+019b6fbf-c2b9-703e-b363-1b7191ce4730	DT-228	Luna	Luna	Appenzeller Mix	W	2012-05-27	0.00	NULL	019b6f8b-fc48-70bc-9ba1-70a045b1cef7			kurzhaar	0	schwarz-braun-weiss		Hund	756093900000260			1	0	
+019b6fbf-c2b9-7049-93e3-f64b4c983df3	DT-300	Louis	Louis	Labrador Retriever	M	2006-07-01	0.00	NULL	019b6f8b-fc49-7af6-afb0-2ee86e586854			kurzhaar	NULL	schwarz		Hund				1	0	
+019b6fbf-c2b9-7053-8e0c-72373b30d55b	DT-330	Tessy	Tessy	Airedale Terrier	W	2009-04-28	0.00	NULL	019b6f8b-fc49-7f90-b5cb-81b636dd8403			lockig-gekraust	NULL			Hund	276098102701659			1	0	
+019b6fbf-c2b9-705d-8575-701557e7f0b9	DT-319	Mäx	Mäx	Beagle	M	2004-07-29	0.00	NULL	019b6f8b-fc49-7519-9877-9d3355a88e7f			kurzhaar	NULL	braun mit Brand		Hund	756097200088253			1	0	
+019b6fbf-c2b9-7072-84d1-70027e999c57	DT-313	Nirco	Mirco	Schweizer Sennenhund Mix	M	2012-07-23	0.00	NULL	019b6f8b-fc49-78f9-b541-57af4c410729				NULL			Hund	756098500072045			1	0	
+019b6fbf-c2b9-708b-85f0-03e3a05942cf	DT-244	Leroy	Leroy	Flat Coated Retriever	M	2010-03-20	0.00	NULL	019b6f8b-fc48-7046-8f9d-d778fdab3f51			langhaar	NULL	chocholat		Hund	756 097 200 170 150			1	0	
+019b6fbf-c2b9-7095-a48b-38be4215ade6	DT-201	Mira	Mira	Australian Shepherd Dog	W	2011-01-03	0.00	NULL	019b6f8b-fc48-7c77-a37b-c15620ea458d			langhaar	NULL			Hund	756097200180551			1	0	
+019b6fbf-c2b9-70a8-bc74-d0a7d6bb50b4	DT-254	Phila	Phila	Berger Blanc Suisse	H	2011-04-26	0.00	NULL	019b6f8b-fc48-7091-9b91-c24df39ec492			halblanghaar	NULL	weiss		Hund	040098100327993			1	0	
+019b6fbf-c2b9-70da-a48a-2e76b22b99e3	DT-223	Zuma	Lara	Deutscher Wachtelhund	W	2011-12-24	0.00	NULL	019b6f8b-fc48-7765-b623-dfabbc370b5b			halblanghaar	0	chocholat		Hund	756095200162543			1	0	
+019b6fbf-c2b9-70f1-8646-b2b7d54d39cb	DT-168	Mike	Mike	Chihuahua kurzhaariger Schlag	M	2011-08-27	0.00	NULL	019b6f8b-fc48-7849-84da-a59fe559eb53			kurzhaar	0	beige - weiss		Hund	939000010236039			1	0	
+019b6fbf-c2b9-7118-81c3-0a4381ff02a0	DT-253	Piri	Piri	Zwergschnauzer	H	2012-06-08	0.00	NULL	019b6f8b-fc48-7f68-b379-ad03a27a26d8			lockig-gekraust	NULL			Hund				1	0	
+019b6fbf-c2b9-7139-b6c4-5d16ed1b1a9d	DT-221	Xira of Ironlad	Xira	Airedale Terrier	W	2011-10-02	0.00	NULL	019b6f8b-fc48-77d3-b450-8e126c9c7ec4			halblanghaar	0	black & tan		Hund	756098100573834			1	0	
+019b6fbf-c2b9-7159-856c-85fa47a64759	DT-291	Benny	Benny	Labrador Retriever	M	2005-03-11	0.00	NULL	019b6f8b-fc49-77e4-95a3-906ca3ff9e79			kurzhaar	NULL			Hund				1	0	
+019b6fbf-c2b9-716e-a459-05907b05b897	DT-200	Dundee	Dundee	Airedale Terrier	M	2011-09-25	0.00	NULL	019b6f8b-fc48-79bb-b31c-d6bc7f6afd8e				NULL			Hund				1	0	
+019b6fbf-c2b9-7171-94d6-7303b0071397	DT-183	Smartie	Smartie	Pudelmix	M	2007-01-01	0.00	NULL	019b6f8b-fc48-7b1d-abc7-9c3a06c5424c			halblanghaar	1	beige weiss		Hund	977200007409943			1	0	
+019b6fbf-c2b9-7173-a712-92656214df07	DT-236	Bella	Bella	West Highland White Terrier	W	2010-01-27	0.00	NULL	019b6f8b-fc48-7cdc-9dbe-471ad37b3bcf			langhaar	1	weiss		Hund	348 098 100 210 955			1	0	
+019b6fbf-c2b9-7189-951b-f34cd60d2606	DT-202	Mailo	Mailo	Appenzeller-Mix	M	2009-12-01	0.00	NULL	019b6f8b-fc48-752d-9497-f78ba4f6c890			kurzhaar	NULL			Hund	756 097 200 185 657			1	0	
+019b6fbf-c2b9-71be-b320-6c5912e7c87c	DT-207	Danny v. Bono Vox	Danny	Deutscher Schäferhund	M	2012-02-01	0.00	NULL	019b6f8b-fc48-737d-8333-43d300fef627			stockhaar	0	braun schwarz		Hund	756 098 100 553 938			1	0	
+019b6fbf-c2b9-71c9-9beb-afed993de3ce	DT-322	Rocco	Rocco	Deutscher Schäferhund X Laufhundmischling	M	2011-07-17	0.00	NULL	019b6f8b-fc49-7078-87ea-1c1dff3b7d36				NULL			Hund	380260040240487			1	0	
+019b6fbf-c2b9-7201-ab1f-426c9823760b	DT-176	Crystal	Crystel	American Staffordshire Terrier	W	2010-11-15	0.00	NULL	019b6f8b-fc48-77c6-8b5c-b1314e073409			kurzhaar	0	beige		Hund	191100000321864			1	0	
+019b6fbf-c2b9-7208-b505-5b4a0886227a	DT-264	Amalee	Amalee	Französische Bulldogge	H	2012-09-19	0.00	NULL	019b6f8b-fc48-7f2b-9463-a85eb792b2fe			kurzhaar	NULL			Hund				1	0	
+019b6fbf-c2b9-7237-a2a7-ab1fc54007c1	DT-190	Eika	Eika	Jack-Russell-Terrier	W	2010-12-20	0.00	NULL	019b6f8b-fc48-7d4a-9740-91bc73ca73de			kurzhaar	NULL			Hund				1	0	
+019b6fbf-c2b9-7258-8ea7-ef80333e3438	DT-213	Felix	Felix	Beagle	M	2011-01-04	0.00	NULL	019b6f8b-fc48-7309-bce1-2e71af55457b			kurzhaar	0	tricolor braun		Hund	756098100497880			1	0	
+019b6fbf-c2b9-725e-a392-42b8ecc10954	DT-312	Bobby	Bobby	Französische Bulldogge	M	2012-06-18	0.00	NULL	019b6f8b-fc49-760d-9d8a-11a38b20aa6b				NULL			Hund	900182000184387			1	0	
+019b6fbf-c2b9-7262-b4d0-046b77eb4a1b	DT-256	Akilah	Akilah	Leonberger	H	2012-01-17	0.00	NULL	019b6f8b-fc48-7a17-abd0-a367978666b6			lockig-gekraust	NULL			Hund	756098100580730			1	0	
+019b6fbf-c2b9-726c-8da1-9b052a54611e	DT-212	Tobi	Tobi	Mischling	M	2011-06-02	0.00	NULL	019b6f8b-fc48-7490-9098-fa76af8da1ec			kurzhaar	NULL	braun mit Brand		Hund				1	0	
+019b6fbf-c2b9-7291-89d2-771bde9d0ae5	DT-248	Lori	Lori	Border Collie	H	2009-08-06	0.00	NULL	019b6f8b-fc48-7df3-bc12-c807e952f10b				NULL			Hund	756 098 100 450 916			1	0	
+019b6fbf-c2b9-72a1-a8c0-b7f8fe989c78	DT-283	Pirinia	Pirinia	Mischling	W		0.00	NULL	019b6f8b-fc49-785a-a84f-7650f5c7b828			lockig-gekraust	NULL	beige		Hund				1	0	
+019b6fbf-c2b9-72c3-8abf-056e606eb79e	DT-274	Kaya	Kaya	Irish Setter	W	2012-05-15	0.00	NULL	019b6f8b-fc49-7ac5-90a9-d74f4f0de0aa			langhaar	NULL	rot		Hund	756098100584510			1	0	
+019b6fbf-c2b9-72ca-8585-a04ddf731ef6	DT-306	Basil	Basil	West Highland White Terrier	M	2007-06-24	0.00	NULL	019b6f8b-fc49-715b-be64-4cbf0666c99f			lockig-gekraust	NULL	weiss		Hund				1	0	
+019b6fbf-c2b9-72cb-8b37-2bcbeab7d5fb	DT-297	Tobi	Tobi	Entlebucher-Mix	M	2007-10-13	0.00	NULL	019b6f8b-fc49-733c-a3a7-754f08210f16			kurzhaar	NULL			Hund				1	0	
+019b6fbf-c2b9-72cd-9d42-3b63306d5652	DT-227	Kira	Kira	Cairn Terrier x Beagle	W	2012-05-05	0.00	NULL	019b6f8b-fc48-7945-b5ab-455fdef4a835			rauhaar	0	tricolor braun		Hund	756098100570271			1	0	
+019b6fbf-c2b9-7354-8dfd-fe3cc42579eb	DT-335	Sissi	Sissi	Appenzeller x Belg.Schäfer	W	2011-11-26	0.00	NULL	019b6f8b-fc49-74b3-ad2e-a5c0bda0afb9			kurzhaar	NULL	schwarz weiss/braune Abzeichen		Hund	756098100559091			1	0	
+019b6fbf-c2b9-7355-ad37-f323c5ae8fe4	DT-184	Kosmo Merle  (Jöra)	Jöra	Australian Shepherd Dog	W	2012-02-10	0.00	NULL	019b6f8b-fc48-7408-98c8-944260635700			langhaar	0	red-merle-crème-weiss		Hund	756098100540207			1	0	
+019b6fbf-c2b9-735a-9295-2154a6481201	DT-206	Aramis	Ari	Berner Sennenhund	M	2008-03-16	0.00	NULL	019b6f8b-fc48-7508-b6b1-003fba872bdd			langhaar	1	tricolor schwarz		Hund	250268500065162			1	0	
+019b6fbf-c2b9-738e-a53f-247d82e85328	DT-285	Cando Scalloways	Cando	Groenendael	M	2008-05-01	0.00	NULL	019b6f8b-fc49-7b59-8a6c-4af844f2cdef			langhaar	NULL	schwarz		Hund				1	0	
+019b6fbf-c2b9-7399-b934-aa29e359ba85	DT-294	Jenny	Jenny	West Highland White Terrier	W	2004-03-15	0.00	NULL	019b6f8b-fc49-78f4-be12-2b21858a9968			lockig-gekraust	NULL	weiss		Hund				1	0	
+019b6fbf-c2b9-739d-bcc5-da7ff4eef6fe	DT-216	Vasco	Vasco	Cairn Terrier	M	2012-05-29	0.00	NULL	019b6f8b-fc48-7762-9e41-855d0085fcae			rauhaar	0	brindle		Hund	756098100582509			1	0	
+019b6fbf-c2b9-73cd-b7f6-e78335d44fbf	DT-267	Tegan	Tegan	Mix	H	2010-08-15	0.00	NULL	019b6f8b-fc48-79ed-beaf-19f34a75bc8d				NULL			Hund	978101080614046			1	0	
+019b6fbf-c2b9-73e2-941d-7c95e0a4998a	DT-299	Awacho v. Klonhof	Awacho	Rhodesian Ridgeback	M	2008-02-01	0.00	NULL	019b6f8b-fc49-7458-977b-2527f4302c8a			kurzhaar	NULL			Hund				1	0	
+019b6fbf-c2b9-73ec-965f-39466c633056	DT-337	Baco	Paco	Rehpinscher	M	2012-09-01	0.00	NULL	019b6f8b-fc49-7794-a8c2-2ad12266c041			kurzhaar	NULL			Hund	756098100571955			1	0	
+019b6fbf-c2b9-73f3-8a27-12adf012f4ec	DT-340	Afroudite	Afroudite	Yorkshire Terrier	W	2010-02-02	0.00	NULL	019b6f8b-fc49-7b29-87e0-dc90495f48ae				NULL			Hund	756097200187458			1	0	
+019b6fbf-c2b9-73f4-afe4-8f13cae659b9	DT-239	Jack	Jack	Deutschen Jagdterrier	M	2012-07-27	0.00	NULL	019b6f8b-fc48-76aa-9515-791b05a0dad9			rauhaar	0	braun mit Brand		Hund	756097200101125			1	0	
+019b6fbf-c2b9-7424-9629-0a36ef381094	DT-218	Aldavinur Fijall	Fijall	Samojede	M	2012-05-22	0.00	NULL	019b6f8b-fc48-7e53-977c-9ec209be2952			langhaar	0	weiss		Hund	756098100602411			1	0	
+019b6fbf-c2b9-7429-9825-adb8e2b16b73	DT-234	Neo	Neo	Berner Sennenhund	M	2010-10-27	0.00	NULL	019b6f8b-fc48-7df6-bbfd-b6b42b9f201b			langhaar	NULL	tricolor schwarz		Hund	756097200146814			1	0	
+019b6fbf-c2b9-742d-91c2-f77e1654ffb7	DT-279	Branco	Branco	Golden x Labrador x Neufundl.	M	2003-01-06	0.00	NULL	019b6f8b-fc48-7e24-8b49-1c3b40926dd6			langhaar	NULL	schwarz		Hund				1	0	
+019b6fbf-c2b9-743b-ab9a-4d3790e67687	DT-226	Kira	Kira	Appenzeller Mischling	W	2006-05-08	0.00	NULL	019b6f8b-fc48-7e11-aa66-8b8477f05d1e			kurzhaar	0	Scharz braun weiss		Hund	756097200036967			1	0	
+019b6fbf-c2b9-7481-8bd5-daff880dda33	DT-323	Lara	Lara	Labrador Retriever	W	2012-11-11	0.00	NULL	019b6f8b-fc49-7f68-836d-a775b68e7460			kurzhaar	NULL	silber		Hund				1	0	
+019b6fbf-c2b9-7487-b77b-ce854500cc64	DT-237	Rocky	Rocky	Schäfer x Appenzeller	M	2008-07-02	0.00	NULL	019b6f8b-fc48-7a4b-8b24-46f41e22bb05		24.09.2012 rifo: Ziel wäre es ihn mit zum Reiten zu nehmen
+
+jagt wie verrückt
+
+24.09.2012 rifo: Reisst an Leine wenn ein anderer Hund gekreutzt wird
+
+Am Gartenzaun Bellt er wie wild	halblanghaar	1	tricolor		Hund	756098100412606			1	0	
+019b6fbf-c2b9-7491-b5a9-670288ec15df	DT-225	Kian	Kian	Irish Terrier	M	2012-07-15	0.00	NULL	019b6f8b-fc48-7b6a-85d4-4fb91e599516				NULL			Hund				1	0	
+019b6fbf-c2b9-74e1-81bd-100847073329	DT-243	Gilli	Gilli	Papillon	W	2012-05-08	0.00	NULL	019b6f8b-fc48-7c4e-8c56-bb7db86756bd			langhaar	NULL	weiss braun		Hund	75608100590395			1	0	
+019b6fbf-c2b9-74fd-aae3-8dfd74870428	DT-255	Djamal	Djamal	Berger de Beauce	R	2010-04-28	0.00	NULL	019b6f8b-fc48-728a-944b-83028661e3f2			kurzhaar	NULL			Hund	276096900373001			1	0	
+019b6fbf-c2b9-750b-a947-0b4627149b8c	DT-188	Ronja	Römmie	Beagle	W	2011-06-08	0.00	NULL	019b6f8b-fc43-7e92-b83c-9d1059374b82			kurzhaar	0	tricolor braun		Hund	756098100553506			1	0	
+019b6fbf-c2b9-7512-898d-b6fd85e33c8c	DT-182	Zwirbel	Zwirbel	Prager Rattler (Prazsky Krysarik)	M	2008-09-26	0.00	NULL	019b6f8b-fc48-73d1-9c34-1e8fdf5a6373			halblanghaar	NULL	black-loh		Hund	756097200144514			1	0	
+019b6fbf-c2b9-751b-8300-2356db6f05ad	DT-257	Zamph	Zamph	Deutscher Schäferhund	R	2011-04-30	0.00	NULL	019b6f8b-fc48-7922-b86d-5448c991acb5			Stockhaar	NULL			Hund	756098100547418			1	0	
+019b6fbf-c2b9-753b-9d20-ed5e21638bd3	DT-214	Arko	Arko	Deutscher Schäferhund	M	2011-08-14	0.00	NULL	019b6f8b-fc48-77f5-8bbb-a7118d324fd9			lang-stock	0	grau		Hund	756098100504490			1	0	
+019b6fbf-c2b9-7540-a7a6-3b7e0b908530	DT-303	Chico v. Wiesentalidyll	Chico	Golden Retriever	M	2007-06-11	0.00	NULL	019b6f8b-fc49-754f-aa26-57ac811e4a6b			lockig-gekraust	NULL	beige		Hund				1	0	
+019b6fbf-c2b9-7541-9f63-6b8aad87a6f5	DT-336	Luna	Luna	Appenzeller Mischling	W	2001-05-16	0.00	NULL	019b6f8b-fc49-731d-ab05-95b2f5c6cee2				NULL			Hund	756097200029844			1	0	
+019b6fbf-c2b9-755c-8e95-24cd9b940de4	DT-250	Balu	Balu	Rottweiler x Cane Corso	R	2008-11-28	0.00	NULL	019b6f8b-fc48-77ae-ac2c-fc69d403708f			kurzhaar	NULL	schwarz		Hund	756 097 2000 84 923			1	0	
+019b6fbf-c2b9-7589-9a82-092123ac04f2	DT-302	Grace		Berner Sennenhund x Schäfer	W		0.00	NULL	019b6f8b-fc49-7525-8584-f4ca6c8ca5a8				NULL			Hund				1	0	
+019b6fbf-c2b9-759c-8aa9-8fab9311f09b	DT-329	Bella	Bella	Labrador Retriever	W	2010-09-01	0.00	NULL	019b6f8b-fc49-7cf7-b31f-42b3174b20d3				NULL			Hund				1	0	
+019b6fbf-c2b9-759c-9643-0ac8806f1f92	DT-278	Rika von der Bachhöhle	Rika	Deutscher Schäferhund	W	2004-07-30	0.00	NULL	019b6f8b-fc49-7599-b555-c05349896476				NULL			Hund				1	0	
+019b6fbf-c2b9-75a7-965d-7e3bd8b46b27	DT-325	Mahalia	Mahalia	Chihuahua kurzhaariger Schlag	W	2008-07-19	0.00	NULL	019b6f8b-fc49-73e1-b0a3-ad27a8230cb1			kurzhaar	NULL	braun		Hund	276098510256601			1	0	
+019b6fbf-c2b9-75a8-8ffb-9963d8ed6da9	DT-164	Eiko the happy black foot	Eiko	Labrador Retriever	M	2011-11-14	0.00	NULL	019b6f8b-fc48-75b0-96af-e419e14e821b			kurzhaar	0	schwarz		Hund	756098100571376			1	0	
+019b6fbf-c2b9-75aa-9577-74e137f8e967	DT-268	Bläss	Drake	Appenzeller Sennenhund	M	2011-03-25	0.00	NULL	019b6f8b-fc48-7996-9b58-a8dec5b5a43a			kurzhaar	NULL	tricolor		Hund	756098100551310			1	0	
+019b6fbf-c2b9-75b7-95d2-ad29cc984a10	DT-273	Nino	Nino	Belgischer Schäfer Mix	M	2012-10-23	0.00	NULL	019b6f8b-fc49-7ba7-b799-3676a3d2d02e				NULL	grau-schwarz		Hund	756098100593209			1	0	
+019b6fbf-c2b9-75d2-93f3-a7cde99da2ce	DT-180	Charisma von Goldstück	Cara	Labrador	W	2009-08-09	0.00	NULL	019b6f8b-fc48-794d-98a0-75c6b6282217			kurzhaar	NULL	silber		Hund	756097200185015			1	0	
+019b6fbf-c2b9-75de-8155-5755d475c32f	DT-334	Alegra	Alegra	Border Collie Mix	W	2007-08-09	0.00	NULL	019b6f8b-fc49-7570-af7e-d4f2e4e49e4d				NULL			Hund	756098100365477			1	0	
+019b6fbf-c2b9-75fd-9d41-61000475ef58	DT-170	Nils	Nils	Bichon Bologneser	M	2011-05-27	0.00	NULL	019b6f8b-fc48-78ad-a4dd-8f77a8eadde5			lockig-gekraust	0	weiss		Hund	348093900003380			1	0	
+019b6fbf-c2b9-761b-b88c-e57437117b70	DT-245	Nayak	Nayak	Samojede	R	2008-01-02	0.00	NULL	019b6f8b-fc48-700a-b1c3-af21f2a6095d			langhaar	0	weiss		Hund	276 097 200 731 430			1	0	
+019b6fbf-c2b9-7637-b48d-751a898fb68d	DT-185	Cayenne	Cayenne	Berger de Picardie	W	2007-02-20	0.00	NULL	019b6f8b-fc48-7c02-8cc1-fc5ebd37b06b			rauhaar	0	fauve-charbonné		Hund	981100000119930			1	0	
+019b6fbf-c2b9-765b-9c0d-81d215f0dbc7	DT-308	Gina	Gina	Deutscher Schäferhund	W	2008-07-01	0.00	NULL	019b6f8b-fc49-7038-bdca-a4a1f8c5eeac			kurzhaar	NULL	schwarz braun		Hund	756 098 100 411 327			1	0	
+019b6fbf-c2b9-7677-84f8-b9f6a01cac03	DT-160	JJ	JJ	Dalmatiner	W	2010-11-24	0.00	NULL	019b6f8b-fc48-7d94-85cb-4a866230020e			kurzhaar	NULL	weiss-schwarz		Hund				1	0	
+019b6fbf-c2b9-769a-a18c-a3ec7805c561	DT-252	Akita	Akita	Labrador x Appenzeller	H	2012-07-29	0.00	NULL	019b6f8b-fc48-72b3-a88f-a236c6fe73aa			halblanghaar	NULL	schwarz		Hund	756098500073400			1	0	
+019b6fbf-c2b9-76aa-9b4e-31c83a322194	DT-162	Timi v. den Farbigen Pfoten	Timi	Bolonka Zwetna	M	2011-12-03	0.00	NULL	019b6f8b-fc48-719e-afe4-c393c58bdd54			gewellt	0	schwarz weiss		Hund	756095200137053			1	0	
+019b6fbf-c2b9-76bc-bbf2-cc2ef1640392	DT-197	Gipsy	Gipsy	Yorkie x Malteser	M	2011-07-01	0.00	NULL	019b6f8b-fc48-7cd2-ab3c-cf62d319632f				NULL			Hund				1	0	
+019b6fbf-c2b9-76d0-9d31-017c6edcb34a	DT-341	Chica	Chica	Bologneser	W	2013-01-26	0.00	NULL	019b6f8b-fc49-7b53-b7cc-6f55c29aef06				NULL			Hund	900032001645169			1	0	
+019b6fbf-c2b9-76d1-aa16-a25dee282819	DT-318	Stella	Stella	Lagotto Romagnolo	W	2012-03-15	0.00	NULL	019b6f8b-fc49-7de0-a9fc-ba699f223c38			lockig-gekraust	NULL			Hund	756098100565904			1	0	
+019b6fbf-c2b9-774e-b650-3768d76ad7a5	DT-290	Kira	Kira	Appenzeller x Bergamasker	W	2008-04-30	0.00	NULL	019b6f8b-fc49-75e0-97c6-275828716c5b			halblanghaar	NULL			Hund				1	0	
+019b6fbf-c2b9-775d-959d-98f5e8d6cbec	DT-203	Roy	Roy	Pudel	M	2005-08-12	0.00	NULL	019b6f8b-fc48-71bd-a7e5-39d48ce3316a			lockig-gekraust	1	black & tan		Hund	756098100243095			1	0	
+019b6fbf-c2b9-776d-967d-aba65a8b49b3	DT-314	Luna	Luna	Bichon Havanese	W	2012-12-01	0.00	NULL	019b6f8b-fc49-7874-97b0-0d9521e95775				NULL			Hund	941000014672692			1	0	
+019b6fbf-c2b9-7776-b086-201376a16cf9	DT-211	Diamond-Dayna	Dayna	Leonberger	W	2011-07-18	0.00	NULL	019b6f8b-fc47-728e-8505-37d234486078			langhaar	1	Löwengelb mit Maske		Hund	756098100559269			1	0	
+019b6fbf-c2b9-7784-b185-4ba2ad0508e4	DT-315	Lola	Lola	Australien Shepherd	W	2013-01-02	0.00	NULL	019b6f8b-fc48-76bb-87f8-2ece54ff2b11				0			Hund	756098100613993			1	0	
+019b6fbf-c2b9-7784-b7ce-8c22aaa2dc90	DT-220	Germaine	Germaine	Beauceron Berger de Beauce	W	2012-04-15	0.00	NULL	019b6f8b-fc48-76cf-a6ee-7562aa8dcbbf			kurzhaar	0	harlekin		Hund	276096901137448			1	0	
+019b6fbf-c2b9-778e-b665-ded2c9562d14	DT-332	Polly v. Greenparadise	Polly	Labrador Retriever	W	2009-08-31	0.00	NULL	019b6f8b-fc49-7ff7-99bb-7c9606022ab6			kurzhaar	NULL	chocholat		Hund				1	0	
+019b6fbf-c2b9-779a-8562-ed45819346c0	DT-192	Boubou	Boubou	Biewer Yorkshire Terrier	M	2010-02-20	0.00	NULL	019b6f8b-fc48-72e2-9ee1-08e0e0ecd52e				NULL			Hund				1	0	
+019b6fbf-c2b9-77dc-83ff-566c05ae3dbc	DT-166	Ruca	Ruca	Zwergspitz	M	2011-10-25	0.00	NULL	019b6f8b-fc48-728f-8be1-0b1f7422c884			langhaar	0	salz & pfeffer		Hund	978000001461777			1	0	
+019b6fbf-c2b9-77e0-bd22-728932277c57	DT-165	Argo	Argo	Tschechischen Wolfshund	M	2011-10-21	0.00	NULL	019b6f8b-fc48-72de-9bfd-93a40c52d0c7			kurzhaar	0	gefleckt grauer Untergrund		Hund	978000001423540			1	0	
+019b6fbf-c2b9-77e2-9d7c-0759e9711112	DT-345	Maddie	Maddie	Chihuahua langhaariger Schlag	W	2008-12-18	0.00	NULL	019b6f8b-fc49-7de0-9f5f-e773d9c350f2			langhaar	NULL	braun		Hund	040096100119477			1	0	
+019b6fbf-c2b9-77f5-9eec-fa03d38229f6	DT-266	Aslan	Aslan	Golden Retriever	M	2012-06-20	0.00	NULL	019b6f8b-fc48-7b95-8bc2-69143ca0215d			langhaar	NULL	golden		Hund	756098100601199			1	0	
+019b6fbf-c2b9-7822-9037-cf4468c3bf84	DT-282	Amigo/Aragon v. Palmenstein	Amigo/Aragon	Landseer	M	2007-01-28	0.00	NULL	019b6f8b-fc49-74c2-8019-84162506f477			halblanghaar	NULL	schwarz weisse Abzeichen		Hund				1	0	
+019b6fbf-c2b9-7894-89c9-50d8b0a0ccc5	DT-208	Daisy	Daisy	Appenzeller  Mischling	W	2012-02-05	0.00	NULL	019b6f8b-fc43-7aa9-b9bc-6e4a4c145c9e			kurzhaar	NULL	tricolor schwarz		Hund	756 098 100 558 163			1	0	
+019b6fbf-c2b9-7901-91dc-d5ad9519655b	DT-247	Luci	Luci	Chihuahua	H		0.00	NULL	019b6f8b-fc48-7a6a-b558-fcebd79ab27a				NULL			Hund				1	0	
+019b6fbf-c2b9-7907-bc59-044decaa5910	DT-288	Zappa	Zappa	Pon	M	1999-01-22	0.00	NULL	019b6f8b-fc49-78ee-b7a8-9eb05d944767				NULL			Hund				1	0	
+019b6fbf-c2b9-7908-a533-6799f86f3400	DT-339	Herkules	Herkules	Yorkshire Terrier	M	2009-01-05	0.00	NULL	019b6f8b-fc49-7b29-87e0-dc90495f48ae			lockig-gekraust	NULL			Hund	941000002837198			1	0	
+019b6fbf-c2b9-791e-bd1b-d3df472d08d5	DT-219	Moira	Moira	Border Collie Mischling	W	2012-04-08	0.00	NULL	019b6f8b-fc48-7115-a6d2-a1f17dcdd2ee			langhaar	NULL	schwarz-weisse		Hund	756097200095704			1	0	
+019b6fbf-c2b9-792c-8ca5-3290a6a02430	DT-189	Luna	Luna	Biewer Yorkshire Terrier x Yorkshire Terrier	W	2011-07-07	0.00	NULL	019b6f8b-fc48-76ee-8bc1-f103a0adfd44			halblanghaar	0	tricolor braun		Hund	756097200151161			1	0	
+019b6fbf-c2b9-7944-b105-92cb01104100	DT-171	Nicky	Nicky	Bolonka Zwetna	M	2011-08-27	0.00	NULL	019b6f8b-fc48-7b31-87d8-f3cf2eff3aa0			langhaar	0	schwarz		Hund	276093400194982			1	0	
+019b6fbf-c2b9-7974-91a6-517b849524db	DT-240	Lili	Lili	Border Terrier	W	2012-06-14	0.00	NULL	019b6f8b-fc48-7c46-937b-b9fe65d00081			rauhaar	NULL			Hund	756098100602821			1	0	
+019b6fbf-c2b9-7975-a912-c6fedfe037e1	DT-191	Yellow	Yellow	Neufundländer	W	2011-10-01	0.00	NULL	019b6f8b-fc48-7d7c-882b-bd4201f879b4			langhaar	0	schwarz		Hund	276096100301327			1	0	
+019b6fbf-c2b9-7981-b306-9d36d26d8e31	DT-249	Fredy	Fredy	Deutscher Schäferhund	R	2011-11-20	0.00	NULL	019b6f8b-fc48-7284-ba29-0556acf663ad			langhaar	NULL	schwarz-braun		Hund	756 098 100 566 957			1	0	
+019b6fbf-c2b9-7992-9785-76934ed8457b	DT-177	Max	Max	Collie x Schäfer	M	2005-01-01	0.00	NULL	019b6f8b-fc48-794b-80eb-69564a8e9f7f		20.05.2012 such: gjfgznbjbftzumtzb	kurzhaar	1	hellbraun		Hund	756098100304708			1	0	
+019b6fbf-c2b9-7998-83ef-28385f1bfc0c	DT-232	Shila	Shila	Mischling	W	2008-04-02	0.00	NULL	019b6f8b-fc48-73a3-89c8-69ccf9cdabe3			kurzhaar	NULL	weiss, braun gestromt		Hund	939000010038363			1	0	
+019b6fbf-c2b9-799a-a858-0f50a99068ea	DT-328	Uschka vom Termitenstaat	Uschka	Deutscher Schäferhund	W	2011-04-08	0.00	NULL	019b6f8b-fc49-71f8-a0a2-3a4673615daf			kurzhaar	NULL			Hund	756 098 100 527 571			1	0	
+019b6fbf-c2b9-79bb-b519-8279265a1c1a	DT-311	Minou	Minou	Yorkshire Terrier	W	2010-11-04	0.00	NULL	019b6f8b-fc49-7131-ba3b-c16acc4c9a28				NULL			Hund				1	0	
+019b6fbf-c2b9-79c0-8964-9026c5c2c2be	DT-179	Fuchur	Fuchur	Welsh Corgi x Montagne des Pyrénées	M	2010-01-15	0.00	NULL	019b6f8b-fc48-764f-9b72-0169a1e4a0c2			langhaar	1	hellbraun-weiss		Hund	900 032 000 242 158			1	0	
+019b6fbf-c2b9-79e5-9059-d4a44e0dde2c	DT-304	Zera	Zera	Labrador Retriever	W	2008-08-06	0.00	NULL	019b6f8b-fc49-7f75-929f-404ae9577a75			kurzhaar	NULL	schwarz		Hund				1	0	
+019b6fbf-c2b9-79fd-a793-affaac58adfc	DT-284	Cenja Scalloways	Cenja	Groenendael	W	2008-05-01	0.00	NULL	019b6f8b-fc49-79f2-8907-97e6c4dd8b71			langhaar	NULL	schwarz		Hund				1	0	
+019b6fbf-c2b9-7a08-9a0e-978ecc162caf	DT-196	Callas	Callas	Bernhardiner	W	2011-10-15	0.00	NULL	019b6f8b-fc48-7ca1-9264-7178a4a18890				0			Hund				1	0	
+019b6fbf-c2b9-7a4a-9965-f3db513955bb	DT-231	Basci Youma von Arsidi	Basci	Riesenschnauzer	M	2011-05-22	0.00	NULL	019b6f8b-fc48-76ef-b4bd-f019ea4310de			rauhaar	NULL	schwarz		Hund	756098100556252			1	0	
+019b6fbf-c2b9-7a6e-bd46-1067625f0556	DT-333	Chico	Chico	Bologneser	M	2013-01-26	0.00	NULL	019b6f8b-fc49-7b53-b7cc-6f55c29aef06				NULL			Hund	900032001645161			1	0	
+019b6fbf-c2b9-7a93-9a3a-efb64ca6d23b	DT-292	Aldavinur Fijall	Fijall	Samojede	M	2012-05-22	0.00	NULL	019b6f8b-fc49-7dc7-904f-41eca3088a40			langhaar	0	weiss		Hund	756098100602411			1	0	
+019b6fbf-c2b9-7a9d-845a-1c51a16b30bd	DT-186	Hector	Hector	Langhaardackel	M	2012-02-10	0.00	NULL	019b6f8b-fc48-7f11-b062-7f24065f99f7			langhaar	0	schwarz braun		Hund	250269604607147			1	0	
+019b6fbf-c2b9-7ab5-a232-c184893b2396	DT-286	Julie	Julie	Jack-Russell-Terrier	W	2008-04-05	0.00	NULL	019b6f8b-fc49-700f-bb14-30725df2d3cd			kurzhaar	NULL			Hund				1	0	
+019b6fbf-c2b9-7ab5-a848-6208cd66f841	DT-301	Grappa v. Camwood	Grappa	Flat Coated Retriever	W	2008-03-16	0.00	NULL	019b6f8b-fc49-7391-8f06-471e00148db0			langhaar	NULL	schwarz		Hund				1	0	
+019b6fbf-c2b9-7acd-9cfc-16efc9708eb4	DT-262	Daisy	Daisy	American Staffordshire Terrier	W	2010-03-16	0.00	NULL	019b6f8b-fc48-7aab-8c38-284a51fed7c6			kurzhaar	NULL	hell gestromt		Hund	945000000425781			1	0	
+019b6fbf-c2b9-7ada-84db-773e139eee95	DT-344	Idefix	Idefix	Appenzeller Sennenhund Mischling	M	2007-06-02	0.00	NULL	019b6f8b-fc49-7d95-a646-6755717d58a4			kurzhaar	1	tricolor schwarz		Hund	756097200126268			1	0	
+019b6fbf-c2b9-7ae7-a139-14315268fd6a	DT-209	Maya	Maya	Siberian Husky	W	2012-03-07	0.00	NULL	019b6f8b-fc47-72c3-bb6c-8257ee334813			halblanghaar	0	grau weiss		Hund	756097200134372			1	0	
+019b6fbf-c2b9-7af7-87e2-311d236e48e8	DT-307	Azzurro	Azzurro	Australian Shepherd Dog	M	2006-01-18	0.00	NULL	019b6f8b-fc49-769f-bcc4-d944935be619			halblanghaar	NULL			Hund				1	0	
+019b6fbf-c2b9-7b20-8f94-6ad654b929b5	DT-271	Aashka	Aashka	Hovawart	W	2009-07-09	0.00	NULL	019b6f8b-fc49-7854-844b-8c721cd00ee3			langhaar	NULL	schwarz marken		Hund	276098102763536			1	0	
+019b6fbf-c2b9-7b3f-9d40-d8ccaffdf2f9	DT-181	Charly	Charly	Australian Shepherd x Border Collie	M	2008-01-01	0.00	NULL	019b6f8b-fc48-7883-b82b-e886de43ef3e			langhaar	NULL	schwarz-weiss		Hund	276093400222065			1	0	
+019b6fbf-c2b9-7b7c-b7f9-08733e6ebde6	DT-175	Gazal	Gazal	Anglo-Francais de Petite Vénerie	M	2011-06-05	0.00	NULL	019b6f8b-fc48-7f27-bc02-7c1cf95bb52e			kurzhaar	1	tricolor braun		Hund				1	0	
+019b6fbf-c2b9-7ba9-bd49-ba4ec9c7c99f	DT-331	Cedor vom Grostal	Cedor	Alpenländische Dachsbracke	M	2009-03-10	0.00	NULL	019b6f8b-fc49-7ebe-9b4f-c0a54341370f				1			Hund				1	0	
+019b6fbf-c2b9-7bde-a9c7-82c09b726823	DT-327	Higgins	Higgins	Beagle	M	2006-08-27	0.00	NULL	019b6f8b-fc49-7b51-be72-7d69f7164d2b			kurzhaar	NULL			Hund				1	0	
+019b6fbf-c2b9-7be0-9c4c-ed3610d9d782	DT-295	Ché	Ché	Irish Terrier	M	2008-08-31	0.00	NULL	019b6f8b-fc49-733c-9235-6665b459a6ef			lockig-gekraust	NULL	beige		Hund				1	0	
+019b6fbf-c2b9-7c04-a084-734539694270	DT-233	Woody v. Defuns	Woody	Border Collie	M	2011-12-11	0.00	NULL	019b6f8b-fc47-7769-b2ce-ed0a862b1a59			langhaar	0	tricolor schwarz		Hund	756098100548765			1	0	
+019b6fbf-c2b9-7c07-a930-1e53157949e1	DT-169	Fynn	Fynn	Bichon Bologneser	M	2011-05-27	0.00	NULL	019b6f8b-fc48-78ad-a4dd-8f77a8eadde5			lockig-gekraust	0	weiss		Hund	939000010198639			1	0	
+019b6fbf-c2b9-7c19-9f95-29d4083167f8	DT-269	Ambitious'N'Delightfully	Banshee	Französische Bulldogge	H	2012-09-19	0.00	NULL	019b6f8b-fc48-7796-b264-e2653f422352			kurzhaarig	NULL	reverse- hell gestromt		Hund	756098500080399			1	0	
+019b6fbf-c2b9-7c19-aa7e-e2bd956f5ec1	DT-174	Schneeball	Schneeball	Samojede	W	2011-05-20	0.00	NULL	019b6f8b-fc48-785a-8595-fd9dcb2ee3e7			langhaar	0	weiss		Hund	756097200149193			1	0	
+019b6fbf-c2b9-7c29-abc1-c19023b65baa	DT-204	Chester	Chester	Cocker Spaniel	M	2011-10-28	0.00	NULL	019b6f8b-fc48-77b9-9272-6e3f1a78b85e			langhaar	0	hellbraun		Hund	756094500213655			1	0	
+019b6fbf-c2b9-7c4d-8cfa-c7a1eea83466	DT-195	Acki	Acki	Zwergpudel	M	2004-11-01	0.00	NULL	019b6f8b-fc48-77ef-90da-be971dc04bca			lockig-gekraust	NULL	beige		Hund				1	0	
+019b6fbf-c2b9-7c56-948e-9af40bb14c06	DT-289	Tara	Tara	Labrador Retriever	W	2008-09-12	0.00	NULL	019b6f8b-fc49-7840-b953-7955d3546c55			kurzhaar	NULL	schwarz		Hund				1	0	
+019b6fbf-c2b9-7c58-9873-f50f7c14e81a	DT-217	Subi	Subi	Französische Bulldogge	W	2012-03-17	0.00	NULL	019b6f8b-fc48-7a57-97df-29d2fa678b8b			kurzhaar	0	schwarz weisse Abzeichen		Hund	900032001250294			1	0	
+019b6fbf-c2b9-7c75-b360-aeeaa2e470f8	DT-229	Meli	Meli	Boxer	W	2012-04-21	0.00	NULL	019b6f8b-fc48-7732-998b-1c45fcac13d2			kurzhaar	0	hirschrot		Hund	756098100591710			1	0	
+019b6fbf-c2b9-7c7f-bd15-a1e17ddfbbed	DT-320	Amy	Amy	Mischling	W	2012-02-01	0.00	NULL	019b6f8b-fc48-754e-8f73-3adbc5630a1e				NULL			Hund	941000013744825			1	0	
+019b6fbf-c2b9-7c95-a9d7-0f4076055b9a	DT-338	Amarok	Amarok	Bergamasker Mischling	M	2012-06-10	0.00	NULL	019b6f8b-fc47-7d67-a127-b1c124ee1367				NULL			Hund	7560972000856			1	0	
+019b6fbf-c2b9-7c96-8cff-642796e5cb69	DT-275	Bryan	Bryan	Labrador Retriever	M	2011-08-23	0.00	NULL	019b6f8b-fc49-733e-b306-443d611bc8d1			kurzhaar	NULL	chocholat		Hund	756097200147219			1	0	
+019b6fbf-c2b9-7ca5-8dd5-e05adc03fb8a	DT-163	Udjno v. Shenjamo	Udjno	Labrador Retriever	M	2011-12-01	0.00	NULL	019b6f8b-fc48-7593-aa85-d60eff9c8085			kurzhaar	0	gelb		Hund	756094500214665			1	0	
+019b6fbf-c2b9-7ce6-bb01-a8a6e45591ea	DT-161	Frodo vom Rottal	Frodo	Grosser Schweizer Sennenhund	M	2003-09-29	0.00	NULL	019b6f8b-fc48-7a5a-80f0-fe7ba8c4c89f			kurzhaar	1	braun weiss		Hund				1	0	
+019b6fbf-c2b9-7cef-8cd1-8fa99235a71b	DT-287	Toby	Toby	Berner Sennenmix	M	2007-08-16	0.00	NULL	019b6f8b-fc49-7c06-bcfd-080c5feda966			lockig-gekraust	NULL			Hund				1	0	
+019b6fbf-c2b9-7d01-aef0-04825c458c58	DT-261	Aldavinur Frekja	Frekia	Samojede	H	2012-05-22	0.00	NULL	019b6f8b-fc48-711c-b8ba-0e67db573845			langhaar	0	weiss		Hund	756098100604554			1	0	
+019b6fbf-c2b9-7d08-8bc8-ece8f8b016d6	DT-321	Sira	Sira	Labrador Retriever X	W	2001-11-03	0.00	NULL	019b6f8b-fc49-7991-bb36-af494b5be9dc				NULL			Hund	985100008448291			1	0	
+019b6fbf-c2b9-7d35-a61e-88903453f817	DT-270	Momo	Momo	Mittelpudel	W	2011-12-04	0.00	NULL	019b6f8b-fc49-74ef-b9e3-14d0d225fb64			lang, gelockt	NULL	schwarz-weiss		Hund	276097202220676			1	0	
+019b6fbf-c2b9-7d5e-aa03-fcfb78baba89	DT-241	Scalloway`s Lascar	Lascar	Tervueren / Belgischer Schäferhund	M	2012-06-25	0.00	NULL	019b6f8b-fc48-7bb7-a615-d9d3a841371b			langhaar	0	braun mit Brand		Hund	756097200155563			1	0	
+019b6fbf-c2b9-7d62-8fc6-19ed9f002d94	DT-258	Geordy von der Savrazenen	Geordy	Irish Wolfhound	M	2012-07-10	0.00	NULL	019b6f8b-fc48-73f1-8e2e-801ebe2d9afd			rauhaar	NULL	crème		Hund	276098104485890			1	0	
+019b6fbf-c2b9-7d80-9a6c-e3e0ea2b92b7	DT-305	Lea v. Luxatori	Lea	Magyar Vizsla	W	2008-06-28	0.00	NULL	019b6f8b-fc49-7b4f-86d8-e8b1ff605a69			kurzhaar	NULL			Hund				1	0	
+019b6fbf-c2b9-7d8c-a06b-7c4699a8b757	DT-224	Mell	Mell	Malteser	W	2010-05-26	0.00	NULL	019b6f8b-fc48-735a-939e-cf8fb0b10448			halblanghaar	0	weiss		Hund	756098100212220			1	0	
+019b6fbf-c2b9-7db7-a2d9-cb1e4c75d114	DT-172	Speedy	Speedy	Französische Bulldogge	M	2011-08-18	0.00	NULL	019b6f8b-fc48-7fb7-ba9a-3fe680843211			kurzhaar	NULL	schwarz-weisse		Hund	939000010232910			1	0	
+019b6fbf-c2b9-7db8-b637-36df9d1b71f7	DT-235	Tino	Tino	Neufundländer	M	2008-10-04	0.00	NULL	019b6f8b-fc48-7d7c-882b-bd4201f879b4			langhaar	1	schwarz		Hund	756097200085712			1	0	
+019b6fbf-c2b9-7dd4-a106-f549caaa61b2	DT-194	Nala	Nala	Collie	W	2010-05-25	0.00	NULL	019b6f8b-fc48-7d0e-8c67-473217bd30b2			langhaar	NULL			Hund				1	0	
+019b6fbf-c2b9-7e3a-9d40-7dea583790ed	DT-276	Hund		Yorkshire Terrier	X		0.00	NULL	019b6f8b-fc49-79f1-8826-8229b39802ed		31.01.2013 rifo: Tel. vom 31.01.2013
+
+Agressiver und wilder Yorki		NULL			Hund				1	0	
+019b6fbf-c2b9-7e3f-a77b-854f199c9651	DT-293	Arko	Arko	Brandlbracke	M	2012-05-17	0.00	NULL	019b6f8b-fc49-7b2d-bf47-edcfe55dcd73			kurzhaar	0	schwarz-btaun		Hund	040098100356163			1	0	
+019b6fbf-c2b9-7e49-bbd8-c23b8732bc9a	DT-215	Arko	Arko	Brandlbracke	M	2012-05-17	0.00	NULL	019b6f8b-fc48-75c0-9279-d68601d35cb1			kurzhaar	0	schwarz-braun		Hund	040098100356163			1	0	
+019b6fbf-c2b9-7e52-9d4b-8cf813da9583	DT-309	Chipo	Chipo	Rhodesian Ridgeback	M	2012-10-01	0.00	NULL	019b6f8b-fc49-7cc6-b7ce-69c1125e2a2c			kurzhaar	NULL			Hund	276098104583806			1	0	
+019b6fbf-c2b9-7e7f-bf6f-df0dfc69dfca	DT-199	Gina	Gina	Lagotto Romagnolo	W	2011-08-15	0.00	NULL	019b6f8b-fc48-70fb-a887-f0e27d521b94			lockig-gekraust	0	bianco marrone		Hund	756098500071275			1	0	
+019b6fbf-c2b9-7e95-a84e-7e952a6012d8	DT-198	Cheveyo	Cheveyo	Saarlooswolfhond	M	2011-11-01	0.00	NULL	019b6f8b-fc48-702e-aa90-efe846c883ec				NULL			Hund				1	0	
+019b6fbf-c2b9-7e9b-8545-6e0b4c9c3b2b	DT-326	Jimbo	Jimbo	Mischling	M	2007-02-01	0.00	NULL	019b6f8b-fc49-7a76-9ddc-b8761e3dd4c1			kurzhaar	1	rotbraun		Hund	756097200138390			1	0	
+019b6fbf-c2b9-7eac-ae6a-44204efd96ab	DT-246	Anique	Anique	Labrador Retriever	R	2011-06-24	0.00	NULL	019b6f8b-fc48-7190-b0c8-628f31413b11			kurzhaar	NULL	chocholat		Hund	756 098 100 552 911			1	0	
+019b6fbf-c2b9-7ecd-8516-6ccdb38009b7	DT-280	Mäx	Mäx	Beagle	M	2004-07-29	0.00	NULL	019b6f8b-fc48-78de-8a63-7256c6bf23f3			kurzhaar	NULL			Hund				1	0	
+019b6fbf-c2b9-7ed0-8fe7-975d7fbb94f0	DT-210	Kira	Kira	Jack-Russell x Dackel Mix	W	2011-11-27	0.00	NULL	019b6f8b-fc48-7c9a-b9b1-a719e686f4ff			kurzhaar	NULL	braun mit Brand		Hund				1	0	
+019b6fbf-c2b9-7ee5-86bc-5c0b160949af	DT-272	Rambo	Rambo	Pudel	M	2011-09-01	0.00	NULL	019b6f8b-fc49-7614-917d-b30cadccc6a9				1	harlekin		Hund	276094500018085			1	0	
+019b6fbf-c2b9-7ef0-b38e-457578df1aec	DT-310	Sheriff	Sheriff	Mops	M	2011-03-07	0.00	NULL	019b6f8b-fc49-73bb-a549-989a9781f44c				NULL			Hund				1	0	
+019b6fbf-c2b9-7f1a-b5fb-b2b9e18c7e8b	DT-238	Murphy	Murphy	Französische Bulldogge	M	2012-06-01	0.00	NULL	019b6f8b-fc48-79ed-8968-f73d67af1b17			kurzhaar	NULL	weiss / schwarz		Hund	981020007210764			1	0	
+019b6fbf-c2b9-7f26-9e66-6cc7fc2eb645	DT-296	Pagliaccio	Pagliaccio	Appenzeller x Vorstehhund	M	2005-02-01	0.00	NULL	019b6f8b-fc49-713f-889f-3debfeb21f63			kurzhaar	NULL			Hund				1	0	
+019b6fbf-c2b9-7f65-aa66-873d8fc93754	DT-187	"Corwin" Laub	Corwin	Shetland Sheepdog (Sheltie)	M	2012-02-10	0.00	NULL	019b6f8b-fc48-798c-8376-14f2cecfccf3			langhaar	0	tricolor schwarz		Hund	756098500075145			1	0	
+019b6fbf-c2b9-7f74-b7b6-c816b8cab95f	DT-222	Aijkira	Aijkira	Labrador Retriever	W	2012-05-07	0.00	NULL	019b6f8b-fc48-7d00-b0ef-2d78663d1705			kurzhaar	0	chocholat		Hund	756095200101436			1	0	
+019b6fbf-c2b9-7f75-a284-7370f1457d46	DT-298	Foxli	Foxli	Foxterrier Mix	M	1999-01-01	0.00	NULL	019b6f8b-fc49-7570-af7e-d4f2e4e49e4d				NULL			Hund				1	0	
+019b6fbf-c2b9-7f77-b006-0b19b90f358b	DT-263	Amalee	Amalee	Französische Bulldogge	H	2012-09-19	0.00	NULL	019b6f8b-fc48-7555-891c-365d75a4cefc			kurzhaar	NULL	beige		Hund	756 098 500 080 386			1	0	
+019b6fbf-c2b9-7f8b-a9ac-732df1ab3097	DT-193	Ben	Ben	Labrador Retriever	M	2011-08-24	0.00	NULL	019b6f8b-fc48-79e7-a686-dcad25c88ddd				NULL			Hund				1	0	
+019b6fbf-c2b9-7f9c-90d8-3a2a7432897a	DT-159	Penny	Penny	Labrador Retriever	W	2004-11-26	0.00	NULL	019b6f8b-fc48-76df-919d-ff59da009b90			kurzhaar	NULL			Hund				1	0	
+019b6fbf-c2b9-7fb8-9275-d50c603837c9	DT-277	Sydney-Nero	Nero	Labrador Retriever	M	2012-08-18	0.00	NULL	019b6f8b-fc48-74ab-8abd-3f12ee806afb			kurzhaar	NULL	schwarz		Hund	756094500218957			1	0	
+019b6fbf-c2b9-7fd7-8c81-f77fda574858	DT-242	Bruce	Bruce	Beagle	M		0.00	NULL	019b6f8b-fc48-78de-8a63-7256c6bf23f3			kurzhaar	0	braun mit Brand		Hund				1	0	
+019b6fbf-c2b9-7fd9-bf31-c6a4c3c9eee1	DT-342	Jacki	Jacki	Jack-Russell-Terrier Mix	M	2010-06-20	0.00	NULL	019b6f8b-fc49-7459-b84a-0fe8bedcde0c				NULL			Hund	276094100133694			1	0	
+019b6fbf-c2b9-7fdc-914e-f199a50f046c	DT-281	Gowy v. Happy Paradise	Gowy	Airedale Terrier	M	2008-07-14	0.00	NULL	019b6f8b-fc49-7b29-844e-10deda2f7e3e			lockig-gekraust	NULL			Hund				1	0	
+019b6fbf-c2b9-7fee-9339-40ec835fa8d3	DT-259	Barka	Barka	Jagdhund Mischling	H	2011-03-01	0.00	NULL	019b6f8b-fc48-712f-a110-155173ef6435			kurzhaar	NULL			Hund	939000010170830			1	0	
+019b6fbf-c2ba-7032-a324-7bf97e4e892f	DT-396	Pumba	Pumba	Mops	M	2011-12-23	0.00	NULL	019b6f8b-fc49-72af-8e8c-f79c4d2234f6				NULL			Hund	756098100578402			1	0	
+019b6fbf-c2ba-70a1-a4be-1bde9e7cd37c	DT-372	Anni	Änni	Schwarzwälder Schweisshund	W	2011-04-30	0.00	NULL	019b6f8b-fc49-72b6-be90-445dcdd2874a			kurzhaar	NULL	hell gestromt		Hund	982000088383903			1	0	
+019b6fbf-c2ba-70b1-841a-7e1d50c42077	DT-127	Balou	Balou	Katalan. Hirtenhund x Collie	M	2010-05-23	0.00	NULL	019b6f8b-fc48-7911-9f5d-8e71c5f880c6			langhaar	NULL	braun		Hund	756097200190923			1	0	
+019b6fbf-c2ba-70b7-9580-60939d4cd2c6	DT-365	Kenny	Kenny	Chihuahua	M	2007-06-12	0.00	NULL	019b6f8b-fc49-7880-8c0f-734441daafef				1	beige		Hund	756098100343728			1	0	
+019b6fbf-c2ba-710a-8ebc-844e2b328c75	DT-384	Spike	Spike	Bolonka Zwetna	M	2008-07-23	0.00	NULL	019b6f8b-fc49-7521-9817-435fec3969f7			lockig-gekraust	NULL	chocholat		Hund	7560981000418023			1	0	
+019b6fbf-c2ba-7114-afee-4a8d7cf8f622	DT-343	Dixi , Doki	Dixie	Dachshund	W	2008-01-01	0.00	NULL	019b6f8b-fc49-7f4a-b509-6a7b552ac56b				1	black & tan		Hund	939000010285853			1	0	
+019b6fbf-c2ba-7121-8d3f-1bad8f71f0d2	DT-230	Simba	Simba	Havaneser	M	2012-03-01	0.00	NULL	019b6f8b-fc48-7150-8212-c8b4785dd597			langhaar	0	beige		Hund	756098100554292			1	0	
+019b6fbf-c2ba-719c-b971-5edb63e36636	DT-380	Angel	Angel	Samojede	W	2013-06-01	0.00	NULL	019b6f8b-fc48-785a-8595-fd9dcb2ee3e7			langhaar	NULL	weiss		Hund	756098100615009			1	0	
+019b6fbf-c2ba-71d5-88fc-142f73582c6d	DT-391	Birka	Birka	Deutscher Schäferhund	W	2013-06-30	0.00	NULL	019b6f8b-fc49-7fb9-9be7-038ed4a783e8			kurzhaar	NULL	braun schwarz		Hund	981189900043289			1	0	
+019b6fbf-c2ba-71fb-a345-ca376d9ea40c	DT-357	Jango	Jango	Parson-Russell-Terrier	M	2013-01-09	0.00	NULL	019b6f8b-fc49-7840-9e7f-4f90117b9072			rauhaar	NULL	tricolor braun		Hund	756098100645886			1	0	
+019b6fbf-c2ba-7210-8c6e-723964e2ce8e	DT-399	Otesse	Otesse	Rottweiler	W	2013-03-28	0.00	NULL	019b6f8b-fc49-7d70-89cb-1f9b3eec7608				NULL			Hund	941000014575556			1	0	
+019b6fbf-c2ba-7225-8fa4-44276647b053	DT-375	Uban	Uban	Mischling	W	2009-09-01	0.00	NULL	019b6f8b-fc49-7a91-9175-9c5ae0f8cac5			kurzhaar	1	beige		Hund	688035000007303			1	0	
+019b6fbf-c2ba-7265-8777-8bd0cf6c42ca	DT-386	Franky	Franky	Malteser	M	2013-05-23	0.00	NULL	019b6f8b-fc48-715d-aac3-709d07127991			langhaar	NULL	weiss		Hund	688035000077699			1	0	
+019b6fbf-c2ba-7280-b0bd-0c7282938d67	DT-368	Nadjeschda	Nadjeschda	Katalan. Hirtenhund x Collie	W	2013-01-26	0.00	NULL	019b6f8b-fc48-7911-9f5d-8e71c5f880c6			langhaar	NULL	braun		Hund				1	0	
+019b6fbf-c2ba-72a8-bd75-8e877f9dc8fe	DT-346	Sky	Sky	Weisser Schweizer Schäferhund	W	2012-01-03	0.00	NULL	019b6f8b-fc49-74ba-a32a-82b910b2c9f5				NULL	weiss		Hund	756098100519049			1	0	
+019b6fbf-c2ba-732d-a94b-502086a1d447	DT-385	Fiby	Fiby	Dalmatiner	W		0.00	NULL	019b6f8b-fc49-74f1-9e7a-c36616f1089c			kurzhaar	NULL			Hund				1	0	
+019b6fbf-c2ba-7377-bac0-7c15b6ed0e5e	DT-362	Lumpi	Lumpi	Jack-Russell-Terrier	M	2012-11-11	0.00	NULL	019b6f8b-fc49-770d-b596-7efc9110d2c8			kurzhaar	NULL	schwarz-weiss		Hund	756097200135264			1	0	
+019b6fbf-c2ba-73ea-8783-85e150aeea1a	DT-371	Struppi	Struppi	Mittelschnauzer	M	2003-08-01	0.00	NULL	019b6f8b-fc49-7bd5-8bdc-327c2d699c64				NULL	salz & pfeffer		Hund	756098100180535			1	0	
+019b6fbf-c2ba-73f4-9ba0-9499c6a5e73c	DT-104	Rex	Rex	Altdeutscher Schäferhund	M	2000-09-30	0.00	NULL	019b6f8b-fc48-715d-aac3-709d07127991		22.08.2011 such: Wurde vom Vater ausgebildet. Grundsätzlich eher schwacher Hund im Grundwesen, hat aber gelernt durch Knurren Eindruck zu machen		0			Hund				1	0	
+019b6fbf-c2ba-7407-9694-1f34c6e8d493	DT-400	Lenny	Lenny	Mischling	M	2012-07-24	0.00	NULL	019b6f8b-fc47-707f-b2ba-b08ae31162fa				NULL			Hund	900182000179239			1	0	
+019b6fbf-c2ba-741b-9227-d1a3df0a5104	DT-383	Emma	Emma	Berner Sennenhund	W	2013-06-09	0.00	NULL	019b6f8b-fc49-7b07-a2a3-0779d66c2683				NULL			Hund	756095200155395			1	0	
+019b6fbf-c2ba-74b2-b327-ff2cf728decb	DT-366	Ken vom Hohlen Fels	Ken	Cairn Terrier	M	2013-01-23	0.00	NULL	019b6f8b-fc48-756b-8428-d9a1b1e64047				NULL	weizen		Hund	756098100613047			1	0	
+019b6fbf-c2ba-7634-9c0e-133dab65ac24	DT-349	Lissy	Lissy	Chihuahua kurzhaariger Schlag	W	2009-12-01	0.00	NULL	019b6f8b-fc49-750f-a6ec-0e2e74b3d9f9			kurzhaar	NULL	braun mit Brand		Hund	756097200085221			1	0	
+019b6fbf-c2ba-7651-a5ec-874f14df1d5d	DT-390	Timmy	Timmy	Havaneser	M	2012-10-24	0.00	NULL	019b6f8b-fc49-7355-a0cd-be4c05a53383				NULL			Hund	900108000666853			1	0	
+019b6fbf-c2ba-76ae-b4fd-a7ac6eebfbce	DT-401	Hund		Tibet Terrier	X		0.00	NULL	019b6f8b-fc49-7157-96b5-a7efa8314f5f				NULL			Hund				1	0	
+019b6fbf-c2ba-7735-bba5-5ccd0dd4b391	DT-364	Cora	Cora	Schäfer x Labrador	W	2010-01-01	0.00	NULL	019b6f8b-fc49-79ae-bdaa-9809067d7f9c			kurzhaar	NULL	braun		Hund	961001200033012			1	0	
+019b6fbf-c2ba-77b2-8f05-88a9c082f269	DT-352	Choco Cannel	Choco	Chihuahua kurzhaariger Schlag	M	2010-05-25	0.00	NULL	019b6f8b-fc49-7e2c-b2bb-c0ff73f83761			kurzhaar	NULL	Dunkelbraun/beige		Hund	756097200077476			1	0	
+019b6fbf-c2ba-77b3-904a-f53bddc04053	DT-367	Kamy vom Hohlen Fels	Kamy	Cairn Terrier	W	2013-01-23	0.00	NULL	019b6f8b-fc48-756b-8428-d9a1b1e64047			weizen	NULL			Hund	756098100614146			1	0	
+019b6fbf-c2ba-77e5-9cd0-e96442a62a3b	DT-388	Kira	Kira	Wolfspitz	W	2012-09-11	0.00	NULL	019b6f8b-fc49-74fc-8a47-eac408a7e5ad			langhaar	NULL			Hund	276098104590265			1	0	
+019b6fbf-c2ba-77e5-a21e-d4cd8e0e572c	DT-381	Artos	Artos	Deutscher Jagdterrier	M	2013-05-01	0.00	NULL	019b6f8b-fc49-7acf-8d04-37b7f5ce94bf				NULL			Hund				1	0	
+019b6fbf-c2ba-7852-acf6-0d2e7d37ee4a	DT-395	Shiva	Shiva	Labrador mix	W	2006-01-01	0.00	NULL	019b6f8b-fc49-7104-97ca-cb9306cb830d				NULL			Hund	756098100348774			1	0	
+019b6fbf-c2ba-78b4-8d0e-c02e5a1bb381	DT-351	Lylly	Lylli	Chihuahua kurzhaariger Schlag	W	2009-12-01	0.00	NULL	019b6f8b-fc49-78a6-b9c2-4611644af0e2			kurzhaar	NULL	braun mit Brand		Hund	756097200089534			1	0	
+019b6fbf-c2ba-78b6-86e4-d9e4048e3778	DT-393	Ilana	Ilana	Deutsche Dogge	W	2007-01-01	0.00	NULL	019b6f8b-fc49-7104-97ca-cb9306cb830d				NULL			Hund	945000000640961			1	0	
+019b6fbf-c2ba-78cd-9f1c-d2ab1eed578a	DT-361	Alina	Alina	Yorkshire Terrier x Jack Russell	W	2010-02-18	0.00	NULL	019b6f8b-fc49-741b-9635-3517a94074a5				NULL			Hund	756097200135642			1	0	
+019b6fbf-c2ba-78e0-ab74-220f8c8557e4	DT-355	Duke Kiro	Duke	Cairn Terrier	M	2013-01-23	0.00	NULL	019b6f8b-fc49-7041-bf05-b13e32f4a05f			rauhaar	NULL	weizen		Hund	756098100615768			1	0	
+019b6fbf-c2ba-78e9-9ebc-df3800ab97fe	DT-370	Ayana	Ayana	Australian Shepherd	W	2013-04-08	0.00	NULL	019b6f8b-fc49-7070-aa3d-f9ac37d03f80			langhaar	NULL	blue merle		Hund				1	0	
+019b6fbf-c2ba-7947-92a6-fad2b3b521f6	DT-389	Sissi	Sissi	Chihuahua kurzhaariger Schlag	W	2012-12-19	0.00	NULL	019b6f8b-fc48-7a6a-b558-fcebd79ab27a			kurzhaar	NULL	beige		Hund	756098100647355			1	0	
+019b6fbf-c2ba-797c-9275-b634b83f972e	DT-402	Thaio	Thaio	Husky	M	2013-06-01	0.00	NULL	019b6f8b-fc49-74bb-9a82-dcb38454094b				NULL			Hund	276097209063690			1	0	
+019b6fbf-c2ba-79c3-abf5-b34e44a38d78	DT-374	Diego	Diego	Mischling	M	2010-11-01	0.00	NULL	019b6f8b-fc43-7d1b-8a01-718c876c354f			halblanghaar	1	schwarz-gelb		Hund	982000161064096			1	0	
+019b6fbf-c2ba-7a0d-9b40-2dcc646994fe	DT-378	Pippa	Pippa	Lagotto Romagnolo	W	2013-05-05	0.00	NULL	019b6f8b-fc49-7ecc-84f2-96ced16e30d1			lockig-gekraust	NULL	braun-weiss		Hund	380260042104911			1	0	
+019b6fbf-c2ba-7a5a-985b-37d347988ee5	DT-265	Trixli	Trixli	Border Collie	H		0.00	NULL	019b6f8b-fc48-78bf-8592-81c88a51c630			halblanghaar	NULL	weiss schwarz		Hund	756097200126050			1	0	
+019b6fbf-c2ba-7a60-a90d-feb363f90024	DT-392	Churro	Churro	Labrador	M	2013-07-01	0.00	NULL	019b6f8b-fc49-7c88-88e9-9b2feecead6e				NULL			Hund	756098500076993			1	0	
+019b6fbf-c2ba-7aa9-b69a-8a091b90b52e	DT-387	Motzi wird noch geändert		Zwergspitz	M	2013-07-25	0.00	NULL	019b6f8b-fc49-7105-bfa1-628896240ee8			langhaar	NULL			Hund				1	0	
+019b6fbf-c2ba-7ab3-85d7-ccc22dbc4d69	DT-360	Belinha	Belinha	Chihuahua kurzhaariger Schlag	W	2012-01-10	0.00	NULL	019b6f8b-fc49-7df0-8be0-cedc5e87c3a9				NULL			Hund	972274000093727			1	0	
+019b6fbf-c2ba-7b1b-936e-6f5c55c014ea	DT-377	Amun	Amun	Appenzeller Sennenhund Mischling	M	2011-02-20	0.00	NULL	019b6f8b-fc49-72f4-b66d-72d9b455e119			kurzhaar	1	braun-weiss		Hund	756098100518778			1	0	
+019b6fbf-c2ba-7c1e-a4fd-a28572cfbd1e	DT-382	Charlie	Charlie	Flat Coated Retriever	M	2013-06-01	0.00	NULL	019b6f8b-fc49-7063-bc25-a6db8b80aa69			langhaar	NULL	schwarz		Hund	756098100653443			1	0	
+019b6fbf-c2ba-7c6c-8625-22714ab5b912	DT-397	Hera	Hera	AppenzellerxEntlebucher	W	2006-08-01	0.00	NULL	019b6f8b-fc49-7c8f-bdd3-c3f7a17034b8				1			Hund	756098100318976			1	0	
+019b6fbf-c2ba-7c6c-92e2-500b54130063	DT-373	Rocky	Rocky	Appenzeller x Schäfer	M	2008-07-02	0.00	NULL	019b6f8b-fc49-7597-a875-0754cf2116fb				NULL			Hund	756098100412606			1	0	
+019b6fbf-c2ba-7c98-be20-b2d184195735	DT-363	Miranda	Miranda	Papillon-Mix	W	2009-09-12	0.00	NULL	019b6f8b-fc49-7e20-98bf-9ee950d8de41				NULL	braun-schwarz		Hund	941000012418971			1	0	
+019b6fbf-c2ba-7cc6-ad6e-a1c5e2f2d947	DT-369	Ayana	Ayana	Australian Shepherd	W	2013-04-08	0.00	NULL	019b6f8b-fc49-7c3e-95d2-bef3dc1bbcef			langhaar	NULL	blue merle		Hund				1	0	
+019b6fbf-c2ba-7cc8-8881-b1f265d0650b	DT-356	Bandit	Bandit	Boxer	M	2012-12-25	0.00	NULL	019b6f8b-fc49-7883-b3d1-8f7149c81482			kurzhaar	NULL	Braun		Hund	276098104415985			1	0	
+019b6fbf-c2ba-7d69-8ded-0160ebaa31b1	DT-359	Sandy	Sandy	Yorkshire Terrier	W	2013-01-16	0.00	NULL	019b6f8b-fc49-7259-af41-b496ed386424			lockig-gekraust	NULL			Hund	756098100552069			1	0	
+019b6fbf-c2ba-7ddc-a7d7-449f3670c0b5	DT-403	Frida	frida	Golden Retriever	W	2013-06-21	0.00	NULL	019b6f8b-fc49-7f2f-9367-6db9788df401			langhaar	NULL	hellbraun		Hund	276098104690965			1	0	
+019b6fbf-c2ba-7e12-b555-d26271451d7d	DT-354	Milka	Milka	Chihuahua kurzhaariger Schlag	W	2010-05-25	0.00	NULL	019b6f8b-fc49-7e2c-b2bb-c0ff73f83761			kurzhaar	NULL	weiss		Hund	756097200081754			1	0	
+019b6fbf-c2ba-7e2c-ab58-912d6157feb8	DT-379	Jabo	Jabo	Entlebucher Sennenhund	M	2012-09-17	0.00	NULL	019b6f8b-fc49-7086-b47b-079fd0225afd				NULL	schwarz-braun-weiss		Hund	756098100620278			1	0	
+019b6fbf-c2ba-7e45-9564-a6fc9b1f9943	DT-46__dup2	Nino	Nino	Belgischer Schäferhund Mix	M	2012-10-23	0.00	NULL	019b6f8b-fc48-75f9-924a-db1f37ca5727			kurzhaar	1	beige		Hund	756098100593209			1	0	
+019b6fbf-c2ba-7e6f-9119-b06abe5b6191	DT-347	Caro	Caro	Alpenländische Dachsbracke	M	2009-12-03	0.00	NULL	019b6f8b-fc49-7309-84ec-d9eb4e46e494			kurzhaar	0	hirschrot		Hund	756098100470873			1	0	
+019b6fbf-c2ba-7e8d-96d2-478f20076e9e	DT-358	Luna	Luna	Yorkshire Terrier	W	2010-03-30	0.00	NULL	019b6f8b-fc49-792b-ad7e-2dcfe62873a6				NULL			Hund	7560981001173			1	0	
+019b6fbf-c2ba-7ea2-b8a3-ebf91921dfe0	DT-348	Rex	Rex	Jack-Russell-Terrier	M	2012-09-21	0.00	NULL	019b6f8b-fc49-74a5-9e5a-18e492ecf551			kurzhaar	1	tricolor braun		Hund	756098500071656			1	0	
+019b6fbf-c2ba-7ee9-b595-5f17f69eab17	DT-350	Snoopy	Snoopy	Chihuahua langhaariger Schlag	M	2009-11-26	0.00	NULL	019b6f8b-fc49-78a6-b9c2-4611644af0e2			langhaar	NULL	weiss mit schwarzen Flecken		Hund	756097200089684			1	0	
+019b6fbf-c2ba-7f88-a833-d1474fe3396e	DT-398	Lenni	Lenni	Appenzeller/Schäfer	M	2006-08-01	0.00	NULL	019b6f8b-fc49-7f8b-a09d-652a6922a442				NULL			Hund	756097200040764			1	0	
+019b73a4-a4f2-72cc-b278-262a8f78cb0a	H-404	Enaroo	Naru	Holl. Schäferhund Kurzhaar	Rüde		NULL	NULL	019b6f8b-fc43-7f7a-9a23-a31fda684482		Ein bisschen gestört	Mittel-Kurz	0	Schwarz,	M	züchter		2025-12-31T09:02:08.626Z	2025-12-31T09:02:08.626Z	1	0	aktiv
+019bb769-b262-74ae-8c0f-1baddf9280a3	H-405	test	test	test	Hündin	2026-01-13	NULL	NULL	019b6f8b-fc43-7f7a-9a23-a31fda684482	test	test	test	NULL	test				2026-01-13T12:51:56.129Z	2026-01-13T12:51:56.130Z	1	0	aktiv
+019bc186-2e63-74d1-bd96-2f5ad4ac2ba2		Akihito2	Aki2	Akita Inu	Rüde	22.07.2025	NULL	NULL	019bc186-2904-7b07-958c-d86e4bd60083				NULL					2026-01-15T11:59:15.043Z	2026-01-15T11:59:15.044Z	1	0	
+019bc269-4cf6-789d-99e8-0b2c915ad907		Akihito2	Aki2	Akita Inu	Rüde	22.07.2025	NULL	NULL	019bc269-4274-70b8-b769-ef19596d7c00				NULL					2026-01-15T16:07:19.542Z	2026-01-15T16:07:19.542Z	1	0	

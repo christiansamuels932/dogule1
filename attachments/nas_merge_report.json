@@ -1,0 +1,63 @@
+{
+  "customers": {
+    "nas_count": 1414,
+    "xls_count": 1414,
+    "updated": 1410,
+    "new": 4,
+    "unmatched": 4
+  },
+  "dogs": {
+    "nas_count": 390,
+    "pdf_customers": 1414,
+    "updated": 169,
+    "new": 1344,
+    "unmatched_customers": 0
+  },
+  "unmatched_customers": [
+    {
+      "vorname": "Manuel",
+      "nachname": "Oeschger",
+      "status": "aktiv",
+      "email": "erne.corinne@gmail.com",
+      "telefon": "+4179 / 511 51 37",
+      "adresse": "Mandacherstrasse\n5317 Hettenschwil",
+      "geburtsdatum": "1979-01-02",
+      "ausweis_id": "",
+      "notizen": ""
+    },
+    {
+      "vorname": "Brigitte",
+      "nachname": "Fellmann",
+      "status": "aktiv",
+      "email": "",
+      "telefon": "",
+      "adresse": "",
+      "geburtsdatum": "",
+      "ausweis_id": "",
+      "notizen": ""
+    },
+    {
+      "vorname": "Amantius",
+      "nachname": "Suter",
+      "status": "aktiv",
+      "email": "amantius@hispeed.ch",
+      "telefon": "+4176 746 90 43",
+      "adresse": "Brunnengasse 5b\n5420 Ehrendingen",
+      "geburtsdatum": "1975-11-13",
+      "ausweis_id": "",
+      "notizen": "Waren bereits mit unserem ersten Hund bei Dir (Manolo)\r\n\r\nFrau Karin kommt auch hie und da mit dem Hund."
+    },
+    {
+      "vorname": "Luca",
+      "nachname": "Segler",
+      "status": "aktiv",
+      "email": "evlu9223@gmail.com",
+      "telefon": "+4176 830 90 01",
+      "adresse": "Landstrasse 11\n5300 Turgi",
+      "geburtsdatum": "1991-09-20",
+      "ausweis_id": "",
+      "notizen": ""
+    }
+  ],
+  "unmatched_pdf_customers": []
+}
