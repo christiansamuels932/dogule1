@@ -85,6 +85,10 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 - NAS cleanup (dog duplicates):
   - Rule: same owner + same name + same birthdate; delete lower `filled_score` row (tie: keep lowest id).
   - Deleted 112 rows from `hunde` on NAS; verification shows 0 duplicate groups remaining.
+- Header logo update:
+  - Replaced logo asset with `/home/ran/Downloads/ChatGPT Image Jan 22, 2026, 11_09_53 PM.png`.
+  - Removed "DOGULE" text from header; adjusted brand card sizing for new PNG.
+  - Rebuilt UI and updated `.NAS-Distro/app/` plus `.NAS-Distro/api/modules/shared/`.
 
 # - - - - - - - - - - - - - - - - - - - -
 
