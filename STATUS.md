@@ -32,6 +32,59 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 # - - - - - - - - - - - - - - - - - - - -
 
+# Station 99 — New Features (Schulungen + Kommunikation + Local Auth + UI fixes)
+
+## Kontext
+
+- Status: in progress.
+- Branch: `99-newfeatures`.
+- Scope: Schulungen module, Kommunikation overhaul (Infochannel only), local passwordless auth, dashboard/report polish, Zertifikate delete, trainer forced mobile view, UI wrapping fixes.
+
+## Ergebnis (kurz)
+
+- Schulungen module added end-to-end:
+  - UI list + detail + create with dynamic text blocks and image uploads (min 1 block).
+  - Detail view shows date + title; image previews are small and clickable to full size.
+  - Overview includes delete with warning (matches Schulungen pattern).
+  - API/storage wiring added for list/get/create/delete/upload.
+  - MariaDB schema + migration added (`schulungen`), local migration file `tools/mariadb/migrations/99_0_schulungen.sql`.
+  - Uploads served at `/api/schulungen/uploads/<file>` (public GET).
+- Kommunikation module overhauled:
+  - Removed System/Chats; only Infochannel remains (tabs hidden when only one).
+  - SLA removed completely; trainers can still confirm; confirmations show trainer.
+  - Publish restricted to Richard Fontana; admin-only delete on notices.
+  - Historie list is vertical; spacing and back button styling aligned with other modules.
+  - Trainer status bars (Ausstehend/Bestätigt) hidden for non-admin trainers.
+- Local auth behavior updated (NAS untouched):
+  - Local login is passwordless for all users; NAS still requires passwords from `DOGULE1_PASSWORD_FILE`.
+  - Login UI no longer blocks empty password.
+  - Header auth button is visible consistently.
+- UI/feature fixes:
+  - Dashboard raporte draft shows trainer name and improved meta.
+  - Zertifikate overview delete button with warning.
+  - Navigation and routing include Schulungen.
+  - Historie/post text now wraps within card/frame (Kunden/Hunde Rapporte, Schulungen detail, Kommunikation detail).
+- Trainer forced mobile view:
+  - Adds forced mobile layout for trainer roles via `force-mobile` class + inline styles.
+  - Enlarged fonts/buttons, full-width layout, and tighter side margins for trainer sessions.
+
+## Tests
+
+- Not run.
+
+## Issues
+
+- Outlook mailto still shows `+` in subject/body for birthday emails (needs investigation).
+- Trainer forced mobile view still reported as unchanged in browser testing (user asked to leave as-is for now).
+
+## Notizen
+
+- NAS remains passworded; local passwordless is gated by runtime path check (`/volume1`).
+- Schulungen local migration run manually:
+  - `mariadb --protocol=socket --socket /run/mysqld/mysqld.sock dogule1 < tools/mariadb/migrations/99_0_schulungen.sql`
+
+# - - - - - - - - - - - - - - - - - - - -
+
 # Station 98 — NAS MariaDB DogTabs Kunden/Hunde Refresh
 
 ## Kontext

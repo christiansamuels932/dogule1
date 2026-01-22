@@ -398,8 +398,6 @@ export function validateInfochannelNotice(record) {
     "createdByRole",
     "targetRole",
     "targetIds",
-    "slaHours",
-    "slaDueAt",
     "schemaVersion",
   ];
   required.forEach((field) => {
@@ -428,8 +426,12 @@ export function validateInfochannelNotice(record) {
   record.targetIds.forEach((id, idx) => {
     assertUuid(id, `kommunikation_infochannel_notice.targetIds[${idx}]`);
   });
-  assertOptionalNumber(record.slaHours, "kommunikation_infochannel_notice.slaHours");
-  assertString(record.slaDueAt, "kommunikation_infochannel_notice.slaDueAt");
+  if (record.slaHours !== undefined) {
+    assertOptionalNumber(record.slaHours, "kommunikation_infochannel_notice.slaHours");
+  }
+  if (record.slaDueAt !== undefined) {
+    assertString(record.slaDueAt, "kommunikation_infochannel_notice.slaDueAt");
+  }
   return record;
 }
 

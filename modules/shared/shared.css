@@ -29,6 +29,36 @@ body {
   background: linear-gradient(180deg, #ffeec5 0%, var(--color-background) 55%, #ffe0a0 100%);
 }
 
+html.force-mobile,
+body.force-mobile {
+  font-size: 19px;
+  line-height: 1.75;
+}
+
+body.force-mobile h1,
+body.force-mobile h2,
+body.force-mobile h3,
+body.force-mobile .ui-section__title,
+body.force-mobile .dogule-header-title {
+  letter-spacing: 0.02em;
+}
+
+body.force-mobile .ui-card {
+  padding: 1.1rem;
+}
+
+body.force-mobile .ui-btn {
+  padding: 0.65rem 1.15rem;
+  font-size: 1.05rem;
+}
+
+body.force-mobile .ui-form-row__control input,
+body.force-mobile .ui-form-row__control select,
+body.force-mobile .ui-form-row__control textarea {
+  font-size: 1.05rem;
+  padding: 0.65rem 0.85rem;
+}
+
 a {
   color: var(--color-brand-700);
   text-decoration: none;
@@ -61,6 +91,15 @@ h3,
   font-family: var(--font-heading);
   color: var(--color-brand-900);
   letter-spacing: 0.01em;
+}
+
+.hunde-historie-line,
+.kunden-historie-line,
+.hunde-historie-line span,
+.kunden-historie-line span {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  white-space: normal;
 }
 
 .ui-section__subtitle {
@@ -767,6 +806,7 @@ h3,
 .ui-form-row__control select,
 .ui-form-row__control textarea {
   width: 100%;
+  box-sizing: border-box;
   padding: 0.55rem 0.75rem;
   border-radius: 0.6rem;
   border: 1px solid var(--color-border);
@@ -840,10 +880,89 @@ h3,
   gap: 1rem;
 }
 
+
 .kommunikation-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+@media (max-width: 720px) {
+  .ui-card {
+    padding: 0.85rem;
+  }
+
+  .module-actions {
+    flex-wrap: wrap;
+  }
+
+  .kunden-list,
+  .hunde-list,
+  .trainer-list {
+    grid-template-columns: 1fr;
+  }
+
+  .kunden-list-table,
+  .hunde-list-table,
+  .trainer-list-table {
+    min-width: 420px;
+  }
+
+  .kunden-list-table th,
+  .kunden-list-table td,
+  .hunde-list-table th,
+  .hunde-list-table td,
+  .trainer-list-table th,
+  .trainer-list-table td {
+    padding: 0.5rem 0.6rem;
+    font-size: 0.9rem;
+  }
+
+  .kommunikation-card {
+    padding: 0.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .kunden-list-table,
+  .hunde-list-table,
+  .trainer-list-table {
+    min-width: 360px;
+  }
+}
+
+.force-mobile .ui-card {
+  padding: 0.85rem;
+}
+
+.force-mobile .module-actions {
+  flex-wrap: wrap;
+}
+
+.force-mobile .kunden-list,
+.force-mobile .hunde-list,
+.force-mobile .trainer-list {
+  grid-template-columns: 1fr;
+}
+
+.force-mobile .kunden-list-table,
+.force-mobile .hunde-list-table,
+.force-mobile .trainer-list-table {
+  min-width: 360px;
+}
+
+.force-mobile .kunden-list-table th,
+.force-mobile .kunden-list-table td,
+.force-mobile .hunde-list-table th,
+.force-mobile .hunde-list-table td,
+.force-mobile .trainer-list-table th,
+.force-mobile .trainer-list-table td {
+  padding: 0.5rem 0.6rem;
+  font-size: 0.9rem;
+}
+
+.force-mobile .kommunikation-card {
+  padding: 0.8rem;
 }
 
 .kommunikation-card {
@@ -874,6 +993,9 @@ h3,
   margin: 0;
   color: var(--color-muted);
   font-size: 0.95rem;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  white-space: normal;
 }
 
 .kommunikation-card__meta {
@@ -904,6 +1026,9 @@ h3,
   padding: 1rem;
   background: var(--color-paper);
   box-shadow: var(--shadow-soft);
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  white-space: normal;
 }
 
 .kommunikation-detail__meta {
@@ -995,4 +1120,87 @@ h3,
 
 .infochannel-targets__status--warn {
   color: #b45309;
+}
+
+.schulungen-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.schulungen-item {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0.75rem;
+  padding: 0.75rem 1rem;
+}
+
+.schulungen-item__link {
+  color: inherit;
+  text-decoration: none;
+  font-weight: 600;
+  display: block;
+}
+
+.schulungen-item__link:hover {
+  text-decoration: underline;
+}
+
+.schulungen-detail__meta {
+  color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 1rem;
+}
+
+.schulungen-blocks {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.schulungen-block {
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.schulungen-block__title {
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.schulungen-block__text {
+  white-space: pre-wrap;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.schulungen-block__image {
+  width: 220px;
+  max-width: 100%;
+  border-radius: 0.5rem;
+  display: block;
+  cursor: zoom-in;
+}
+
+.schulungen-block__image-link {
+  display: inline-block;
+}
+
+.schulungen-form-blocks {
+  display: grid;
+  gap: 1rem;
+}
+
+.schulungen-form-block {
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.schulungen-form__heading {
+  margin: 1.25rem 0 0.5rem;
 }

@@ -4,6 +4,7 @@ import {
   getZertifikat,
   createZertifikat,
   updateZertifikat,
+  deleteZertifikat,
 } from "../shared/api/zertifikate.js";
 import { listKunden } from "../shared/api/kunden.js";
 import { listHunde } from "../shared/api/hunde.js";
@@ -134,7 +135,7 @@ async function renderListView(section) {
   table.className = "kunden-list-table";
   const thead = document.createElement("thead");
   const headRow = document.createElement("tr");
-  ["Code", "Kunde", "Hund", "Kurs", "Kursdatum", "Ausstellungsdatum"].forEach((label) => {
+  ["Code", "Kunde", "Hund", "Kurs", "Kursdatum", "Ausstellungsdatum", ""].forEach((label) => {
     const th = document.createElement("th");
     th.textContent = label;
     headRow.appendChild(th);
@@ -145,6 +146,7 @@ async function renderListView(section) {
     const row = document.createElement("tr");
     row.addEventListener("click", (event) => {
       if (event.target?.closest("a")) return;
+      if (event.target?.closest("button")) return;
       window.location.hash = `#/zertifikate/${entry.id}`;
     });
     row.appendChild(buildCell(entry.code || "–", true, entry.id));
@@ -153,6 +155,39 @@ async function renderListView(section) {
     row.appendChild(buildCell(entry.kursTitelSnapshot || "–"));
     row.appendChild(buildCell(entry.kursDatumSnapshot || "–"));
     row.appendChild(buildCell(entry.ausstellungsdatum || "–"));
+    const actionsCell = document.createElement("td");
+    const deleteBtn = createButton({ label: "Löschen", variant: "secondary" });
+    deleteBtn.type = "button";
+    deleteBtn.addEventListener("click", async (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      const label = entry.code || entry.id || "Zertifikat";
+      const ok = window.confirm(
+        `Zertifikat wirklich löschen?\n\n${label}\n\nDieser Vorgang kann nicht rückgängig gemacht werden.`
+      );
+      if (!ok) return;
+      deleteBtn.disabled = true;
+      exportStatus.innerHTML = "";
+      try {
+        await deleteZertifikat(entry.id);
+        row.remove();
+        exportStatus.appendChild(
+          createNotice("Zertifikat gelöscht.", { variant: "ok", role: "status" })
+        );
+        if (!tbody.children.length) {
+          body.innerHTML = "";
+          body.appendChild(createEmptyState("Keine Zertifikate vorhanden.", ""));
+        }
+      } catch (error) {
+        console.error("[ZERTIFIKAT_DELETE_FAILED]", error);
+        exportStatus.appendChild(
+          createNotice("Löschen fehlgeschlagen.", { variant: "warn", role: "alert" })
+        );
+        deleteBtn.disabled = false;
+      }
+    });
+    actionsCell.appendChild(deleteBtn);
+    row.appendChild(actionsCell);
     tbody.appendChild(row);
   });
   table.append(thead, tbody);

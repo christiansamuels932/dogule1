@@ -383,4 +383,5 @@ export const db = {
     },
   ],
   zertifikate: [],
+  schulungen: [],
 };

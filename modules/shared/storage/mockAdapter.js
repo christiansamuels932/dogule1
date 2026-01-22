@@ -29,6 +29,7 @@ import {
   updateZertifikat,
   deleteZertifikat,
 } from "../api/zertifikate.js";
+import { listSchulungen, getSchulung, createSchulung, deleteSchulung } from "../api/schulungen.js";
 import { StorageError, STORAGE_ERROR_CODES } from "./errors.js";
 import { executeWriteContract } from "./writeContract.js";
 
@@ -192,6 +193,17 @@ export function createMockAdapter(options = {}) {
         create: (data, ctx) => createZertifikat(data, ctx),
         update: (id, data, ctx) => updateZertifikat(id, data, ctx),
         delete: (id, ctx) => deleteZertifikat(id, ctx),
+      },
+      defaults
+    ),
+    schulungen: buildEntityAdapter(
+      "schulungen",
+      {
+        list: (ctx) => listSchulungen(ctx),
+        get: (id, ctx) => getSchulung(id, ctx),
+        create: (data, ctx) => createSchulung(data, ctx),
+        update: async () => null,
+        delete: (id, ctx) => deleteSchulung(id, ctx),
       },
       defaults
     ),

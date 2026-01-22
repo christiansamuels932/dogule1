@@ -129,6 +129,12 @@ async function handleLogout(session) {
 
 function updateAuthHeader(session) {
   syncWindowAuth(session);
+  const normalizedRole = normalizeRole(session?.user?.role);
+  const forceMobile =
+    normalizedRole === "trainer" || normalizedRole === "trainer_rapport";
+  document.documentElement.classList.toggle("force-mobile", forceMobile);
+  document.body.classList.toggle("force-mobile", forceMobile);
+  applyForceMobileStyles(forceMobile);
   const host = document.getElementById("dogule-auth");
   if (!host) return;
   host.innerHTML = "";
@@ -156,6 +162,47 @@ function updateAuthHeader(session) {
   logoutBtn.textContent = "Abmelden";
   logoutBtn.addEventListener("click", () => handleLogout(session));
   host.append(name, role, logoutBtn);
+}
+
+function applyForceMobileStyles(forceMobile) {
+  const html = document.documentElement;
+  const body = document.body;
+  const headerInner = document.querySelector(".dogule-header-inner");
+  const main = document.getElementById("dogule-main");
+  const footer = document.querySelector(".dogule-footer");
+  const clear = (el, props) => {
+    if (!el) return;
+    props.forEach((prop) => el.style.removeProperty(prop));
+  };
+
+  if (forceMobile) {
+    html.style.setProperty("font-size", "19px");
+    body.style.setProperty("font-size", "19px");
+    body.style.setProperty("line-height", "1.75");
+    if (headerInner) {
+      headerInner.style.setProperty("max-width", "none");
+      headerInner.style.setProperty("width", "100%");
+      headerInner.style.setProperty("box-sizing", "border-box");
+      headerInner.style.setProperty("padding", "0.75rem 0.6rem");
+    }
+    if (main) {
+      main.style.setProperty("max-width", "none");
+      main.style.setProperty("width", "100%");
+      main.style.setProperty("box-sizing", "border-box");
+      main.style.setProperty("padding", "1rem 0.6rem 1.5rem");
+    }
+    if (footer) {
+      footer.style.setProperty("width", "100%");
+      footer.style.setProperty("box-sizing", "border-box");
+      footer.style.setProperty("padding", "0.75rem 0.6rem");
+    }
+  } else {
+    clear(html, ["font-size"]);
+    clear(body, ["font-size", "line-height"]);
+    clear(headerInner, ["max-width", "width", "box-sizing", "padding"]);
+    clear(main, ["max-width", "width", "box-sizing", "padding"]);
+    clear(footer, ["width", "box-sizing", "padding"]);
+  }
 }
 
 function installStorageProbe() {
@@ -237,6 +284,9 @@ async function mountLayout() {
     applyLayoutBody(layoutDoc.body);
     hydrateBranding();
     startStatusMonitor();
+    const session = getSession();
+    updateAuthHeader(session);
+    updateNavVisibility(normalizeRole(session?.user?.role));
 
     layoutMain = document.getElementById("dogule-main");
     if (!layoutMain) {

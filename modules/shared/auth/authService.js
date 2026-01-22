@@ -179,7 +179,9 @@ export function createAuthService(options = {}) {
     const hasPassword = Boolean(user.passwordHash);
     const passwordInput = String(password || "");
     let ok = false;
-    if (hasPassword && passwordInput) {
+    if (config.allowLocalPasswordless) {
+      ok = true;
+    } else if (hasPassword && passwordInput) {
       try {
         ok = await verifyPassword(passwordInput, user.passwordHash, config.hash);
       } catch {
