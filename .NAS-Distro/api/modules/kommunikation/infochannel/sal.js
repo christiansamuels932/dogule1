@@ -1,4 +1,5 @@
 import fs from "node:fs/promises";
+import path from "node:path";
 import crypto from "node:crypto";
 import { Buffer } from "node:buffer";
 import { logEvent } from "../../shared/logging/logger.js";
@@ -14,15 +15,15 @@ import { loadAuditChainState, appendAuditRecord } from "../../shared/storage/rea
 import {
   validateInfochannelNotice,
   validateInfochannelConfirmation,
-  validateInfochannelEvent,
 } from "../../shared/storage/real/validators.js";
 import { sha256Hex } from "../../shared/storage/real/utils.js";
-import { resolveInfochannelConfig } from "./config.js";
 
 const MAX_TITLE_LENGTH = 140;
 const MAX_BODY_LENGTH = 5000;
 const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 50;
+const ADMIN_TRAINER_CODE = "TR-001";
+const ADMIN_TRAINER_NAME = "Fontana Richard";
 
 class InfochannelError extends Error {
   constructor(code, message, details) {
@@ -116,19 +117,20 @@ function validateLimit(limit) {
   return Math.min(parsed, MAX_LIMIT);
 }
 
-function parseSlaHours(value, fallback) {
-  if (value === undefined || value === null || value === "") return fallback;
-  const parsed = Number(value);
-  if (!Number.isFinite(parsed) || parsed < 1) {
-    throw new InfochannelError("INVALID_INPUT", "slaHours must be a number >= 1");
-  }
-  return Math.floor(parsed);
+function resolveTrainerIdFromActorId(actorId) {
+  const raw = String(actorId || "").trim();
+  if (!raw) return "";
+  return raw.startsWith("user-") ? raw.slice(5) : raw;
 }
 
-function computeDueAt(startIso, hours) {
-  const baseMs = Date.parse(startIso);
-  const startMs = Number.isNaN(baseMs) ? Date.now() : baseMs;
-  return new Date(startMs + hours * 3600_000).toISOString();
+async function isRichardPublisher(actorId, listTrainers) {
+  const trainerId = resolveTrainerIdFromActorId(actorId);
+  if (!trainerId) return false;
+  const trainers = await listTrainers();
+  const match = trainers.find((trainer) => trainer?.id === trainerId);
+  const code = String(match?.code || "").trim().toUpperCase();
+  const name = String(match?.name || "").trim().toLowerCase();
+  return code === ADMIN_TRAINER_CODE || name === ADMIN_TRAINER_NAME.toLowerCase();
 }
 
 function ensureActor(context) {
@@ -236,21 +238,41 @@ function normalizeTrainer(trainer) {
   };
 }
 
+function isAdminTrainer(trainer) {
+  if (!trainer) return false;
+  const code = String(trainer.code || "").trim().toUpperCase();
+  const name = String(trainer.name || "").trim().toLowerCase();
+  return code === ADMIN_TRAINER_CODE || name === ADMIN_TRAINER_NAME.toLowerCase();
+}
+
 function deriveTargetIds({ noticeTargetIds, confirmations, trainers, actorId, actorRole }) {
   const targetSet = new Set();
   (noticeTargetIds || []).forEach((id) => {
     if (id) targetSet.add(id);
   });
   (trainers || []).forEach((trainer) => {
-    if (trainer?.id) targetSet.add(trainer.id);
+    if (!trainer?.id || isAdminTrainer(trainer)) return;
+    targetSet.add(trainer.id);
   });
   (confirmations || []).forEach((entry) => {
     if (entry?.trainerId) targetSet.add(entry.trainerId);
   });
-  if (actorRole === "trainer" && actorId) {
+  if ((actorRole === "trainer" || actorRole === "trainer_rapport") && actorId) {
     targetSet.add(actorId);
   }
   return Array.from(targetSet);
+}
+
+async function deleteNoticeById(paths, noticeId, logger, alerter) {
+  const dir = paths.entityDir("kommunikation_infochannel_notice");
+  const filePath = path.join(dir, `${noticeId}.json`);
+  try {
+    await fs.unlink(filePath);
+    return true;
+  } catch (error) {
+    if (error.code === "ENOENT") return false;
+    throw error;
+  }
 }
 
 export function createInfochannelSal(options = {}) {
@@ -262,8 +284,6 @@ export function createInfochannelSal(options = {}) {
   const auditEvent = options.auditEvent || audit;
   const limiter = options.rateLimiter || rateLimit;
   const now = options.now || (() => new Date().toISOString());
-  const nowMs = options.nowMs || (() => Date.now());
-  const config = resolveInfochannelConfig(options.config || {});
   const listTrainers =
     typeof options.listTrainers === "function"
       ? options.listTrainers
@@ -286,6 +306,9 @@ export function createInfochannelSal(options = {}) {
     authorize(context, "kommunikation.infochannel.publish");
     if (actorRole !== "admin") {
       throw new InfochannelError("DENIED", "Only admins can publish notices");
+    }
+    if (!(await isRichardPublisher(actorId, listTrainers))) {
+      throw new InfochannelError("DENIED", "Only Richard Fontana can publish notices");
     }
 
     enforceRateLimit(limiter, {
@@ -328,11 +351,9 @@ export function createInfochannelSal(options = {}) {
 
     const trainersRaw = await listTrainers();
     const trainers = trainersRaw.map(normalizeTrainer).filter((entry) => entry.id);
-    const targetIds = trainers.map((entry) => entry.id);
+    const targetIds = trainers.filter((entry) => !isAdminTrainer(entry)).map((entry) => entry.id);
 
     const issuedAt = now();
-    const slaHours = parseSlaHours(payload.slaHours, config.slaHours);
-    const slaDueAt = computeDueAt(issuedAt, slaHours);
     const notice = {
       id: uuidv7(),
       title,
@@ -343,8 +364,6 @@ export function createInfochannelSal(options = {}) {
       createdByRole: actorRole,
       targetRole: "trainer",
       targetIds,
-      slaHours,
-      slaDueAt,
       schemaVersion: 1,
     };
     const auditContext = { hashPrev: 0, hashIndex: 0, after: notice };
@@ -398,7 +417,6 @@ export function createInfochannelSal(options = {}) {
       actorRole,
       noticeId: result.id,
       targetCount: targetIds.length,
-      slaHours,
     });
 
     return result;
@@ -420,12 +438,16 @@ export function createInfochannelSal(options = {}) {
     }
     const sliced = all.slice(startIndex, startIndex + limit);
 
-    const confirmations = await listAllEntities(
+    const confirmationsRaw = await listAllEntities(
       paths,
       "kommunikation_infochannel_confirmation",
       logger,
       alerter
     );
+    const confirmations = confirmationsRaw.map((entry) => ({
+      ...entry,
+      trainerId: resolveTrainerIdFromActorId(entry?.trainerId || entry?.actorId),
+    }));
     const trainersRaw = await listTrainers();
     const trainers = trainersRaw.map(normalizeTrainer);
     const confirmationMap = new Map();
@@ -438,49 +460,37 @@ export function createInfochannelSal(options = {}) {
     });
 
     const nowIso = now();
-    const nowTs = Date.parse(nowIso);
 
+    const actorTrainerId = resolveTrainerIdFromActorId(context?.actorId);
     const notices = sliced.map((notice) => {
       const noticeConfirmations = confirmationMap.get(notice.id) || [];
       const targetIds = deriveTargetIds({
         noticeTargetIds: Array.isArray(notice.targetIds) ? notice.targetIds : [],
         confirmations: noticeConfirmations,
         trainers,
-        actorId: context?.actorId,
+        actorId: actorTrainerId,
         actorRole: context?.actorRole,
       });
       const confirmedCount = noticeConfirmations.length;
       const targetCount = targetIds.length;
       const pendingCount = Math.max(0, targetCount - confirmedCount);
-      const dueTs = Date.parse(notice.slaDueAt || "");
-      const isOverdue = !Number.isNaN(dueTs) && nowTs > dueTs && pendingCount > 0;
-      const lateCount = noticeConfirmations.filter((entry) => {
-        const confirmedTs = Date.parse(entry.confirmedAt || "");
-        return !Number.isNaN(dueTs) && !Number.isNaN(confirmedTs) && confirmedTs > dueTs;
-      }).length;
 
       const summary = {
         id: notice.id,
         title: notice.title,
         body: notice.body,
         createdAt: notice.createdAt,
-        slaDueAt: notice.slaDueAt,
         targetCount,
         confirmedCount,
         pendingCount,
-        lateCount,
-        overdueCount: isOverdue ? pendingCount : 0,
       };
 
-      if (context?.actorRole === "trainer" && context?.actorId) {
-        const match = noticeConfirmations.find((entry) => entry.trainerId === context.actorId);
-        const confirmedTs = match ? Date.parse(match.confirmedAt || "") : NaN;
-        const late =
-          match && !Number.isNaN(dueTs) && !Number.isNaN(confirmedTs) && confirmedTs > dueTs;
-        summary.viewerConfirmation = match
-          ? { confirmedAt: match.confirmedAt, late: Boolean(late) }
-          : null;
-        summary.viewerOverdue = !match && isOverdue;
+      if (
+        (context?.actorRole === "trainer" || context?.actorRole === "trainer_rapport") &&
+        actorTrainerId
+      ) {
+        const match = noticeConfirmations.find((entry) => entry.trainerId === actorTrainerId);
+        summary.viewerConfirmation = match ? { confirmedAt: match.confirmedAt } : null;
       }
 
       return summary;
@@ -500,32 +510,30 @@ export function createInfochannelSal(options = {}) {
     if (!notice) {
       throw new InfochannelError("NOT_FOUND", "notice not found");
     }
-    const confirmations = await listAllEntities(
+    const confirmationsRaw = await listAllEntities(
       paths,
       "kommunikation_infochannel_confirmation",
       logger,
       alerter
     );
+    const confirmations = confirmationsRaw.map((entry) => ({
+      ...entry,
+      trainerId: resolveTrainerIdFromActorId(entry?.trainerId || entry?.actorId),
+    }));
     const noticeConfirmations = confirmations.filter((entry) => entry.noticeId === notice.id);
     const trainersRaw = await listTrainers();
     const trainers = trainersRaw.map(normalizeTrainer);
+    const actorTrainerId = resolveTrainerIdFromActorId(context?.actorId);
     const targetIds = deriveTargetIds({
       noticeTargetIds: Array.isArray(notice.targetIds) ? notice.targetIds : [],
       confirmations: noticeConfirmations,
       trainers,
-      actorId: context?.actorId,
+      actorId: actorTrainerId,
       actorRole: context?.actorRole,
     });
     const targetCount = targetIds.length;
     const confirmedCount = noticeConfirmations.length;
     const pendingCount = Math.max(0, targetCount - confirmedCount);
-    const dueTs = Date.parse(notice.slaDueAt || "");
-    const nowTs = nowMs();
-    const isOverdue = !Number.isNaN(dueTs) && nowTs > dueTs && pendingCount > 0;
-    const lateCount = noticeConfirmations.filter((entry) => {
-      const confirmedTs = Date.parse(entry.confirmedAt || "");
-      return !Number.isNaN(dueTs) && !Number.isNaN(confirmedTs) && confirmedTs > dueTs;
-    }).length;
 
     const response = {
       notice: {
@@ -533,43 +541,30 @@ export function createInfochannelSal(options = {}) {
         title: notice.title,
         body: notice.body,
         createdAt: notice.createdAt,
-        slaDueAt: notice.slaDueAt,
         targetCount,
         confirmedCount,
         pendingCount,
-        lateCount,
-        overdueCount: isOverdue ? pendingCount : 0,
       },
     };
 
-    if (context?.actorRole === "trainer" && context?.actorId) {
-      const match = noticeConfirmations.find((entry) => entry.trainerId === context.actorId);
-      const confirmedTs = match ? Date.parse(match.confirmedAt || "") : NaN;
-      const late =
-        match && !Number.isNaN(dueTs) && !Number.isNaN(confirmedTs) && confirmedTs > dueTs;
-      response.confirmation = match
-        ? { confirmedAt: match.confirmedAt, late: Boolean(late) }
-        : null;
-      response.overdue = !match && isOverdue;
+    if (
+      (context?.actorRole === "trainer" || context?.actorRole === "trainer_rapport") &&
+      actorTrainerId
+    ) {
+      const match = noticeConfirmations.find((entry) => entry.trainerId === actorTrainerId);
+      response.confirmation = match ? { confirmedAt: match.confirmedAt } : null;
     }
 
-    if (context?.actorRole === "admin" || context?.actorRole === "staff") {
-      const trainerMap = new Map(trainers.map((entry) => [entry.id, entry]));
-      response.targets = targetIds.map((trainerId) => {
-        const match = noticeConfirmations.find((entry) => entry.trainerId === trainerId);
-        const confirmedTs = match ? Date.parse(match.confirmedAt || "") : NaN;
-        const late =
-          match && !Number.isNaN(dueTs) && !Number.isNaN(confirmedTs) && confirmedTs > dueTs;
-        const overdue = !match && isOverdue;
-        return {
-          trainerId,
-          trainerName: trainerMap.get(trainerId)?.name || trainerId,
-          status: match ? "confirmed" : overdue ? "overdue" : "pending",
-          confirmedAt: match?.confirmedAt || null,
-          late: Boolean(late),
-        };
-      });
-    }
+    const trainerMap = new Map(trainers.map((entry) => [entry.id, entry]));
+    response.targets = targetIds.map((trainerId) => {
+      const match = noticeConfirmations.find((entry) => entry.trainerId === trainerId);
+      return {
+        trainerId,
+        trainerName: trainerMap.get(trainerId)?.name || trainerId,
+        status: match ? "confirmed" : "pending",
+        confirmedAt: match?.confirmedAt || null,
+      };
+    });
 
     return response;
   }
@@ -577,8 +572,12 @@ export function createInfochannelSal(options = {}) {
   async function confirmNotice(noticeId, context = {}) {
     const { actorId, actorRole } = ensureActor(context);
     authorize(context, "kommunikation.infochannel.confirm");
-    if (actorRole !== "trainer") {
+    if (!(actorRole === "trainer" || actorRole === "trainer_rapport")) {
       throw new InfochannelError("DENIED", "Only trainers can confirm notices");
+    }
+    const trainerId = resolveTrainerIdFromActorId(actorId);
+    if (!trainerId) {
+      throw new InfochannelError("INVALID_CONTEXT", "trainerId missing");
     }
     const notice = await loadNotice(paths, noticeId, logger, alerter);
     if (!notice) {
@@ -595,16 +594,16 @@ export function createInfochannelSal(options = {}) {
       logger,
     });
 
-    const existing = await loadConfirmation(paths, noticeId, actorId, logger, alerter);
+    const existing = await loadConfirmation(paths, noticeId, trainerId, logger, alerter);
     if (existing) {
       return existing;
     }
 
     const confirmedAt = now();
     const confirmation = {
-      id: noticeConfirmId(noticeId, actorId),
+      id: noticeConfirmId(noticeId, trainerId),
       noticeId,
-      trainerId: actorId,
+      trainerId,
       confirmedAt,
       actorId,
       actorRole,
@@ -665,150 +664,23 @@ export function createInfochannelSal(options = {}) {
     return result;
   }
 
-  async function runSlaJob(context = {}) {
+  async function deleteNotice(noticeId, context = {}) {
     const { actorId, actorRole } = ensureActor(context);
-    authorize(context, "kommunikation.infochannel.sla.run");
-
-    const notices = await listAllEntities(
-      paths,
-      "kommunikation_infochannel_notice",
-      logger,
-      alerter
-    );
-    const confirmations = await listAllEntities(
-      paths,
-      "kommunikation_infochannel_confirmation",
-      logger,
-      alerter
-    );
-    const events = await listAllEntities(
-      paths,
-      "kommunikation_infochannel_notice_event",
-      logger,
-      alerter
-    );
-    const eventIds = new Set(events.map((event) => event.id));
-    const nowIso = now();
-    const nowTs = nowMs();
-    const reminderLeadMs = config.reminderLeadHours * 3600_000;
-    const escalationGraceMs = config.escalationGraceHours * 3600_000;
-    let reminderCount = 0;
-    let escalationCount = 0;
-    const jobId = crypto.randomUUID ? crypto.randomUUID() : uuidv7();
-
-    const confirmationMap = new Map();
-    confirmations.forEach((entry) => {
-      if (!confirmationMap.has(entry.noticeId)) {
-        confirmationMap.set(entry.noticeId, new Set());
-      }
-      confirmationMap.get(entry.noticeId).add(entry.trainerId);
-    });
-
-    for (const notice of notices) {
-      const targetIds = Array.isArray(notice.targetIds) ? notice.targetIds : [];
-      const dueTs = Date.parse(notice.slaDueAt || "");
-      if (Number.isNaN(dueTs)) continue;
-      const noticeConfirmations = confirmationMap.get(notice.id) || new Set();
-      for (const trainerId of targetIds) {
-        if (noticeConfirmations.has(trainerId)) continue;
-        const overdue = nowTs > dueTs + escalationGraceMs;
-        const reminderWindow = nowTs >= dueTs - reminderLeadMs && nowTs <= dueTs;
-        const eventType = overdue ? "escalation" : reminderWindow ? "reminder" : null;
-        if (!eventType) continue;
-        const eventId = noticeEventId(notice.id, trainerId, eventType);
-        if (eventIds.has(eventId)) continue;
-
-        const eventRecord = {
-          id: eventId,
-          noticeId: notice.id,
-          trainerId,
-          eventType,
-          createdAt: nowIso,
-          actorId,
-          actorRole,
-          slaDueAt: notice.slaDueAt,
-          jobId,
-          schemaVersion: 1,
-        };
-        const auditContext = { hashPrev: 0, hashIndex: 0, after: eventRecord };
-        await executeWriteContract({
-          mode,
-          entity: "kommunikation_infochannel_notice_event",
-          operation: "create",
-          actionId:
-            eventType === "reminder"
-              ? "kommunikation.infochannel.reminder"
-              : "kommunikation.infochannel.escalation",
-          actorId,
-          actorRole,
-          targetId: eventRecord.id,
-          requestId: context.requestId,
-          authz: true,
-          audit,
-          auditContext,
-          logger,
-          alerter,
-          perform: async () => {
-            const chain = await loadAuditChainState(
-              paths,
-              "kommunikation_infochannel_notice_event"
-            );
-            auditContext.hashPrev = chain.hashPrev;
-            auditContext.hashIndex = chain.hashIndex;
-            validateInfochannelEvent(eventRecord);
-            const { checksum } = await writeEntityFile(
-              paths,
-              "kommunikation_infochannel_notice_event",
-              eventRecord.id,
-              eventRecord
-            );
-            await appendAuditRecord(
-              paths,
-              "kommunikation_infochannel_notice_event",
-              {
-                actionId:
-                  eventType === "reminder"
-                    ? "kommunikation.infochannel.reminder"
-                    : "kommunikation.infochannel.escalation",
-                actor: buildActor(actorId, actorRole),
-                target: {
-                  type: "kommunikation_infochannel_notice_event",
-                  id: eventRecord.id,
-                },
-                requestId: context.requestId || "infochannel-sla",
-                result: "success",
-                before: null,
-                after: eventRecord,
-                afterChecksum: checksum,
-              },
-              chain
-            );
-            return eventRecord;
-          },
-        });
-
-        emitAudit(auditEvent, `kommunikation.infochannel.${eventType}`, {
-          actorId,
-          actorRole,
-          noticeId: notice.id,
-          trainerId,
-          slaDueAt: notice.slaDueAt,
-          jobId,
-        });
-        eventIds.add(eventId);
-        if (eventType === "reminder") {
-          reminderCount += 1;
-        } else {
-          escalationCount += 1;
-        }
-      }
+    authorize(context, "kommunikation.infochannel.publish");
+    if (actorRole !== "admin") {
+      throw new InfochannelError("DENIED", "Only admins can delete notices");
     }
-
-    return {
-      reminders: reminderCount,
-      escalations: escalationCount,
-      jobId,
-    };
+    if (!(await isRichardPublisher(actorId, listTrainers))) {
+      throw new InfochannelError("DENIED", "Only Richard Fontana can delete notices");
+    }
+    if (!noticeId) {
+      throw new InfochannelError("INVALID_INPUT", "notice id required");
+    }
+    const removed = await deleteNoticeById(paths, noticeId, logger, alerter);
+    if (!removed) {
+      throw new InfochannelError("NOT_FOUND", "notice not found");
+    }
+    return { ok: true, id: noticeId };
   }
 
   return {
@@ -816,6 +688,6 @@ export function createInfochannelSal(options = {}) {
     listNotices,
     getNotice,
     confirmNotice,
-    runSlaJob,
+    deleteNotice,
   };
 }

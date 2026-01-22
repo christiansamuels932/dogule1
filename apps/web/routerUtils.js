@@ -8,6 +8,7 @@ export const VALID_MODULES = new Set([
   "hunde",
   "trainer",
   "zertifikate",
+  "schulungen",
 ]);
 
 export const DEFAULT_MODULE = "dashboard";

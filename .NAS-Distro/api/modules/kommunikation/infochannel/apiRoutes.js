@@ -110,6 +110,7 @@ export function createInfochannelApiHandlers(options = {}) {
         requestId: req?.id || req?.requestId,
       });
     } catch (error) {
+      console.error("[INFOCHANNEL_LIST_FAILED]", error);
       const mapped = mapError(error);
       jsonResponse(res, mapped.status, mapped.body, mapped.headers);
       logApiEvent({
@@ -130,7 +131,6 @@ export function createInfochannelApiHandlers(options = {}) {
         {
           title: body.title,
           body: body.body,
-          slaHours: body.slaHours,
         },
         {
           actorId: actor.id,
@@ -147,6 +147,7 @@ export function createInfochannelApiHandlers(options = {}) {
         requestId: req?.id || req?.requestId,
       });
     } catch (error) {
+      console.error("[INFOCHANNEL_PUBLISH_FAILED]", error);
       const mapped = mapError(error);
       jsonResponse(res, mapped.status, mapped.body, mapped.headers);
       logApiEvent({
@@ -177,6 +178,7 @@ export function createInfochannelApiHandlers(options = {}) {
         requestId: req?.id || req?.requestId,
       });
     } catch (error) {
+      console.error("[INFOCHANNEL_GET_FAILED]", error);
       const mapped = mapError(error);
       jsonResponse(res, mapped.status, mapped.body, mapped.headers);
       logApiEvent({
@@ -208,6 +210,7 @@ export function createInfochannelApiHandlers(options = {}) {
         requestId: req?.id || req?.requestId,
       });
     } catch (error) {
+      console.error("[INFOCHANNEL_CONFIRM_FAILED]", error);
       const mapped = mapError(error);
       jsonResponse(res, mapped.status, mapped.body, mapped.headers);
       logApiEvent({
@@ -220,27 +223,29 @@ export function createInfochannelApiHandlers(options = {}) {
     }
   }
 
-  async function handleRunSlaJob(req, res) {
+  async function handleDeleteNotice(req, res) {
     const actor = toActor(req);
+    const noticeId = req?.params?.id || req?.params?.noticeId || req?.query?.id || null;
     try {
-      const result = await sal.runSlaJob({
+      const result = await sal.deleteNotice(noticeId, {
         actorId: actor.id,
         actorRole: actor.role,
-        authz: resolveAuthz(req, "kommunikation.infochannel.sla.run"),
+        authz: resolveAuthz(req, "kommunikation.infochannel.publish"),
         requestId: req?.id || req?.requestId,
       });
       jsonResponse(res, 200, result);
       logApiEvent({
-        actionId: "kommunikation.infochannel.sla.run",
+        actionId: "kommunikation.infochannel.delete",
         actor,
         result: "success",
         requestId: req?.id || req?.requestId,
       });
     } catch (error) {
+      console.error("[INFOCHANNEL_DELETE_FAILED]", error);
       const mapped = mapError(error);
       jsonResponse(res, mapped.status, mapped.body, mapped.headers);
       logApiEvent({
-        actionId: "kommunikation.infochannel.sla.run",
+        actionId: "kommunikation.infochannel.delete",
         actor,
         result: "error",
         requestId: req?.id || req?.requestId,
@@ -254,6 +259,6 @@ export function createInfochannelApiHandlers(options = {}) {
     handleCreateNotice,
     handleGetNotice,
     handleConfirmNotice,
-    handleRunSlaJob,
+    handleDeleteNotice,
   };
 }

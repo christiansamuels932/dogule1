@@ -8,18 +8,11 @@ import {
   createButton,
   createSectionHeader,
 } from "../shared/components/components.js";
-import * as groupchatClient from "./groupchat/client.js";
 import * as infochannelClient from "./infochannel/client.js";
-import * as automationClient from "./automation/client.js";
 
 const TAB_CONFIG = [
-  { id: "chats", label: "Chats", actionId: "kommunikation.chat.view" },
   { id: "infochannel", label: "Infochannel", actionId: "kommunikation.infochannel.view" },
-  { id: "system", label: "System", actionId: "kommunikation.system.view" },
 ];
-
-const MAX_LIST_PREVIEW = 1;
-const MESSAGE_PAGE_LIMIT = 50;
 
 const PLACEHOLDER_DATA = {
   infochannel: [
@@ -45,8 +38,10 @@ export async function initModule(container, routeInfo = {}) {
   const section = document.createElement("section");
   section.className = "dogule-section kommunikation-section";
 
-  const tabs = renderTabs(tab);
-  section.appendChild(tabs);
+  if (TAB_CONFIG.length > 1) {
+    const tabs = renderTabs(tab);
+    section.appendChild(tabs);
+  }
 
   const content = document.createElement("div");
   content.className = "kommunikation-content";
@@ -63,8 +58,8 @@ export async function initModule(container, routeInfo = {}) {
 
 function parseRoute(segments = []) {
   const parts = Array.isArray(segments) ? segments.filter(Boolean) : [];
-  const rawTab = parts[0] || "chats";
-  const tab = TAB_CONFIG.some((t) => t.id === rawTab) ? rawTab : "chats";
+  const rawTab = parts[0] || "infochannel";
+  const tab = TAB_CONFIG.some((t) => t.id === rawTab) ? rawTab : "infochannel";
   const detailId = parts.length > 1 ? parts.slice(1).join("/") : null;
   return { tab, detailId };
 }
@@ -186,11 +181,7 @@ function renderError(host) {
 function renderEmpty(host, tab) {
   host.innerHTML = "";
   const hint =
-    tab === "chats"
-      ? "Keine Chats vorhanden."
-      : tab === "infochannel"
-        ? "Keine Infochannel-Meldungen vorhanden."
-        : "Keine Systemmeldungen vorhanden.";
+    tab === "infochannel" ? "Keine Infochannel-Meldungen vorhanden." : "Keine Einträge vorhanden.";
   host.appendChild(createEmptyState("Leer", hint));
 }
 
@@ -312,20 +303,8 @@ async function renderInfochannelList(host, actor) {
       required: true,
       placeholder: "Nachricht an alle Trainerinnen und Trainer",
     });
-    const slaRow = createFormRow({
-      id: "infochannel-sla",
-      label: "SLA (Stunden)",
-      type: "number",
-      value: "48",
-      describedByText: "Frist für Bestätigung der Meldung.",
-    });
     const bodyControl = bodyRow.querySelector("textarea");
     if (bodyControl) bodyControl.rows = 5;
-    const slaControl = slaRow.querySelector("input");
-    if (slaControl) {
-      slaControl.min = "1";
-      slaControl.step = "1";
-    }
     const actions = document.createElement("div");
     actions.className = "infochannel-compose__actions";
     const status = document.createElement("span");
@@ -338,7 +317,6 @@ async function renderInfochannelList(host, actor) {
     actions.appendChild(submit);
     compose.appendChild(titleRow);
     compose.appendChild(bodyRow);
-    compose.appendChild(slaRow);
     compose.appendChild(actions);
     compose.addEventListener("submit", async (event) => {
       event.preventDefault();
@@ -346,13 +324,10 @@ async function renderInfochannelList(host, actor) {
       submit.disabled = true;
       const title = compose.querySelector("#infochannel-title")?.value || "";
       const body = compose.querySelector("#infochannel-body")?.value || "";
-      const slaHours = compose.querySelector("#infochannel-sla")?.value || "";
       try {
-        await infochannelClient.createNotice({ title, body, slaHours });
+        await infochannelClient.createNotice({ title, body });
         status.textContent = "Meldung veröffentlicht.";
         compose.reset();
-        const slaInput = compose.querySelector("#infochannel-sla");
-        if (slaInput) slaInput.value = "48";
         await renderInfochannelList(host, actor);
       } catch (error) {
         if (error.code === "RATE_LIMITED") {
@@ -368,6 +343,7 @@ async function renderInfochannelList(host, actor) {
         submit.disabled = false;
       }
     });
+    compose.style.marginBottom = "1rem";
     wrapper.appendChild(compose);
   }
 
@@ -397,19 +373,47 @@ async function renderInfochannelList(host, actor) {
       const published = document.createElement("time");
       published.dateTime = notice.createdAt || "";
       published.textContent = notice.createdAt ? formatTime(notice.createdAt) : "";
-      const status = document.createElement("span");
-      status.className = "kommunikation-card__status";
-      status.textContent = buildInfochannelStatusText(notice, actor);
-      if (notice.viewerOverdue || notice.overdueCount > 0) {
-        status.classList.add("kommunikation-card__status--warn");
-      } else if (notice.viewerConfirmation?.late || notice.lateCount > 0) {
-        status.classList.add("kommunikation-card__status--late");
-      }
+      const statusText = buildInfochannelStatusText(notice, actor);
       meta.appendChild(published);
-      meta.appendChild(status);
+      if (statusText) {
+        const status = document.createElement("span");
+        status.className = "kommunikation-card__status";
+        status.textContent = statusText;
+        meta.appendChild(status);
+      }
       card.appendChild(title);
       card.appendChild(snippet);
       card.appendChild(meta);
+      if (canDeleteNotice(actor)) {
+        const actions = document.createElement("div");
+        actions.className = "module-actions";
+        const deleteBtn = createButton({ label: "Löschen", variant: "secondary" });
+        deleteBtn.type = "button";
+        deleteBtn.addEventListener("click", async (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          const ok = window.confirm(
+            `Infochannel-Eintrag wirklich löschen?\n\n${notice.title || "Infochannel"}\n\nDieser Vorgang kann nicht rückgängig gemacht werden.`
+          );
+          if (!ok) return;
+          deleteBtn.disabled = true;
+          try {
+            await infochannelClient.deleteNotice({ id: notice.id });
+            card.remove();
+            if (!list.children.length) {
+              list.appendChild(
+                createEmptyState("Leer", "Keine Infochannel-Meldungen vorhanden.")
+              );
+            }
+          } catch (error) {
+            console.error("[INFOCHANNEL_DELETE_FAILED]", error);
+            deleteBtn.disabled = false;
+            window.alert("Löschen fehlgeschlagen.");
+          }
+        });
+        actions.appendChild(deleteBtn);
+        card.appendChild(actions);
+      }
       card.setAttribute("tabindex", "0");
       card.addEventListener("click", () => {
         window.location.hash = `#/kommunikation/infochannel/${notice.id}`;
@@ -437,10 +441,8 @@ async function renderInfochannelDetail(host, noticeId, actor) {
   host.innerHTML = "";
   const header = document.createElement("div");
   header.className = "kommunikation-chat-header";
-  const back = document.createElement("button");
+  const back = createButton({ label: "Zurück", variant: "secondary" });
   back.type = "button";
-  back.className = "kommunikation-back";
-  back.textContent = "Zurück";
   back.addEventListener("click", () => {
     window.location.hash = "#/kommunikation/infochannel";
   });
@@ -471,10 +473,7 @@ async function renderInfochannelDetail(host, noticeId, actor) {
     published.textContent = notice.createdAt
       ? `Veröffentlicht: ${formatTime(notice.createdAt)}`
       : "Veröffentlicht";
-    const due = document.createElement("span");
-    due.textContent = notice.slaDueAt ? `SLA bis: ${formatTime(notice.slaDueAt)}` : "SLA";
     meta.appendChild(published);
-    meta.appendChild(due);
 
     const summary = document.createElement("div");
     summary.className = "infochannel-detail__summary";
@@ -485,18 +484,14 @@ async function renderInfochannelDetail(host, noticeId, actor) {
     content.appendChild(meta);
     content.appendChild(summary);
 
-    if (actor.role === "trainer") {
+    if (actor.role === "trainer" || actor.role === "trainer_rapport") {
       const confirmWrap = document.createElement("div");
       confirmWrap.className = "infochannel-confirm";
       const status = document.createElement("span");
       status.className = "infochannel-confirm__status";
       const confirmation = detail.confirmation;
       if (confirmation) {
-        status.textContent = confirmation.late
-          ? `Bestätigt (verspätet) · ${formatTime(confirmation.confirmedAt)}`
-          : `Bestätigt · ${formatTime(confirmation.confirmedAt)}`;
-      } else if (detail.overdue) {
-        status.textContent = "SLA überschritten – Bestätigung ausstehend.";
+        status.textContent = `Bestätigt · ${formatTime(confirmation.confirmedAt)}`;
       } else {
         status.textContent = "Bestätigung ausstehend.";
       }
@@ -513,12 +508,7 @@ async function renderInfochannelDetail(host, noticeId, actor) {
           try {
             const result = await infochannelClient.confirmNotice({ id: noticeId });
             const confirmedAt = result?.confirmation?.confirmedAt || new Date().toISOString();
-            const late =
-              notice.slaDueAt &&
-              new Date(confirmedAt).getTime() > new Date(notice.slaDueAt).getTime();
-            status.textContent = late
-              ? `Bestätigt (verspätet) · ${formatTime(confirmedAt)}`
-              : `Bestätigt · ${formatTime(confirmedAt)}`;
+            status.textContent = `Bestätigt · ${formatTime(confirmedAt)}`;
             confirmBtn.remove();
           } catch (error) {
             if (error.code === "RATE_LIMITED") {
@@ -554,12 +544,9 @@ async function renderInfochannelDetail(host, noticeId, actor) {
         const status = document.createElement("span");
         status.className = "infochannel-targets__status";
         if (entry.status === "confirmed") {
-          status.textContent = entry.late
-            ? `Bestätigt (verspätet) · ${formatTime(entry.confirmedAt)}`
-            : `Bestätigt · ${formatTime(entry.confirmedAt)}`;
-        } else if (entry.status === "overdue") {
-          status.textContent = "SLA überschritten";
-          status.classList.add("infochannel-targets__status--warn");
+          status.textContent = entry.confirmedAt
+            ? `Bestätigt · ${formatTime(entry.confirmedAt)}`
+            : "Bestätigt";
         } else {
           status.textContent = "Ausstehend";
         }
@@ -1399,23 +1386,21 @@ function buildAutomationDecisionText(event = {}) {
 }
 
 function buildInfochannelStatusText(notice, actor) {
-  if (actor?.role === "trainer") {
-    if (notice.viewerConfirmation) {
-      return notice.viewerConfirmation.late ? "Bestätigt (verspätet)" : "Bestätigt";
-    }
-    return notice.viewerOverdue ? "SLA überschritten" : "Bestätigung ausstehend";
+  if (actor?.role === "trainer" || actor?.role === "trainer_rapport") {
+    return "";
   }
   const target = Number(notice.targetCount || 0);
   const confirmed = Number(notice.confirmedCount || 0);
   const pending = Number(notice.pendingCount || Math.max(0, target - confirmed));
   const parts = [`Bestätigt ${confirmed}/${target}`];
-  if (notice.lateCount > 0) {
-    parts.push(`${notice.lateCount} verspätet`);
-  }
-  if (notice.overdueCount > 0 || pending > 0) {
-    parts.push(notice.overdueCount > 0 ? `${notice.overdueCount} überfällig` : `${pending} offen`);
+  if (pending > 0) {
+    parts.push(`${pending} offen`);
   }
   return parts.join(" · ");
+}
+
+function canDeleteNotice(actor) {
+  return actor?.role === "admin";
 }
 
 function compareMessageOrder(a, b) {

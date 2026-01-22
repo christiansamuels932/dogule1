@@ -7,6 +7,7 @@ const ALL_MODULES = [
   "trainer",
   "zertifikate",
   "kommunikation",
+  "schulungen",
   "kalender",
   "finanzen",
   "waren",
@@ -19,28 +20,28 @@ const ALL_API_ENTITIES = [...ALL_MODULES, "rapporte", "historie"];
 const ROLE_MODULES = {
   admin: ALL_MODULES,
   developer: ALL_MODULES,
-  trainer: ["kunden", "hunde"],
-  trainer_rapport: ["kunden", "hunde"],
+  trainer: ["kunden", "hunde", "schulungen", "kommunikation"],
+  trainer_rapport: ["kunden", "hunde", "schulungen", "kommunikation"],
 };
 
 const API_ACCESS = {
   admin: { read: ALL_API_ENTITIES, write: ALL_API_ENTITIES },
   developer: { read: ALL_API_ENTITIES, write: ALL_API_ENTITIES },
   trainer: {
-    read: ["kunden", "hunde", "rapporte"],
+    read: ["kunden", "hunde", "rapporte", "schulungen"],
     write: ["kunden", "hunde", "rapporte"],
   },
   trainer_rapport: {
-    read: ["kunden", "hunde", "rapporte"],
+    read: ["kunden", "hunde", "rapporte", "schulungen"],
     write: ["rapporte"],
   },
 };
 
 const KOMMUNIKATION_ACTIONS = {
-  admin: ["*"],
-  developer: ["*"],
-  trainer: [],
-  trainer_rapport: [],
+  admin: ["kommunikation.infochannel.view", "kommunikation.infochannel.publish", "kommunikation.infochannel.confirm"],
+  developer: ["kommunikation.infochannel.view", "kommunikation.infochannel.confirm"],
+  trainer: ["kommunikation.infochannel.view", "kommunikation.infochannel.confirm"],
+  trainer_rapport: ["kommunikation.infochannel.view", "kommunikation.infochannel.confirm"],
 };
 
 export function normalizeRole(role) {

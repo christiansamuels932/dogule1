@@ -30,6 +30,9 @@ export function resolveAuthConfig(overrides = {}) {
   const requireAdmin2fa =
     overrides.requireAdmin2fa ??
     readEnv("DOGULE1_REQUIRE_ADMIN_2FA", "false").toLowerCase() === "true";
+  const allowLocalPasswordless =
+    overrides.allowLocalPasswordless ??
+    readEnv("DOGULE1_LOCAL_PASSWORDLESS", "false").toLowerCase() === "true";
 
   return {
     enabled,
@@ -42,5 +45,6 @@ export function resolveAuthConfig(overrides = {}) {
     },
     sessionCookieName,
     requireAdmin2fa,
+    allowLocalPasswordless,
   };
 }

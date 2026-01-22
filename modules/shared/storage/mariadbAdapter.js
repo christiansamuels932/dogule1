@@ -407,6 +407,20 @@ function mapHistorieEntryRow(row) {
   };
 }
 
+function mapSchulungRow(row) {
+  if (!row) return null;
+  return {
+    id: row.id,
+    title: row.title,
+    occurredAt: row.occurred_at,
+    blocks: parseJson(row.blocks, []),
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    schemaVersion: row.schema_version,
+    version: row.version,
+  };
+}
+
 function normalizeKunde(data = {}, existing) {
   const createdAt = existing?.createdAt || data.createdAt || nowIso();
   const shouldInfer =
@@ -756,6 +770,23 @@ function normalizeHistorieEntry(data = {}, existing) {
     authorId: toStringValue(data.authorId ?? existing?.authorId),
     authorRole: toStringValue(data.authorRole ?? existing?.authorRole),
     text: toStringValue(data.text ?? existing?.text),
+    createdAt,
+    updatedAt: nowIso(),
+    schemaVersion: Number(data.schemaVersion ?? existing?.schemaVersion ?? 1),
+    version: Number(data.version ?? existing?.version ?? 0),
+  };
+}
+
+function normalizeSchulung(data = {}, existing) {
+  const createdAt = existing?.createdAt || data.createdAt || nowIso();
+  const blocks = Array.isArray(data.blocks)
+    ? data.blocks
+    : parseJson(data.blocks, existing?.blocks || []);
+  return {
+    id: data.id || existing?.id || uuidv7(),
+    title: toStringValue(data.title ?? existing?.title),
+    occurredAt: toStringValue(data.occurredAt ?? existing?.occurredAt ?? nowIso()),
+    blocks: blocks || [],
     createdAt,
     updatedAt: nowIso(),
     schemaVersion: Number(data.schemaVersion ?? existing?.schemaVersion ?? 1),
@@ -2091,6 +2122,60 @@ export function createMariaDbAdapter(options = {}) {
     }
   }
 
+  async function listSchulungen() {
+    try {
+      return await listAll(pool, "SELECT * FROM schulungen ORDER BY occurred_at DESC", [], mapSchulungRow);
+    } catch (error) {
+      throw toStorageError(error, "Failed to list schulungen");
+    }
+  }
+
+  async function getSchulung(id) {
+    try {
+      const record = await fetchOne(pool, "SELECT * FROM schulungen WHERE id = ?", [id], mapSchulungRow);
+      if (!record) {
+        throw new StorageError(STORAGE_ERROR_CODES.NOT_FOUND, `schulungen ${id} not found`);
+      }
+      return record;
+    } catch (error) {
+      throw toStorageError(error, `Failed to get schulungen ${id}`);
+    }
+  }
+
+  async function createSchulung(data = {}) {
+    const record = normalizeSchulung(data, null);
+    ensureRequiredFields(record, ["title", "occurredAt"], "Schulung benötigt Titel und Datum");
+    const params = [
+      record.id,
+      record.title,
+      record.occurredAt,
+      toJson(record.blocks),
+      record.createdAt,
+      record.updatedAt,
+      record.schemaVersion,
+      record.version,
+    ];
+    try {
+      await pool.query(
+        "INSERT INTO schulungen (id, title, occurred_at, blocks, created_at, updated_at, schema_version, version) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        params
+      );
+      return record;
+    } catch (error) {
+      throw toStorageError(error, "Failed to create schulungen");
+    }
+  }
+
+  async function deleteSchulung(id) {
+    try {
+      await ensureExists(pool, "schulungen", id);
+      await pool.query("DELETE FROM schulungen WHERE id = ?", [id]);
+      return { ok: true, id };
+    } catch (error) {
+      throw toStorageError(error, `Failed to delete schulungen ${id}`);
+    }
+  }
+
   return {
     kunden: {
       list: listKunden,
@@ -2171,6 +2256,12 @@ export function createMariaDbAdapter(options = {}) {
       update: (arg) =>
         updateHistorieEntry(arg?.id || arg, arg?.data || arg?.payload || arg?.data || arg),
       delete: deleteHistorieEntry,
+    },
+    schulungen: {
+      list: listSchulungen,
+      get: getSchulung,
+      create: createSchulung,
+      delete: deleteSchulung,
     },
     dashboardBirthdays: {
       listHandled: listBirthdayHandledEntries,

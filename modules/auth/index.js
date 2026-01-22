@@ -41,7 +41,10 @@ async function fetchAuthOptions() {
     err.code = data?.code || "OPTIONS_FAILED";
     throw err;
   }
-  return Array.isArray(data?.users) ? data.users : [];
+  return {
+    users: Array.isArray(data?.users) ? data.users : [],
+    passwordlessUsers: Array.isArray(data?.passwordlessUsers) ? data.passwordlessUsers : [],
+  };
 }
 
 async function logoutUser(refreshToken) {
@@ -68,7 +71,7 @@ async function loadUserOptions(selectEl, statusSlot, controls = [], selectedUser
   selectEl.appendChild(baseOption);
 
   try {
-    const users = await fetchAuthOptions();
+    const { users, passwordlessUsers } = await fetchAuthOptions();
     users.forEach((user) => {
       const option = document.createElement("option");
       option.value = user.username || "";
@@ -84,6 +87,7 @@ async function loadUserOptions(selectEl, statusSlot, controls = [], selectedUser
         createNotice("Keine Login-Optionen gefunden.", { variant: "warn", role: "alert" })
       );
     }
+    return { users, passwordlessUsers };
   } catch (error) {
     console.error("[AUTH_OPTIONS_FAILED]", error);
     statusSlot.appendChild(
@@ -96,6 +100,7 @@ async function loadUserOptions(selectEl, statusSlot, controls = [], selectedUser
       control.disabled = true;
     });
   }
+  return { users: [], passwordlessUsers: [] };
 }
 
 function renderLoggedIn(container, session) {
@@ -189,7 +194,7 @@ async function renderLogin(container, { selectedUser = "" } = {}) {
     label: "Passwort",
     control: "input",
     type: "password",
-    required: true,
+    required: false,
   });
   const passwordInput = passwordRow.querySelector("input");
   if (passwordInput) {
@@ -208,7 +213,22 @@ async function renderLogin(container, { selectedUser = "" } = {}) {
   actions.append(submit);
   footer.appendChild(actions);
 
-  await loadUserOptions(userInput, statusSlot, [submit], selectedUser);
+  const authOptions = await loadUserOptions(userInput, statusSlot, [submit], selectedUser);
+  let passwordlessUsers = authOptions.passwordlessUsers || [];
+  const applyPasswordState = (username) => {
+    const isPasswordless = passwordlessUsers.includes(username);
+    if (passwordInput) {
+      passwordInput.required = !isPasswordless;
+      passwordInput.disabled = isPasswordless;
+      passwordInput.value = isPasswordless ? "" : passwordInput.value;
+      passwordInput.placeholder = isPasswordless ? "Kein Passwort erforderlich." : "";
+    }
+    passwordRow.style.display = isPasswordless ? "none" : "";
+  };
+  applyPasswordState(userInput.value);
+  userInput.addEventListener("change", () => {
+    applyPasswordState(userInput.value);
+  });
 
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -216,15 +236,6 @@ async function renderLogin(container, { selectedUser = "" } = {}) {
     if (!userInput.value.trim()) {
       statusSlot.appendChild(
         createNotice("Bitte einen Benutzer auswählen.", {
-          variant: "warn",
-          role: "alert",
-        })
-      );
-      return;
-    }
-    if (!String(passwordInput?.value || "").trim()) {
-      statusSlot.appendChild(
-        createNotice("Bitte ein Passwort eingeben.", {
           variant: "warn",
           role: "alert",
         })

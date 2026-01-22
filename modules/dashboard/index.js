@@ -6,6 +6,7 @@ import { createButton, createCard, createNotice } from "../shared/components/com
 import { listAnmeldungDrafts } from "../shared/api/anmeldung.js";
 import { listKunden } from "../shared/api/kunden.js";
 import { listHunde } from "../shared/api/hunde.js";
+import { listTrainer } from "../shared/api/trainer.js";
 import { getDashboardBirthdays, handleDashboardBirthday } from "../shared/api/dashboard.js";
 import {
   listRapporteDrafts,
@@ -150,6 +151,12 @@ function findKundeNameById(kunden, id) {
   return [kunde.vorname, kunde.nachname].filter(Boolean).join(" ").trim();
 }
 
+function resolveTrainerIdFromActorId(actorId) {
+  const raw = String(actorId || "").trim();
+  if (!raw) return "";
+  return raw.startsWith("user-") ? raw.slice(5) : raw;
+}
+
 async function buildRapporteDraftsCard() {
   const role = getSession()?.user?.role || "";
   if (!(role === "admin" || role === "developer")) return null;
@@ -165,14 +172,18 @@ async function buildRapporteDraftsCard() {
 
   let kunden = [];
   let hunde = [];
+  let trainers = [];
   try {
-    kunden = await listKunden();
-    hunde = await listHunde();
+    [kunden, hunde, trainers] = await Promise.all([listKunden(), listHunde(), listTrainer()]);
   } catch (error) {
     console.error("DASHBOARD_RAPPORTE_TARGETS_FAILED", error);
     kunden = [];
     hunde = [];
+    trainers = [];
   }
+  const trainerMap = new Map(
+    trainers.map((trainer) => [trainer.id, trainer.name || trainer.code || trainer.id])
+  );
 
   const cardFragment = createCard({
     eyebrow: "",
@@ -221,9 +232,24 @@ async function buildRapporteDraftsCard() {
     const meta = document.createElement("div");
     meta.className = "dashboard-rapporte__meta";
     const date = draft.occurredAt ? new Date(draft.occurredAt).toLocaleString("de-CH") : "";
-    const author = draft.authorRole || draft.authorId || "";
+    const trainerId = resolveTrainerIdFromActorId(draft.authorId);
+    const trainerName = trainerId ? trainerMap.get(trainerId) : "";
+    const authorLabel = trainerName
+      ? `Trainer: ${trainerName}`
+      : draft.authorRole
+        ? `Rolle: ${draft.authorRole}`
+        : draft.authorId
+          ? `Autor: ${draft.authorId}`
+          : "";
     const textPreview = String(draft.text || "").trim();
-    meta.textContent = [date, author, textPreview].filter(Boolean).join(" · ");
+    const metaTop = document.createElement("div");
+    metaTop.textContent = [date, authorLabel].filter(Boolean).join(" · ");
+    meta.appendChild(metaTop);
+    if (textPreview) {
+      const metaBottom = document.createElement("div");
+      metaBottom.textContent = `Notiz: ${textPreview}`;
+      meta.appendChild(metaBottom);
+    }
 
     left.append(title, meta);
 
@@ -283,11 +309,11 @@ async function buildRapporteDraftsCard() {
 }
 
 function buildMailtoHref({ to, subject, body }) {
-  const params = new window.URLSearchParams();
-  if (subject) params.set("subject", subject);
-  if (body) params.set("body", body);
-  const suffix = params.toString();
-  return `mailto:${encodeURIComponent(to || "")}${suffix ? `?${suffix}` : ""}`;
+  const parts = [];
+  if (subject) parts.push(`subject=${encodeURIComponent(subject)}`);
+  if (body) parts.push(`body=${encodeURIComponent(body)}`);
+  const suffix = parts.length ? `?${parts.join("&")}` : "";
+  return `mailto:${encodeURIComponent(to || "")}${suffix}`;
 }
 
 async function buildBirthdaysCard() {
@@ -420,12 +446,13 @@ async function buildBirthdaysCard() {
     const bodyText = [
       `Herzlichen Glückwunsch zum Geburtstag, ${kunde.vorname || name}.`,
       "",
+      "",
       "Fontanas Dogschool wünscht Dir das Allerbeste und möchte gerne ((Geschenkidee))  offerieren.",
       "",
       "Wir schätzen Dein Vertrauen in uns und hoffen, Dich noch viele Geburtstage bei uns zu haben.",
       "",
+      "",
       "Beste Grüsse",
-      "Richard Fontana",
     ].join("\n");
     appendItem({
       label: `Kunde: ${name}`,
@@ -459,7 +486,9 @@ async function buildBirthdaysCard() {
     const bodyText = [
       `Herzlichen Glückwunsch zum Geburtstag, ${hundName}.`,
       "",
+      "",
       `Fontanas Dogschool wünscht ${kunde?.vorname || kundeName} und Dir  das Allerbeste und wir hoffen, Dich noch viele Geburtstage bei uns zu haben.`,
+      "",
       "",
       "Beste Grüsse",
     ]

@@ -61,8 +61,8 @@ export async function listNotices({ limit, cursor } = {}) {
   return doFetch(path, { method: "GET" });
 }
 
-export async function createNotice({ title, body, slaHours } = {}) {
-  return doFetch("/notices", { method: "POST", body: { title, body, slaHours } });
+export async function createNotice({ title, body } = {}) {
+  return doFetch("/notices", { method: "POST", body: { title, body } });
 }
 
 export async function getNotice({ id }) {
@@ -75,6 +75,7 @@ export async function confirmNotice({ id }) {
   return doFetch(`/notices/${id}/confirm`, { method: "POST" });
 }
 
-export async function runSlaJob() {
-  return doFetch("/jobs/sla", { method: "POST" });
+export async function deleteNotice({ id }) {
+  if (!id) throw buildError("INVALID_INPUT", "notice id required");
+  return doFetch(`/notices/${id}`, { method: "DELETE" });
 }
