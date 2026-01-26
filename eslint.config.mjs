@@ -40,7 +40,9 @@ export default [
       ecmaVersion: 2021,
       sourceType: "script",
       globals: {
+        console: "readonly",
         module: "writable",
+        process: "readonly",
         require: "readonly",
         __dirname: "readonly",
       },

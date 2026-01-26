@@ -35,12 +35,12 @@
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
       "echo \"DLX-LS-JS-001: eslint --fix on staged js/ts\"",
-      "eslint --fix",
-      "prettier --write"
+      "node tools/ci/lint-staged-run.cjs eslint --fix --",
+      "node tools/ci/lint-staged-run.cjs prettier --write --"
     ],
     "*.{json,md,css,html}": [
       "echo \"DLX-LS-DOC-001: prettier on staged non-code\"",
-      "prettier --write"
+      "node tools/ci/lint-staged-run.cjs prettier --write --"
     ]
   },
   "pnpm": {

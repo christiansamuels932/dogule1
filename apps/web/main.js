@@ -130,14 +130,15 @@ async function handleLogout(session) {
 function updateAuthHeader(session) {
   syncWindowAuth(session);
   const normalizedRole = normalizeRole(session?.user?.role);
-  const forceMobile =
-    normalizedRole === "trainer" || normalizedRole === "trainer_rapport";
+  const forceMobile = normalizedRole === "trainer" || normalizedRole === "trainer_rapport";
   document.documentElement.classList.toggle("force-mobile", forceMobile);
   document.body.classList.toggle("force-mobile", forceMobile);
   applyForceMobileStyles(forceMobile);
   const host = document.getElementById("dogule-auth");
   if (!host) return;
   host.innerHTML = "";
+  const helpBtn = createHelpButton();
+  host.appendChild(helpBtn);
   if (!session?.user) {
     const loginBtn = document.createElement("button");
     loginBtn.type = "button";
@@ -162,6 +163,95 @@ function updateAuthHeader(session) {
   logoutBtn.textContent = "Abmelden";
   logoutBtn.addEventListener("click", () => handleLogout(session));
   host.append(name, role, logoutBtn);
+}
+
+function createHelpButton() {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "dogule-auth__btn dogule-help-btn";
+  button.textContent = "Anleitung";
+  button.addEventListener("click", () => {
+    showModuleHelp();
+  });
+  return button;
+}
+
+function showModuleHelp() {
+  const module = window.__DOGULE_ROUTE__?.module || "unbekannt";
+  const help = getModuleHelp(module);
+  const overlay = document.createElement("div");
+  overlay.className = "dogule-help-overlay";
+  const card = document.createElement("div");
+  card.className = "dogule-help-card";
+  const title = document.createElement("h2");
+  title.textContent = "Anleitung";
+  const moduleLabel = document.createElement("p");
+  moduleLabel.className = "dogule-help-card__module";
+  moduleLabel.textContent = `Modul: ${help.label}`;
+  const body = document.createElement("p");
+  body.className = "dogule-help-card__text";
+  body.textContent = help.text;
+  const closeBtn = document.createElement("button");
+  closeBtn.type = "button";
+  closeBtn.className = "dogule-help-card__close";
+  closeBtn.textContent = "Schliessen";
+  closeBtn.addEventListener("click", () => overlay.remove());
+  overlay.addEventListener("click", (event) => {
+    if (event.target === overlay) overlay.remove();
+  });
+  card.append(title, moduleLabel, body, closeBtn);
+  overlay.appendChild(card);
+  document.body.appendChild(overlay);
+}
+
+function getModuleHelp(module) {
+  const helpMap = {
+    auth: {
+      label: "Anmeldung",
+      text: "Wählen Sie einen Benutzer aus und melden Sie sich an. Nach der Anmeldung sehen Sie die Module, die für Ihre Rolle freigegeben sind.",
+    },
+    dashboard: {
+      label: "Dashboard",
+      text: "Hier sehen Sie die wichtigsten Übersichten und aktuellen Hinweise. Nutzen Sie die Karten, um direkt zu den relevanten Bereichen zu springen.",
+    },
+    anmeldung: {
+      label: "Anmeldung",
+      text: "Fügen Sie eine Anmeldungs-E-Mail ein, prüfen Sie die Vorschau und erstellen Sie daraus Kunde und Hund. Kurszuordnung ist Pflicht.",
+    },
+    kunden: {
+      label: "Kunden",
+      text: "Suchen Sie Kundinnen und Kunden, öffnen Sie Details und pflegen Sie Stammdaten. Verknüpfte Hunde und Historie finden Sie in der Detailansicht.",
+    },
+    hunde: {
+      label: "Hunde",
+      text: "Suchen Sie Hunde, öffnen Sie die Detailansicht und pflegen Sie die Stammdaten. Verknüpfte Kunden werden dort angezeigt.",
+    },
+    kurse: {
+      label: "Kurse",
+      text: "Verwalten Sie Kursdaten, Trainer und Zertifikat-Hintergründe. Änderungen hier beeinflussen Zertifikate und Kursübersichten.",
+    },
+    trainer: {
+      label: "Trainer",
+      text: "Pflegen Sie Trainerprofile, Zuständigkeiten und Verfügbarkeiten. Trainer werden in Kursen und Rapporteinträgen angezeigt.",
+    },
+    zertifikate: {
+      label: "Zertifikate",
+      text: "Erstellen Sie Zertifikate für absolvierte Kurse. Prüfen Sie die Vorschau und exportieren Sie das PDF.",
+    },
+    kommunikation: {
+      label: "Kommunikation",
+      text: "Veröffentlichen Sie Hinweise im Infochannel und prüfen Sie Bestätigungen. Inhalte sind für Trainer sichtbar.",
+    },
+    schulungen: {
+      label: "Schulungen",
+      text: "Verwalten Sie Schulungsinhalte, Texte und Bilder. Öffnen Sie eine Schulung, um Details zu prüfen.",
+    },
+  };
+  const fallback = {
+    label: module,
+    text: "Zu diesem Modul ist noch keine spezifische Anleitung hinterlegt.",
+  };
+  return helpMap[module] || fallback;
 }
 
 function applyForceMobileStyles(forceMobile) {
