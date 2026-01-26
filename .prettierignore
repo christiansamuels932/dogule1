@@ -2,3 +2,5 @@ node_modules
 dist
 pnpm-lock.yaml
 .husky
+.NAS-Distro/app
+.NAS-Distro/app/**

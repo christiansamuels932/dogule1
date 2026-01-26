@@ -32,11 +32,33 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 
 # - - - - - - - - - - - - - - - - - - - -
 
+# Station 100 — Anleitung Popup + Kursinhalt Lines
+
+## Kontext
+
+- Status: completed (read-only).
+- Branch: `100`.
+- Scope: Kursinhalt Theorie/Praxis inputs as 5 fixed-width lines, global Anleitung popup per module, NAS deploy sync prep.
+
+## Ergebnis (kurz)
+
+- Kursinhalt Theorie/Praxis now uses five single-line inputs (24 chars) that serialize to the same newline-separated text output.
+- Added global Anleitung button next to auth actions that opens a German module instruction popup.
+- Synced `attachments/material/Material/` into `.NAS-Distro/attachments/material/Material/`.
+- Updated `FEATURES_TO_IMPLEMENT.md` and marked Station 99 as read-only.
+- Rebuilt frontend and synced `dist/` into `.NAS-Distro/app/`.
+
+## Tests
+
+- `pnpm build` ✅
+
+# - - - - - - - - - - - - - - - - - - - -
+
 # Station 99 — New Features (Schulungen + Kommunikation + Local Auth + UI fixes)
 
 ## Kontext
 
-- Status: in progress.
+- Status: completed (read-only).
 - Branch: `99-newfeatures`.
 - Scope: Schulungen module, Kommunikation overhaul (Infochannel only), local passwordless auth, dashboard/report polish, Zertifikate delete, trainer forced mobile view, UI wrapping fixes.
 

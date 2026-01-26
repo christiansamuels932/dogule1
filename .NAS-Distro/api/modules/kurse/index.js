@@ -537,7 +537,43 @@ async function renderForm(section, view, id) {
   const refs = {};
   fields.forEach((field) => {
     const row = createFormRow(field.config);
+    const controlHost = row.querySelector(".ui-form-row__control");
     const input = row.querySelector("input, select, textarea");
+    if (field.name === "inhaltTheorie" || field.name === "inhaltPraxis") {
+      const lines = String(field.value ?? "").split(/\r?\n/);
+      const inputs = [];
+      const lineGroup = document.createElement("div");
+      lineGroup.className = "kurse-inhalt-lines";
+      for (let i = 0; i < 5; i += 1) {
+        const lineInput = document.createElement("input");
+        lineInput.type = "text";
+        lineInput.className = "kurse-inhalt-line";
+        lineInput.maxLength = 24;
+        lineInput.size = 24;
+        lineInput.value = lines[i] || "";
+        lineInput.setAttribute("aria-label", `${field.config.label} Zeile ${i + 1}`);
+        inputs.push(lineInput);
+        lineGroup.appendChild(lineInput);
+      }
+      controlHost.innerHTML = "";
+      controlHost.appendChild(lineGroup);
+      const hint = row.querySelector(".ui-form-row__hint");
+      if (!field.config.describedByText) {
+        hint.classList.add("sr-only");
+      }
+      refs[field.name] = {
+        inputs,
+        hint,
+        row,
+        getValue: () =>
+          inputs
+            .map((lineInput) => lineInput.value)
+            .join("\n")
+            .trim(),
+      };
+      form.appendChild(row);
+      return;
+    }
     input.name = field.name;
     if (field.multiple && input && input.tagName === "SELECT") {
       input.multiple = true;
