@@ -62,6 +62,17 @@ function normalizeTimestamps(record, existing) {
   };
 }
 
+function buildAdresseFromParts({ strasse, plz, ort } = {}) {
+  const cleanStrasse = (strasse ?? "").toString().trim();
+  const cleanPlz = (plz ?? "").toString().trim();
+  const cleanOrt = (ort ?? "").toString().trim();
+  const parts = [];
+  if (cleanStrasse) parts.push(cleanStrasse);
+  const plzOrt = [cleanPlz, cleanOrt].filter(Boolean).join(" ").trim();
+  if (plzOrt) parts.push(plzOrt);
+  return parts.join(", ");
+}
+
 function normalizeKunde(data = {}, existing) {
   const id = (existing?.id || data.id || "").trim() || crypto.randomUUID();
   const timestamps = normalizeTimestamps(data, existing);
@@ -72,7 +83,18 @@ function normalizeKunde(data = {}, existing) {
     nachname: data.nachname ?? existing?.nachname ?? "",
     email: data.email ?? existing?.email ?? "",
     telefon: data.telefon ?? existing?.telefon ?? "",
-    adresse: data.adresse ?? existing?.adresse ?? "",
+    mobile: data.mobile ?? existing?.mobile ?? "",
+    strasse: data.strasse ?? existing?.strasse ?? "",
+    plz: data.plz ?? existing?.plz ?? "",
+    ort: data.ort ?? existing?.ort ?? "",
+    adresse:
+      data.adresse ??
+      existing?.adresse ??
+      buildAdresseFromParts({
+        strasse: data.strasse ?? existing?.strasse,
+        plz: data.plz ?? existing?.plz,
+        ort: data.ort ?? existing?.ort,
+      }),
     notizen: data.notizen ?? existing?.notizen ?? "",
     schemaVersion: 1,
     ...timestamps,

@@ -160,6 +160,7 @@ function resolveView(routeContext = {}) {
 async function renderList(section) {
   if (!section) return;
   section.innerHTML = "";
+  section.classList.add("card-stack-compact");
   scrollToTop();
   await fetchTrainer(true);
   injectToast(section);
@@ -214,6 +215,42 @@ async function renderDetail(section, id) {
       { label: "Kurscode", value: kurs.code },
       { label: "Kursname", value: kurs.title },
       { label: "Trainer", render: () => renderTrainerInline(kurs) },
+      {
+        label: "Weitere Trainer 1",
+        render: () =>
+          renderTrainerLinkById(
+            (Array.isArray(kurs.trainerIds) ? kurs.trainerIds : []).filter(
+              (trainerId) => trainerId && trainerId !== kurs.trainerId
+            )[0] || ""
+          ),
+      },
+      {
+        label: "Weitere Trainer 2",
+        render: () =>
+          renderTrainerLinkById(
+            (Array.isArray(kurs.trainerIds) ? kurs.trainerIds : []).filter(
+              (trainerId) => trainerId && trainerId !== kurs.trainerId
+            )[1] || ""
+          ),
+      },
+      {
+        label: "Weitere Trainer 3",
+        render: () =>
+          renderTrainerLinkById(
+            (Array.isArray(kurs.trainerIds) ? kurs.trainerIds : []).filter(
+              (trainerId) => trainerId && trainerId !== kurs.trainerId
+            )[2] || ""
+          ),
+      },
+      {
+        label: "Weitere Trainer 4",
+        render: () =>
+          renderTrainerLinkById(
+            (Array.isArray(kurs.trainerIds) ? kurs.trainerIds : []).filter(
+              (trainerId) => trainerId && trainerId !== kurs.trainerId
+            )[3] || ""
+          ),
+      },
       { label: "Abo-Form", value: kurs.aboForm },
       { label: "Alter Hund", value: kurs.alterHund },
       { label: "Aufbauend", value: kurs.aufbauend },
@@ -345,6 +382,21 @@ function renderTrainerInline(kurs = {}) {
     }
   });
   return wrapper;
+}
+
+function renderTrainerLinkById(trainerId = "") {
+  const resolvedId = String(trainerId || "").trim();
+  if (!resolvedId) {
+    const span = document.createElement("span");
+    span.textContent = "–";
+    return span;
+  }
+  const trainer = findTrainerById(resolvedId, trainerCache);
+  const label = formatTrainerLabel(trainer, "", resolvedId);
+  const link = document.createElement("a");
+  link.href = `#/trainer/${resolvedId}`;
+  link.textContent = label;
+  return link;
 }
 
 function createCourseListItem(course = {}) {
@@ -1178,7 +1230,12 @@ function buildFormFields(existing = {}, { defaultCode = "", trainerOptions = [] 
       ? [existingTrainerId]
       : [];
   const additionalTrainerIds = existingTrainerIds.filter((id) => id !== existingTrainerId);
-  const additionalTrainerId = additionalTrainerIds[0] || "";
+  const additionalTrainerSlots = [
+    additionalTrainerIds[0] || "",
+    additionalTrainerIds[1] || "",
+    additionalTrainerIds[2] || "",
+    additionalTrainerIds[3] || "",
+  ];
   const backgroundValue = getCertificateBackgroundForKurs(existing);
   return [
     {
@@ -1239,15 +1296,51 @@ function buildFormFields(existing = {}, { defaultCode = "", trainerOptions = [] 
       },
     },
     {
-      name: "trainerIds",
-      value: additionalTrainerId,
+      name: "trainerIds1",
+      value: additionalTrainerSlots[0],
       config: {
-        id: "kurs-trainer-ids",
-        label: "Weitere Trainer",
+        id: "kurs-trainer-ids-1",
+        label: "Weitere Trainer 1",
         control: "select",
         required: false,
         describedByText: "Optional.",
-        options: buildAdditionalTrainerOptions(trainerOptions, additionalTrainerId),
+        options: buildAdditionalTrainerOptions(trainerOptions, additionalTrainerSlots[0]),
+      },
+    },
+    {
+      name: "trainerIds2",
+      value: additionalTrainerSlots[1],
+      config: {
+        id: "kurs-trainer-ids-2",
+        label: "Weitere Trainer 2",
+        control: "select",
+        required: false,
+        describedByText: "Optional.",
+        options: buildAdditionalTrainerOptions(trainerOptions, additionalTrainerSlots[1]),
+      },
+    },
+    {
+      name: "trainerIds3",
+      value: additionalTrainerSlots[2],
+      config: {
+        id: "kurs-trainer-ids-3",
+        label: "Weitere Trainer 3",
+        control: "select",
+        required: false,
+        describedByText: "Optional.",
+        options: buildAdditionalTrainerOptions(trainerOptions, additionalTrainerSlots[2]),
+      },
+    },
+    {
+      name: "trainerIds4",
+      value: additionalTrainerSlots[3],
+      config: {
+        id: "kurs-trainer-ids-4",
+        label: "Weitere Trainer 4",
+        control: "select",
+        required: false,
+        describedByText: "Optional.",
+        options: buildAdditionalTrainerOptions(trainerOptions, additionalTrainerSlots[3]),
       },
     },
     {
@@ -1381,6 +1474,25 @@ function collectFormValues(refs) {
   return values;
 }
 
+function collectAdditionalTrainerIds(values = {}) {
+  const rawValues = [
+    values.trainerIds1,
+    values.trainerIds2,
+    values.trainerIds3,
+    values.trainerIds4,
+  ];
+  const seen = new Set();
+  const ids = [];
+  rawValues.forEach((value) => {
+    const trimmed = ensureString(value).trim();
+    if (!trimmed) return;
+    if (seen.has(trimmed)) return;
+    seen.add(trimmed);
+    ids.push(trimmed);
+  });
+  return ids;
+}
+
 function validate(values = {}, { trainers = [] } = {}) {
   const safeValues = { ...values };
   safeValues.kursCode = ensureString(values.kursCode).trim();
@@ -1394,22 +1506,24 @@ function validate(values = {}, { trainers = [] } = {}) {
     errors.ort = "Bitte Ort angeben.";
   }
   const trainerId = ensureString(values.trainerId).trim();
-  const trainerIds = Array.isArray(values.trainerIds)
-    ? values.trainerIds.map((id) => ensureString(id).trim()).filter(Boolean)
-    : ensureString(values.trainerIds).trim()
-      ? [ensureString(values.trainerIds).trim()]
-      : [];
+  let trainerIds = collectAdditionalTrainerIds(values);
   const validTrainerIds = Array.isArray(trainers) ? trainers.map((trainer) => trainer.id) : [];
   if (!trainerId) {
     errors.trainerId = "Bitte Trainer auswählen.";
   } else if (validTrainerIds.length && !validTrainerIds.includes(trainerId)) {
     errors.trainerId = "Ausgewählter Trainer ist ungültig.";
   }
+  trainerIds = trainerIds.filter((id) => id !== trainerId);
   const invalidAdditional = trainerIds.filter(
     (id) => validTrainerIds.length && !validTrainerIds.includes(id)
   );
   if (invalidAdditional.length) {
-    errors.trainerIds = "Ausgewählte Zusatz-Trainer sind ungültig.";
+    ["trainerIds1", "trainerIds2", "trainerIds3", "trainerIds4"].forEach((key) => {
+      const value = ensureString(values[key]).trim();
+      if (value && invalidAdditional.includes(value)) {
+        errors[key] = "Ausgewählte Zusatz-Trainer sind ungültig.";
+      }
+    });
   }
   safeValues.trainerId = trainerId;
   safeValues.trainerIds = trainerIds;
@@ -1436,11 +1550,7 @@ function applyErrors(refs, errors) {
 
 function buildPayload(values, trainerList = []) {
   const trainer = findTrainerById(values.trainerId, trainerList);
-  const trainerIds = Array.isArray(values.trainerIds)
-    ? values.trainerIds.map((id) => ensureString(id).trim()).filter(Boolean)
-    : ensureString(values.trainerIds).trim()
-      ? [ensureString(values.trainerIds).trim()]
-      : [];
+  const trainerIds = collectAdditionalTrainerIds(values).filter((id) => id !== values.trainerId);
   if (values.trainerId && !trainerIds.includes(values.trainerId)) {
     trainerIds.unshift(values.trainerId);
   }

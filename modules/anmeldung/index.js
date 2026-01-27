@@ -414,7 +414,7 @@ async function renderEditor(container, { mode, draftId, initial }) {
     actionsCardFrag.querySelector(".ui-card") || actionsCardFrag.firstElementChild;
   const actionsBody = actionsCard.querySelector(".ui-card__body");
   const actionsWrap = document.createElement("div");
-  actionsWrap.className = "module-actions";
+  actionsWrap.className = "module-actions anmeldung-actions";
   actionsBody.appendChild(actionsWrap);
 
   if (mode === "detail") {
@@ -586,16 +586,13 @@ async function renderCreate(container) {
 
   const intakeSection = document.createElement("section");
   intakeSection.className = "dogule-section";
-  intakeSection.appendChild(
-    createSectionHeader({ title: "Anmeldung", subtitle: "E-Mail einfügen und auswerten" })
-  );
 
   const statusHost = document.createElement("div");
   intakeSection.appendChild(statusHost);
 
   const intakeCardFrag = createCard({
-    eyebrow: "",
-    title: "Anmeldung (E-Mail)",
+    eyebrow: "E-Mail einfügen und auswerten",
+    title: "Anmeldung",
     body: "",
     footer: "",
   });
@@ -613,7 +610,7 @@ async function renderCreate(container) {
   intakeSection.appendChild(intakeCard);
 
   const actionsWrap = document.createElement("div");
-  actionsWrap.className = "module-actions";
+  actionsWrap.className = "module-actions anmeldung-actions";
   const parseBtn = createButton({ label: "Auswerten", variant: "primary" });
   parseBtn.type = "button";
   actionsWrap.appendChild(parseBtn);

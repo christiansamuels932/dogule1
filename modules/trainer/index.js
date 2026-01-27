@@ -71,6 +71,7 @@ function resolveView(routeInfo) {
 }
 
 async function renderList(section) {
+  section.classList.add("card-stack-compact");
   const actionsCard = createCard({
     eyebrow: "",
     title: "Aktionen",
@@ -192,6 +193,17 @@ async function renderList(section) {
       rows.forEach(({ entry }) => {
         const row = document.createElement("tr");
         row.className = "trainer-list-row";
+        row.tabIndex = 0;
+        row.addEventListener("click", (event) => {
+          if (event.target && event.target.closest("a")) return;
+          window.location.hash = `#/trainer/${entry.id}`;
+        });
+        row.addEventListener("keydown", (event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            window.location.hash = `#/trainer/${entry.id}`;
+          }
+        });
         columns.forEach((column) => {
           const cell = document.createElement("td");
           if (column.isLink) {
@@ -243,6 +255,7 @@ async function renderList(section) {
 }
 
 async function renderDetail(section, id) {
+  section.classList.add("card-stack-compact");
   const actionsCard = createCard({
     eyebrow: "",
     title: "Aktionen",

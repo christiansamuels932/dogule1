@@ -14,6 +14,7 @@ import { listWarenByKundeId } from "../shared/api/waren.js";
 import { listZertifikate } from "../shared/api/zertifikate.js";
 import { createRapporteDraft } from "../shared/api/rapporteDrafts.js";
 import {
+  createHistorieEntry,
   listHistorieEntries,
   updateHistorieEntry,
   deleteHistorieEntry,
@@ -90,7 +91,7 @@ function toLocalDateTimeInputValue(date = new Date()) {
   )}:${pad2(date.getMinutes())}`;
 }
 
-function buildRapportDraftCard({ targetType, targetId, kundeId }) {
+function buildRapportDraftCard({ targetType, targetId, kundeId, role }) {
   const card = createStandardCard("Rapport (Entwurf)");
   if (!card) return null;
   const body = card.querySelector(".ui-card__body");
@@ -118,7 +119,9 @@ function buildRapportDraftCard({ targetType, targetId, kundeId }) {
 
   const actions = document.createElement("div");
   actions.className = "module-actions";
-  const submitBtn = createButton({ label: "Entwurf senden", variant: "primary" });
+  const shouldSaveDirect = isAdminOrDeveloper(role);
+  const submitLabel = shouldSaveDirect ? "Rapport speichern" : "Entwurf senden";
+  const submitBtn = createButton({ label: submitLabel, variant: "primary" });
   submitBtn.type = "submit";
   actions.appendChild(submitBtn);
 
@@ -141,21 +144,64 @@ function buildRapportDraftCard({ targetType, targetId, kundeId }) {
       : new Date().toISOString();
     submitBtn.disabled = true;
     try {
-      await createRapporteDraft({
-        targetType,
-        targetId,
-        kundeId,
-        text,
-        occurredAt,
-      });
-      status.appendChild(createNotice("Rapport eingereicht.", { variant: "ok", role: "status" }));
+      if (shouldSaveDirect) {
+        const session = getSession();
+        const authorId = session?.user?.id || "";
+        const authorRole = session?.user?.role || "";
+        const resolvedText = `Rapport - ${text}`.trim();
+        if (kundeId) {
+          const created = await createHistorieEntry({
+            entityType: "kunden",
+            entityId: kundeId,
+            occurredAt,
+            authorId,
+            authorRole,
+            text: resolvedText,
+          });
+          prependKundenHistorieEntry(
+            created || {
+              entityType: "kunden",
+              entityId: kundeId,
+              occurredAt,
+              authorId,
+              authorRole,
+              text: resolvedText,
+            }
+          );
+        }
+        if (targetType === "hunde" && targetId) {
+          await createHistorieEntry({
+            entityType: "hunde",
+            entityId: targetId,
+            occurredAt,
+            authorId,
+            authorRole,
+            text: resolvedText,
+          });
+        }
+        status.appendChild(createNotice("Rapport gespeichert.", { variant: "ok", role: "status" }));
+      } else {
+        await createRapporteDraft({
+          targetType,
+          targetId,
+          kundeId,
+          text,
+          occurredAt,
+        });
+        status.appendChild(createNotice("Rapport eingereicht.", { variant: "ok", role: "status" }));
+      }
       if (occurredInput) occurredInput.disabled = true;
       if (textInput) textInput.disabled = true;
       submitBtn.disabled = true;
     } catch (error) {
       console.error("[KUNDEN_ERR_RAPPORT_CREATE]", error);
       status.appendChild(
-        createNotice("Rapport konnte nicht eingereicht werden.", { variant: "warn", role: "alert" })
+        createNotice(
+          shouldSaveDirect
+            ? "Rapport konnte nicht gespeichert werden."
+            : "Rapport konnte nicht eingereicht werden.",
+          { variant: "warn", role: "alert" }
+        )
       );
       submitBtn.disabled = false;
     }
@@ -250,6 +296,63 @@ function getHundeNamenString(kunde = {}, hundeByKundeId) {
 function formatHundeNamenForKunde(kunde = {}, hundeByKundeId) {
   const names = getHundeNamenString(kunde, hundeByKundeId);
   return names || "–";
+}
+
+function parseAdresseParts(address = "") {
+  if (typeof address !== "string") return { strasse: "", plz: "", ort: "" };
+  const cleaned = address.trim();
+  if (!cleaned) return { strasse: "", plz: "", ort: "" };
+  const inlineMatch = cleaned.match(/^(.+?)\s+(\d{3,6})\s+(.*)$/);
+  if (inlineMatch) {
+    return {
+      strasse: inlineMatch[1].trim(),
+      plz: inlineMatch[2].trim(),
+      ort: inlineMatch[3].trim(),
+    };
+  }
+  const chunks = cleaned
+    .split(",")
+    .map((part) => part.trim())
+    .filter(Boolean);
+  const strasse = chunks[0] || "";
+  const tail = chunks.slice(1).join(" ").trim();
+  if (!tail) {
+    return { strasse, plz: "", ort: "" };
+  }
+  const match = tail.match(/^(\d{3,6})\s*(.*)$/);
+  if (match) {
+    return { strasse, plz: match[1], ort: match[2].trim() };
+  }
+  return { strasse, plz: "", ort: tail };
+}
+
+function resolveKundenStrasse(kunde = {}) {
+  if (kunde.strasse) return kunde.strasse;
+  const parsed = parseAdresseParts(kunde.adresse || kunde.address || "");
+  return parsed.strasse;
+}
+
+function resolveKundenPlz(kunde = {}) {
+  if (kunde.plz) return kunde.plz;
+  const parsed = parseAdresseParts(kunde.adresse || kunde.address || "");
+  return parsed.plz;
+}
+
+function resolveKundenOrt(kunde = {}) {
+  if (kunde.ort) return kunde.ort;
+  const parsed = parseAdresseParts(kunde.adresse || kunde.address || "");
+  return parsed.ort || extractTown(kunde.adresse || kunde.address || "");
+}
+
+function buildAdresseFromParts(values = {}) {
+  const strasse = (values.strasse || "").trim();
+  const plz = (values.plz || "").trim();
+  const ort = (values.ort || "").trim();
+  const parts = [];
+  if (strasse) parts.push(strasse);
+  const plzOrt = [plz, ort].filter(Boolean).join(" ").trim();
+  if (plzOrt) parts.push(plzOrt);
+  return parts.join(", ");
 }
 
 function buildExportFilename(prefix) {
@@ -351,6 +454,7 @@ async function renderList(root) {
     title: "",
     subtitle: "",
     level: 1,
+    className: "card-stack-compact",
   });
   injectToast(section);
 
@@ -597,8 +701,8 @@ async function renderList(root) {
       ort: {
         key: "ort",
         label: "Ort",
-        value: (kunde) => valueOrDash(extractTown(kunde.adresse || kunde.address || "")),
-        sortValue: (kunde) => extractTown(kunde.adresse || kunde.address || "").toLowerCase(),
+        value: (kunde) => valueOrDash(resolveKundenOrt(kunde)),
+        sortValue: (kunde) => resolveKundenOrt(kunde).toLowerCase(),
       },
     };
     const defaultColumnOrder = ["nachname", "vorname", "hundeNamen", "telefon", "email", "ort"];
@@ -640,7 +744,11 @@ async function renderList(root) {
         getHundeNamenString(kunde, hundeByKundeId),
         kunde.email,
         kunde.telefon,
+        kunde.mobile,
         extractTown(kunde.adresse || kunde.address || ""),
+        kunde.strasse,
+        kunde.plz,
+        kunde.ort,
         kunde.adresse,
       ]
         .filter(Boolean)
@@ -834,6 +942,17 @@ async function renderList(root) {
       pageRows.forEach((kunde) => {
         const row = document.createElement("tr");
         row.className = "kunden-list-row";
+        row.tabIndex = 0;
+        row.addEventListener("click", (event) => {
+          if (event.target && event.target.closest("a")) return;
+          window.location.hash = `#/kunden/${kunde.id}`;
+        });
+        row.addEventListener("keydown", (event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            window.location.hash = `#/kunden/${kunde.id}`;
+          }
+        });
         columns.forEach((column) => {
           const cell = document.createElement("td");
           if (column.isLink) {
@@ -937,7 +1056,10 @@ async function renderDetail(root, id) {
     { label: "Geschlecht", value: formatKundenGeschlecht(kunde.geschlecht) },
     { label: "E-Mail", value: kunde.email },
     { label: "Telefon", value: kunde.telefon },
-    { label: "Adresse", value: kunde.adresse },
+    { label: "Mobile", value: kunde.mobile },
+    { label: "Strasse", value: resolveKundenStrasse(kunde) },
+    { label: "PLZ", value: resolveKundenPlz(kunde) },
+    { label: "Ort", value: resolveKundenOrt(kunde) },
     { label: "Heimatort", value: kunde.heimatort ?? kunde.heimatOrt },
     { label: "Ausweis-ID", value: kunde.ausweisId || kunde.ausweisID },
     { label: "Status", value: formatKundenStatus(kunde.status) },
@@ -973,21 +1095,13 @@ async function renderDetail(root, id) {
     editBtn.addEventListener("click", () => {
       window.location.hash = `#/kunden/${id}/edit`;
     });
-    const zertifikatBtn = createButton({
-      label: "Zertifikat erstellen",
-      variant: "secondary",
-    });
-    zertifikatBtn.type = "button";
-    zertifikatBtn.addEventListener("click", () => {
-      window.location.hash = `#/zertifikate/new?kundeId=${encodeURIComponent(id)}`;
-    });
     deleteBtn = createButton({
       label: "Löschen",
       variant: "secondary",
     });
     deleteBtn.type = "button";
     deleteBtn.dataset.action = "delete";
-    actionsWrap.append(editBtn, zertifikatBtn, deleteBtn);
+    actionsWrap.append(editBtn, deleteBtn);
   }
   const backBtn = createButton({
     label: "Zur Übersicht",
@@ -1010,6 +1124,7 @@ async function renderDetail(root, id) {
       targetType: "kunden",
       targetId: id,
       kundeId: id,
+      role,
     });
     if (rapportCard) {
       detailSection.appendChild(rapportCard);
@@ -1122,10 +1237,8 @@ async function renderDetail(root, id) {
 
 function renderKundenHundeSection(hunde = [], hasError = false) {
   const section = createSectionBlock({
-    title: "Hunde",
-    subtitle: "",
     level: 2,
-    className: "kunden-details",
+    className: "kunden-detail-stack",
   });
   const card = createStandardCard("Hunde");
   const body = card.querySelector(".ui-card__body");
@@ -1336,9 +1449,28 @@ async function renderForm(root, view, id) {
       placeholder: "z. B. +41 44 123 45 67",
     },
     {
-      name: "adresse",
-      label: "Adresse",
-      placeholder: "z. B. Hauptstrasse 10, 8000 Zürich",
+      name: "mobile",
+      label: "Mobile",
+      placeholder: "z. B. +41 79 123 45 67",
+      value: existing ? existing.mobile || "" : "",
+    },
+    {
+      name: "strasse",
+      label: "Strasse",
+      placeholder: "z. B. Hauptstrasse 10",
+      value: existing ? resolveKundenStrasse(existing) : "",
+    },
+    {
+      name: "plz",
+      label: "PLZ",
+      placeholder: "z. B. 8000",
+      value: existing ? resolveKundenPlz(existing) : "",
+    },
+    {
+      name: "ort",
+      label: "Ort",
+      placeholder: "z. B. Zürich",
+      value: existing ? resolveKundenOrt(existing) : "",
     },
     {
       name: "ausweisId",
@@ -1560,6 +1692,8 @@ async function handleKundeFormSubmit(event, context = {}) {
   const codeInput = refs.kundenCode?.input;
   const isManualCode = codeInput ? !codeInput.readOnly : false;
   const values = collectValues(refs);
+  const computedAdresse = buildAdresseFromParts(values);
+  values.adresse = computedAdresse || existing?.adresse || "";
   if (!isManualCode && !values.kundenCode) {
     const nextCode = generateNextKundenCode(kundenCache);
     values.kundenCode = nextCode;
@@ -1823,10 +1957,10 @@ function buildHundCode(num) {
 
 function renderKundenHistorieSection(entries = [], hasError = false) {
   const section = createSectionBlock({
-    title: "Historie",
-    subtitle: "",
     level: 2,
+    className: "kunden-detail-stack",
   });
+  section.dataset.section = "kunden-historie";
   const card = createStandardCard("Historie");
   const body = card.querySelector(".ui-card__body");
   body.innerHTML = "";
@@ -1844,79 +1978,98 @@ function renderKundenHistorieSection(entries = [], hasError = false) {
     const list = document.createElement("ul");
     list.className = "kunden-historie-list";
     entries.forEach((entry) => {
-      const item = document.createElement("li");
-      item.className = "kunden-historie-item";
-      const line = document.createElement("div");
-      line.className = "kunden-historie-line";
-      const date = entry.occurredAt ? formatDateTime(entry.occurredAt) : "";
-      const author = entry.authorRole ? String(entry.authorRole) : "";
-      const text = (entry.text || "").trim();
-      const label = document.createElement("span");
-      label.textContent = [date, author, text].filter(Boolean).join(" · ");
-      line.appendChild(label);
-
-      if (canEdit) {
-        const actions = document.createElement("div");
-        actions.className = "module-actions";
-        const editBtn = createButton({ label: "Bearbeiten", variant: "secondary" });
-        editBtn.type = "button";
-        const deleteBtn = createButton({ label: "Löschen", variant: "secondary" });
-        deleteBtn.type = "button";
-
-        editBtn.addEventListener("click", async () => {
-          const next = window.prompt("Historie-Eintrag bearbeiten:", entry.text || "");
-          if (next === null) return;
-          const trimmed = String(next).trim();
-          if (!trimmed) {
-            window.alert("Text darf nicht leer sein.");
-            return;
-          }
-          editBtn.disabled = true;
-          deleteBtn.disabled = true;
-          try {
-            const updated = await updateHistorieEntry(entry.id, { text: trimmed });
-            entry.text = updated?.text ?? trimmed;
-            label.textContent = [date, author, (entry.text || "").trim()]
-              .filter(Boolean)
-              .join(" · ");
-          } catch (error) {
-            console.error("[KUNDEN_ERR_HISTORIE_EDIT]", error);
-            window.alert("Änderung fehlgeschlagen (siehe Konsole).");
-          } finally {
-            editBtn.disabled = false;
-            deleteBtn.disabled = false;
-          }
-        });
-
-        deleteBtn.addEventListener("click", async () => {
-          const ok = window.confirm("Historie-Eintrag wirklich löschen?");
-          if (!ok) return;
-          editBtn.disabled = true;
-          deleteBtn.disabled = true;
-          try {
-            await deleteHistorieEntry(entry.id);
-            item.remove();
-          } catch (error) {
-            console.error("[KUNDEN_ERR_HISTORIE_DELETE]", error);
-            window.alert("Löschen fehlgeschlagen (siehe Konsole).");
-          } finally {
-            editBtn.disabled = false;
-            deleteBtn.disabled = false;
-          }
-        });
-
-        actions.append(editBtn, deleteBtn);
-        line.appendChild(actions);
-      }
-
-      item.appendChild(line);
-      list.appendChild(item);
+      list.appendChild(buildKundenHistorieItem(entry, canEdit));
     });
     body.appendChild(list);
   }
 
   section.appendChild(card);
   return section;
+}
+
+function buildKundenHistorieItem(entry, canEdit) {
+  const item = document.createElement("li");
+  item.className = "kunden-historie-item";
+  const line = document.createElement("div");
+  line.className = "kunden-historie-line";
+  const date = entry.occurredAt ? formatDateTime(entry.occurredAt) : "";
+  const author = entry.authorRole ? String(entry.authorRole) : "";
+  const text = (entry.text || "").trim();
+  const label = document.createElement("span");
+  label.textContent = [date, author, text].filter(Boolean).join(" · ");
+  line.appendChild(label);
+
+  if (canEdit) {
+    const actions = document.createElement("div");
+    actions.className = "module-actions";
+    const editBtn = createButton({ label: "Bearbeiten", variant: "secondary" });
+    editBtn.type = "button";
+    const deleteBtn = createButton({ label: "Löschen", variant: "secondary" });
+    deleteBtn.type = "button";
+
+    editBtn.addEventListener("click", async () => {
+      const next = window.prompt("Historie-Eintrag bearbeiten:", entry.text || "");
+      if (next === null) return;
+      const trimmed = String(next).trim();
+      if (!trimmed) {
+        window.alert("Text darf nicht leer sein.");
+        return;
+      }
+      editBtn.disabled = true;
+      deleteBtn.disabled = true;
+      try {
+        const updated = await updateHistorieEntry(entry.id, { text: trimmed });
+        entry.text = updated?.text ?? trimmed;
+        label.textContent = [date, author, (entry.text || "").trim()].filter(Boolean).join(" · ");
+      } catch (error) {
+        console.error("[KUNDEN_ERR_HISTORIE_EDIT]", error);
+        window.alert("Änderung fehlgeschlagen (siehe Konsole).");
+      } finally {
+        editBtn.disabled = false;
+        deleteBtn.disabled = false;
+      }
+    });
+
+    deleteBtn.addEventListener("click", async () => {
+      const ok = window.confirm("Historie-Eintrag wirklich löschen?");
+      if (!ok) return;
+      editBtn.disabled = true;
+      deleteBtn.disabled = true;
+      try {
+        await deleteHistorieEntry(entry.id);
+        item.remove();
+      } catch (error) {
+        console.error("[KUNDEN_ERR_HISTORIE_DELETE]", error);
+        window.alert("Löschen fehlgeschlagen (siehe Konsole).");
+      } finally {
+        editBtn.disabled = false;
+        deleteBtn.disabled = false;
+      }
+    });
+
+    actions.append(editBtn, deleteBtn);
+    line.appendChild(actions);
+  }
+
+  item.appendChild(line);
+  return item;
+}
+
+function prependKundenHistorieEntry(entry) {
+  const section = document.querySelector("[data-section='kunden-historie']");
+  const body = section?.querySelector(".ui-card__body");
+  if (!body || !entry) return;
+  let list = body.querySelector(".kunden-historie-list");
+  if (!list) {
+    body.innerHTML = "";
+    list = document.createElement("ul");
+    list.className = "kunden-historie-list";
+    body.appendChild(list);
+  }
+  const role = getSession()?.user?.role || "";
+  const canEdit = role === "admin" || role === "developer";
+  const item = buildKundenHistorieItem(entry, canEdit);
+  list.prepend(item);
 }
 
 function generateNextKundenCode(list = []) {
@@ -1936,9 +2089,8 @@ function generateNextKundenCode(list = []) {
 
 function renderKundenZertifikateSection(zertifikate = [], hasError = false) {
   const section = createSectionBlock({
-    title: "Zertifikate",
-    subtitle: "",
     level: 2,
+    className: "kunden-detail-stack",
   });
   const card = createStandardCard("Zertifikate");
   const body = card.querySelector(".ui-card__body");

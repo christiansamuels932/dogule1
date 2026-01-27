@@ -14,7 +14,7 @@ import { injectHundToast } from "./formView.js";
 export async function createHundeListView(container) {
   if (!container) return;
   container.innerHTML = "";
-  container.classList.add("hunde-view");
+  container.classList.add("hunde-view", "hunde-list-view");
 
   try {
     injectHundToast(container);
@@ -24,10 +24,13 @@ export async function createHundeListView(container) {
     let exportHandler = null;
     const actionCard = canManage ? buildActionCard(() => exportHandler?.()) : null;
     const listCard = buildListCard();
+    const section = document.createElement("section");
+    section.className = "dogule-section hunde-section hunde-list-stack";
     if (actionCard) {
-      container.appendChild(actionCard);
+      section.appendChild(actionCard);
     }
-    container.appendChild(listCard);
+    section.appendChild(listCard);
+    container.appendChild(section);
 
     exportHandler = await populateHundeTable(listCard);
     focusHeading(container);
@@ -43,7 +46,10 @@ export async function createHundeListView(container) {
         role: "alert",
       })
     );
-    container.appendChild(fallbackCard);
+    const section = document.createElement("section");
+    section.className = "dogule-section hunde-section hunde-list-stack";
+    section.appendChild(fallbackCard);
+    container.appendChild(section);
   }
 }
 
@@ -359,6 +365,17 @@ async function populateHundeTable(cardElement) {
       pageRows.forEach((hund) => {
         const row = document.createElement("tr");
         row.className = "hunde-list-row";
+        row.tabIndex = 0;
+        row.addEventListener("click", (event) => {
+          if (event.target && event.target.closest("a")) return;
+          window.location.hash = `#/hunde/${hund.id}`;
+        });
+        row.addEventListener("keydown", (event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            window.location.hash = `#/hunde/${hund.id}`;
+          }
+        });
         columns.forEach((column) => {
           const cell = document.createElement("td");
           if (column.isLink) {

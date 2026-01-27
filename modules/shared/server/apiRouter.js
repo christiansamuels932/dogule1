@@ -393,8 +393,12 @@ export function createApiRouter(options = {}) {
     if (!trainerId) return false;
     try {
       const trainer = await storage.trainer.get(trainerId);
-      const code = String(trainer?.code || "").trim().toUpperCase();
-      const name = String(trainer?.name || "").trim().toLowerCase();
+      const code = String(trainer?.code || "")
+        .trim()
+        .toUpperCase();
+      const name = String(trainer?.name || "")
+        .trim()
+        .toLowerCase();
       return code === adminTrainerCode || name === adminTrainerName.toLowerCase();
     } catch {
       return false;
@@ -919,7 +923,8 @@ export function createApiRouter(options = {}) {
               }
             }
 
-            const text = `Geburtstag ${entityType === "kunden" ? "Kunde" : "Hund"} ${subjectName} – ${actionLabel} – ${todayLabel}`;
+            const labelPrefix = entityType === "kunden" ? "Geburtstag Kunde" : "Wurftag Hund";
+            const text = `${labelPrefix} ${subjectName} – ${actionLabel} – ${todayLabel}`;
             await storage.historie.create(
               {
                 entityType: "kunden",
@@ -1341,7 +1346,10 @@ export function createApiRouter(options = {}) {
   async function handle(req, res) {
     const reqUrl = req?.url || "";
     if (!reqUrl.startsWith("/api/")) return false;
-    if (reqUrl.startsWith("/api/schulungen/uploads/") && (req.method || "GET").toUpperCase() === "GET") {
+    if (
+      reqUrl.startsWith("/api/schulungen/uploads/") &&
+      (req.method || "GET").toUpperCase() === "GET"
+    ) {
       return handleSchulungenRoutes(req, res);
     }
     if (

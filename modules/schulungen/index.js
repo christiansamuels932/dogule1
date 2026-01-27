@@ -60,6 +60,7 @@ function buildActionsCard() {
 }
 
 async function renderListView(section) {
+  section.classList.add("card-stack-compact");
   const actionsCard = buildActionsCard();
   if (actionsCard) section.appendChild(actionsCard);
 
@@ -84,7 +85,9 @@ async function renderListView(section) {
   } catch (error) {
     console.error("[SCHULUNGEN_LIST_FAILED]", error);
     body.innerHTML = "";
-    body.appendChild(createNotice("Fehler beim Laden der Daten.", { variant: "warn", role: "alert" }));
+    body.appendChild(
+      createNotice("Fehler beim Laden der Daten.", { variant: "warn", role: "alert" })
+    );
     return;
   }
 

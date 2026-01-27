@@ -20,7 +20,7 @@ export async function initModule(container) {
   const fragment = document.createDocumentFragment();
 
   const overviewSection = document.createElement("section");
-  overviewSection.className = "dogule-section";
+  overviewSection.className = "dogule-section card-stack-compact";
   const statusCardFragment = createCard({
     eyebrow: "",
     title: "Systemstatus",
@@ -231,23 +231,28 @@ async function buildRapporteDraftsCard() {
 
     const meta = document.createElement("div");
     meta.className = "dashboard-rapporte__meta";
-    const date = draft.occurredAt ? new Date(draft.occurredAt).toLocaleString("de-CH") : "";
+    const date = draft.occurredAt
+      ? new Date(draft.occurredAt).toLocaleString("de-CH", {
+          year: "numeric",
+          month: "numeric",
+          day: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        })
+      : "";
     const trainerId = resolveTrainerIdFromActorId(draft.authorId);
     const trainerName = trainerId ? trainerMap.get(trainerId) : "";
-    const authorLabel = trainerName
-      ? `Trainer: ${trainerName}`
-      : draft.authorRole
-        ? `Rolle: ${draft.authorRole}`
-        : draft.authorId
-          ? `Autor: ${draft.authorId}`
-          : "";
+    const authorLabel = trainerName || "";
     const textPreview = String(draft.text || "").trim();
     const metaTop = document.createElement("div");
     metaTop.textContent = [date, authorLabel].filter(Boolean).join(" · ");
+    metaTop.style.fontWeight = "600";
     meta.appendChild(metaTop);
     if (textPreview) {
       const metaBottom = document.createElement("div");
-      metaBottom.textContent = `Notiz: ${textPreview}`;
+      metaBottom.textContent = textPreview;
+      metaBottom.style.marginTop = "0.5rem";
+      metaBottom.style.marginBottom = "0.35rem";
       meta.appendChild(metaBottom);
     }
 
@@ -339,8 +344,10 @@ async function buildBirthdaysCard() {
   const body = card.querySelector(".ui-card__body");
   if (!body) return card;
 
-  const list = document.createElement("ul");
-  list.className = "dashboard-birthdays";
+  const kundenList = document.createElement("ul");
+  kundenList.className = "dashboard-birthdays";
+  const hundeList = document.createElement("ul");
+  hundeList.className = "dashboard-birthdays";
 
   const normalizeStatus = (value) =>
     String(value || "")
@@ -348,17 +355,21 @@ async function buildBirthdaysCard() {
       .toLowerCase();
   const warnLabel = (text) => `WARNUNG: ${text}`;
 
-  const appendItem = ({
-    label,
-    meta,
-    href,
-    email,
-    entityType,
-    entityId,
-    mailtoSubject,
-    mailtoBody,
-    warningText,
-  }) => {
+  const appendItem = (
+    listHost,
+    {
+      label,
+      meta,
+      href,
+      email,
+      entityType,
+      entityId,
+      mailtoSubject,
+      mailtoBody,
+      warningText,
+      kindLabel,
+    }
+  ) => {
     const li = document.createElement("li");
     const row = document.createElement("div");
     row.className = "dashboard-birthdays__row";
@@ -390,12 +401,15 @@ async function buildBirthdaysCard() {
     actions.className = "dashboard-birthdays__actions module-actions";
     const dismissBtn = createButton({ label: "Verwerfen", variant: "secondary" });
     dismissBtn.type = "button";
-    const mailBtn = createButton({ label: "Geburtstagsemail", variant: "primary" });
+    const mailBtn = createButton({
+      label: `${kindLabel}semail`,
+      variant: "primary",
+    });
     mailBtn.type = "button";
     mailBtn.disabled = !String(email || "").trim();
 
     dismissBtn.addEventListener("click", async () => {
-      const ok = window.confirm(`Geburtstagseintrag verwerfen?\n\n${label}`);
+      const ok = window.confirm(`${kindLabel}seintrag verwerfen?\n\n${label}`);
       if (!ok) return;
       dismissBtn.disabled = true;
       mailBtn.disabled = true;
@@ -413,7 +427,7 @@ async function buildBirthdaysCard() {
     mailBtn.addEventListener("click", async () => {
       const warningLine = warningText ? `\n\nWARNUNG: ${warningText}` : "";
       const ok = window.confirm(
-        `Geburtstagsemail vorbereiten?\n\nEmpfänger: ${email || "—"}${warningLine}\n\nHinweis: Es wird nichts automatisch versendet – es öffnet nur dein Mailprogramm.`
+        `${kindLabel}semail vorbereiten?\n\nEmpfänger: ${email || "—"}${warningLine}\n\nHinweis: Es wird nichts automatisch versendet – es öffnet nur dein Mailprogramm.`
       );
       if (!ok) return;
       dismissBtn.disabled = true;
@@ -434,8 +448,15 @@ async function buildBirthdaysCard() {
     actions.append(mailBtn, dismissBtn);
     row.append(left, actions);
     li.appendChild(row);
-    list.appendChild(li);
+    listHost.appendChild(li);
   };
+
+  if (kunden.length) {
+    const kundenHeading = document.createElement("h3");
+    kundenHeading.textContent = "Heutige Geburtstage Kunden";
+    body.appendChild(kundenHeading);
+    body.appendChild(kundenList);
+  }
 
   kunden.forEach((kunde) => {
     const name = [kunde.vorname, kunde.nachname].filter(Boolean).join(" ").trim() || "Unbekannt";
@@ -454,7 +475,7 @@ async function buildBirthdaysCard() {
       "",
       "Beste Grüsse",
     ].join("\n");
-    appendItem({
+    appendItem(kundenList, {
       label: `Kunde: ${name}`,
       meta: kunde.geburtsdatum ? `Geburtsdatum: ${kunde.geburtsdatum}` : "",
       href: `#/kunden/${kunde.id}`,
@@ -464,8 +485,16 @@ async function buildBirthdaysCard() {
       mailtoSubject: subject,
       mailtoBody: bodyText,
       warningText,
+      kindLabel: "Geburtstag",
     });
   });
+
+  if (hunde.length) {
+    const hundeHeading = document.createElement("h3");
+    hundeHeading.textContent = "Heutige Wurftage Hunde";
+    body.appendChild(hundeHeading);
+    body.appendChild(hundeList);
+  }
 
   hunde.forEach((hund) => {
     const hundName = hund.name || hund.rufname || "Unbekannt";
@@ -482,23 +511,23 @@ async function buildBirthdaysCard() {
       ? [kunde.vorname, kunde.nachname].filter(Boolean).join(" ").trim() || kunde.id
       : hund.kundenId;
     const email = kunde?.email || "";
-    const subject = `Alles Gute zum Geburtstag, ${hundName}!`;
+    const subject = `Alles Gute zum Wurftag, ${hundName}!`;
     const bodyText = [
-      `Herzlichen Glückwunsch zum Geburtstag, ${hundName}.`,
+      `Herzlichen Glückwunsch zum Wurftag, ${hundName}.`,
       "",
       "",
-      `Fontanas Dogschool wünscht ${kunde?.vorname || kundeName} und Dir  das Allerbeste und wir hoffen, Dich noch viele Geburtstage bei uns zu haben.`,
+      `Fontanas Dogschool wünscht ${kunde?.vorname || kundeName} und Dir  das Allerbeste und wir hoffen, Dich noch viele Wurftage bei uns zu haben.`,
       "",
       "",
       "Beste Grüsse",
     ]
       .filter(Boolean)
       .join("\n");
-    appendItem({
+    appendItem(hundeList, {
       label: `Hund: ${hundName}`,
       meta: [
         kundeName ? `Besitzer: ${kundeName}` : "",
-        hund.geburtsdatum ? `Geburtsdatum: ${hund.geburtsdatum}` : "",
+        hund.geburtsdatum ? `Wurftag: ${hund.geburtsdatum}` : "",
       ]
         .filter(Boolean)
         .join(" · "),
@@ -509,10 +538,10 @@ async function buildBirthdaysCard() {
       mailtoSubject: subject,
       mailtoBody: bodyText,
       warningText,
+      kindLabel: "Wurftag",
     });
   });
 
-  body.appendChild(list);
   return card;
 }
 
@@ -548,7 +577,7 @@ function groupBy(items, keyFn) {
 function buildDuplicatesCard() {
   const cardFragment = createCard({
     eyebrow: "",
-    title: "Possible duplicates",
+    title: "Mögliche Duplikate",
     body: "",
     footer: "",
   });
@@ -563,14 +592,14 @@ function buildDuplicatesCard() {
   const resultHost = document.createElement("div");
   body.append(status, resultHost);
 
-  const scanBtn = createButton({ label: "Scan now", variant: "secondary" });
+  const scanBtn = createButton({ label: "Jetzt scannen", variant: "secondary" });
   scanBtn.type = "button";
   footer.appendChild(scanBtn);
 
   const renderResults = ({ kundenDupes = [], hundDupes = [] } = {}) => {
     resultHost.innerHTML = "";
     const summary = document.createElement("p");
-    summary.innerHTML = `<strong>${kundenDupes.length}</strong> customer groups and <strong>${hundDupes.length}</strong> dog groups look duplicated.`;
+    summary.innerHTML = `<strong>${kundenDupes.length}</strong> Kundengruppen und <strong>${hundDupes.length}</strong> Hundegruppen wirken dupliziert.`;
     resultHost.appendChild(summary);
 
     const makeList = (title, groups, renderItem) => {
@@ -580,7 +609,7 @@ function buildDuplicatesCard() {
       block.appendChild(h);
       if (!groups.length) {
         block.appendChild(
-          createNotice("No duplicates detected.", { variant: "ok", role: "status" })
+          createNotice("Keine Duplikate gefunden.", { variant: "ok", role: "status" })
         );
         return block;
       }
@@ -595,7 +624,7 @@ function buildDuplicatesCard() {
     };
 
     resultHost.appendChild(
-      makeList("Customers (same name + town)", kundenDupes, (group) => {
+      makeList("Kunden (gleicher Name + Ort)", kundenDupes, (group) => {
         const wrap = document.createElement("div");
         const strong = document.createElement("strong");
         strong.textContent = `${group.name || "—"} · ${group.town || "—"}`;
@@ -615,10 +644,10 @@ function buildDuplicatesCard() {
     );
 
     resultHost.appendChild(
-      makeList("Dogs (same owner + name)", hundDupes, (group) => {
+      makeList("Hunde (gleicher Besitzer + Name)", hundDupes, (group) => {
         const wrap = document.createElement("div");
         const strong = document.createElement("strong");
-        strong.textContent = `${group.kundeName || "Owner"} · ${group.name || "—"}`;
+        strong.textContent = `${group.kundeName || "Besitzer"} · ${group.name || "—"}`;
         wrap.appendChild(strong);
         const ul = document.createElement("ul");
         group.items.forEach((hund) => {
@@ -640,7 +669,7 @@ function buildDuplicatesCard() {
     scanBtn.disabled = true;
     status.innerHTML = "";
     resultHost.innerHTML = "";
-    status.appendChild(createNotice("Scanning…", { variant: "info", role: "status" }));
+    status.appendChild(createNotice("Scan läuft…", { variant: "info", role: "status" }));
     try {
       const [kunden, hunde] = await Promise.all([listKunden(), listHunde()]);
       const kundenById = new Map((kunden || []).map((kunde) => [kunde.id, kunde]));
@@ -689,13 +718,16 @@ function buildDuplicatesCard() {
       hundDupes.sort((a, b) => b.items.length - a.items.length);
 
       status.innerHTML = "";
-      status.appendChild(createNotice("Scan complete.", { variant: "ok", role: "status" }));
+      status.appendChild(createNotice("Scan abgeschlossen.", { variant: "ok", role: "status" }));
       renderResults({ kundenDupes, hundDupes });
     } catch (error) {
       console.error("[DASHBOARD_DUPLICATES_SCAN_FAILED]", error);
       status.innerHTML = "";
       status.appendChild(
-        createNotice("Scan failed (see console).", { variant: "warn", role: "alert" })
+        createNotice("Scan fehlgeschlagen (siehe Konsole).", {
+          variant: "warn",
+          role: "alert",
+        })
       );
     } finally {
       scanBtn.disabled = false;

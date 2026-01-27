@@ -12,6 +12,10 @@ const EDITABLE_DEFAULTS = {
   geschlecht: "",
   email: "",
   telefon: "",
+  mobile: "",
+  strasse: "",
+  plz: "",
+  ort: "",
   adresse: "",
   notizen: "",
 };
