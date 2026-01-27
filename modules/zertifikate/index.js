@@ -74,6 +74,7 @@ function parseHashQuery() {
 }
 
 async function renderListView(section) {
+  section.classList.add("card-stack-compact");
   const actionsCard = createStandardCard("Aktionen");
   const actionsBody = actionsCard?.querySelector(".ui-card__body");
   const actionsRow = document.createElement("div");
@@ -144,10 +145,18 @@ async function renderListView(section) {
   const tbody = document.createElement("tbody");
   zertifikate.forEach((entry) => {
     const row = document.createElement("tr");
+    row.className = "kunden-list-row";
+    row.tabIndex = 0;
     row.addEventListener("click", (event) => {
       if (event.target?.closest("a")) return;
       if (event.target?.closest("button")) return;
       window.location.hash = `#/zertifikate/${entry.id}`;
+    });
+    row.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        window.location.hash = `#/zertifikate/${entry.id}`;
+      }
     });
     row.appendChild(buildCell(entry.code || "–", true, entry.id));
     row.appendChild(buildCell(entry.kundeNameSnapshot || "–"));
@@ -209,6 +218,7 @@ function buildCell(text, isLink = false, id = "") {
 }
 
 async function renderDetailView(section, id) {
+  section.classList.add("card-stack-compact");
   const detailCard = createStandardCard("Stammdaten");
   const detailBody = detailCard?.querySelector(".ui-card__body");
   const actionsCard = createStandardCard("Aktionen");

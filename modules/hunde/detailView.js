@@ -2,7 +2,6 @@
 import {
   createCard,
   createNotice,
-  createSectionHeader,
   createEmptyState,
   createFormRow,
   createButton,
@@ -13,6 +12,7 @@ import { getKurseForHund } from "../shared/api/kurse.js";
 import { listZertifikate } from "../shared/api/zertifikate.js";
 import { createRapporteDraft } from "../shared/api/rapporteDrafts.js";
 import {
+  createHistorieEntry,
   listHistorieEntries,
   updateHistorieEntry,
   deleteHistorieEntry,
@@ -42,7 +42,7 @@ function toLocalDateTimeInputValue(date = new Date()) {
   )}:${pad2(date.getMinutes())}`;
 }
 
-function buildRapportDraftCard({ targetId, kundeId }) {
+function buildRapportDraftCard({ targetId, kundeId, role }) {
   const cardFragment = createCard({
     eyebrow: "",
     title: "Rapport (Entwurf)",
@@ -76,7 +76,9 @@ function buildRapportDraftCard({ targetId, kundeId }) {
 
   const actions = document.createElement("div");
   actions.className = "module-actions";
-  const submitBtn = createButton({ label: "Entwurf senden", variant: "primary" });
+  const shouldSaveDirect = isAdminOrDeveloper(role);
+  const submitLabel = shouldSaveDirect ? "Rapport speichern" : "Entwurf senden";
+  const submitBtn = createButton({ label: submitLabel, variant: "primary" });
   submitBtn.type = "submit";
   actions.appendChild(submitBtn);
 
@@ -99,21 +101,62 @@ function buildRapportDraftCard({ targetId, kundeId }) {
       : new Date().toISOString();
     submitBtn.disabled = true;
     try {
-      await createRapporteDraft({
-        targetType: "hunde",
-        targetId,
-        kundeId,
-        text,
-        occurredAt,
-      });
-      status.appendChild(createNotice("Rapport eingereicht.", { variant: "ok", role: "status" }));
+      if (shouldSaveDirect) {
+        const session = getSession();
+        const authorId = session?.user?.id || "";
+        const authorRole = session?.user?.role || "";
+        const resolvedText = `Rapport - ${text}`.trim();
+        if (kundeId) {
+          await createHistorieEntry({
+            entityType: "kunden",
+            entityId: kundeId,
+            occurredAt,
+            authorId,
+            authorRole,
+            text: resolvedText,
+          });
+        }
+        const created = await createHistorieEntry({
+          entityType: "hunde",
+          entityId: targetId,
+          occurredAt,
+          authorId,
+          authorRole,
+          text: resolvedText,
+        });
+        prependHundeHistorieEntry(
+          created || {
+            entityType: "hunde",
+            entityId: targetId,
+            occurredAt,
+            authorId,
+            authorRole,
+            text: resolvedText,
+          }
+        );
+        status.appendChild(createNotice("Rapport gespeichert.", { variant: "ok", role: "status" }));
+      } else {
+        await createRapporteDraft({
+          targetType: "hunde",
+          targetId,
+          kundeId,
+          text,
+          occurredAt,
+        });
+        status.appendChild(createNotice("Rapport eingereicht.", { variant: "ok", role: "status" }));
+      }
       if (occurredInput) occurredInput.disabled = true;
       if (textInput) textInput.disabled = true;
       submitBtn.disabled = true;
     } catch (error) {
       console.error("[HUNDE_ERR_RAPPORT_CREATE]", error);
       status.appendChild(
-        createNotice("Rapport konnte nicht eingereicht werden.", { variant: "warn", role: "alert" })
+        createNotice(
+          shouldSaveDirect
+            ? "Rapport konnte nicht gespeichert werden."
+            : "Rapport konnte nicht eingereicht werden.",
+          { variant: "warn", role: "alert" }
+        )
       );
       submitBtn.disabled = false;
     }
@@ -262,6 +305,7 @@ export async function createHundeDetailView(container, hundId) {
       const rapportCard = buildRapportDraftCard({
         targetId: hund.id,
         kundeId: kundeInfo.id || hund.kundenId,
+        role,
       });
       if (rapportCard) {
         detailSection.appendChild(rapportCard);
@@ -293,13 +337,7 @@ export async function createHundeDetailView(container, hundId) {
 async function buildHistorieSection(hundId) {
   const section = document.createElement("section");
   section.className = "hunde-historie";
-  section.appendChild(
-    createSectionHeader({
-      title: "Historie",
-      subtitle: "",
-      level: 2,
-    })
-  );
+  section.dataset.section = "hunde-historie";
   const cardFragment = createCard({
     eyebrow: "",
     title: "",
@@ -337,73 +375,7 @@ async function buildHistorieSection(hundId) {
       const list = document.createElement("ul");
       list.className = "hunde-historie-list";
       entries.forEach((entry) => {
-        const item = document.createElement("li");
-        item.className = "hunde-historie-item";
-        const line = document.createElement("div");
-        line.className = "hunde-historie-line";
-        const date = entry.occurredAt ? formatDateTime(entry.occurredAt) : "";
-        const author = entry.authorRole ? String(entry.authorRole) : "";
-        const text = (entry.text || "").trim();
-        const label = document.createElement("span");
-        label.textContent = [date, author, text].filter(Boolean).join(" · ");
-        line.appendChild(label);
-
-        if (canEdit) {
-          const actions = document.createElement("div");
-          actions.className = "module-actions";
-          const editBtn = createButton({ label: "Bearbeiten", variant: "secondary" });
-          editBtn.type = "button";
-          const deleteBtn = createButton({ label: "Löschen", variant: "secondary" });
-          deleteBtn.type = "button";
-
-          editBtn.addEventListener("click", async () => {
-            const next = window.prompt("Historie-Eintrag bearbeiten:", entry.text || "");
-            if (next === null) return;
-            const trimmed = String(next).trim();
-            if (!trimmed) {
-              window.alert("Text darf nicht leer sein.");
-              return;
-            }
-            editBtn.disabled = true;
-            deleteBtn.disabled = true;
-            try {
-              const updated = await updateHistorieEntry(entry.id, { text: trimmed });
-              entry.text = updated?.text ?? trimmed;
-              label.textContent = [date, author, (entry.text || "").trim()]
-                .filter(Boolean)
-                .join(" · ");
-            } catch (error) {
-              console.error("[HUNDE_ERR_HISTORIE_EDIT]", error);
-              window.alert("Änderung fehlgeschlagen (siehe Konsole).");
-            } finally {
-              editBtn.disabled = false;
-              deleteBtn.disabled = false;
-            }
-          });
-
-          deleteBtn.addEventListener("click", async () => {
-            const ok = window.confirm("Historie-Eintrag wirklich löschen?");
-            if (!ok) return;
-            editBtn.disabled = true;
-            deleteBtn.disabled = true;
-            try {
-              await deleteHistorieEntry(entry.id);
-              item.remove();
-            } catch (error) {
-              console.error("[HUNDE_ERR_HISTORIE_DELETE]", error);
-              window.alert("Löschen fehlgeschlagen (siehe Konsole).");
-            } finally {
-              editBtn.disabled = false;
-              deleteBtn.disabled = false;
-            }
-          });
-
-          actions.append(editBtn, deleteBtn);
-          line.appendChild(actions);
-        }
-
-        item.appendChild(line);
-        list.appendChild(item);
+        list.appendChild(buildHundeHistorieItem(entry, canEdit));
       });
       body.appendChild(list);
     }
@@ -412,16 +384,94 @@ async function buildHistorieSection(hundId) {
   return section;
 }
 
+function buildHundeHistorieItem(entry, canEdit) {
+  const item = document.createElement("li");
+  item.className = "hunde-historie-item";
+  const line = document.createElement("div");
+  line.className = "hunde-historie-line";
+  const date = entry.occurredAt ? formatDateTime(entry.occurredAt) : "";
+  const author = entry.authorRole ? String(entry.authorRole) : "";
+  const text = (entry.text || "").trim();
+  const label = document.createElement("span");
+  label.textContent = [date, author, text].filter(Boolean).join(" · ");
+  line.appendChild(label);
+
+  if (canEdit) {
+    const actions = document.createElement("div");
+    actions.className = "module-actions";
+    const editBtn = createButton({ label: "Bearbeiten", variant: "secondary" });
+    editBtn.type = "button";
+    const deleteBtn = createButton({ label: "Löschen", variant: "secondary" });
+    deleteBtn.type = "button";
+
+    editBtn.addEventListener("click", async () => {
+      const next = window.prompt("Historie-Eintrag bearbeiten:", entry.text || "");
+      if (next === null) return;
+      const trimmed = String(next).trim();
+      if (!trimmed) {
+        window.alert("Text darf nicht leer sein.");
+        return;
+      }
+      editBtn.disabled = true;
+      deleteBtn.disabled = true;
+      try {
+        const updated = await updateHistorieEntry(entry.id, { text: trimmed });
+        entry.text = updated?.text ?? trimmed;
+        label.textContent = [date, author, (entry.text || "").trim()].filter(Boolean).join(" · ");
+      } catch (error) {
+        console.error("[HUNDE_ERR_HISTORIE_EDIT]", error);
+        window.alert("Änderung fehlgeschlagen (siehe Konsole).");
+      } finally {
+        editBtn.disabled = false;
+        deleteBtn.disabled = false;
+      }
+    });
+
+    deleteBtn.addEventListener("click", async () => {
+      const ok = window.confirm("Historie-Eintrag wirklich löschen?");
+      if (!ok) return;
+      editBtn.disabled = true;
+      deleteBtn.disabled = true;
+      try {
+        await deleteHistorieEntry(entry.id);
+        item.remove();
+      } catch (error) {
+        console.error("[HUNDE_ERR_HISTORIE_DELETE]", error);
+        window.alert("Löschen fehlgeschlagen (siehe Konsole).");
+      } finally {
+        editBtn.disabled = false;
+        deleteBtn.disabled = false;
+      }
+    });
+
+    actions.append(editBtn, deleteBtn);
+    line.appendChild(actions);
+  }
+
+  item.appendChild(line);
+  return item;
+}
+
+function prependHundeHistorieEntry(entry) {
+  const section = document.querySelector("[data-section='hunde-historie']");
+  const body = section?.querySelector(".ui-card__body");
+  if (!body || !entry) return;
+  let list = body.querySelector(".hunde-historie-list");
+  if (!list) {
+    body.innerHTML = "";
+    list = document.createElement("ul");
+    list.className = "hunde-historie-list";
+    body.appendChild(list);
+  }
+  const role = getSession()?.user?.role || "";
+  const canEdit = role === "admin" || role === "developer";
+  const item = buildHundeHistorieItem(entry, canEdit);
+  list.prepend(item);
+}
+
 async function buildZertifikateSection(hundId) {
   const section = document.createElement("section");
   section.className = "hunde-zertifikate";
-  section.appendChild(
-    createSectionHeader({
-      title: "Zertifikate",
-      subtitle: "",
-      level: 2,
-    })
-  );
   const cardFragment = createCard({
     eyebrow: "",
     title: "",

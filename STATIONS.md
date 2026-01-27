@@ -35,6 +35,12 @@ Station 96 — Hide modules Kalender/Finanzen/Waren (UI + direct access block)
 Station 97 — NAS Deployment
 Station 98 — NAS MariaDB DogTabs Kunden/Hunde Refresh
 Station 99 — New Features (Schulungen + Kommunikation + Local Auth + UI fixes)
+Station 101 — GUI cleanup (consistent buttons, clicks, positions)
+Station 102 — Geburtstagsemails text and formatting fixes
+Station 103 — Anmeldung refinement (draft fidelity, Historie split, gender inference)
+Station 104 — Kurse expansion (Teilnehmer log + Kurs-only Zertifikat)
+Station 105 — Zertifikat uses Hunde Rufname
+Station 106 — Intermittent “Daten konnten nicht geladen werden” investigation/fix
 
 Battleplan (Stations 85+):
 
@@ -283,3 +289,114 @@ Goal:
 - Try direct URL access; confirm blocked behavior.
   Out of scope:
 - Per-user feature toggles or partial visibility.
+
+Station 101 — GUI cleanup (consistent buttons, clicks, positions)
+Goal:
+
+- Standardize UI actions so the same buttons and clicks behave consistently across all modules, with consistent placement.
+  Scope:
+- Align primary/secondary actions (Create/Edit/Delete/Back/Save/Cancel) across modules.
+- Ensure identical labels and click behaviors for equivalent actions.
+- Normalize button placement within module list/detail/create/edit views.
+  Steps:
+- Inventory all module action buttons and click behaviors.
+- Define canonical labels, ordering, and placement for shared actions.
+- Update each module to follow the canonical action layout.
+- Verify no behavior regressions (same action does the same thing everywhere).
+  Deliverables:
+- Consistent action button placement and behavior across modules.
+  Verification:
+- Manual check on at least four modules (Kunden, Hunde, Kurse, Kommunikation).
+  Out of scope:
+- New features or layout redesign beyond action placement.
+
+Station 102 — Geburtstagsemails text and formatting fixes
+Goal:
+
+- Fix birthday email content: correct names, spacing, spelling, and add new text blocks.
+  Scope:
+- Adjust mailto subject/body formatting for birthday emails.
+- Fix name rendering and spacing issues.
+- Correct spelling and add required new text blocks.
+  Steps:
+- Review current birthday mailto composition and identify text issues.
+- Update templates/strings to correct names, spacing, and spelling.
+- Insert new text blocks as specified in the birthday email content.
+  Deliverables:
+- Corrected birthday email content with updated blocks.
+  Verification:
+- Trigger birthday email action and verify content in the mail client.
+  Out of scope:
+- Automated sending or SMTP delivery changes.
+
+Station 103 — Anmeldung refinement (draft fidelity, Historie split, gender inference)
+Goal:
+
+- Ensure Anmeldung drafts match the email content exactly, ignore spacing, and propagate each bullet point into both drafts and Kunde/Hund details; split Historie for Rapporte vs Anmeldung; infer gender from Herr/Frau.
+  Scope:
+- Drafts must mirror the email data (content fidelity, spacing-insensitive parsing).
+- Each email point appears in the Anmeldung draft and in Kunde/Hund detail views.
+- Kurs Anmeldungen remain in Kundenhistorie but also have separate Historie categories: Rapporte vs Anmeldungen.
+- Herr/Frau in the email sets gender automatically.
+  Steps:
+- Make email parsing spacing-insensitive while preserving content.
+- Persist parsed points and surface them in draft + Kunde/Hund detail.
+- Introduce separate Historie categories/sections for Rapporte and Anmeldungen.
+- Map "Herr"/"Frau" to gender field during draft creation.
+  Deliverables:
+- Drafts and detail views reflect full email content; Historie split is visible; gender inferred reliably.
+  Verification:
+- Paste a sample Anmeldung email with multiple points and verify all outputs.
+  Out of scope:
+- Redesign of the Anmeldung UI beyond required content placement.
+
+Station 104 — Kurse expansion (Teilnehmer log + Kurs-only Zertifikat)
+Goal:
+
+- Add a Teilnehmer history/log per Kurs, allow adding Kunde/Hund with start date, and restrict Zertifikat creation to Kurs context only.
+  Scope:
+- Kurs detail shows a log of confirmations (definitive attendance, not just Anmeldung).
+- Kurs overview has "Kunde eintragen" flow: select Kunde, then Hund, then Startdatum; log entry created.
+- Kurs detail includes a Teilnehmer Historie-style section (similar to Kunden overview).
+- Zertifikat creation is only allowed from Kurse once Teilnehmer data exists.
+  Steps:
+- Add participant log storage and UI section in Kurs detail.
+- Implement “Kunde eintragen” dialog/flow from Kurs overview and log the entry.
+- Enforce Zertifikat creation path to be Kurs-only.
+  Deliverables:
+- Kurs shows Teilnehmer log; entries are created via Kurs overview; Zertifikat is gated to Kurs flow.
+  Verification:
+- Create a log entry and confirm it appears in Kurs detail; verify Zertifikat only from Kurs.
+  Out of scope:
+- Changing existing Anmeldung flow outside of course logging.
+
+Station 105 — Zertifikat uses Hunde Rufname
+Goal:
+
+- Use the dog's Rufname (not Name) in the certificate output.
+  Scope:
+- Certificate template and any related display uses Rufname.
+  Steps:
+- Update certificate generation to reference Rufname.
+- Verify any preview or stored outputs use Rufname.
+  Deliverables:
+- Zertifikat content shows Rufname instead of Name.
+  Verification:
+- Generate a certificate and verify the displayed dog name.
+
+Station 106 — Intermittent “Daten konnten nicht geladen werden” investigation/fix
+Goal:
+
+- Identify and fix the intermittent “Daten konnten nicht geladen werden” error that forces re-login and loses unsaved form data.
+  Scope:
+- Reproduce the error reliably if possible.
+- Identify root cause (auth/session/token/state/data fetch failures).
+- Prevent forced logout and data loss during form entry.
+  Steps:
+- Add diagnostics to capture the failure context (API response, auth state, timing).
+- Trace the failure path and fix the underlying issue.
+- Add a safeguard to preserve in-progress form data if a transient error occurs.
+  Deliverables:
+- Error no longer occurs or is gracefully handled without data loss.
+  Verification:
+- Manual test across common flows (create Kunde/Hund/Kurs) without reload/login.

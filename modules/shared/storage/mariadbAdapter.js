@@ -17,6 +17,17 @@ function toStringValue(value, fallback = "") {
   return String(value);
 }
 
+function buildAdresseFromParts({ strasse, plz, ort } = {}) {
+  const cleanStrasse = toStringValue(strasse).trim();
+  const cleanPlz = toStringValue(plz).trim();
+  const cleanOrt = toStringValue(ort).trim();
+  const parts = [];
+  if (cleanStrasse) parts.push(cleanStrasse);
+  const plzOrt = [cleanPlz, cleanOrt].filter(Boolean).join(" ").trim();
+  if (plzOrt) parts.push(plzOrt);
+  return parts.join(", ");
+}
+
 function toArrayValue(value) {
   if (Array.isArray(value)) return value;
   if (value === undefined || value === null) return [];
@@ -137,6 +148,10 @@ function mapKundeRow(row) {
     geschlecht: row.geschlecht,
     email: row.email,
     telefon: row.telefon,
+    mobile: row.mobile,
+    strasse: row.strasse,
+    plz: row.plz,
+    ort: row.ort,
     adresse: row.adresse,
     status: row.status,
     ausweisId: row.ausweis_id,
@@ -440,7 +455,19 @@ function normalizeKunde(data = {}, existing) {
     geschlecht,
     email: toStringValue(data.email ?? existing?.email),
     telefon: toStringValue(data.telefon ?? existing?.telefon),
-    adresse: toStringValue(data.adresse ?? existing?.adresse),
+    mobile: toStringValue(data.mobile ?? existing?.mobile),
+    strasse: toStringValue(data.strasse ?? existing?.strasse),
+    plz: toStringValue(data.plz ?? existing?.plz),
+    ort: toStringValue(data.ort ?? existing?.ort),
+    adresse: toStringValue(
+      data.adresse ??
+        existing?.adresse ??
+        buildAdresseFromParts({
+          strasse: data.strasse ?? existing?.strasse,
+          plz: data.plz ?? existing?.plz,
+          ort: data.ort ?? existing?.ort,
+        })
+    ),
     status: toStringValue(data.status ?? existing?.status),
     ausweisId: toStringValue(
       data.ausweisId ?? data.ausweisID ?? existing?.ausweisId ?? existing?.ausweisID
@@ -884,6 +911,10 @@ export function createMariaDbAdapter(options = {}) {
       record.geschlecht,
       record.email,
       record.telefon,
+      record.mobile,
+      record.strasse,
+      record.plz,
+      record.ort,
       record.adresse,
       record.status,
       record.ausweisId,
@@ -897,7 +928,7 @@ export function createMariaDbAdapter(options = {}) {
     ];
     try {
       await pool.query(
-        "INSERT INTO kunden (id, code, vorname, nachname, geburtsdatum, geschlecht, email, telefon, adresse, status, ausweis_id, foto_url, begleitpersonen, notizen, created_at, updated_at, schema_version, version) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO kunden (id, code, vorname, nachname, geburtsdatum, geschlecht, email, telefon, mobile, strasse, plz, ort, adresse, status, ausweis_id, foto_url, begleitpersonen, notizen, created_at, updated_at, schema_version, version) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         params
       );
       return record;
@@ -919,6 +950,10 @@ export function createMariaDbAdapter(options = {}) {
         record.geschlecht,
         record.email,
         record.telefon,
+        record.mobile,
+        record.strasse,
+        record.plz,
+        record.ort,
         record.adresse,
         record.status,
         record.ausweisId,
@@ -931,7 +966,7 @@ export function createMariaDbAdapter(options = {}) {
         record.id,
       ];
       await pool.query(
-        "UPDATE kunden SET code=?, vorname=?, nachname=?, geburtsdatum=?, geschlecht=?, email=?, telefon=?, adresse=?, status=?, ausweis_id=?, foto_url=?, begleitpersonen=?, notizen=?, updated_at=?, schema_version=?, version=? WHERE id=?",
+        "UPDATE kunden SET code=?, vorname=?, nachname=?, geburtsdatum=?, geschlecht=?, email=?, telefon=?, mobile=?, strasse=?, plz=?, ort=?, adresse=?, status=?, ausweis_id=?, foto_url=?, begleitpersonen=?, notizen=?, updated_at=?, schema_version=?, version=? WHERE id=?",
         params
       );
       return record;
@@ -2124,7 +2159,12 @@ export function createMariaDbAdapter(options = {}) {
 
   async function listSchulungen() {
     try {
-      return await listAll(pool, "SELECT * FROM schulungen ORDER BY occurred_at DESC", [], mapSchulungRow);
+      return await listAll(
+        pool,
+        "SELECT * FROM schulungen ORDER BY occurred_at DESC",
+        [],
+        mapSchulungRow
+      );
     } catch (error) {
       throw toStorageError(error, "Failed to list schulungen");
     }
@@ -2132,7 +2172,12 @@ export function createMariaDbAdapter(options = {}) {
 
   async function getSchulung(id) {
     try {
-      const record = await fetchOne(pool, "SELECT * FROM schulungen WHERE id = ?", [id], mapSchulungRow);
+      const record = await fetchOne(
+        pool,
+        "SELECT * FROM schulungen WHERE id = ?",
+        [id],
+        mapSchulungRow
+      );
       if (!record) {
         throw new StorageError(STORAGE_ERROR_CODES.NOT_FOUND, `schulungen ${id} not found`);
       }

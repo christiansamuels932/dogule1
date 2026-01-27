@@ -13,6 +13,7 @@ drift and prevents repeated breakages.
 ## Assumptions
 
 - Local repo: `/home/ran/codex/dogule1`
+- Local MariaDB (ran) password: `Ace1Ab215932.`
 - Local NAS deploy payload: `/home/ran/codex/dogule1/.NAS-Distro`
 - NAS root: `/volume1/dogule1nasfolder`
 - NAS API: `http://127.0.0.1:5177`

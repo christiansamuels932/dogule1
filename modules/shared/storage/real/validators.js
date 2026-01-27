@@ -96,6 +96,10 @@ export function validateKunde(record) {
   assertString(record.nachname, "kunden.nachname");
   assertOptionalString(record.email, "kunden.email");
   assertOptionalString(record.telefon, "kunden.telefon");
+  assertOptionalString(record.mobile, "kunden.mobile");
+  assertOptionalString(record.strasse, "kunden.strasse");
+  assertOptionalString(record.plz, "kunden.plz");
+  assertOptionalString(record.ort, "kunden.ort");
   assertOptionalString(record.adresse, "kunden.adresse");
   assertOptionalString(record.notizen, "kunden.notizen");
   assertString(record.createdAt, "kunden.createdAt");

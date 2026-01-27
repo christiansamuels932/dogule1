@@ -16,7 +16,42 @@ Quick stop (manual):
 OPEN: SMTP input pending (Outlook credentials not yet provided; SMTP test + send pipeline ready but blocked).
 
 This document is the authoritative status log for Dogule1 (replaces dogule1_status.md). Station suffix legend: `R` = lifecycle/retention, `K` = Kommunikation, `E` = Email/Outlook line.
-Every station block is wrapped by a visual bracket line: `# - - - - - - - - - - - - - - - - - - - -` before and after.
+Every station block is wrapped by a visual bracket line: `# - - - - - - - - - - - - - - - - - - - -
+
+# Station 101 — GUI cleanup (Anmeldung + Kunden address fields + UI consistency)
+
+## Kontext
+
+- Status: completed (read-only).
+- Branch: `101`.
+- Scope: Anmeldung UI cleanup; Kunden detail/form address + mobile split; Rapporte direct save for admin/developer; list UX/hover/click; consistent card spacing; small UI cleanups.
+
+## Ergebnis (kurz)
+
+- Anmeldung: removed redundant top header; added spacing above "Auswerten" actions.
+- Kunden detail/form: added Mobile + Strasse/PLZ/Ort; address parsing for legacy `adresse`; computed `adresse` on save; MariaDB columns + migration added.
+- Rapporte: admin/developer now save directly from Kunde/Hund detail with "Rapport speichern"; Historie updates immediately without refresh; trainers still submit drafts.
+- Kunden detail: removed "Zertifikat erstellen" action; removed outer section headers for Hunde/Zertifikate/Historie; unified smaller card spacing.
+- Overview lists: rows are fully clickable with pointer cursor, blue hover (no underline) in Kunden/Hunde/Trainer/Zertifikate.
+- Hunde list: applied compact 0.75rem spacing between Aktionen and Übersicht.
+- Dashboard/Kunden/Kurse/Trainer/Zertifikate/Schulungen: applied compact 0.75rem top-card spacing (card-stack-compact).
+- Kurs detail: show "Weitere Trainer 1–4"; Kurs edit/create: four additional trainer selects; validation/payload updated.
+
+## Tests
+
+- Not run.
+
+## Issues
+
+- None.
+
+## Notizen
+
+- MariaDB migration applied locally: `tools/mariadb/migrations/101_0_kunden_address_fields.sql`.
+- Local port 5177 conflict resolved before restart.
+
+# - - - - - - - - - - - - - - - - - - - -` before and after.
+
 Each station block uses this structure (read-only):
 
 - Title: `# Station X — <Title>` (for grouped history: `Station 1–17 — <Title>`).
@@ -29,6 +64,71 @@ Each station block uses this structure (read-only):
 - READ-ONLY INSTRUCTIONS: All stations (including historical ones) must stay logged in this file; never replace or truncate existing entries when adding new stations. If a truncation occurs, restore the full history before adding new content (the Station 39–41 overwrite was fixed by restoring Stations 1–38 and reappending 39–41).
 
 Branching rule: each station must be developed on its dedicated branch; if the expected branch does not exist yet, create a new one before starting the station.
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 101 — GUI cleanup (Anmeldung + Kunden address fields)
+
+## Kontext
+
+- Status: in progress.
+- Branch: `101`.
+- Scope: Anmeldung UI cleanup; Kunden detail/form address split + Mobile; MariaDB schema updates.
+
+## Ergebnis (kurz)
+
+- Anmeldung: removed redundant top "Anmeldung" header outside the card; added spacing above "Auswerten" button via `anmeldung-actions`.
+- Kunden detail: added "Mobile" after "Telefon"; split address into Strasse/PLZ/Ort display (fallback parses legacy `adresse`).
+- Kunden form: replaced single Adresse field with Mobile + Strasse + PLZ + Ort fields; computed `adresse` from parts on save.
+- Parsing: improved address parsing for inline `Strasse PLZ Ort` (e.g., "Kirchweg 23 5415 Nussbaumen AG").
+- Storage/schema:
+  - MariaDB: new columns `mobile`, `strasse`, `plz`, `ort` in `kunden`.
+  - Added migration `tools/mariadb/migrations/101_0_kunden_address_fields.sql`.
+  - Updated MariaDB adapter + real adapter + validators + API defaults.
+
+## Tests
+
+- Not run.
+
+## Issues
+
+- UI loads forever after changes; API restart attempts failed with `EADDRINUSE` on port 5177.
+
+## Notizen
+
+- Resume by identifying the process on port 5177 and stopping it, then restart API + `pnpm dev`.
+- Apply migration `101_0_kunden_address_fields.sql` to local (and NAS if needed).
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 101 — NAS → Local MariaDB copy (dump + transfer)
+
+## Kontext
+
+- Status: in progress.
+- Branch: `101`.
+- Scope: copy NAS MariaDB `dogule1` into local MariaDB (NAS is source of truth), full overwrite on local.
+
+## Ergebnis (kurz)
+
+- NAS dump created at `/tmp/dogule1_nas.sql` (and `.sql.gz`).
+- Local DB dropped/recreated: `DROP DATABASE dogule1; CREATE DATABASE dogule1;`.
+- Local dump file transferred via SSH stream to `/tmp/dogule1_nas.sql` (scp from NAS `/tmp` failed).
+- Import completed into local `dogule1` database.
+- Local MariaDB password confirmed for user `ran` (recorded in `NAS_UPDATE_AND_SETUP.md`).
+
+## Tests
+
+- `mariadb -u ran -p -e "SELECT 1;"` ✅
+- `mariadb -u ran -p -e "USE dogule1; SHOW TABLES;"` ✅
+
+## Issues
+
+- `scp me@192.168.1.116:/tmp/dogule1_nas.sql` failed with “No such file or directory”; resolved by streaming file via `ssh me@192.168.1.116 "cat /tmp/dogule1_nas.sql" > /tmp/dogule1_nas.sql`.
+
+## Notizen
+
+- Import completed via `mariadb -u ran -p dogule1 < /tmp/dogule1_nas.sql`.
 
 # - - - - - - - - - - - - - - - - - - - -
 
