@@ -8,6 +8,7 @@ const EDITABLE_DEFAULTS = {
   code: "",
   vorname: "",
   nachname: "",
+  anrede: "",
   geburtsdatum: "",
   geschlecht: "",
   email: "",
@@ -16,6 +17,8 @@ const EDITABLE_DEFAULTS = {
   strasse: "",
   plz: "",
   ort: "",
+  heimatort: "",
+  aufmerksamDurch: "",
   adresse: "",
   notizen: "",
 };

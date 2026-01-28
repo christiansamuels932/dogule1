@@ -463,17 +463,22 @@ async function buildBirthdaysCard() {
     const email = kunde.email || "";
     const kundenStatus = normalizeStatus(kunde.status);
     const warningText = kundenStatus === "deaktiviert" ? "Kunde ist deaktiviert." : "";
+    const anrede = `Liebe${resolveLiebeSuffix(kunde.geschlecht)}`;
     const subject = `Alles Gute zum Geburtstag, ${kunde.vorname || name}!`;
     const bodyText = [
-      `Herzlichen Glückwunsch zum Geburtstag, ${kunde.vorname || name}.`,
+      `${anrede} ${kunde.vorname || name}`,
       "",
       "",
-      "Fontanas Dogschool wünscht Dir das Allerbeste und möchte gerne ((Geschenkidee))  offerieren.",
+      "Zu Deinem heutigen Geburtstag wünschen wir Dir alles Gute und weiterhin Gesundheit, Glück und viel Freude und Erfolg mit Deinem Wuffi.",
       "",
       "Wir schätzen Dein Vertrauen in uns und hoffen, Dich noch viele Geburtstage bei uns zu haben.",
       "",
+      "Gegen Vorlage dieses E-Mails ausgedruckt, erhältst Du eine Gratislektion bei Fontanas DogWorld.",
       "",
-      "Beste Grüsse",
+      "",
+      "En liebe Gruess und en schöne Tag",
+      "Richi Fontana",
+      "Susann Christen",
     ].join("\n");
     appendItem(kundenList, {
       label: `Kunde: ${name}`,
@@ -497,7 +502,7 @@ async function buildBirthdaysCard() {
   }
 
   hunde.forEach((hund) => {
-    const hundName = hund.name || hund.rufname || "Unbekannt";
+    const hundName = hund.rufname || hund.name || "Unbekannt";
     const kunde = hund.kunde || null;
     const hundStatus = normalizeStatus(hund.status);
     const kundenStatus = normalizeStatus(kunde?.status);
@@ -511,15 +516,15 @@ async function buildBirthdaysCard() {
       ? [kunde.vorname, kunde.nachname].filter(Boolean).join(" ").trim() || kunde.id
       : hund.kundenId;
     const email = kunde?.email || "";
-    const subject = `Alles Gute zum Wurftag, ${hundName}!`;
+    const subject = `Herzlichen Glückwunsch zum Geburtstag, ${hundName}`;
     const bodyText = [
-      `Herzlichen Glückwunsch zum Wurftag, ${hundName}.`,
-      "",
-      "",
-      `Fontanas Dogschool wünscht ${kunde?.vorname || kundeName} und Dir  das Allerbeste und wir hoffen, Dich noch viele Wurftage bei uns zu haben.`,
+      `Herzlichen Glückwunsch zum Geburtstag, ${hundName}.`,
+      `Fontanas Dogschool wünscht ${kunde?.vorname || kundeName} und Dir  das Allerbeste und wir hoffen, Dich noch viele Geburtstage bei uns zu haben.`,
       "",
       "",
       "Beste Grüsse",
+      "Richi Fontana",
+      "Susann Christen",
     ]
       .filter(Boolean)
       .join("\n");
@@ -549,6 +554,16 @@ function normalizeValue(value) {
   return String(value || "")
     .trim()
     .toLowerCase();
+}
+
+function resolveLiebeSuffix(geschlecht) {
+  const normalized = String(geschlecht || "")
+    .trim()
+    .toLowerCase()
+    .replaceAll("ä", "ae");
+  if (!normalized) return "";
+  if (normalized === "m" || normalized === "maennlich" || normalized === "männlich") return "r";
+  return "";
 }
 
 function extractTown(address = "") {

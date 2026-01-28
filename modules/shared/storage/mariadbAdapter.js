@@ -144,6 +144,7 @@ function mapKundeRow(row) {
     code: row.code,
     vorname: row.vorname,
     nachname: row.nachname,
+    anrede: row.anrede,
     geburtsdatum: row.geburtsdatum,
     geschlecht: row.geschlecht,
     email: row.email,
@@ -152,6 +153,8 @@ function mapKundeRow(row) {
     strasse: row.strasse,
     plz: row.plz,
     ort: row.ort,
+    heimatort: row.heimatort,
+    aufmerksamDurch: row.aufmerksam_durch,
     adresse: row.adresse,
     status: row.status,
     ausweisId: row.ausweis_id,
@@ -451,6 +454,7 @@ function normalizeKunde(data = {}, existing) {
     code: toStringValue(data.code ?? existing?.code),
     vorname: toStringValue(data.vorname ?? existing?.vorname),
     nachname: toStringValue(data.nachname ?? existing?.nachname),
+    anrede: toStringValue(data.anrede ?? existing?.anrede),
     geburtsdatum: toStringValue(data.geburtsdatum ?? existing?.geburtsdatum),
     geschlecht,
     email: toStringValue(data.email ?? existing?.email),
@@ -459,6 +463,10 @@ function normalizeKunde(data = {}, existing) {
     strasse: toStringValue(data.strasse ?? existing?.strasse),
     plz: toStringValue(data.plz ?? existing?.plz),
     ort: toStringValue(data.ort ?? existing?.ort),
+    heimatort: toStringValue(data.heimatort ?? data.heimatOrt ?? existing?.heimatort),
+    aufmerksamDurch: toStringValue(
+      data.aufmerksamDurch ?? data.aufmerksam_durch ?? existing?.aufmerksamDurch
+    ),
     adresse: toStringValue(
       data.adresse ??
         existing?.adresse ??
@@ -907,6 +915,7 @@ export function createMariaDbAdapter(options = {}) {
       record.code,
       record.vorname,
       record.nachname,
+      record.anrede,
       record.geburtsdatum,
       record.geschlecht,
       record.email,
@@ -915,6 +924,8 @@ export function createMariaDbAdapter(options = {}) {
       record.strasse,
       record.plz,
       record.ort,
+      record.heimatort,
+      record.aufmerksamDurch,
       record.adresse,
       record.status,
       record.ausweisId,
@@ -928,7 +939,7 @@ export function createMariaDbAdapter(options = {}) {
     ];
     try {
       await pool.query(
-        "INSERT INTO kunden (id, code, vorname, nachname, geburtsdatum, geschlecht, email, telefon, mobile, strasse, plz, ort, adresse, status, ausweis_id, foto_url, begleitpersonen, notizen, created_at, updated_at, schema_version, version) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO kunden (id, code, vorname, nachname, anrede, geburtsdatum, geschlecht, email, telefon, mobile, strasse, plz, ort, heimatort, aufmerksam_durch, adresse, status, ausweis_id, foto_url, begleitpersonen, notizen, created_at, updated_at, schema_version, version) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         params
       );
       return record;
@@ -946,6 +957,7 @@ export function createMariaDbAdapter(options = {}) {
         record.code,
         record.vorname,
         record.nachname,
+        record.anrede,
         record.geburtsdatum,
         record.geschlecht,
         record.email,
@@ -954,6 +966,8 @@ export function createMariaDbAdapter(options = {}) {
         record.strasse,
         record.plz,
         record.ort,
+        record.heimatort,
+        record.aufmerksamDurch,
         record.adresse,
         record.status,
         record.ausweisId,
@@ -966,7 +980,7 @@ export function createMariaDbAdapter(options = {}) {
         record.id,
       ];
       await pool.query(
-        "UPDATE kunden SET code=?, vorname=?, nachname=?, geburtsdatum=?, geschlecht=?, email=?, telefon=?, mobile=?, strasse=?, plz=?, ort=?, adresse=?, status=?, ausweis_id=?, foto_url=?, begleitpersonen=?, notizen=?, updated_at=?, schema_version=?, version=? WHERE id=?",
+        "UPDATE kunden SET code=?, vorname=?, nachname=?, anrede=?, geburtsdatum=?, geschlecht=?, email=?, telefon=?, mobile=?, strasse=?, plz=?, ort=?, heimatort=?, aufmerksam_durch=?, adresse=?, status=?, ausweis_id=?, foto_url=?, begleitpersonen=?, notizen=?, updated_at=?, schema_version=?, version=? WHERE id=?",
         params
       );
       return record;

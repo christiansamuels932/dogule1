@@ -81,12 +81,18 @@ function normalizeKunde(data = {}, existing) {
     code: data.code ?? existing?.code ?? "",
     vorname: data.vorname ?? existing?.vorname ?? "",
     nachname: data.nachname ?? existing?.nachname ?? "",
+    anrede: data.anrede ?? existing?.anrede ?? "",
+    geburtsdatum: data.geburtsdatum ?? existing?.geburtsdatum ?? "",
+    geschlecht: data.geschlecht ?? existing?.geschlecht ?? "",
     email: data.email ?? existing?.email ?? "",
     telefon: data.telefon ?? existing?.telefon ?? "",
     mobile: data.mobile ?? existing?.mobile ?? "",
     strasse: data.strasse ?? existing?.strasse ?? "",
     plz: data.plz ?? existing?.plz ?? "",
     ort: data.ort ?? existing?.ort ?? "",
+    heimatort: data.heimatort ?? data.heimatOrt ?? existing?.heimatort ?? "",
+    aufmerksamDurch:
+      data.aufmerksamDurch ?? data.aufmerksam_durch ?? existing?.aufmerksamDurch ?? "",
     adresse:
       data.adresse ??
       existing?.adresse ??
