@@ -288,7 +288,7 @@ export async function getKurs(id, options) {
   return kurse.find((kurs) => kurs.id === id) || null;
 }
 
-export async function listKursTeilnehmer(kursId, options) {
+export async function listKursTeilnehmer(kursId) {
   const targetId = (kursId || "").trim();
   if (!targetId) return [];
   if (isHttpMode()) {

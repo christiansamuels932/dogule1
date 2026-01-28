@@ -1,4 +1,4 @@
-/* global process */
+/* global process, console */
 import { URL } from "node:url";
 import path from "node:path";
 import crypto from "node:crypto";

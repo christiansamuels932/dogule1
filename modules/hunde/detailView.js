@@ -1,4 +1,4 @@
-/* globals document, console, window, URLSearchParams */
+/* globals document, console, window */
 import {
   createCard,
   createNotice,

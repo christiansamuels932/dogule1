@@ -1,5 +1,5 @@
 // Kurse module – list/detail flows with mock API
-/* globals document, console, window */
+/* globals document, console, window, URLSearchParams */
 import {
   createButton,
   createCard,
@@ -28,7 +28,6 @@ import {
   listFinanzen,
   listTrainer,
 } from "../shared/api/index.js";
-import { getSession } from "../shared/auth/client.js";
 import { runIntegrityCheck } from "../shared/api/db/integrityCheck.js";
 import {
   describeCertificateBackground,
