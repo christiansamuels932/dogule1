@@ -20,9 +20,15 @@ import {
   createKurs,
   updateKurs,
   deleteKurs,
+  listKursTeilnehmer,
+  createKursTeilnehmer,
+  deleteKursTeilnehmer,
+  listKunden,
+  listHunde,
   listFinanzen,
   listTrainer,
 } from "../shared/api/index.js";
+import { getSession } from "../shared/auth/client.js";
 import { runIntegrityCheck } from "../shared/api/db/integrityCheck.js";
 import {
   describeCertificateBackground,
@@ -108,6 +114,333 @@ function createZertifikatHintergrundPreview(value = "") {
   return wrap;
 }
 
+function formatDate(value) {
+  if (!value) return "–";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleDateString("de-CH", { dateStyle: "medium" });
+}
+
+function createTeilnehmerFormCard() {
+  const card = createStandardCard("Neuer Teilnehmer");
+  const body = card.querySelector(".ui-card__body");
+  body.innerHTML = "";
+
+  const form = document.createElement("form");
+  form.className = "kurse-teilnehmer-form";
+  form.noValidate = true;
+
+  const status = document.createElement("div");
+  status.className = "kurse-teilnehmer-status";
+  form.appendChild(status);
+
+  const searchRow = createFormRow({
+    id: "kurs-teilnehmer-kunde-search",
+    label: "Kunde suchen",
+    placeholder: "Name, Vorname, Ort ...",
+    value: "",
+    required: false,
+  });
+  const searchInput = searchRow.querySelector("input");
+  if (searchInput) searchInput.type = "search";
+  form.appendChild(searchRow);
+
+  const kundeRow = createFormRow({
+    id: "kurs-teilnehmer-kunde",
+    label: "Kunde",
+    control: "select",
+    required: true,
+    options: [{ value: "", label: "— Kunde auswählen —", selected: true }],
+  });
+  const kundeSelect = kundeRow.querySelector("select");
+  form.appendChild(kundeRow);
+
+  const hundRow = createFormRow({
+    id: "kurs-teilnehmer-hund",
+    label: "Hund",
+    control: "select",
+    required: true,
+    options: [{ value: "", label: "— Hund auswählen —", selected: true }],
+  });
+  const hundSelect = hundRow.querySelector("select");
+  form.appendChild(hundRow);
+
+  const startRow = createFormRow({
+    id: "kurs-teilnehmer-start",
+    label: "Startdatum",
+    placeholder: "TT.MM.JJJJ",
+    value: "",
+    required: true,
+  });
+  const startInput = startRow.querySelector("input");
+  if (startInput) startInput.type = "date";
+  form.appendChild(startRow);
+
+  const actions = document.createElement("div");
+  actions.className = "module-actions";
+  const submitBtn = createButton({ label: "Teilnehmer eintragen", variant: "primary" });
+  submitBtn.type = "submit";
+  const closeBtn = createButton({ label: "Schließen", variant: "quiet" });
+  closeBtn.type = "button";
+  actions.append(submitBtn, closeBtn);
+  form.appendChild(actions);
+
+  body.appendChild(form);
+
+  let kunden = [];
+  let hunde = [];
+
+  const setStatus = (message = "", tone = "info") => {
+    status.textContent = message;
+    status.className = `kurse-teilnehmer-status kurse-teilnehmer-status--${tone}`;
+  };
+
+  const buildKundeLabel = (kunde = {}) => {
+    const name = [kunde.nachname, kunde.vorname].filter(Boolean).join(" ").trim();
+    const ort = kunde.ort || "";
+    return ort ? `${name || "Kunde"} · ${ort}` : name || "Kunde";
+  };
+
+  const setSelectOptions = (select, options = [], selectedValue = "") => {
+    if (!select) return;
+    select.innerHTML = "";
+    options.forEach((option) => {
+      const opt = document.createElement("option");
+      opt.value = option.value;
+      opt.textContent = option.label;
+      if (option.value === selectedValue) opt.selected = true;
+      select.appendChild(opt);
+    });
+  };
+
+  const updateKundeOptions = (query = "") => {
+    const normalized = String(query || "").trim().toLowerCase();
+    const filtered = normalized
+      ? kunden.filter((kunde) => {
+          const text = [
+            kunde.nachname,
+            kunde.vorname,
+            kunde.ort,
+            kunde.email,
+            kunde.telefon,
+          ]
+            .filter(Boolean)
+            .join(" ")
+            .toLowerCase();
+          return text.includes(normalized);
+        })
+      : kunden;
+    const options = [
+      { value: "", label: "— Kunde auswählen —" },
+      ...filtered.map((kunde) => ({
+        value: kunde.id,
+        label: buildKundeLabel(kunde),
+      })),
+    ];
+    setSelectOptions(kundeSelect, options, kundeSelect?.value || "");
+  };
+
+  const updateHundOptions = (kundeId = "") => {
+    const relevant = kundeId
+      ? hunde.filter((hund) => (hund.kundenId || hund.kundeId) === kundeId)
+      : [];
+    const options = [
+      { value: "", label: "— Hund auswählen —" },
+      ...relevant.map((hund) => ({
+        value: hund.id,
+        label: hund.name || hund.rufname || "Hund",
+      })),
+    ];
+    setSelectOptions(hundSelect, options, "");
+  };
+
+  if (searchInput) {
+    searchInput.addEventListener("input", (event) => {
+      updateKundeOptions(event.target.value || "");
+    });
+  }
+  if (kundeSelect) {
+    kundeSelect.addEventListener("change", (event) => {
+      updateHundOptions(event.target.value || "");
+    });
+  }
+
+  const api = {
+    card,
+    open() {
+      card.hidden = false;
+    },
+    close() {
+      card.hidden = true;
+    },
+    setData(nextKunden = [], nextHunde = []) {
+      kunden = Array.isArray(nextKunden) ? nextKunden : [];
+      hunde = Array.isArray(nextHunde) ? nextHunde : [];
+      updateKundeOptions(searchInput?.value || "");
+      updateHundOptions(kundeSelect?.value || "");
+      setStatus("");
+    },
+    setStatus,
+    focus() {
+      searchInput?.focus();
+    },
+    onSubmit(handler) {
+      form.addEventListener("submit", handler);
+    },
+    onClose(handler) {
+      closeBtn.addEventListener("click", handler);
+    },
+    getValues() {
+      return {
+        kundeId: kundeSelect?.value || "",
+        hundId: hundSelect?.value || "",
+        startDatum: startInput?.value || "",
+      };
+    },
+    getKundeById(id) {
+      return kunden.find((item) => item.id === id) || null;
+    },
+    getHundById(id) {
+      return hunde.find((item) => item.id === id) || null;
+    },
+    reset() {
+      if (kundeSelect) kundeSelect.value = "";
+      updateHundOptions("");
+      if (startInput) startInput.value = "";
+    },
+  };
+
+  return api;
+}
+
+function renderKursHistorieRows(
+  tbody,
+  entries = [],
+  { onDelete, onCreateZertifikat, filter = "" } = {}
+) {
+  if (!tbody) return;
+  tbody.innerHTML = "";
+  const normalizedFilter = String(filter || "").trim().toLowerCase();
+  const visibleEntries = normalizedFilter
+    ? entries.filter((entry) => {
+        const searchText = [
+          entry?.kundeNachname,
+          entry?.kundeVorname,
+          entry?.hundName,
+        ]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase();
+        return searchText.includes(normalizedFilter);
+      })
+    : entries;
+  if (!visibleEntries.length) {
+    const emptyRow = document.createElement("tr");
+    const emptyCell = document.createElement("td");
+    emptyCell.colSpan = 8;
+    emptyCell.textContent = "Keine Einträge vorhanden.";
+    emptyRow.appendChild(emptyCell);
+    tbody.appendChild(emptyRow);
+    return;
+  }
+
+  visibleEntries.forEach((entry) => {
+    const row = document.createElement("tr");
+    row.className = "kunden-list-row";
+    if (entry?.kundeId) {
+      row.tabIndex = 0;
+      row.addEventListener("click", (event) => {
+        if (event.target && event.target.closest("button")) return;
+        window.location.hash = `#/kunden/${entry.kundeId}`;
+      });
+      row.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          window.location.hash = `#/kunden/${entry.kundeId}`;
+        }
+      });
+    }
+    const cells = [
+      entry?.kundeNachname,
+      entry?.kundeVorname,
+      entry?.kundeOrt,
+      entry?.hundName,
+      formatDate(entry?.startDatum),
+      formatDate(entry?.createdAt),
+    ];
+    cells.forEach((value) => {
+      const td = document.createElement("td");
+      td.textContent = valueOrDash(value);
+      row.appendChild(td);
+    });
+    const actionCell = document.createElement("td");
+    actionCell.className = "kurs-historie-actions";
+    const zertifikatBtn = createButton({ label: "Zertifikat erstellen", variant: "primary" });
+    zertifikatBtn.type = "button";
+    zertifikatBtn.addEventListener("click", () => onCreateZertifikat?.(entry));
+    actionCell.appendChild(zertifikatBtn);
+    const deleteBtn = createButton({ label: "Löschen", variant: "quiet" });
+    deleteBtn.type = "button";
+    deleteBtn.addEventListener("click", () => onDelete?.(entry));
+    actionCell.appendChild(deleteBtn);
+    row.appendChild(actionCell);
+    tbody.appendChild(row);
+  });
+}
+
+function buildKursHistorieCard(kurs = {}, { onDelete, onCreateZertifikat } = {}) {
+  const card = createStandardCard("Kurs Historie");
+  const body = card.querySelector(".ui-card__body");
+  body.innerHTML = "";
+
+  const searchRow = createFormRow({
+    id: "kurs-historie-search",
+    label: "Suche",
+    placeholder: "Kunde oder Hund suchen",
+    value: "",
+    required: false,
+  });
+  const searchInput = searchRow.querySelector("input");
+  if (searchInput) searchInput.type = "search";
+  body.appendChild(searchRow);
+
+  const tableWrapper = document.createElement("div");
+  tableWrapper.className = "kunden-list-scroll";
+  const table = document.createElement("table");
+  table.className = "kunden-list-table";
+  const thead = document.createElement("thead");
+  const headerRow = document.createElement("tr");
+  const tbody = document.createElement("tbody");
+
+  ["Name", "Vorname", "Ort", "Hund", "Startdatum", "Eintrag vom", ""].forEach((label) => {
+    const th = document.createElement("th");
+    th.textContent = label;
+    headerRow.appendChild(th);
+  });
+  thead.appendChild(headerRow);
+  const entries = Array.isArray(kurs.teilnehmerLog) ? kurs.teilnehmerLog : [];
+  let filter = "";
+  renderKursHistorieRows(tbody, entries, { onDelete, onCreateZertifikat, filter });
+  if (searchInput) {
+    searchInput.addEventListener("input", (event) => {
+      filter = event.target.value || "";
+      renderKursHistorieRows(tbody, entries, { onDelete, onCreateZertifikat, filter });
+    });
+  }
+
+  table.append(thead, tbody);
+  tableWrapper.appendChild(table);
+  body.appendChild(tableWrapper);
+  return {
+    card,
+    tbody,
+    setEntries(nextEntries = []) {
+      const list = Array.isArray(nextEntries) ? nextEntries : [];
+      renderKursHistorieRows(tbody, list, { onDelete, onCreateZertifikat, filter });
+    },
+  };
+}
+
 export async function initModule(container, routeContext = { segments: [] }) {
   container.innerHTML = "";
   const section = document.createElement("section");
@@ -191,7 +524,7 @@ async function renderDetail(section, id) {
   scrollToTop();
   await fetchTrainer(true);
   const detailSection = document.createElement("section");
-  detailSection.className = "dogule-section kurse-section kurse-detail";
+  detailSection.className = "dogule-section kurse-section kurse-detail card-stack-compact";
   section.appendChild(detailSection);
 
   try {
@@ -205,8 +538,138 @@ async function renderDetail(section, id) {
       const hydrated = await hydrateKurseWithTrainer([kurs]);
       kurs = hydrated[0] || kurs;
     }
+    try {
+      kurs.teilnehmerLog = await listKursTeilnehmer(kurs.id);
+    } catch (error) {
+      console.error("[KURSE_ERR_TEILNEHMER_LIST]", error);
+      kurs.teilnehmerLog = [];
+    }
 
     injectToast(detailSection);
+    const actionsCard = createStandardCard("Aktionen");
+    const actionsBody = actionsCard.querySelector(".ui-card__body");
+    const actionsWrap = document.createElement("div");
+    actionsWrap.className = "module-actions";
+    const teilnehmerBtn = createButton({
+      label: "+ neuer Teilnehmer",
+      variant: "secondary",
+    });
+    teilnehmerBtn.type = "button";
+    const editBtn = createButton({
+      label: "Kurs bearbeiten",
+      variant: "primary",
+    });
+    editBtn.type = "button";
+    editBtn.addEventListener("click", () => {
+      window.location.hash = `#/kurse/${kurs.id}/edit`;
+    });
+    const deleteBtn = createButton({
+      label: "Kurs löschen",
+      variant: "secondary",
+    });
+    deleteBtn.type = "button";
+    deleteBtn.addEventListener("click", () => handleDeleteKurs(section, kurs.id, deleteBtn));
+    const backBtn = createButton({
+      label: "Zur Übersicht",
+      variant: "quiet",
+    });
+    backBtn.type = "button";
+    backBtn.addEventListener("click", () => {
+      window.location.hash = "#/kurse";
+    });
+    actionsWrap.append(teilnehmerBtn, editBtn, deleteBtn, backBtn);
+    actionsBody.appendChild(actionsWrap);
+    detailSection.appendChild(actionsCard);
+
+    const teilnehmerForm = createTeilnehmerFormCard();
+    teilnehmerForm.card.hidden = true;
+    detailSection.appendChild(teilnehmerForm.card);
+
+    let teilnehmerLoaded = false;
+    const refreshTeilnehmer = async () => {
+      try {
+        const list = await listKursTeilnehmer(kurs.id);
+        kurs.teilnehmerLog = list;
+        const cacheIndex = kursCache.findIndex((item) => item.id === kurs.id);
+        if (cacheIndex >= 0) {
+          kursCache[cacheIndex] = { ...kursCache[cacheIndex], teilnehmerLog: list };
+        }
+        kursHistorie.setEntries(list);
+      } catch (error) {
+        console.error("[KURSE_ERR_TEILNEHMER_REFRESH]", error);
+      }
+    };
+    const handleDeleteTeilnehmer = async (entry) => {
+      if (!entry) return;
+      const confirmed = window.confirm("Teilnehmer wirklich löschen?");
+      if (!confirmed) return;
+      try {
+        await deleteKursTeilnehmer(kurs.id, entry.id);
+        await refreshTeilnehmer();
+      } catch (error) {
+        console.error("[KURSE_ERR_TEILNEHMER_DELETE]", error);
+        showInlineToast(detailSection, "Teilnehmer konnte nicht gelöscht werden.", "error");
+        return;
+      }
+      const wantsRapport = window.confirm("Kunden Rapport erstellen?");
+      if (wantsRapport && entry.kundeId) {
+        window.__DOGULE_RAPPORT_TARGET__ = entry.kundeId;
+        window.location.hash = `#/kunden/${entry.kundeId}`;
+      }
+    };
+    teilnehmerForm.onClose(() => {
+      teilnehmerForm.close();
+    });
+    teilnehmerForm.onSubmit(async (event) => {
+      event.preventDefault();
+      const { kundeId, hundId, startDatum } = teilnehmerForm.getValues();
+      if (!kundeId || !hundId || !startDatum) {
+        teilnehmerForm.setStatus("Bitte Kunde, Hund und Startdatum auswählen.", "warn");
+        return;
+      }
+      const kunde = teilnehmerForm.getKundeById(kundeId);
+      const hund = teilnehmerForm.getHundById(hundId);
+      try {
+        await createKursTeilnehmer({
+          kursId: kurs.id,
+          kundeId,
+          hundId,
+          kundeNachname: kunde?.nachname || "",
+          kundeVorname: kunde?.vorname || "",
+          kundeOrt: kunde?.ort || kunde?.heimatort || kunde?.heimatOrt || "",
+          hundName: hund?.rufname || hund?.name || "",
+          startDatum,
+        });
+        await refreshTeilnehmer();
+        teilnehmerForm.setStatus("Teilnehmer eingetragen.", "success");
+        teilnehmerForm.reset();
+      } catch (error) {
+        console.error("[KURSE_ERR_TEILNEHMER_CREATE]", error);
+        const detail = error?.code ? ` (${error.code})` : "";
+        teilnehmerForm.setStatus(`Teilnehmer konnte nicht gespeichert werden.${detail}`, "warn");
+      }
+    });
+    teilnehmerBtn.addEventListener("click", async () => {
+      const isHidden = teilnehmerForm.card.hidden;
+      teilnehmerForm.card.hidden = !isHidden;
+      if (isHidden) {
+        teilnehmerForm.setStatus("Kunden werden geladen ...", "info");
+        teilnehmerForm.focus();
+        if (!teilnehmerLoaded) {
+          try {
+            const [kunden, hunde] = await Promise.all([listKunden(), listHunde()]);
+            teilnehmerForm.setData(kunden, hunde);
+            teilnehmerLoaded = true;
+          } catch (error) {
+            console.error("[KURSE_ERR_TEILNEHMER_LOAD]", error);
+            teilnehmerForm.setStatus("Kunden/Hunde konnten nicht geladen werden.", "warn");
+          }
+        } else {
+          teilnehmerForm.setStatus("");
+        }
+      }
+    });
+
     const detailCard = createStandardCard("Stammdaten");
     const detailBody = detailCard.querySelector(".ui-card__body");
     const zertifikatHintergrund = getCertificateBackgroundForKurs(kurs);
@@ -291,43 +754,22 @@ async function renderDetail(section, id) {
         createNotice("Kein Zertifikat-Hintergrund zugewiesen.", { variant: "warn", role: "status" })
       );
     }
-    const actionsCard = createStandardCard("Aktionen");
-    const actionsBody = actionsCard.querySelector(".ui-card__body");
-    const actionsWrap = document.createElement("div");
-    actionsWrap.className = "module-actions";
-    const editBtn = createButton({
-      label: "Kurs bearbeiten",
-      variant: "primary",
+
+    const handleCreateZertifikat = (entry) => {
+      if (!entry?.kundeId || !entry?.hundId) return;
+      const params = new URLSearchParams();
+      params.set("kundeId", entry.kundeId);
+      params.set("hundId", entry.hundId);
+      params.set("kursId", kurs.id);
+      if (kurs.date) params.set("kursDatumSnapshot", kurs.date);
+      if (kurs.ort || kurs.location) params.set("kursOrtSnapshot", kurs.ort || kurs.location);
+      window.location.hash = `#/zertifikate/new?${params.toString()}`;
+    };
+    const kursHistorie = buildKursHistorieCard(kurs, {
+      onDelete: handleDeleteTeilnehmer,
+      onCreateZertifikat: handleCreateZertifikat,
     });
-    editBtn.type = "button";
-    editBtn.addEventListener("click", () => {
-      window.location.hash = `#/kurse/${kurs.id}/edit`;
-    });
-    const zertifikatBtn = createButton({
-      label: "Zertifikat erstellen",
-      variant: "secondary",
-    });
-    zertifikatBtn.type = "button";
-    zertifikatBtn.addEventListener("click", () => {
-      window.location.hash = `#/zertifikate/new?kursId=${encodeURIComponent(kurs.id)}`;
-    });
-    const deleteBtn = createButton({
-      label: "Kurs löschen",
-      variant: "secondary",
-    });
-    deleteBtn.type = "button";
-    deleteBtn.addEventListener("click", () => handleDeleteKurs(section, kurs.id, deleteBtn));
-    const backBtn = createButton({
-      label: "Zur Übersicht",
-      variant: "quiet",
-    });
-    backBtn.type = "button";
-    backBtn.addEventListener("click", () => {
-      window.location.hash = "#/kurse";
-    });
-    actionsWrap.append(editBtn, zertifikatBtn, deleteBtn, backBtn);
-    actionsBody.appendChild(actionsWrap);
-    detailSection.appendChild(actionsCard);
+    detailSection.appendChild(kursHistorie.card);
   } catch (error) {
     console.error("[KURSE_ERR_DETAIL]", error);
     const errorCard = createStandardCard("Stammdaten");
@@ -686,6 +1128,12 @@ async function renderForm(section, view, id) {
 
   const backgroundRef = refs.zertifikatHintergrund;
   if (backgroundRef?.row) {
+    const collapsible = document.createElement("details");
+    collapsible.className = "dogule-collapsible";
+    const summary = document.createElement("summary");
+    summary.textContent = "Zertifikat Hintergrund anzeigen";
+    const content = document.createElement("div");
+    content.className = "dogule-collapsible__content";
     const preview = document.createElement("div");
     preview.className = "kurse-zertifikat-preview";
     const previewImage = document.createElement("img");
@@ -695,7 +1143,9 @@ async function renderForm(section, view, id) {
     previewEmpty.className = "kurse-zertifikat-preview__empty";
     previewEmpty.textContent = "Kein Zertifikat-Hintergrund zugewiesen.";
     preview.append(previewImage, previewEmpty);
-    backgroundRef.row.appendChild(preview);
+    content.appendChild(preview);
+    collapsible.append(summary, content);
+    backgroundRef.row.appendChild(collapsible);
 
     const updatePreview = () => {
       const url = resolveCertificateBackgroundUrl(backgroundRef.input.value);

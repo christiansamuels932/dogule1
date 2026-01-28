@@ -90,7 +90,7 @@ Goal:
 
 - Remove redundant module title and description blocks from each module page.
   Scope:
-- Remove blocks like "Kunden" title + descriptive text (e.g., "Übersicht über alle Kundinnen und Kunden ...").
+- Remove blocks like "Kunden" title + descriptive text (e.g., "Übersicht über alle Kunden ...").
 - Applies to all module pages.
   Steps:
 - Locate module page layout template or shared module header component.

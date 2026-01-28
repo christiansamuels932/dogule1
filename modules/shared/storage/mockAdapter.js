@@ -14,6 +14,9 @@ import {
   createKurs,
   updateKurs,
   deleteKurs,
+  listKursTeilnehmer,
+  createKursTeilnehmer,
+  deleteKursTeilnehmer,
 } from "../api/kurse.js";
 import {
   listTrainer,
@@ -171,6 +174,17 @@ export function createMockAdapter(options = {}) {
         create: (data, ctx) => createKurs(data, ctx),
         update: (id, data, ctx) => updateKurs(id, data, ctx),
         delete: (id, ctx) => deleteKurs(id, ctx),
+      },
+      defaults
+    ),
+    kursTeilnehmer: buildEntityAdapter(
+      "kursTeilnehmer",
+      {
+        list: ({ query } = {}, ctx) => listKursTeilnehmer(query?.kursId, ctx),
+        get: async () => null,
+        create: (data, ctx) => createKursTeilnehmer(data, ctx),
+        update: async () => null,
+        delete: (id, ctx) => deleteKursTeilnehmer("", id, ctx),
       },
       defaults
     ),

@@ -382,6 +382,13 @@ h3,
   gap: 0.5rem;
 }
 
+.kurs-historie-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  white-space: nowrap;
+}
+
 .list-pagination__page {
   font-weight: 600;
   color: var(--color-ink);

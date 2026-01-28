@@ -6,6 +6,7 @@ import fs from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { createApiRouter } from "../../modules/shared/server/apiRouter.js";
 import { createHealthHandlers } from "../../modules/shared/server/health.js";
+import { createStorage } from "../../modules/shared/storage/storage.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -21,8 +22,23 @@ const ALLOWED_ORIGINS = (process.env.DOGULE1_CORS_ORIGINS || "")
 
 process.env.DOGULE1_REQUIRE_MARIADB = process.env.DOGULE1_REQUIRE_MARIADB || "1";
 
-const router = createApiRouter();
-const healthHandlers = createHealthHandlers();
+const storage = createStorage({ mode: "mariadb" });
+const router = createApiRouter({ storage });
+const healthHandlers = createHealthHandlers({
+  storageUsage: async () => {
+    const pool = storage?.pool;
+    if (!pool?.query) return null;
+    const dbName = process.env.DOGULE1_MARIADB_DATABASE || "dogule1";
+    const rows = await pool.query(
+      "SELECT SUM(data_length + index_length) AS bytes FROM information_schema.tables WHERE table_schema = ?",
+      [dbName]
+    );
+    const bytesRaw = rows?.[0]?.bytes ?? 0;
+    const bytes = Number(bytesRaw);
+    if (!Number.isFinite(bytes)) return null;
+    return Math.round((bytes / 1024 / 1024) * 10) / 10;
+  },
+});
 
 function contentTypeFor(filePath) {
   const ext = path.extname(filePath).toLowerCase();
@@ -79,7 +95,7 @@ const server = http.createServer(async (req, res) => {
     }
     const reqUrl = req.url || "";
     if (reqUrl.startsWith("/healthz")) {
-      healthHandlers.handleHealthz(req, res);
+      await healthHandlers.handleHealthz(req, res);
       return;
     }
     if (reqUrl.startsWith("/readyz")) {

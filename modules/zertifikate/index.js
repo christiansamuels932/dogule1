@@ -79,13 +79,9 @@ async function renderListView(section) {
   const actionsBody = actionsCard?.querySelector(".ui-card__body");
   const actionsRow = document.createElement("div");
   actionsRow.className = "module-actions";
-  const createBtn = createButton({
-    label: "Zertifikat erstellen",
-    variant: "primary",
-    onClick: () => {
-      window.location.hash = "#/zertifikate/new";
-    },
-  });
+  const createBtn = document.createElement("p");
+  createBtn.className = "zertifikate-kurs-only";
+  createBtn.textContent = "Zertifikate können nur aus der Kurs Historie erstellt werden.";
   actionsRow.appendChild(createBtn);
   if (actionsBody) {
     actionsBody.innerHTML = "";
@@ -597,6 +593,13 @@ async function renderCreateView(section, { mode = "create", existing = null } = 
   };
   form.appendChild(trainer1Row);
 
+  const trainer1ManualDetails = document.createElement("details");
+  trainer1ManualDetails.className = "dogule-collapsible";
+  const trainer1Summary = document.createElement("summary");
+  trainer1Summary.textContent = "Trainer 1 manuell";
+  const trainer1Content = document.createElement("div");
+  trainer1Content.className = "dogule-collapsible__content";
+
   const trainer1ModeRow = createFormRow({
     id: "zertifikate-trainer1-mode",
     label: "Trainer 1 manuell",
@@ -607,7 +610,6 @@ async function renderCreateView(section, { mode = "create", existing = null } = 
   trainer1ModeInput.name = "trainer1Manual";
   trainer1ModeRow.querySelector(".ui-form-row__hint")?.classList.add("sr-only");
   refs.trainer1Manual = { input: trainer1ModeInput, hint: null };
-  form.appendChild(trainer1ModeRow);
 
   const trainer1NameRow = createFormRow({
     id: "zertifikate-trainer1-name",
@@ -623,21 +625,23 @@ async function renderCreateView(section, { mode = "create", existing = null } = 
     input: trainer1NameInput,
     hint: trainer1NameRow.querySelector(".ui-form-row__hint"),
   };
-  form.appendChild(trainer1NameRow);
 
   const trainer1TitelRow = createFormRow({
     id: "zertifikate-trainer1-titel",
     label: "Trainer 1 Titel",
     control: "input",
     type: "text",
-    placeholder: "z. B. Dipl. Hundetrainer:in",
+    placeholder: "z. B. Dipl. Hundetrainer",
   });
   const trainer1TitelInput = trainer1TitelRow.querySelector("input");
   trainer1TitelInput.name = "trainer1TitelManual";
   trainer1TitelInput.disabled = true;
   trainer1TitelRow.querySelector(".ui-form-row__hint")?.classList.add("sr-only");
   refs.trainer1TitelManual = { input: trainer1TitelInput, hint: null };
-  form.appendChild(trainer1TitelRow);
+
+  trainer1Content.append(trainer1ModeRow, trainer1NameRow, trainer1TitelRow);
+  trainer1ManualDetails.append(trainer1Summary, trainer1Content);
+  form.appendChild(trainer1ManualDetails);
 
   const trainer2Row = createFormRow({
     id: "zertifikate-trainer2",
@@ -654,6 +658,13 @@ async function renderCreateView(section, { mode = "create", existing = null } = 
   };
   form.appendChild(trainer2Row);
 
+  const trainer2ManualDetails = document.createElement("details");
+  trainer2ManualDetails.className = "dogule-collapsible";
+  const trainer2Summary = document.createElement("summary");
+  trainer2Summary.textContent = "Trainer 2 manuell";
+  const trainer2Content = document.createElement("div");
+  trainer2Content.className = "dogule-collapsible__content";
+
   const trainer2ModeRow = createFormRow({
     id: "zertifikate-trainer2-mode",
     label: "Trainer 2 manuell",
@@ -664,7 +675,6 @@ async function renderCreateView(section, { mode = "create", existing = null } = 
   trainer2ModeInput.name = "trainer2Manual";
   trainer2ModeRow.querySelector(".ui-form-row__hint")?.classList.add("sr-only");
   refs.trainer2Manual = { input: trainer2ModeInput, hint: null };
-  form.appendChild(trainer2ModeRow);
 
   const trainer2NameRow = createFormRow({
     id: "zertifikate-trainer2-name",
@@ -678,21 +688,23 @@ async function renderCreateView(section, { mode = "create", existing = null } = 
   trainer2NameInput.disabled = true;
   trainer2NameRow.querySelector(".ui-form-row__hint")?.classList.add("sr-only");
   refs.trainer2NameManual = { input: trainer2NameInput, hint: null };
-  form.appendChild(trainer2NameRow);
 
   const trainer2TitelRow = createFormRow({
     id: "zertifikate-trainer2-titel",
     label: "Trainer 2 Titel",
     control: "input",
     type: "text",
-    placeholder: "z. B. Dipl. Hundetrainer:in",
+    placeholder: "z. B. Dipl. Hundetrainer",
   });
   const trainer2TitelInput = trainer2TitelRow.querySelector("input");
   trainer2TitelInput.name = "trainer2TitelManual";
   trainer2TitelInput.disabled = true;
   trainer2TitelRow.querySelector(".ui-form-row__hint")?.classList.add("sr-only");
   refs.trainer2TitelManual = { input: trainer2TitelInput, hint: null };
-  form.appendChild(trainer2TitelRow);
+
+  trainer2Content.append(trainer2ModeRow, trainer2NameRow, trainer2TitelRow);
+  trainer2ManualDetails.append(trainer2Summary, trainer2Content);
+  form.appendChild(trainer2ManualDetails);
 
   const dateRow = createFormRow({
     id: "zertifikate-ausstellungsdatum",

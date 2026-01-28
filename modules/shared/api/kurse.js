@@ -1,6 +1,14 @@
 import { list, create, update, remove } from "./crud.js";
 import { db } from "./db/index.js";
-import { isHttpMode, httpList, httpGet, httpCreate, httpUpdate, httpDelete } from "./httpClient.js";
+import {
+  isHttpMode,
+  httpList,
+  httpGet,
+  httpCreate,
+  httpUpdate,
+  httpDelete,
+  httpRequest,
+} from "./httpClient.js";
 import { removeKalenderEventByKursId, upsertKalenderEventForKurs } from "./kalender.js";
 
 const TABLE = "kurse";
@@ -33,6 +41,7 @@ const EDITABLE_DEFAULTS = {
   inhaltPraxis: "",
   zertifikatHintergrund: "",
   hundIds: [],
+  teilnehmerLog: [],
 };
 
 const NUMBER_FIELDS = new Set(["capacity", "bookedCount"]);
@@ -196,6 +205,22 @@ const ensureKursShape = (kurs = {}) => ({
   ...kurs,
 });
 
+function ensureTeilnehmerShape(entry = {}) {
+  return {
+    id: entry.id || "",
+    kursId: entry.kursId || "",
+    kundeId: entry.kundeId || "",
+    hundId: entry.hundId || "",
+    kundeNachname: entry.kundeNachname || "",
+    kundeVorname: entry.kundeVorname || "",
+    kundeOrt: entry.kundeOrt || "",
+    hundName: entry.hundName || "",
+    startDatum: entry.startDatum || "",
+    createdAt: entry.createdAt || "",
+    createdBy: entry.createdBy || "",
+  };
+}
+
 export async function getKurseForHund(hundId) {
   const targetId = (hundId || "").trim();
   if (!targetId) return [];
@@ -261,6 +286,45 @@ export async function getKurs(id, options) {
   }
   const kurse = await listKurse(options);
   return kurse.find((kurs) => kurs.id === id) || null;
+}
+
+export async function listKursTeilnehmer(kursId, options) {
+  const targetId = (kursId || "").trim();
+  if (!targetId) return [];
+  if (isHttpMode()) {
+    const result = await httpRequest(`/kurse/${encodeURIComponent(targetId)}/teilnehmer`, {
+      method: "GET",
+    });
+    return Array.isArray(result) ? result.map(ensureTeilnehmerShape) : [];
+  }
+  const table = Array.isArray(db.kursTeilnehmer) ? db.kursTeilnehmer : [];
+  return table
+    .filter((entry) => entry.kursId === targetId)
+    .map(ensureTeilnehmerShape)
+    .sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || ""));
+}
+
+export async function createKursTeilnehmer(data = {}, options) {
+  if (isHttpMode()) {
+    return httpRequest(`/kurse/${encodeURIComponent(data.kursId || "")}/teilnehmer`, {
+      method: "POST",
+      body: data,
+    });
+  }
+  const record = await create("kursTeilnehmer", data, options);
+  return ensureTeilnehmerShape(record);
+}
+
+export async function deleteKursTeilnehmer(kursId, teilnehmerId, options) {
+  if (isHttpMode()) {
+    return httpRequest(
+      `/kurse/${encodeURIComponent(kursId || "")}/teilnehmer/${encodeURIComponent(
+        teilnehmerId || ""
+      )}`,
+      { method: "DELETE" }
+    );
+  }
+  return remove("kursTeilnehmer", teilnehmerId, options);
 }
 
 export async function createKurs(data = {}, options) {

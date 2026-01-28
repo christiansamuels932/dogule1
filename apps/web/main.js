@@ -220,7 +220,7 @@ function getModuleHelp(module) {
     },
     kunden: {
       label: "Kunden",
-      text: "Suchen Sie Kundinnen und Kunden, öffnen Sie Details und pflegen Sie Stammdaten. Verknüpfte Hunde und Historie finden Sie in der Detailansicht.",
+      text: "Suchen Sie Kunden, öffnen Sie Details und pflegen Sie Stammdaten. Verknüpfte Hunde und Historie finden Sie in der Detailansicht.",
     },
     hunde: {
       label: "Hunde",
@@ -407,12 +407,20 @@ function startStatusMonitor() {
   statusIntervalId = window.setInterval(runCheck, STATUS_CHECK_INTERVAL_MS);
 }
 
-function setStatusBadge(badge, state, latencyMs, statusCode) {
+function formatStorageMb(value) {
+  if (!Number.isFinite(value)) return "";
+  const rounded = value >= 10 ? Math.round(value) : Math.round(value * 10) / 10;
+  const text = Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
+  return ` · ${text} MB`;
+}
+
+function setStatusBadge(badge, state, latencyMs, statusCode, storageMb) {
   const baseClass = "dogule-status";
   const stateClass = `dogule-status--${state}`;
   badge.className = `${baseClass} ${stateClass}`;
   let text = "NAS Status";
   let detail = "";
+  const storageDetail = formatStorageMb(storageMb);
   if (state === "ok") {
     text = "NAS OK";
     detail = typeof latencyMs === "number" ? ` · ${latencyMs} ms` : "";
@@ -425,7 +433,7 @@ function setStatusBadge(badge, state, latencyMs, statusCode) {
   } else if (state === "checking") {
     text = "NAS prüfen";
   }
-  const label = `${text}${detail}`;
+  const label = `${text}${detail}${storageDetail}`;
   badge.textContent = label;
   badge.setAttribute("aria-label", `NAS Status: ${label}`);
   badge.setAttribute("title", `Letzte Prüfung: ${label}`);
@@ -444,15 +452,17 @@ async function checkStatus(badge) {
       signal: controller.signal,
     });
     const elapsed = Math.round(performance.now() - startedAt);
+    const payload = await res.json().catch(() => null);
+    const storageMb = Number.isFinite(payload?.storageMb) ? payload.storageMb : null;
     if (!res.ok) {
-      setStatusBadge(badge, "down", elapsed, res.status);
+      setStatusBadge(badge, "down", elapsed, res.status, storageMb);
       return;
     }
     if (elapsed >= STATUS_SLOW_THRESHOLD_MS) {
-      setStatusBadge(badge, "slow", elapsed);
+      setStatusBadge(badge, "slow", elapsed, null, storageMb);
       return;
     }
-    setStatusBadge(badge, "ok", elapsed);
+    setStatusBadge(badge, "ok", elapsed, null, storageMb);
   } catch (error) {
     if (error?.name === "AbortError") {
       setStatusBadge(badge, "down", null, "timeout");

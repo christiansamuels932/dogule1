@@ -13,6 +13,43 @@ Quick stop (manual):
 - `pkill -f "tools/server/apiServer.js|vite dev|pnpm dev|vite" 2>/dev/null || true`
 - `sudo systemctl stop mariadb`
 
+RESUME (Station 105): Zertifikat uses Hunde Rufname.
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 104 — Kurse expansion (Teilnehmer log + Kurs-only Zertifikat)
+
+## Kontext
+
+- Status: completed.
+- Branch: `104`.
+- Scope: Kurs Teilnehmer-Log + Kurs Historie UX, Teilnehmer flow (Kunde → Hund → Startdatum), Kurs-only Zertifikat-Erstellung, MariaDB storage wiring, and status badge storage usage.
+
+## Ergebnis (kurz)
+
+- Kurs Detail: Aktionen card moved to top, Zertifikat Hintergrund always collapsible, and Kurs Historie card added with search, clickable rows, “Zertifikat erstellen” + “Löschen”, and “Eintrag vom” column.
+- Teilnehmer flow: “+ neuer Teilnehmer” creates entries with Kunde/Hund/Startdatum and updates the list without reload; delete prompts and optional rapport jump retained.
+- Zertifikate: entry points removed from Hunde and Zertifikate overview; only Kurs Historie row creates Zertifikate with prefilled Kunde/Hund/Kurs; API guardrail blocks Zertifikate without matching Teilnehmer.
+- Zertifikate form: manual trainer sections are foldable; placeholders de-gendered.
+- Storage: added `kurs_teilnehmer` table + adapters/API routes; health badge now shows DB storage MB; removed gendered wording across UI/docs where found.
+
+## Tests
+
+- Manual: add Teilnehmer, list updates, delete entry, Zertifikat create from Kurs Historie ✅
+- Manual: health badge shows `NAS OK · <ms> · <MB>` ✅
+- Not run: unit/integration tests.
+
+## Issues
+
+- MariaDB `created_by` length overflow on first run; fixed by widening to TEXT via migration.
+
+## Notizen
+
+- Migrations applied locally:
+  - `tools/mariadb/migrations/104_0_kurs_teilnehmer.sql`
+  - `tools/mariadb/migrations/104_1_kurs_teilnehmer_created_by.sql`
+  - `tools/mariadb/migrations/104_2_kurs_teilnehmer_created_by_text.sql`
+
 # - - - - - - - - - - - - - - - - - - - -
 
 # Station 102 — Geburtstagsemails text and formatting fixes
@@ -1061,7 +1098,7 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 - Participant sentence now fully rendered by Dogule (four lines): “Hiermit bestätigen wir, dass” + Kunde name + “mit dem” + Hund line; course participation sentence rendered as `am Kurs "<Kursname>" erfolgreich teilgenommen hat.`.
 - Added course title overlay above “Kursbestätigung” (blue, bold, larger) and aligned Kunde/Hund lines to the same visual axis.
 - Kursinhalt bullets repositioned for visual centering under headers; fixed line height + max lines; deterministic truncation for overflow.
-- Gratulation sentence now rendered fully by Dogule (gendered Hundeführer:in).
+- Gratulation sentence now rendered fully by Dogule (Hundeführer).
 - Ausstellungsdatum rendered as centered `Döttingen, DD.MM.YYYY` on the same axis as title/name.
 - Trainer blocks aligned and synchronized (baseline/spacing) with right column shifted for symmetry.
 - Added unobtrusive Zertifikat-ID footer (internal UUID) for authenticity verification.
@@ -1073,7 +1110,7 @@ Branching rule: each station must be developed on its dedicated branch; if the e
   - Participant sentence (4 lines) renders cleanly; course sentence uses `am Kurs "<Kursname>" erfolgreich teilgenommen hat.` ✅
   - Course title line above “Kursbestätigung” is blue, bold, and centered ✅
   - Kursinhalt bullets align under headers, with stable wrapping/truncation ✅
-  - Gratulation sentence rendered by Dogule (gendered Hundeführer:in) ✅
+  - Gratulation sentence rendered by Dogule (Hundeführer) ✅
   - Date line centered as `Döttingen, DD.MM.YYYY` ✅
   - Trainer blocks aligned and symmetric ✅
   - Zertifikat-ID footer visible and unobtrusive ✅

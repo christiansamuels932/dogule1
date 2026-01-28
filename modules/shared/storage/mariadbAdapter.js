@@ -264,6 +264,25 @@ function mapKursRow(row) {
   };
 }
 
+function mapKursTeilnehmerRow(row) {
+  if (!row) return null;
+  return {
+    id: row.id,
+    kursId: row.kurs_id,
+    kundeId: row.kunde_id,
+    hundId: row.hund_id,
+    kundeNachname: row.kunde_nachname,
+    kundeVorname: row.kunde_vorname,
+    kundeOrt: row.kunde_ort,
+    hundName: row.hund_name,
+    startDatum: row.start_datum,
+    createdAt: row.created_at,
+    createdBy: row.created_by,
+    schemaVersion: row.schema_version,
+    version: row.version,
+  };
+}
+
 function mapKalenderRow(row) {
   if (!row) return null;
   return {
@@ -605,6 +624,25 @@ function normalizeKurs(data = {}, existing) {
     portfolioFlag: Boolean(data.portfolioFlag ?? existing?.portfolioFlag ?? false),
     createdAt,
     updatedAt: nowIso(),
+    schemaVersion: Number(data.schemaVersion ?? existing?.schemaVersion ?? 1),
+    version: Number(data.version ?? existing?.version ?? 0),
+  };
+}
+
+function normalizeKursTeilnehmer(data = {}, existing) {
+  const createdAt = existing?.createdAt || data.createdAt || nowIso();
+  return {
+    id: data.id || existing?.id || uuidv7(),
+    kursId: toStringValue(data.kursId ?? existing?.kursId),
+    kundeId: toStringValue(data.kundeId ?? existing?.kundeId),
+    hundId: toStringValue(data.hundId ?? existing?.hundId),
+    kundeNachname: toStringValue(data.kundeNachname ?? existing?.kundeNachname),
+    kundeVorname: toStringValue(data.kundeVorname ?? existing?.kundeVorname),
+    kundeOrt: toStringValue(data.kundeOrt ?? existing?.kundeOrt),
+    hundName: toStringValue(data.hundName ?? existing?.hundName),
+    startDatum: toStringValue(data.startDatum ?? existing?.startDatum),
+    createdAt,
+    createdBy: toStringValue(data.createdBy ?? existing?.createdBy),
     schemaVersion: Number(data.schemaVersion ?? existing?.schemaVersion ?? 1),
     version: Number(data.version ?? existing?.version ?? 0),
   };
@@ -1409,6 +1447,96 @@ export function createMariaDbAdapter(options = {}) {
     }
   }
 
+  async function listKursTeilnehmer({ query } = {}) {
+    const kursId = toStringValue(query?.kursId);
+    const kundeId = toStringValue(query?.kundeId);
+    const hundId = toStringValue(query?.hundId);
+    const clauses = [];
+    const params = [];
+    if (kursId) {
+      clauses.push("kurs_id = ?");
+      params.push(kursId);
+    }
+    if (kundeId) {
+      clauses.push("kunde_id = ?");
+      params.push(kundeId);
+    }
+    if (hundId) {
+      clauses.push("hund_id = ?");
+      params.push(hundId);
+    }
+    let sql = "SELECT * FROM kurs_teilnehmer";
+    if (clauses.length) {
+      sql += ` WHERE ${clauses.join(" AND ")}`;
+    }
+    sql += " ORDER BY created_at DESC";
+    try {
+      return await listAll(pool, sql, params, mapKursTeilnehmerRow);
+    } catch (error) {
+      throw toStorageError(error, "Failed to list kurs_teilnehmer");
+    }
+  }
+
+  async function getKursTeilnehmer(id) {
+    try {
+      const record = await fetchOne(
+        pool,
+        "SELECT * FROM kurs_teilnehmer WHERE id = ?",
+        [id],
+        mapKursTeilnehmerRow
+      );
+      if (!record) {
+        throw new StorageError(STORAGE_ERROR_CODES.NOT_FOUND, `kurs_teilnehmer ${id} not found`);
+      }
+      return record;
+    } catch (error) {
+      throw toStorageError(error, `Failed to get kurs_teilnehmer ${id}`);
+    }
+  }
+
+  async function createKursTeilnehmer(data = {}) {
+    const record = normalizeKursTeilnehmer(data, null);
+    ensureRequiredFields(
+      record,
+      ["kursId", "kundeId", "hundId", "startDatum"],
+      "Kurs Teilnehmer benötigt Kurs, Kunde, Hund und Startdatum"
+    );
+    const params = [
+      record.id,
+      record.kursId,
+      record.kundeId,
+      record.hundId,
+      record.kundeNachname,
+      record.kundeVorname,
+      record.kundeOrt,
+      record.hundName,
+      record.startDatum,
+      record.createdAt,
+      record.createdBy,
+      record.schemaVersion,
+      record.version,
+    ];
+    try {
+      await pool.query(
+        "INSERT INTO kurs_teilnehmer (id, kurs_id, kunde_id, hund_id, kunde_nachname, kunde_vorname, kunde_ort, hund_name, start_datum, created_at, created_by, schema_version, version) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        params
+      );
+      return record;
+    } catch (error) {
+      throw toStorageError(error, "Failed to create kurs_teilnehmer");
+    }
+  }
+
+  async function deleteKursTeilnehmer(id) {
+    try {
+      await ensureExists(pool, "kurs_teilnehmer", id);
+      await pool.query("DELETE FROM kurs_teilnehmer WHERE id = ?", [id]);
+      return { ok: true, id };
+    } catch (error) {
+      throw toStorageError(error, `Failed to delete kurs_teilnehmer ${id}`);
+    }
+  }
+
   async function listKalender() {
     try {
       return await listAll(pool, "SELECT * FROM kalender ORDER BY id", [], mapKalenderRow);
@@ -1752,6 +1880,18 @@ export function createMariaDbAdapter(options = {}) {
   async function createZertifikat(data = {}) {
     const record = normalizeZertifikat(data, null);
     ensureZertifikatRequired(record);
+    if (record.kursId && record.kundeId && record.hundId) {
+      const rows = await pool.query(
+        "SELECT id FROM kurs_teilnehmer WHERE kurs_id = ? AND kunde_id = ? AND hund_id = ? LIMIT 1",
+        [record.kursId, record.kundeId, record.hundId]
+      );
+      if (!rows || rows.length === 0) {
+        throw new StorageError(
+          STORAGE_ERROR_CODES.INVALID_DATA,
+          "KURS_TEILNEHMER_REQUIRED"
+        );
+      }
+    }
     const params = [
       record.id,
       record.code,
@@ -1801,6 +1941,18 @@ export function createMariaDbAdapter(options = {}) {
       if (!existing) return null;
       const record = normalizeZertifikat({ ...existing, ...patch, id: existing.id }, existing);
       ensureZertifikatRequired(record);
+      if (record.kursId && record.kundeId && record.hundId) {
+        const rows = await pool.query(
+          "SELECT id FROM kurs_teilnehmer WHERE kurs_id = ? AND kunde_id = ? AND hund_id = ? LIMIT 1",
+          [record.kursId, record.kundeId, record.hundId]
+        );
+        if (!rows || rows.length === 0) {
+          throw new StorageError(
+            STORAGE_ERROR_CODES.INVALID_DATA,
+            "KURS_TEILNEHMER_REQUIRED"
+          );
+        }
+      }
       const params = [
         record.code,
         record.kundeId,
@@ -2321,6 +2473,12 @@ export function createMariaDbAdapter(options = {}) {
       get: getSchulung,
       create: createSchulung,
       delete: deleteSchulung,
+    },
+    kursTeilnehmer: {
+      list: listKursTeilnehmer,
+      get: getKursTeilnehmer,
+      create: createKursTeilnehmer,
+      delete: deleteKursTeilnehmer,
     },
     dashboardBirthdays: {
       listHandled: listBirthdayHandledEntries,

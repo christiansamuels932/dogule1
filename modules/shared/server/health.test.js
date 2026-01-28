@@ -18,10 +18,10 @@ function createMockRes() {
 }
 
 describe("health handlers", () => {
-  it("/healthz always returns ok", () => {
+  it("/healthz always returns ok", async () => {
     const { handleHealthz } = createHealthHandlers();
     const res = createMockRes();
-    handleHealthz({}, res);
+    await handleHealthz({}, res);
     expect(res.statusCode).toBe(200);
     expect(JSON.parse(res.body)).toEqual({ status: "ok" });
   });

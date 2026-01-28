@@ -574,7 +574,7 @@ async function renderCreate(section) {
   const titelRow = createFormRow({
     id: "trainer-titel",
     label: "Titel (für Zertifikate erforderlich)",
-    placeholder: "z. B. Dipl. Hundetrainer:in",
+    placeholder: "z. B. Dipl. Hundetrainer",
     describedByText: "Für Zertifikate erforderlich.",
   });
   const titelInput = titelRow.querySelector("input");
@@ -1202,7 +1202,7 @@ async function renderEdit(section, id) {
   const titelRow = createFormRow({
     id: "trainer-titel",
     label: "Titel (für Zertifikate erforderlich)",
-    placeholder: "z. B. Dipl. Hundetrainer:in",
+    placeholder: "z. B. Dipl. Hundetrainer",
     describedByText: "Für Zertifikate erforderlich.",
   });
   const titelInput = titelRow.querySelector("input");
