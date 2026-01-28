@@ -13,7 +13,7 @@ Quick stop (manual):
 - `pkill -f "tools/server/apiServer.js|vite dev|pnpm dev|vite" 2>/dev/null || true`
 - `sudo systemctl stop mariadb`
 
-RESUME (Station 105): Zertifikat uses Hunde Rufname.
+RESUME (Station 105): Contabo deployment.
 
 # - - - - - - - - - - - - - - - - - - - -
 

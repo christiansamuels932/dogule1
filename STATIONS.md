@@ -39,7 +39,7 @@ Station 101 — GUI cleanup (consistent buttons, clicks, positions)
 Station 102 — Geburtstagsemails text and formatting fixes
 Station 103 — Anmeldung refinement (draft fidelity, Historie split, gender inference)
 Station 104 — Kurse expansion (Teilnehmer log + Kurs-only Zertifikat)
-Station 105 — Zertifikat uses Hunde Rufname
+Station 105 — Contabo deployment
 Station 106 — Intermittent “Daten konnten nicht geladen werden” investigation/fix
 
 Battleplan (Stations 85+):
@@ -370,7 +370,7 @@ Goal:
   Out of scope:
 - Changing existing Anmeldung flow outside of course logging.
 
-Station 105 — Zertifikat uses Hunde Rufname
+Station 105 — Contabo deployment
 Goal:
 
 - Use the dog's Rufname (not Name) in the certificate output.
