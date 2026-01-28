@@ -132,6 +132,7 @@ export const db = {
       updatedAt: "2025-02-11T13:20:00.000Z",
     },
   ],
+  kursTeilnehmer: [],
   kurse: [
     {
       id: "course-001",

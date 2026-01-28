@@ -261,7 +261,7 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 - Participant sentence now fully rendered by Dogule (four lines): “Hiermit bestätigen wir, dass” + Kunde name + “mit dem” + Hund line; course participation sentence rendered as `am Kurs "<Kursname>" erfolgreich teilgenommen hat.`.
 - Added course title overlay above “Kursbestätigung” (blue, bold, larger) and aligned Kunde/Hund lines to the same visual axis.
 - Kursinhalt bullets repositioned for visual centering under headers; fixed line height + max lines; deterministic truncation for overflow.
-- Gratulation sentence now rendered fully by Dogule (gendered Hundeführer:in).
+- Gratulation sentence now rendered fully by Dogule (Hundeführer).
 - Ausstellungsdatum rendered as centered `Döttingen, DD.MM.YYYY` on the same axis as title/name.
 - Trainer blocks aligned and synchronized (baseline/spacing) with right column shifted for symmetry.
 - Added unobtrusive Zertifikat-ID footer (internal UUID) for authenticity verification.
@@ -273,7 +273,7 @@ Branching rule: each station must be developed on its dedicated branch; if the e
   - Participant sentence (4 lines) renders cleanly; course sentence uses `am Kurs "<Kursname>" erfolgreich teilgenommen hat.` ✅
   - Course title line above “Kursbestätigung” is blue, bold, and centered ✅
   - Kursinhalt bullets align under headers, with stable wrapping/truncation ✅
-  - Gratulation sentence rendered by Dogule (gendered Hundeführer:in) ✅
+  - Gratulation sentence rendered by Dogule (Hundeführer) ✅
   - Date line centered as `Döttingen, DD.MM.YYYY` ✅
   - Trainer blocks aligned and symmetric ✅
   - Zertifikat-ID footer visible and unobtrusive ✅

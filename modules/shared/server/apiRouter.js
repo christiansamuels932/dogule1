@@ -1,4 +1,4 @@
-/* global process */
+/* global process, console */
 import { URL } from "node:url";
 import path from "node:path";
 import crypto from "node:crypto";
@@ -630,6 +630,81 @@ export function createApiRouter(options = {}) {
 
     jsonResponse(res, 404, { message: "not_found" });
     return true;
+  }
+
+  async function handleKursTeilnehmerRoutes(req, res) {
+    const reqUrl = req?.url || "";
+    if (!reqUrl.startsWith("/api/kurse/")) return false;
+    const path = reqUrl.split("?")[0];
+    const method = (req.method || "GET").toUpperCase();
+    const requestId = resolveRequestId(req);
+    const listMatch = path.match(/^\/api\/kurse\/([^/]+)\/teilnehmer\/?$/);
+    if (listMatch) {
+      const kursId = listMatch[1];
+      if (!storage.kursTeilnehmer) {
+        jsonResponse(res, 501, { message: "kurs_teilnehmer_unavailable" });
+        return true;
+      }
+      if (method === "GET") {
+        try {
+          const entries = await storage.kursTeilnehmer.list({
+            query: { kursId },
+            requestId,
+          });
+          jsonResponse(res, 200, entries);
+        } catch {
+          jsonResponse(res, 500, { message: "kurs_teilnehmer_list_failed" });
+        }
+        return true;
+      }
+      if (method === "POST") {
+        const body = await readJsonBody(req);
+        try {
+          const actorId = req.headers["x-dogule-actor-id"] || "";
+          const createdByRaw = actorId || body.createdBy || "";
+          const createdBy = String(createdByRaw || "").slice(0, 255);
+          const created = await storage.kursTeilnehmer.create(
+            {
+              kursId,
+              kundeId: body.kundeId,
+              hundId: body.hundId,
+              kundeNachname: body.kundeNachname,
+              kundeVorname: body.kundeVorname,
+              kundeOrt: body.kundeOrt,
+              hundName: body.hundName,
+              startDatum: body.startDatum,
+              createdBy,
+            },
+            { requestId }
+          );
+          jsonResponse(res, 201, created);
+        } catch (error) {
+          console.error("[KURSE_TEILNEHMER_CREATE_FAILED]", error);
+          jsonResponse(res, 400, {
+            message: "kurs_teilnehmer_create_failed",
+            code: error?.code,
+            detail: error?.message,
+          });
+        }
+        return true;
+      }
+    }
+    const deleteMatch = path.match(/^\/api\/kurse\/([^/]+)\/teilnehmer\/([^/]+)$/);
+    if (deleteMatch && method === "DELETE") {
+      if (!storage.kursTeilnehmer) {
+        jsonResponse(res, 501, { message: "kurs_teilnehmer_unavailable" });
+        return true;
+      }
+      const id = deleteMatch[2];
+      try {
+        const result = await storage.kursTeilnehmer.delete(id, { requestId });
+        jsonResponse(res, 200, result);
+      } catch (error) {
+        jsonResponse(res, 500, { message: "kurs_teilnehmer_delete_failed", code: error?.code });
+      }
+      return true;
+    }
+    return false;
   }
 
   function contentTypeForUpload(filePath) {
@@ -1401,6 +1476,7 @@ export function createApiRouter(options = {}) {
     if (await handleAnmeldungRoutes(req, res)) return true;
     if (await handleRapporteRoutes(req, res)) return true;
     if (await handleHistorieRoutes(req, res)) return true;
+    if (await handleKursTeilnehmerRoutes(req, res)) return true;
     if (await handleSchulungenRoutes(req, res)) return true;
     if (await core.handle(req, res)) return true;
     return kommunikation.handle(req, res);

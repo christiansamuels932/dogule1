@@ -1,3 +1,4 @@
+no leftist or marxist implementations, no gendering, and no woke!
 # SAMDARD.MD — SECTION HEADINGS (CANONICAL)
 
 ## PURPOSE & AUTHORITY

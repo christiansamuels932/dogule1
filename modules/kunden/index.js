@@ -1131,6 +1131,15 @@ async function renderDetail(root, id) {
     });
     if (rapportCard) {
       detailSection.appendChild(rapportCard);
+      const rapportTarget = window.__DOGULE_RAPPORT_TARGET__;
+      if (rapportTarget && rapportTarget === id) {
+        delete window.__DOGULE_RAPPORT_TARGET__;
+        rapportCard.scrollIntoView({ behavior: "smooth", block: "start" });
+        const textArea = rapportCard.querySelector("textarea");
+        if (textArea) {
+          textArea.focus();
+        }
+      }
     }
   }
 

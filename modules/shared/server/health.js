@@ -41,9 +41,25 @@ function logNotReady(checks, options = {}) {
 export function createHealthHandlers(options = {}) {
   const readinessCheck = options.readinessCheck || defaultReadinessCheck;
   const logger = options.logger || logEvent;
+  const storageUsage = options.storageUsage;
 
-  function handleHealthz(req, res) {
-    jsonResponse(res, 200, { status: "ok" });
+  async function handleHealthz(req, res) {
+    let storageMb = null;
+    if (typeof storageUsage === "function") {
+      try {
+        const value = await storageUsage({ req });
+        if (Number.isFinite(value)) {
+          storageMb = value;
+        }
+      } catch {
+        storageMb = null;
+      }
+    }
+    if (storageMb === null) {
+      jsonResponse(res, 200, { status: "ok" });
+      return;
+    }
+    jsonResponse(res, 200, { status: "ok", storageMb });
   }
 
   function handleReadyz(req, res) {
