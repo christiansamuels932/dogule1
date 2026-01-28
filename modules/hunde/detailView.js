@@ -535,7 +535,7 @@ function buildDetailList(hund, kundeInfo = null) {
     { label: "Rasse", value: hund.rasse },
     { label: "Geschlecht", value: hund.geschlecht },
     { label: "Status", value: hund.status },
-    { label: "Geburtsdatum", value: formatDate(hund.geburtsdatum) },
+    { label: "Wurfdatum", value: formatDate(hund.geburtsdatum) },
     { label: "Kastriert", value: formatBoolean(hund.kastriert) },
     { label: "Felltyp", value: hund.felltyp || hund.fellTyp },
     { label: "Fellfarbe", value: hund.fellfarbe || hund.fellFarbe },
@@ -543,7 +543,7 @@ function buildDetailList(hund, kundeInfo = null) {
     { label: "Größe (cm)", value: hund.groesseCm },
     { label: "Gewicht (kg)", value: hund.gewichtKg },
     { label: "Herkunft", value: formatHerkunft(hund.herkunft) },
-    { label: "Chip Nummer", value: hund.chipNummer || hund.chipnummer },
+    { label: "Chip-Nr.", value: hund.chipNummer || hund.chipnummer },
     { label: "Trainingsziele", value: hund.trainingsziele },
     { label: "Notizen", value: hund.notizen },
   ];

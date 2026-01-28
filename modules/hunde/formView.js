@@ -316,7 +316,7 @@ function buildFormFields(
       value: existing?.geburtsdatum ?? "",
       config: {
         id: "hund-geburtsdatum",
-        label: "Geburtsdatum",
+        label: "Wurfdatum",
         type: "date",
       },
     },
@@ -402,7 +402,7 @@ function buildFormFields(
       value: existing?.chipNummer ?? existing?.chipnummer ?? "",
       config: {
         id: "hund-chip",
-        label: "Chip Nummer",
+        label: "Chip-Nr.",
         placeholder: "z. B. 978000000000000",
       },
     },

@@ -13,7 +13,88 @@ Quick stop (manual):
 - `pkill -f "tools/server/apiServer.js|vite dev|pnpm dev|vite" 2>/dev/null || true`
 - `sudo systemctl stop mariadb`
 
-OPEN: SMTP input pending (Outlook credentials not yet provided; SMTP test + send pipeline ready but blocked).
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 102 — Geburtstagsemails text and formatting fixes
+
+## Kontext
+
+- Status: completed.
+- Branch: `101`.
+- Scope: dashboard birthday mailto subject/body formatting, line breaks, and wording for Kunde + Hund templates.
+
+## Ergebnis (kurz)
+
+- Kunden mailto uses the provided “Liebe{{r}} {{Kunde Vorname}}” template with exact line breaks and spacing, plus free lesson line and sign-off.
+- Hund mailto uses the provided birthday wording (Geburtstag + Rufname) with matching spacing and sign-off.
+- Added gender-aware Liebe/Lieber suffix based on `geschlecht` to resolve “Liebe{{r}}”.
+
+## Tests
+
+- Not run.
+
+## Issues
+
+- None.
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 101 — GUI cleanup (Anmeldung + Kunden address fields + UI consistency)
+
+## Kontext
+
+- Status: completed.
+- Branch: `101`.
+- Scope: Anmeldung UI cleanup; Kunden detail/form address split + Mobile; MariaDB schema updates.
+
+## Ergebnis (kurz)
+
+- Anmeldung: removed redundant top header; added spacing above "Auswerten" actions.
+- Kunden detail/form: added Mobile + Strasse/PLZ/Ort; address parsing for legacy `adresse`; computed `adresse` on save; MariaDB columns + migration added.
+- Rapporte: admin/developer now save directly from Kunde/Hund detail with "Rapport speichern"; Historie updates immediately without refresh; trainers still submit drafts.
+- Kunden detail: removed "Zertifikat erstellen" action; removed outer section headers for Hunde/Zertifikate/Historie; unified smaller card spacing.
+- Overview lists: rows are fully clickable with pointer cursor, blue hover (no underline) in Kunden/Hunde/Trainer/Zertifikate.
+- Hunde list: applied compact 0.75rem spacing between Aktionen and Übersicht.
+- Dashboard/Kunden/Kurse/Trainer/Zertifikate/Schulungen: applied compact 0.75rem top-card spacing (card-stack-compact).
+- Kurs detail: show "Weitere Trainer 1–4"; Kurs edit/create: four additional trainer selects; validation/payload updated.
+- MariaDB migration applied locally: `tools/mariadb/migrations/101_0_kunden_address_fields.sql`.
+
+## Tests
+
+- Not run.
+
+## Issues
+
+- None.
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 103 — Anmeldung refinement (draft fidelity, Historie split, gender inference)
+
+## Kontext
+
+- Status: completed (read-only).
+- Branch: `101`.
+- Scope: Anmeldung parsing improvements for Kunde/Hund fields, fuzzy Kurs match, Kunde/Hund detail alignment, and schema additions for Kunde anrede/heimatort/aufmerksam durch.
+
+## Ergebnis (kurz)
+
+- Kurs auto-select now uses best-match title logic when parsing Anmeldung emails (not exact match required).
+- Anmeldung Kunde draft uses the same field set as Kunden detail (Anrede, Vorname, Nachname, Strasse, PLZ, Ort, E-Mail, Telefon, Geburtsdatum, Mobile, Heimatort, Aufmerksam durch).
+- Anmeldung Hund draft now includes Geschlecht, Kastriert, Rasse, Rufname, Wurfdatum, Chip-Nr., matching Hunde detailview labels.
+- Kunden schema extended with `anrede`, `heimatort`, `aufmerksam_durch`; adapters/validators/defaults updated; migration added `tools/mariadb/migrations/103_0_kunden_anrede_heimatort_aufmerksam.sql`.
+- Anmeldung parser now captures Anrede → Geschlecht inference, Geburtsdatum, Mobile, Heimatort, Aufmerksam durch, Kastriert, Chip-Nr., and preserves address parts for Strasse/PLZ/Ort.
+- Kunden detail shows Anrede/Vorname/Nachname explicitly, includes Aufmerksam durch; Hunde detail + form labels aligned to Wurfdatum/Chip-Nr.
+
+## Tests
+
+- Not run.
+
+## Issues
+
+- None.
+
+# - - - - - - - - - - - - - - - - - - - -
 
 This document is the authoritative status log for Dogule1 (replaces dogule1_status.md). Station suffix legend: `R` = lifecycle/retention, `K` = Kommunikation, `E` = Email/Outlook line.
 Every station block is wrapped by a visual bracket line: `# - - - - - - - - - - - - - - - - - - - -
@@ -1297,7 +1378,7 @@ Branching rule: each station must be developed on its dedicated branch; if the e
 ## Notizen
 
 - Local start commands:
-  - `sudo systemctl start mariadb`
+  - `sudo systemctl start mariadb && sudo systemctl status mariadb`
   - `DOGULE1_STORAGE_MODE=mariadb DOGULE1_MARIADB_SOCKET=/run/mysqld/mysqld.sock DOGULE1_MARIADB_USER=ran node tools/server/apiServer.js`
   - `DOGULE1_STORAGE_MODE=mariadb DOGULE1_MARIADB_SOCKET=/run/mysqld/mysqld.sock DOGULE1_MARIADB_USER=ran pnpm dev`
 - If Vite starts without `DOGULE1_MARIADB_SOCKET`, it will try the local socket and the UI will show `Fehler beim Laden der Daten`.

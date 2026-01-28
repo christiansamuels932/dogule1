@@ -65,6 +65,49 @@ function buildAdresse(pairs) {
   return parts.join(", ");
 }
 
+function buildAdresseFromParts({ strasse = "", plz = "", ort = "" } = {}) {
+  const line = String(strasse || "").trim();
+  const townLine = [String(plz || "").trim(), String(ort || "").trim()].filter(Boolean).join(" ");
+  return [line, townLine].filter(Boolean).join(", ");
+}
+
+function normalizeCourseKey(value) {
+  return String(value || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+function scoreCourseMatch(candidate = "", target = "") {
+  if (!candidate || !target) return 0;
+  if (candidate === target) return 100;
+  if (candidate.includes(target) || target.includes(candidate)) return 90;
+  const candidateTokens = new Set(candidate.split(" ").filter(Boolean));
+  const targetTokens = new Set(target.split(" ").filter(Boolean));
+  if (!candidateTokens.size || !targetTokens.size) return 0;
+  let overlap = 0;
+  targetTokens.forEach((token) => {
+    if (candidateTokens.has(token)) overlap += 1;
+  });
+  return (overlap / targetTokens.size) * 70;
+}
+
+function findBestKursMatch(kurse = [], kursTitle = "") {
+  const normalizedTarget = normalizeCourseKey(kursTitle);
+  if (!normalizedTarget) return null;
+  let best = null;
+  let bestScore = 0;
+  kurse.forEach((kurs) => {
+    const normalizedCandidate = normalizeCourseKey(kurs?.title || "");
+    const score = scoreCourseMatch(normalizedCandidate, normalizedTarget);
+    if (score > bestScore) {
+      bestScore = score;
+      best = kurs;
+    }
+  });
+  return bestScore > 0 ? best : null;
+}
+
 function normalizeDateDDMMYYYY(value) {
   const raw = String(value || "").trim();
   if (!raw) return "";
@@ -85,6 +128,25 @@ function parseRufnameLine(value) {
     return { name: match[1].trim(), rufname: match[2].trim() };
   }
   return { name: raw, rufname: "" };
+}
+
+function inferGeschlechtFromAnrede(anrede) {
+  const normalized = String(anrede || "")
+    .trim()
+    .toLowerCase();
+  if (normalized === "herr") return "männlich";
+  if (normalized === "frau") return "weiblich";
+  return "";
+}
+
+function normalizeKastriert(value) {
+  const normalized = String(value || "")
+    .trim()
+    .toLowerCase();
+  if (!normalized) return "";
+  if (["ja", "j", "yes", "true", "1"].includes(normalized)) return true;
+  if (["nein", "n", "no", "false", "0"].includes(normalized)) return false;
+  return normalized;
 }
 
 function parseEmailDraft(rawText = "") {
@@ -108,7 +170,7 @@ function parseEmailDraft(rawText = "") {
   const personPairs = parseSectionPairs(personLines);
   const hundPairs = parseSectionPairs(hundLines);
 
-  const ignoreKeys = new Set(["newsletter", "agb", "aufmerksam durch", "aufmerksam", "agbs"]);
+  const ignoreKeys = new Set(["newsletter", "agb", "agbs"]);
   ignoreKeys.forEach((key) => {
     delete personPairs[key];
     delete hundPairs[key];
@@ -121,12 +183,27 @@ function parseEmailDraft(rawText = "") {
     allPairs["kurs titel / name"] ||
     "";
 
+  const anrede = personPairs["anrede"] || "";
+  const geschlecht = personPairs["geschlecht"] || inferGeschlechtFromAnrede(anrede) || "";
   const kundePayload = {
+    anrede,
     vorname: personPairs["vorname"] || "",
     nachname: personPairs["nachname"] || "",
-    geschlecht: personPairs["geschlecht"] || "",
+    geschlecht,
     email: personPairs["e-mail"] || personPairs["email"] || "",
     telefon: personPairs["telefon"] || personPairs["tel"] || "",
+    mobile: personPairs["mobile"] || "",
+    geburtsdatum: normalizeDateDDMMYYYY(personPairs["geburtsdatum"] || ""),
+    strasse:
+      personPairs["strasse"] ||
+      personPairs["straße"] ||
+      personPairs["strasse / nr"] ||
+      personPairs["adresse"] ||
+      "",
+    plz: personPairs["plz"] || personPairs["postleitzahl"] || "",
+    ort: personPairs["ort"] || personPairs["stadt"] || "",
+    heimatort: personPairs["heimatort"] || "",
+    aufmerksamDurch: personPairs["aufmerksam durch"] || personPairs["aufmerksam"] || "",
     adresse: buildAdresse(personPairs),
     notizen: "",
   };
@@ -146,7 +223,15 @@ function parseEmailDraft(rawText = "") {
     rufname: hundPairs["rufname"] || hundPairs["kurzname"] || "",
     rasse: hundPairs["rasse"] || "",
     geschlecht: hundPairs["geschlecht"] || "",
+    kastriert: normalizeKastriert(hundPairs["kastriert"]),
     geburtsdatum: normalizeDateDDMMYYYY(hundPairs["wurfdatum"] || hundPairs["geburtsdatum"] || ""),
+    chipNummer:
+      hundPairs["chip-nr."] ||
+      hundPairs["chip-nr"] ||
+      hundPairs["chip nr"] ||
+      hundPairs["chipnummer"] ||
+      hundPairs["chip nummer"] ||
+      "",
     notizen: "",
     status: "",
   };
@@ -273,25 +358,14 @@ async function renderEditor(container, { mode, draftId, initial }) {
     options: [],
   });
   const kursSelect = kursRow.querySelector("select");
-  ensureSelectOptions(
-    kursSelect,
-    kursOptions,
-    state.kursId ||
-      (state.kursTitle
-        ? kurse.find(
-            (k) => String(k.title || "").toLowerCase() === String(state.kursTitle).toLowerCase()
-          )?.id
-        : "")
-  );
   if (!state.kursId && state.kursTitle) {
-    const match = kurse.find(
-      (kurs) => String(kurs.title || "").toLowerCase() === String(state.kursTitle).toLowerCase()
-    );
+    const match = findBestKursMatch(kurse, state.kursTitle);
     if (match) {
       state.kursId = match.id;
       state.kursTitle = match.title;
     }
   }
+  ensureSelectOptions(kursSelect, kursOptions, state.kursId || "");
   kursSelect.addEventListener("change", () => {
     state.kursId = kursSelect.value || null;
     const match = kurse.find((kurs) => kurs.id === state.kursId);
@@ -304,6 +378,16 @@ async function renderEditor(container, { mode, draftId, initial }) {
   const kundeCard = kundeCardFrag.querySelector(".ui-card") || kundeCardFrag.firstElementChild;
   const kundeBody = kundeCard.querySelector(".ui-card__body");
 
+  const kundeAnredeRow = createFormRow({
+    id: "anmeldung-kunde-anrede",
+    label: "Anrede",
+    control: "select",
+    options: [
+      { value: "", label: "Bitte wählen" },
+      { value: "Herr", label: "Herr" },
+      { value: "Frau", label: "Frau" },
+    ],
+  });
   const kundeVornameRow = createFormRow({
     id: "anmeldung-kunde-vorname",
     label: "Vorname",
@@ -313,6 +397,21 @@ async function renderEditor(container, { mode, draftId, initial }) {
     id: "anmeldung-kunde-nachname",
     label: "Nachname",
     value: state.kundePayload?.nachname || "",
+  });
+  const kundeStrasseRow = createFormRow({
+    id: "anmeldung-kunde-strasse",
+    label: "Strasse",
+    value: state.kundePayload?.strasse || "",
+  });
+  const kundePlzRow = createFormRow({
+    id: "anmeldung-kunde-plz",
+    label: "PLZ",
+    value: state.kundePayload?.plz || "",
+  });
+  const kundeOrtRow = createFormRow({
+    id: "anmeldung-kunde-ort",
+    label: "Ort",
+    value: state.kundePayload?.ort || "",
   });
   const kundeEmailRow = createFormRow({
     id: "anmeldung-kunde-email",
@@ -324,32 +423,89 @@ async function renderEditor(container, { mode, draftId, initial }) {
     label: "Telefon",
     value: state.kundePayload?.telefon || "",
   });
-  const kundeAdresseRow = createFormRow({
-    id: "anmeldung-kunde-adresse",
-    label: "Adresse",
-    value: state.kundePayload?.adresse || "",
+  const kundeGeburtsdatumRow = createFormRow({
+    id: "anmeldung-kunde-geburtsdatum",
+    label: "Geburtsdatum",
+    value: state.kundePayload?.geburtsdatum || "",
+  });
+  const kundeMobileRow = createFormRow({
+    id: "anmeldung-kunde-mobile",
+    label: "Mobile",
+    value: state.kundePayload?.mobile || "",
+  });
+  const kundeHeimatortRow = createFormRow({
+    id: "anmeldung-kunde-heimatort",
+    label: "Heimatort",
+    value: state.kundePayload?.heimatort || "",
+  });
+  const kundeAufmerksamRow = createFormRow({
+    id: "anmeldung-kunde-aufmerksam",
+    label: "Aufmerksam durch",
+    value: state.kundePayload?.aufmerksamDurch || "",
   });
 
+  const anredeSelect = kundeAnredeRow.querySelector("select");
+  if (anredeSelect) {
+    const currentAnrede = state.kundePayload?.anrede || "";
+    const match = Array.from(anredeSelect.options).find((opt) => opt.value === currentAnrede);
+    if (match) match.selected = true;
+  }
+
   const readKundeState = () => {
+    const nextStrasse = kundeStrasseRow.querySelector("input").value;
+    const nextPlz = kundePlzRow.querySelector("input").value;
+    const nextOrt = kundeOrtRow.querySelector("input").value;
     state.kundePayload = {
       ...(state.kundePayload || {}),
+      anrede: anredeSelect?.value || "",
       vorname: kundeVornameRow.querySelector("input").value,
       nachname: kundeNachnameRow.querySelector("input").value,
+      strasse: nextStrasse,
+      plz: nextPlz,
+      ort: nextOrt,
       email: kundeEmailRow.querySelector("input").value,
       telefon: kundeTelefonRow.querySelector("input").value,
-      adresse: kundeAdresseRow.querySelector("input").value,
+      geburtsdatum: kundeGeburtsdatumRow.querySelector("input").value,
+      mobile: kundeMobileRow.querySelector("input").value,
+      heimatort: kundeHeimatortRow.querySelector("input").value,
+      aufmerksamDurch: kundeAufmerksamRow.querySelector("input").value,
+      adresse: buildAdresseFromParts({
+        strasse: nextStrasse,
+        plz: nextPlz,
+        ort: nextOrt,
+      }),
     };
   };
-  [kundeVornameRow, kundeNachnameRow, kundeEmailRow, kundeTelefonRow, kundeAdresseRow].forEach(
-    (row) => row.querySelector("input").addEventListener("input", readKundeState)
-  );
-
-  kundeBody.append(
+  [
     kundeVornameRow,
     kundeNachnameRow,
+    kundeStrasseRow,
+    kundePlzRow,
+    kundeOrtRow,
     kundeEmailRow,
     kundeTelefonRow,
-    kundeAdresseRow
+    kundeGeburtsdatumRow,
+    kundeMobileRow,
+    kundeHeimatortRow,
+    kundeAufmerksamRow,
+  ].forEach((row) => row.querySelector("input").addEventListener("input", readKundeState));
+  if (anredeSelect) {
+    anredeSelect.addEventListener("change", readKundeState);
+  }
+
+  kundeBody.append(
+    kundeAnredeRow,
+    kundeVornameRow,
+    kundeNachnameRow,
+    kundeStrasseRow,
+    kundePlzRow,
+    kundeOrtRow,
+    kundeEmailRow,
+    kundeTelefonRow,
+    kundeGeburtsdatumRow,
+    kundeMobileRow,
+    kundeHeimatortRow,
+    kundeAufmerksamRow
   );
   section.appendChild(kundeCard);
 
@@ -376,13 +532,37 @@ async function renderEditor(container, { mode, draftId, initial }) {
     label: "Geschlecht",
     value: state.hundPayload?.geschlecht || "",
   });
+  const hundKastriertRow = createFormRow({
+    id: "anmeldung-hund-kastriert",
+    label: "Kastriert",
+    control: "select",
+    options: [
+      { value: "", label: "Bitte wählen" },
+      { value: "true", label: "Ja" },
+      { value: "false", label: "Nein" },
+    ],
+  });
   const hundGeburtsdatumRow = createFormRow({
     id: "anmeldung-hund-geburtsdatum",
-    label: "Geburtsdatum (DD.MM.YYYY)",
+    label: "Wurfdatum (DD.MM.YYYY)",
     value: state.hundPayload?.geburtsdatum || "",
   });
+  const hundChipRow = createFormRow({
+    id: "anmeldung-hund-chip",
+    label: "Chip-Nr.",
+    value: state.hundPayload?.chipNummer || "",
+  });
+
+  const kastriertSelect = hundKastriertRow.querySelector("select");
+  if (kastriertSelect) {
+    const currentValue = state.hundPayload?.kastriert;
+    const selectedValue = currentValue === true ? "true" : currentValue === false ? "false" : "";
+    const match = Array.from(kastriertSelect.options).find((opt) => opt.value === selectedValue);
+    if (match) match.selected = true;
+  }
 
   const readHundState = () => {
+    const kastriertValue = kastriertSelect?.value || "";
     state.hundPayload = {
       ...(state.hundPayload || {}),
       name: hundNameRow.querySelector("input").value,
@@ -390,18 +570,37 @@ async function renderEditor(container, { mode, draftId, initial }) {
       rasse: hundRasseRow.querySelector("input").value,
       geschlecht: hundGeschlechtRow.querySelector("input").value,
       geburtsdatum: hundGeburtsdatumRow.querySelector("input").value,
+      kastriert:
+        kastriertValue === ""
+          ? ""
+          : kastriertValue === "true"
+            ? true
+            : kastriertValue === "false"
+              ? false
+              : kastriertValue,
+      chipNummer: hundChipRow.querySelector("input").value,
     };
   };
-  [hundNameRow, hundRufnameRow, hundRasseRow, hundGeschlechtRow, hundGeburtsdatumRow].forEach(
-    (row) => row.querySelector("input").addEventListener("input", readHundState)
-  );
+  [
+    hundNameRow,
+    hundRufnameRow,
+    hundRasseRow,
+    hundGeschlechtRow,
+    hundGeburtsdatumRow,
+    hundChipRow,
+  ].forEach((row) => row.querySelector("input").addEventListener("input", readHundState));
+  if (kastriertSelect) {
+    kastriertSelect.addEventListener("change", readHundState);
+  }
 
   hundBody.append(
     hundNameRow,
     hundRufnameRow,
     hundRasseRow,
     hundGeschlechtRow,
-    hundGeburtsdatumRow
+    hundKastriertRow,
+    hundGeburtsdatumRow,
+    hundChipRow
   );
   section.appendChild(hundCard);
 
