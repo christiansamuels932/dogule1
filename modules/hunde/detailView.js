@@ -299,6 +299,8 @@ export async function createHundeDetailView(container, hundId) {
         detailSection.appendChild(rapportCard);
       }
     }
+    const kurseSection = await buildKurseSection(hund.id);
+    container.appendChild(kurseSection);
     if (canViewExtras) {
       const zertifikateSection = await buildZertifikateSection(hund.id);
       container.appendChild(zertifikateSection);
@@ -506,6 +508,60 @@ async function buildZertifikateSection(hundId) {
         list.appendChild(item);
       });
       body.appendChild(list);
+    }
+  }
+  section.appendChild(card);
+  return section;
+}
+
+async function buildKurseSection(hundId) {
+  const section = document.createElement("section");
+  section.className = "hunde-kurse";
+  const cardFragment = createCard({
+    eyebrow: "",
+    title: "Kurse",
+    body: "",
+    footer: "",
+  });
+  const card = cardFragment.querySelector(".ui-card") || cardFragment.firstElementChild;
+  if (!card) return section;
+  const body = card.querySelector(".ui-card__body");
+  if (body) {
+    body.innerHTML = "";
+    let kurse = [];
+    let loadFailed = false;
+    try {
+      kurse = await getKurseForHund(hundId);
+    } catch (error) {
+      loadFailed = true;
+      console.error("[HUNDE_ERR_KURSE]", error);
+    }
+    if (loadFailed) {
+      body.appendChild(
+        createNotice("Fehler beim Laden der Daten.", {
+          variant: "warn",
+          role: "alert",
+        })
+      );
+    } else if (!kurse.length) {
+      body.appendChild(createEmptyState("Keine Daten vorhanden.", ""));
+    } else {
+      const list = document.createElement("ul");
+      list.className = "hunde-kurse-list";
+      kurse.forEach((kurs) => {
+        const item = document.createElement("li");
+        const link = document.createElement("a");
+        link.href = `#/kurse/${kurs.id}`;
+        const label = kurs.title || kurs.code || "Kurs";
+        link.textContent = label;
+        item.appendChild(link);
+        list.appendChild(item);
+      });
+      body.appendChild(list);
+      const linkWrap = document.createElement("div");
+      linkWrap.className = "module-actions";
+      linkWrap.appendChild(createNavLink("Zur Kursliste", "#/kurse", "quiet"));
+      body.appendChild(linkWrap);
     }
   }
   section.appendChild(card);

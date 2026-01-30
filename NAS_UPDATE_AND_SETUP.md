@@ -1,14 +1,22 @@
-# NAS Update + Setup (84U)
+# NAS-Dogule (alpha) Update + Setup (84U)
+
+Terminology:
+
+- NAS-Dogule (alpha): current NAS-hosted pilot runtime at `/volume1/dogule1nasfolder`.
+- Install-Dogule (beta): future Windows MSI local runtime.
+- NAS-Backup: separate NAS root for encrypted backups from Install-Dogule (beta).
 
 Purpose: update Dogule1 locally and propagate changes to the NAS pilot so they are visible at the remote URL.
 
-Rule: `/home/ran/codex/dogule1/.NAS-Distro` must always be an exact mirror of the NAS root `/volume1/dogule1nasfolder`.
+Rule: `/home/ran/codex/dogule1/.NAS-Distro` must always be an exact mirror of the NAS-Dogule (alpha) root `/volume1/dogule1nasfolder`.
 All changes are made inside `/home/ran/codex/dogule1/.NAS-Distro` first, then you copy the specific subfolder(s)
 (`app/`, `api/`, `config/`, `logs/`, or root files like `README.md` and `update.sh`) to the NAS as instructed.
 
 Non-negotiable: do not hand-edit `app/` or `api/` on the NAS. If something needs to change, change it in
 `/home/ran/codex/dogule1/.NAS-Distro` and then upload the relevant subfolder(s). This avoids “works locally but not on NAS”
 drift and prevents repeated breakages.
+
+Important: NAS-Backup is a separate root folder and is not updated via `.NAS-Distro`.
 
 ## Assumptions
 

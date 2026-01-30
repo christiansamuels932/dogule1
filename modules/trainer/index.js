@@ -436,11 +436,6 @@ function buildTrainerKurseSection(kurse = [], loadFailed = false) {
       kursBody.innerHTML = "";
       const info = document.createElement("div");
       info.className = "trainer-linked-kurs__info";
-      const dateRow = document.createElement("p");
-      dateRow.textContent = `${formatDate(kurs.date)} · ${kurs.location || "Ort offen"}`;
-      const timeRow = document.createElement("p");
-      timeRow.textContent = `Zeit: ${formatTimeRange(kurs.startTime, kurs.endTime)}`;
-      info.append(dateRow, timeRow);
       kursBody.appendChild(info);
       const link = document.createElement("a");
       link.href = `#/kurse/${kurs.id}`;

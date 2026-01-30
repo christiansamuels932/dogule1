@@ -5,6 +5,7 @@ import path from "node:path";
 import fs from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { createApiRouter } from "../../modules/shared/server/apiRouter.js";
+import { createBackupHandlers } from "../../modules/shared/server/backupRoutes.js";
 import { createHealthHandlers } from "../../modules/shared/server/health.js";
 import { createStorage } from "../../modules/shared/storage/storage.js";
 
@@ -24,6 +25,7 @@ process.env.DOGULE1_REQUIRE_MARIADB = process.env.DOGULE1_REQUIRE_MARIADB || "1"
 
 const storage = createStorage({ mode: "mariadb" });
 const router = createApiRouter({ storage });
+const backupHandlers = createBackupHandlers();
 const healthHandlers = createHealthHandlers({
   storageUsage: async () => {
     const pool = storage?.pool;
@@ -85,7 +87,7 @@ const server = http.createServer(async (req, res) => {
       res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS");
       res.setHeader(
         "Access-Control-Allow-Headers",
-        "Content-Type, Authorization, x-dogule-actor-id, x-dogule-actor-role, x-dogule-authz, x-dogule-access-token"
+        "Content-Type, Authorization, x-dogule-actor-id, x-dogule-actor-role, x-dogule-authz, x-dogule-access-token, x-dogule-backup-token"
       );
     }
     if (req.method === "OPTIONS") {
@@ -101,6 +103,10 @@ const server = http.createServer(async (req, res) => {
     if (reqUrl.startsWith("/readyz")) {
       healthHandlers.handleReadyz(req, res);
       return;
+    }
+    if (reqUrl.startsWith("/backup/")) {
+      const handledBackup = await backupHandlers.handle(req, res);
+      if (handledBackup) return;
     }
     const handled = await router.handle(req, res);
     if (handled) return;

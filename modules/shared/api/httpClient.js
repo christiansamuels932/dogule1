@@ -1,5 +1,26 @@
 /* global fetch, window */
-import { getAuthHeaders } from "../auth/client.js";
+import { getAuthHeaders, getSession, saveSession, clearSession } from "../auth/client.js";
+
+async function refreshSession(session) {
+  if (!session?.refreshToken) return null;
+  const res = await fetch(`${resolveBase()}/auth/refresh`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ refreshToken: session.refreshToken }),
+  });
+  const text = await res.text();
+  const data = text ? JSON.parse(text) : null;
+  if (!res.ok || !data?.accessToken) return null;
+  saveSession({ ...session, ...data });
+  return data;
+}
+
+function handleAuthFailure() {
+  clearSession();
+  if (typeof window !== "undefined") {
+    window.location.hash = "#/auth";
+  }
+}
 
 function resolveApiMode() {
   if (typeof window !== "undefined" && typeof window.DOGULE1_API_MODE === "string") {
@@ -41,7 +62,12 @@ function resolveBase() {
 }
 
 async function doFetch(path, options = {}) {
-  const authHeaders = options.authHeaders || {};
+  let authHeaders = options.authHeaders || {};
+  const session = getSession();
+  if ((!authHeaders.Authorization || !session?.accessToken) && session?.refreshToken) {
+    const refreshed = await refreshSession(session);
+    if (refreshed) authHeaders = options.authHeaders || getAuthHeaders();
+  }
   const res = await fetch(`${resolveBase()}${path}`, {
     method: options.method || "GET",
     headers: {
@@ -53,6 +79,16 @@ async function doFetch(path, options = {}) {
   });
   const text = await res.text();
   const json = text ? JSON.parse(text) : null;
+  if (res.status === 401 && !options._retry) {
+    const message = json?.message;
+    if ((message === "invalid_token" || message === "missing_token") && session?.refreshToken) {
+      const refreshed = await refreshSession(session);
+      if (refreshed) {
+        return doFetch(path, { ...options, _retry: true, authHeaders: getAuthHeaders() });
+      }
+      handleAuthFailure();
+    }
+  }
   if (res.status >= 200 && res.status < 300) {
     return json;
   }

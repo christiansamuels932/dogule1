@@ -2,111 +2,93 @@ DO NOT DELETE OR TRUNCATE: Only append new station entries to this file. Keep fu
 NEW ENTRIES: Add the latest station block directly below this header section (top of file), pushing older entries down.
 READ-ONLY NOTE: provide only 1 step of instruction/guidance per message.
 READ-ONLY NOTE: A single "." from the user means "confirmed, ok, next"
-READ-ONLY NOTE: Each instruction must be titled with the step or process being executed.
+READ-ONLY NOTE: Each assistant response must start with "🔷 Topic — Subtitle — Progress: X% 🔷".
 
 Quick start (manual):
 
 - `sudo systemctl start mariadb && sudo systemctl status mariadb`
 - `DOGULE1_STORAGE_MODE=mariadb DOGULE1_MARIADB_SOCKET=/run/mysqld/mysqld.sock DOGULE1_MARIADB_USER=ran node tools/server/apiServer.js`
-- `DOGULE1_STORAGE_MODE=mariadb DOGULE1_MARIADB_SOCKET=/run/mysqld/mysqld.sock DOGULE1_MARIADB_USER=ran pnpm dev`
+- `DOGULE1_STORAGE_MODE=mariadb DOGULE1_MARIADB_SOCKET=/run/mysqld/mysqld.sock DOGULE1_MARIADB_USER=ran DOGULE1_PASSWORD_FILE=/home/ran/codex/dogule1/dogule1.passwords pnpm dev`
 
 Quick stop (manual):
 
 - `pkill -f "tools/server/apiServer.js|vite dev|pnpm dev|vite" 2>/dev/null || true`
 - `sudo systemctl stop mariadb`
 
-RESUME: none (Station 105 completed on 2026-01-30).
+RESUME: Station 107 — post-cleanup hardening + ops (deploy flow, backups, restore notes).
 
-# - - - - - - - - - - - - - - - - - - - -
-
-# Station 105 — VPS-only setup: completed
+# Station 107 — VPS auth timeout fix + deploy recovery
 
 ## Kontext
 
 - Status: completed.
-- Scope: Contabo VPS-only deployment; runtime, auth, data, and watchdog.
+- Scope: fix VPS auth timeout + recover broken deploy.
 
 ## Ergebnis (kurz)
 
-- App/UI running on VPS with systemd service; health checks OK.
-- MariaDB initialized; local data imported to VPS.
-- Auth configured with password file; passwordless disabled; secrets set.
-- Cockpit GUI installed and reachable; firewall open for 9090.
-- Healthcheck watchdog installed via systemd timer.
-- Access/credential locations documented in `Eingaenge.md`.
+- Auth timeout mitigated: access token TTL set to 45 minutes; HTTP client now auto-refreshes tokens on 401 and retries.
+- VPS deploy recovered after wrong rsync target overwrote `/opt/dogule1` layout.
+- Recreated `/opt/dogule1/config/dogule1.env` with fresh secrets; password file restored.
+- Installed prod dependencies on VPS (mariadb, nodemailer); service running again.
+- MariaDB port fixed to 3306 via env.
+- Added `VPS_UPDATE_PROCESS.md` with full update checklist and pitfalls.
 
 ## Tests
 
-- `curl http://127.0.0.1:5177/healthz` ✅
-- `curl http://144.91.86.20:5177/healthz` ✅
-- `curl http://127.0.0.1:5177/api/auth/options` ✅
-- UI login with trainer user ✅
-- `systemctl list-timers | rg dogule1-healthcheck` ✅
+- VPS service running; log shows MariaDB port 3306 ✅
 
-## Notizen
+## Offene Punkte
 
-- No domain/TLS configured; app served on IP:5177.
+- None.
 
 # - - - - - - - - - - - - - - - - - - - -
 
-# Station 105 — VPS-only setup: healthcheck watchdog
+# Station 108 — Links audit: Hund/Kunde/Trainer → Kurse
 
 ## Kontext
 
-- Status: in progress.
-- Scope: Contabo VPS-only deployment; add basic watchdog for API.
+- Status: completed.
+- Scope: fix linked Kurse visibility in Hund/Kunde detail and Trainer links to Kurse.
 
 ## Ergebnis (kurz)
 
-- Added `/opt/dogule1/tools/healthcheck.sh` to restart service if `/healthz` fails.
-- Created `dogule1-healthcheck.service` + `dogule1-healthcheck.timer` (runs every minute).
-- Timer enabled and verified active.
+- Hund detail shows linked Kurse via Teilnehmer-Log (not only `hundIds`), with Kurs links.
+- Kunde detail shows linked Kurse via Teilnehmer-Log and Hund relations, with Kurs links.
+- Trainer detail now resolves Kurse by `trainerId` and `trainerIds` in HTTP mode.
+- Trainer Kurse cards simplified to code + title only (removed date/time rows).
 
 ## Tests
 
-- `systemctl list-timers | rg dogule1-healthcheck` ✅
-
-## Notizen
-
-- Watchdog only checks local `/healthz`; no external uptime monitoring yet.
+- Manual: Hund/Kunde Kurse lists visible ✅
+- Manual: Trainer Kurse list links render ✅
+- VPS UI: hard reload required after deploy to refresh asset hashes ✅
 
 # - - - - - - - - - - - - - - - - - - - -
 
-# Station 105 — VPS-only setup: auth options + DB import + trainer passwords
+# Station 106 — Cleanup: keep runtime, remove historical/NAS artifacts
 
 ## Kontext
 
-- Status: in progress.
-- Scope: Contabo VPS-only deployment; auth options validation + data import.
+- Status: completed.
+- Scope: keep only what is required to run locally + VPS; everything else is history (STATUS.md only).
 
 ## Ergebnis (kurz)
 
-- Auth options API fixed by creating MariaDB schema on VPS and importing local DB dump.
-- Passwordless login disabled via env (`DOGULE1_LOCAL_PASSWORDLESS=false`) and server override removed to honor env.
-- Auth secrets generated and applied in `/opt/dogule1/config/dogule1.env`.
-- External health checks OK on `/healthz` and `/api/auth/options`.
-- Trainer list now populated from imported DB; UI login verified for admin trainer (info / TR-001).
-- Password file deployed to `/opt/dogule1/config/dogule1.passwords` and made readable by service user.
+- Removed NAS-only directories and historical archives from repo:
+  - `.NAS-Distro/`, `.NAS-Backup-Distro/`, `attachments/archive/`, `attachments/docs/`,
+    `attachments/status/`, `migration/legacy/`, `backups/`, `notes/`.
+- Cleanup mirrored on VPS under `/opt/dogule1`.
+- Local and VPS runtime checks OK after cleanup.
 
 ## Tests
 
-- `curl http://127.0.0.1:5177/healthz` ✅
-- `curl http://144.91.86.20:5177/healthz` ✅
-- `curl http://127.0.0.1:5177/api/auth/options` ✅
-- `curl http://144.91.86.20:5177/api/auth/options` ✅
-- `curl -X POST http://127.0.0.1:5177/api/auth/login ...` ✅
-- UI: `/auth` login with trainer user ✅
-- MariaDB: `SELECT COUNT(*) FROM trainer;` ✅
-
-## Issues
-
-- VPS DB initially empty; fixed by importing local dump after dropping/recreating DB.
-- Password file initially unreadable by service user; fixed by chown + chmod.
+- Local DB tables listed ✅
+- Local API `/healthz` ✅
+- VPS API `/healthz` ✅
 
 ## Notizen
 
-- Local MariaDB service had to be started to create the dump.
-- Auth router override removed in `/opt/dogule1/modules/shared/server/apiRouter.js`.
+- Follow-up: verify local + VPS runtime still work after cleanup.
 
 # - - - - - - - - - - - - - - - - - - - -
 
@@ -127,21 +109,6 @@ RESUME: none (Station 105 completed on 2026-01-30).
 - Core packages installed (curl/ca-certificates/gnupg/git/build-essential/mariadb-server).
 - Node.js 20 LTS and pnpm installed and verified.
 - App root `/opt/dogule1` created and owned by `dogule`.
-- Repo synced to VPS `/opt/dogule1`.
-- `pnpm install` completed on VPS.
-- pnpm build scripts approved; esbuild postinstall ran.
-- MariaDB database and user created; password set (VPS).
-- VPS env file created at `/opt/dogule1/config/dogule1.env`.
-- MariaDB schema ensure script completed (VPS).
-- UI assets built (`pnpm build`).
-- API health check OK on `http://127.0.0.1:5177/healthz`.
-- systemd service file created for `dogule1`.
-- Port 5177 conflict cleared (fuser).
-- `dogule1` systemd service running.
-- UFW opened port 5177 (IP-only access).
-- External health check OK at `http://144.91.86.20:5177/healthz`.
-- Forced MariaDB TCP by clearing `DOGULE1_MARIADB_SOCKET`.
-- Set MariaDB socket to `/run/mysqld/mysqld.sock` in VPS env.
 
 ## Offene Punkte
 
