@@ -46,6 +46,17 @@ Run Dogule1 on Contabo VPS only. No NAS-Backup and no Windows installer scope.
 - Run API as a systemd service
 - Run UI as static files served by the API or by the reverse proxy
 
+## Deployment method (VPS)
+
+- No git repo on VPS. Deploy from local machine via rsync or scp.
+- Preferred: rsync the runtime payload into `/opt/dogule1`:
+  - `dist/` → `/opt/dogule1/dist/`
+  - `modules/` → `/opt/dogule1/modules/`
+  - `tools/` → `/opt/dogule1/tools/`
+  - `package.json`, `pnpm-lock.yaml`
+- After sync: `pnpm install --prod --ignore-scripts`, then `sudo systemctl restart dogule1`.
+- Important: run rsync from local machine, not on the VPS.
+
 ## Data
 
 - MariaDB on VPS

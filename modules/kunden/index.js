@@ -8,7 +8,7 @@ import {
   deleteKunde,
 } from "../shared/api/kunden.js";
 import { listHunde, createHund } from "../shared/api/hunde.js";
-import { listKurse } from "../shared/api/kurse.js";
+import { listKurse, listKursTeilnehmer } from "../shared/api/kurse.js";
 import { listFinanzen } from "../shared/api/finanzen.js";
 import { listWarenByKundeId } from "../shared/api/waren.js";
 import { listZertifikate } from "../shared/api/zertifikate.js";
@@ -1164,6 +1164,42 @@ async function renderDetail(root, id) {
 
   root.appendChild(renderKundenHundeSection(linkedHunde, hundeLoadFailed));
 
+  let linkedKurse = [];
+  let kurseLoadFailed = false;
+  try {
+    const allKurse = await listKurse();
+    const hundIds = new Set(linkedHunde.map((hund) => hund.id));
+    const byId = new Map();
+    allKurse.forEach((kurs) => {
+      if (Array.isArray(kurs.hundIds) && kurs.hundIds.some((hundId) => hundIds.has(hundId))) {
+        byId.set(kurs.id, kurs);
+      }
+    });
+    const teilnehmerMatches = await Promise.all(
+      allKurse.map(async (kurs) => {
+        try {
+          const entries = await listKursTeilnehmer(kurs.id);
+          const hasMatch = entries.some(
+            (entry) => entry.kundeId === id || (entry.hundId && hundIds.has(entry.hundId))
+          );
+          return hasMatch ? kurs : null;
+        } catch {
+          return null;
+        }
+      })
+    );
+    teilnehmerMatches.forEach((kurs) => {
+      if (kurs) byId.set(kurs.id, kurs);
+    });
+    linkedKurse = Array.from(byId.values());
+  } catch (error) {
+    kurseLoadFailed = true;
+    linkedKurse = [];
+    console.error("[KUNDEN_ERR_KURSE_LOAD]", error);
+  }
+
+  root.appendChild(renderKundenKurseSection(linkedKurse, kurseLoadFailed));
+
   let historie = [];
   let historieLoadFailed = false;
   try {
@@ -1273,6 +1309,39 @@ function renderKundenHundeSection(hunde = [], hasError = false) {
         list.appendChild(item);
       });
       body.appendChild(list);
+    }
+  }
+  section.appendChild(card);
+  return section;
+}
+
+function renderKundenKurseSection(kurse = [], hasError = false) {
+  const section = createSectionBlock({
+    level: 2,
+    className: "kunden-detail-stack",
+  });
+  const card = createStandardCard("Kurse");
+  const body = card.querySelector(".ui-card__body");
+  if (body) {
+    body.innerHTML = "";
+    if (hasError) {
+      showErrorNotice(body);
+    } else if (!kurse.length) {
+      appendSharedEmptyState(body);
+    } else {
+      const list = document.createElement("ul");
+      list.className = "kunden-kurse-list";
+      kurse.forEach((kurs) => {
+        const item = document.createElement("li");
+        const link = document.createElement("a");
+        link.href = `#/kurse/${kurs.id}`;
+        const label = kurs.title || kurs.code || "Kurs";
+        link.textContent = label;
+        item.appendChild(link);
+        list.appendChild(item);
+      });
+      body.appendChild(list);
+      body.appendChild(createUiLink("Zur Kursliste", "#/kurse", "quiet"));
     }
   }
   section.appendChild(card);

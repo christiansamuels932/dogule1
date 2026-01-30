@@ -30,6 +30,7 @@ If a password is unknown, it is left blank intentionally.
 
 - App env file: `/opt/dogule1/config/dogule1.env`
   - DB settings, `DOGULE1_AUTH_SECRET`, `DOGULE1_REFRESH_SECRET`.
+  - Must exist or systemd start will fail.
 - Password file (users): `/opt/dogule1/config/dogule1.passwords`
   - One line per user: `username:password`.
   - Permissions should allow the service user to read it.
@@ -41,6 +42,7 @@ If a password is unknown, it is left blank intentionally.
 - User: `dogule`
 - Password: `Ace1contabo215932`
 - Socket: `/run/mysqld/mysqld.sock`
+- Port: 3306 (set `DOGULE1_MARIADB_PORT=3306` in `dogule1.env`)
 - Quick checks:
   - `mariadb -u dogule -p -e "USE dogule1; SHOW TABLES;"`
   - `mariadb -u dogule -p -e "USE dogule1; SELECT COUNT(*) FROM trainer;"`

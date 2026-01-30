@@ -2,19 +2,66 @@ DO NOT DELETE OR TRUNCATE: Only append new station entries to this file. Keep fu
 NEW ENTRIES: Add the latest station block directly below this header section (top of file), pushing older entries down.
 READ-ONLY NOTE: provide only 1 step of instruction/guidance per message.
 READ-ONLY NOTE: A single "." from the user means "confirmed, ok, next"
+READ-ONLY NOTE: Each assistant response must start with "🔷 Topic — Subtitle — Progress: X% 🔷".
 
 Quick start (manual):
 
 - `sudo systemctl start mariadb && sudo systemctl status mariadb`
 - `DOGULE1_STORAGE_MODE=mariadb DOGULE1_MARIADB_SOCKET=/run/mysqld/mysqld.sock DOGULE1_MARIADB_USER=ran node tools/server/apiServer.js`
-- `DOGULE1_STORAGE_MODE=mariadb DOGULE1_MARIADB_SOCKET=/run/mysqld/mysqld.sock DOGULE1_MARIADB_USER=ran pnpm dev`
+- `DOGULE1_STORAGE_MODE=mariadb DOGULE1_MARIADB_SOCKET=/run/mysqld/mysqld.sock DOGULE1_MARIADB_USER=ran DOGULE1_PASSWORD_FILE=/home/ran/codex/dogule1/dogule1.passwords pnpm dev`
 
 Quick stop (manual):
 
 - `pkill -f "tools/server/apiServer.js|vite dev|pnpm dev|vite" 2>/dev/null || true`
 - `sudo systemctl stop mariadb`
 
-RESUME: none (Station 106 completed on 2026-01-30).
+RESUME: Station 107 — post-cleanup hardening + ops (deploy flow, backups, restore notes).
+
+# Station 107 — VPS auth timeout fix + deploy recovery
+
+## Kontext
+
+- Status: completed.
+- Scope: fix VPS auth timeout + recover broken deploy.
+
+## Ergebnis (kurz)
+
+- Auth timeout mitigated: access token TTL set to 45 minutes; HTTP client now auto-refreshes tokens on 401 and retries.
+- VPS deploy recovered after wrong rsync target overwrote `/opt/dogule1` layout.
+- Recreated `/opt/dogule1/config/dogule1.env` with fresh secrets; password file restored.
+- Installed prod dependencies on VPS (mariadb, nodemailer); service running again.
+- MariaDB port fixed to 3306 via env.
+- Added `VPS_UPDATE_PROCESS.md` with full update checklist and pitfalls.
+
+## Tests
+
+- VPS service running; log shows MariaDB port 3306 ✅
+
+## Offene Punkte
+
+- None.
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 108 — Links audit: Hund/Kunde/Trainer → Kurse
+
+## Kontext
+
+- Status: completed.
+- Scope: fix linked Kurse visibility in Hund/Kunde detail and Trainer links to Kurse.
+
+## Ergebnis (kurz)
+
+- Hund detail shows linked Kurse via Teilnehmer-Log (not only `hundIds`), with Kurs links.
+- Kunde detail shows linked Kurse via Teilnehmer-Log and Hund relations, with Kurs links.
+- Trainer detail now resolves Kurse by `trainerId` and `trainerIds` in HTTP mode.
+- Trainer Kurse cards simplified to code + title only (removed date/time rows).
+
+## Tests
+
+- Manual: Hund/Kunde Kurse lists visible ✅
+- Manual: Trainer Kurse list links render ✅
+- VPS UI: hard reload required after deploy to refresh asset hashes ✅
 
 # - - - - - - - - - - - - - - - - - - - -
 

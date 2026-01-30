@@ -1,3 +1,0 @@
-# FEATURES TO IMPLEMENT — Dogule1
-
-Pending

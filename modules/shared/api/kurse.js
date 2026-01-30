@@ -224,14 +224,33 @@ function ensureTeilnehmerShape(entry = {}) {
 export async function getKurseForHund(hundId) {
   const targetId = (hundId || "").trim();
   if (!targetId) return [];
-  if (isHttpMode()) {
-    const kurse = await listKurse();
-    const matches = kurse.filter((kurs) => normalizeIdArray(kurs.hundIds).includes(targetId));
-    return matches.map(ensureKursShape);
-  }
-  const kurse = Array.isArray(db[TABLE]) ? db[TABLE] : [];
-  const matches = kurse.filter((kurs) => normalizeIdArray(kurs.hundIds).includes(targetId));
-  return matches.map(ensureKursShape);
+  const kurse = isHttpMode() ? await listKurse() : Array.isArray(db[TABLE]) ? db[TABLE] : [];
+  const normalized = kurse.map(ensureKursShape);
+  const matches = [];
+  const seen = new Set();
+  normalized.forEach((kurs) => {
+    if (normalizeIdArray(kurs.hundIds).includes(targetId)) {
+      matches.push(kurs);
+      seen.add(kurs.id);
+    }
+  });
+  const teilnehmerChecks = await Promise.all(
+    normalized.map(async (kurs) => {
+      try {
+        const entries = await listKursTeilnehmer(kurs.id);
+        return entries.some((entry) => entry.hundId === targetId) ? kurs : null;
+      } catch {
+        return null;
+      }
+    })
+  );
+  teilnehmerChecks.forEach((kurs) => {
+    if (kurs && !seen.has(kurs.id)) {
+      matches.push(kurs);
+      seen.add(kurs.id);
+    }
+  });
+  return matches;
 }
 
 export async function getHundeForKurs(kursId) {
@@ -397,7 +416,10 @@ export async function removeHundFromAllKurse(hundId, options) {
 export async function getKurseForTrainer(trainerId) {
   const targetId = (trainerId || "").trim();
   if (!targetId) return [];
-  const kurse = Array.isArray(db[TABLE]) ? db[TABLE] : [];
-  const matches = kurse.filter((kurs) => kurs.trainerId === targetId);
+  const kurse = isHttpMode() ? await listKurse() : Array.isArray(db[TABLE]) ? db[TABLE] : [];
+  const matches = kurse.filter((kurs) => {
+    if (kurs.trainerId === targetId) return true;
+    return normalizeIdArray(kurs.trainerIds).includes(targetId);
+  });
   return matches.map(ensureKursShape);
 }
