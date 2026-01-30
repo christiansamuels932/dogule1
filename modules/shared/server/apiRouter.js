@@ -316,13 +316,11 @@ export function createApiRouter(options = {}) {
   if (process.env.DOGULE1_STORAGE_MODE !== "mariadb") {
     throw new Error("MARIADB_REQUIRED");
   }
-  const isNasRuntime = process.cwd().startsWith("/volume1/");
   const schulungenUploadRoot =
     process.env.DOGULE1_SCHULUNGEN_UPLOAD_ROOT ||
     path.resolve(process.cwd(), "uploads", "schulungen");
   const authConfig = resolveAuthConfig({
     enabled: true,
-    allowLocalPasswordless: !isNasRuntime,
   });
   const seedUsers = getSeedUsers();
   const userStore = options.userStore || createUserStore(seedUsers);
