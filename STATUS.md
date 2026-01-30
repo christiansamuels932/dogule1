@@ -1,6 +1,8 @@
 DO NOT DELETE OR TRUNCATE: Only append new station entries to this file. Keep full history.
 NEW ENTRIES: Add the latest station block directly below this header section (top of file), pushing older entries down.
 READ-ONLY NOTE: provide only 1 step of instruction/guidance per message.
+READ-ONLY NOTE: A single "." from the user means "confirmed, ok, next"
+READ-ONLY NOTE: Each instruction must be titled with the step or process being executed.
 
 Quick start (manual):
 
@@ -13,7 +15,222 @@ Quick stop (manual):
 - `pkill -f "tools/server/apiServer.js|vite dev|pnpm dev|vite" 2>/dev/null || true`
 - `sudo systemctl stop mariadb`
 
-RESUME (Station 105): Contabo deployment.
+RESUME: none (Station 105 completed on 2026-01-30).
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 105 — VPS-only setup: completed
+
+## Kontext
+
+- Status: completed.
+- Scope: Contabo VPS-only deployment; runtime, auth, data, and watchdog.
+
+## Ergebnis (kurz)
+
+- App/UI running on VPS with systemd service; health checks OK.
+- MariaDB initialized; local data imported to VPS.
+- Auth configured with password file; passwordless disabled; secrets set.
+- Cockpit GUI installed and reachable; firewall open for 9090.
+- Healthcheck watchdog installed via systemd timer.
+- Access/credential locations documented in `Eingaenge.md`.
+
+## Tests
+
+- `curl http://127.0.0.1:5177/healthz` ✅
+- `curl http://144.91.86.20:5177/healthz` ✅
+- `curl http://127.0.0.1:5177/api/auth/options` ✅
+- UI login with trainer user ✅
+- `systemctl list-timers | rg dogule1-healthcheck` ✅
+
+## Notizen
+
+- No domain/TLS configured; app served on IP:5177.
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 105 — VPS-only setup: healthcheck watchdog
+
+## Kontext
+
+- Status: in progress.
+- Scope: Contabo VPS-only deployment; add basic watchdog for API.
+
+## Ergebnis (kurz)
+
+- Added `/opt/dogule1/tools/healthcheck.sh` to restart service if `/healthz` fails.
+- Created `dogule1-healthcheck.service` + `dogule1-healthcheck.timer` (runs every minute).
+- Timer enabled and verified active.
+
+## Tests
+
+- `systemctl list-timers | rg dogule1-healthcheck` ✅
+
+## Notizen
+
+- Watchdog only checks local `/healthz`; no external uptime monitoring yet.
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 105 — VPS-only setup: auth options + DB import + trainer passwords
+
+## Kontext
+
+- Status: in progress.
+- Scope: Contabo VPS-only deployment; auth options validation + data import.
+
+## Ergebnis (kurz)
+
+- Auth options API fixed by creating MariaDB schema on VPS and importing local DB dump.
+- Passwordless login disabled via env (`DOGULE1_LOCAL_PASSWORDLESS=false`) and server override removed to honor env.
+- Auth secrets generated and applied in `/opt/dogule1/config/dogule1.env`.
+- External health checks OK on `/healthz` and `/api/auth/options`.
+- Trainer list now populated from imported DB; UI login verified for admin trainer (info / TR-001).
+- Password file deployed to `/opt/dogule1/config/dogule1.passwords` and made readable by service user.
+
+## Tests
+
+- `curl http://127.0.0.1:5177/healthz` ✅
+- `curl http://144.91.86.20:5177/healthz` ✅
+- `curl http://127.0.0.1:5177/api/auth/options` ✅
+- `curl http://144.91.86.20:5177/api/auth/options` ✅
+- `curl -X POST http://127.0.0.1:5177/api/auth/login ...` ✅
+- UI: `/auth` login with trainer user ✅
+- MariaDB: `SELECT COUNT(*) FROM trainer;` ✅
+
+## Issues
+
+- VPS DB initially empty; fixed by importing local dump after dropping/recreating DB.
+- Password file initially unreadable by service user; fixed by chown + chmod.
+
+## Notizen
+
+- Local MariaDB service had to be started to create the dump.
+- Auth router override removed in `/opt/dogule1/modules/shared/server/apiRouter.js`.
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 105 — VPS-only setup: OS updated + rebooted
+
+## Kontext
+
+- Status: in progress.
+- Scope: Contabo VPS-only deployment.
+
+## Ergebnis (kurz)
+
+- OS packages updated on VPS.
+- VPS rebooted and verified with uptime.
+- Non-root sudo user `dogule` created.
+- SSH key added for `dogule` and root login/password auth disabled.
+- UFW enabled; SSH/HTTP/HTTPS allowed.
+- Core packages installed (curl/ca-certificates/gnupg/git/build-essential/mariadb-server).
+- Node.js 20 LTS and pnpm installed and verified.
+- App root `/opt/dogule1` created and owned by `dogule`.
+- Repo synced to VPS `/opt/dogule1`.
+- `pnpm install` completed on VPS.
+- pnpm build scripts approved; esbuild postinstall ran.
+- MariaDB database and user created; password set (VPS).
+- VPS env file created at `/opt/dogule1/config/dogule1.env`.
+- MariaDB schema ensure script completed (VPS).
+- UI assets built (`pnpm build`).
+- API health check OK on `http://127.0.0.1:5177/healthz`.
+- systemd service file created for `dogule1`.
+- Port 5177 conflict cleared (fuser).
+- `dogule1` systemd service running.
+- UFW opened port 5177 (IP-only access).
+- External health check OK at `http://144.91.86.20:5177/healthz`.
+- Forced MariaDB TCP by clearing `DOGULE1_MARIADB_SOCKET`.
+- Set MariaDB socket to `/run/mysqld/mysqld.sock` in VPS env.
+
+## Offene Punkte
+
+- Install runtime (Node, MariaDB) and deploy app.
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 105 — VPS-only pivot (Contabo)
+
+## Kontext
+
+- Status: in progress.
+- Scope: Contabo VPS-only deployment; drop NAS-Backup + Windows installer.
+
+## Ergebnis (kurz)
+
+- VPS provisioned (Ubuntu 24.04.3 LTS) and reachable via SSH at 144.91.86.20.
+- Deployment plan rewritten to VPS-only.
+
+## Offene Punkte
+
+- Run OS updates on VPS and reboot if required.
+- Harden SSH + firewall.
+- Install runtime (Node, MariaDB) and deploy app.
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 105 — NAS-Backup setup progress
+
+## Kontext
+
+- Status: in progress.
+- Scope: NAS-Backup root + backup-only server.
+
+## Ergebnis (kurz)
+
+- Terminology set: NAS-Dogule (alpha) vs Install-Dogule (beta) + NAS-Backup.
+- NAS-Backup root created at `/volume1/dogule1backup`.
+- API payload copied into `/volume1/dogule1backup/api` via GUI.
+- Master key created and stored at `/volume1/dogule1backup/config/backup_master_key.txt` (permissions 600).
+- Token file created: `/volume1/dogule1backup/config/dogule1.backup.tokens`.
+
+## Offene Punkte
+
+- Start backup-only server with full env vars and keep it running (nohup).
+- Verify `/healthz` on port 5178 and set reverse proxy `8444 → 5178`.
+- Contabo VPS setup postponed; resume later.
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 105 — Naming + NAS-Backup separation
+
+## Kontext
+
+- Status: in progress.
+- Scope: clarify NAS-Dogule (alpha) vs Install-Dogule (beta) + NAS-Backup separation.
+
+## Ergebnis (kurz)
+
+- Terminology added: NAS-Dogule (alpha), Install-Dogule (beta), NAS-Backup.
+- NAS-Backup root created under `/volume1/dogule1backup`.
+- Backup-only server script prepared (`tools/server/backupServer.js`).
+
+## Offene Punkte
+
+- Deploy backup-only server to NAS-Backup root and configure reverse proxy + env.
+
+# - - - - - - - - - - - - - - - - - - - -
+
+# Station 105 — Finding best deployment method
+
+## Kontext
+
+- Status: in progress.
+- Scope: Windows MSI deployment with local runtime + NAS backup.
+
+## Ergebnis (kurz)
+
+- Target platform: Windows MSI installer.
+- Runtime model: local Dogule server on client machine, not NAS-hosted.
+- Data: stored locally with encrypted backups uploaded to NAS.
+- Backup transport: HTTPS API on dedicated port `https://4c31.synology.me:8444`, `/backup/*` only.
+- Auth: separate backup token, unique per client install.
+
+## Offene Punkte
+
+- Define backup API endpoints and token issuance.
+- Decide backup encryption key management.
+- Plan client update mechanism for later releases.
 
 # - - - - - - - - - - - - - - - - - - - -
 
