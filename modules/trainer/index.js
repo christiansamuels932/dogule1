@@ -769,17 +769,6 @@ function appendBackLink(section, href) {
   section.appendChild(back);
 }
 
-function formatDate(value) {
-  if (!value) return "Datum folgt";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleDateString("de-CH", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  });
-}
-
 function kursHasSchedule(kurs = {}) {
   return Boolean((kurs.date || "").trim() && (kurs.startTime || "").trim());
 }
@@ -816,12 +805,6 @@ function sortKurseBySchedule(kurse = []) {
     if (timeA !== timeB) return timeA - timeB;
     return String(a.id || "").localeCompare(String(b.id || ""));
   });
-}
-
-function formatTimeRange(start, end) {
-  const safeStart = start || "00:00";
-  const safeEnd = end || "00:00";
-  return `${safeStart}–${safeEnd}`;
 }
 
 function valueOrDash(value) {
