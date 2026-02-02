@@ -15,6 +15,32 @@ Quick stop (manual):
 - `pkill -f "tools/server/apiServer.js|vite dev|pnpm dev|vite" 2>/dev/null || true`
 - `sudo systemctl stop mariadb`
 
+# Date 2026-02-02 — Übungsbibliothek + Schulungen split, Kunden UI, VPS deploy recovery
+
+## Kontext
+
+- Status: completed.
+- Scope: new Übungsbibliothek module + Schulungen permissions, Kunden detail list redesign, VPS deploy + recovery hardening.
+
+## Ergebnis (kurz)
+
+- Übungsbibliothek added as its own module (trainer create/edit); Schulungen stays read-only for trainer and editable by Richard.
+- Übungsbibliothek + Schulungen overviews aligned (search, sorting, column widths); detail actions card spacing matched to Kurse.
+- Kunden detail: Kurse card now sortable list with Startdatum/Kursname/Trainer/Hund, scrollable (4 rows); Hunde card moved beside Stammdaten with dog toggle and inline stammdaten; Historie cards styled like Dashboard birthdays.
+- New APIs/routes for Übungsbibliothek; RBAC and router wiring updated; uploads handling in API router.
+- MariaDB migrations added: `110_0_schulungen_created_by.sql`, `111_0_uebungsbibliothek.sql`; applied locally and on VPS (110 already present on VPS).
+- VPS deploy recovery: restored missing `/opt/dogule1/modules`, `/opt/dogule1/tools`, `/opt/dogule1/dist`, `package.json` + `pnpm-lock.yaml`, and reinstalled prod deps; service running again.
+- VPS update process hardened with explicit warning against `rsync --delete` without excludes and recovery steps for missing deps/dist.
+
+## Tests
+
+- Manual UI verification (local + VPS) for Übungsbibliothek/Schulungen/Kunden detail flows.
+- VPS service health: `systemctl status dogule1` ✅ and `curl http://127.0.0.1:5177/` ✅.
+
+## Offene Punkte
+
+- VPS uploads (`/opt/dogule1/uploads`) were deleted during bad rsync; images are permanently lost (no backup). Future updates must use safe rsync excludes.
+
 # Station 109 — Status reconciliation: mark prior stations completed
 
 ## Kontext
