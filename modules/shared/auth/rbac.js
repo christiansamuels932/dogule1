@@ -8,6 +8,7 @@ const ALL_MODULES = [
   "zertifikate",
   "kommunikation",
   "schulungen",
+  "uebungsbibliothek",
   "kalender",
   "finanzen",
   "waren",
@@ -20,25 +21,29 @@ const ALL_API_ENTITIES = [...ALL_MODULES, "rapporte", "historie"];
 const ROLE_MODULES = {
   admin: ALL_MODULES,
   developer: ALL_MODULES,
-  trainer: ["kunden", "hunde", "schulungen", "kommunikation"],
-  trainer_rapport: ["kunden", "hunde", "schulungen", "kommunikation"],
+  trainer: ["kunden", "hunde", "schulungen", "uebungsbibliothek", "kommunikation"],
+  trainer_rapport: ["kunden", "hunde", "schulungen", "uebungsbibliothek", "kommunikation"],
 };
 
 const API_ACCESS = {
   admin: { read: ALL_API_ENTITIES, write: ALL_API_ENTITIES },
   developer: { read: ALL_API_ENTITIES, write: ALL_API_ENTITIES },
   trainer: {
-    read: ["kunden", "hunde", "rapporte", "schulungen"],
-    write: ["kunden", "hunde", "rapporte"],
+    read: ["kunden", "hunde", "rapporte", "schulungen", "uebungsbibliothek"],
+    write: ["kunden", "hunde", "rapporte", "uebungsbibliothek"],
   },
   trainer_rapport: {
-    read: ["kunden", "hunde", "rapporte", "schulungen"],
+    read: ["kunden", "hunde", "rapporte", "schulungen", "uebungsbibliothek"],
     write: ["rapporte"],
   },
 };
 
 const KOMMUNIKATION_ACTIONS = {
-  admin: ["kommunikation.infochannel.view", "kommunikation.infochannel.publish", "kommunikation.infochannel.confirm"],
+  admin: [
+    "kommunikation.infochannel.view",
+    "kommunikation.infochannel.publish",
+    "kommunikation.infochannel.confirm",
+  ],
   developer: ["kommunikation.infochannel.view", "kommunikation.infochannel.confirm"],
   trainer: ["kommunikation.infochannel.view", "kommunikation.infochannel.confirm"],
   trainer_rapport: ["kommunikation.infochannel.view", "kommunikation.infochannel.confirm"],

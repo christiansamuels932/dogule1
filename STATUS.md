@@ -15,7 +15,28 @@ Quick stop (manual):
 - `pkill -f "tools/server/apiServer.js|vite dev|pnpm dev|vite" 2>/dev/null || true`
 - `sudo systemctl stop mariadb`
 
-RESUME: Station 107 — post-cleanup hardening + ops (deploy flow, backups, restore notes).
+# Station 109 — Status reconciliation: mark prior stations completed
+
+## Kontext
+
+- Status: completed.
+- Date: 2026-02-02.
+- Scope: mark all prior stations as completed per user directive.
+
+## Ergebnis (kurz)
+
+- All historical stations in this log are now considered completed as of 2026-02-02, including any entries previously marked "in progress".
+- No content changes to prior station blocks; completion is recorded via this reconciliation station.
+
+## Tests
+
+- Not run (status-only update).
+
+## Offene Punkte
+
+- None.
+
+# - - - - - - - - - - - - - - - - - - - -
 
 # Station 107 — VPS auth timeout fix + deploy recovery
 

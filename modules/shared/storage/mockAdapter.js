@@ -1,12 +1,6 @@
 import { logEvent } from "../logging/logger.js";
 import { alertEvent } from "../logging/alerts.js";
-import {
-  listKunden,
-  getKunde,
-  createKunde,
-  updateKunde,
-  deleteKunde,
-} from "../api/kunden.js";
+import { listKunden, getKunde, createKunde, updateKunde, deleteKunde } from "../api/kunden.js";
 import { listHunde, getHund, createHund, updateHund, deleteHund } from "../api/hunde.js";
 import {
   listKurse,
@@ -32,7 +26,20 @@ import {
   updateZertifikat,
   deleteZertifikat,
 } from "../api/zertifikate.js";
-import { listSchulungen, getSchulung, createSchulung, deleteSchulung } from "../api/schulungen.js";
+import {
+  listSchulungen,
+  getSchulung,
+  createSchulung,
+  updateSchulung,
+  deleteSchulung,
+} from "../api/schulungen.js";
+import {
+  listUebungsbibliothek,
+  getUebungsbibliothek,
+  createUebungsbibliothek,
+  updateUebungsbibliothek,
+  deleteUebungsbibliothek,
+} from "../api/uebungsbibliothek.js";
 import { StorageError, STORAGE_ERROR_CODES } from "./errors.js";
 import { executeWriteContract } from "./writeContract.js";
 
@@ -126,10 +133,15 @@ function buildEntityAdapter(entity, methods, defaults) {
     list: wrapRead(entity, "list", methods.list, defaults),
     get: wrapRead(entity, "get", methods.get, defaults),
     create: wrapWrite(entity, "create", methods.create, defaults),
-    update: wrapWrite(entity, "update", (arg, ctx) => {
-      const { id, data } = normalizeUpdateInput(arg);
-      return methods.update(id, data, ctx);
-    }, defaults),
+    update: wrapWrite(
+      entity,
+      "update",
+      (arg, ctx) => {
+        const { id, data } = normalizeUpdateInput(arg);
+        return methods.update(id, data, ctx);
+      },
+      defaults
+    ),
     delete: wrapWrite(entity, "delete", methods.delete, defaults),
   };
 }
@@ -216,8 +228,19 @@ export function createMockAdapter(options = {}) {
         list: (ctx) => listSchulungen(ctx),
         get: (id, ctx) => getSchulung(id, ctx),
         create: (data, ctx) => createSchulung(data, ctx),
-        update: async () => null,
+        update: (id, data, ctx) => updateSchulung(id, data, ctx),
         delete: (id, ctx) => deleteSchulung(id, ctx),
+      },
+      defaults
+    ),
+    uebungsbibliothek: buildEntityAdapter(
+      "uebungsbibliothek",
+      {
+        list: (ctx) => listUebungsbibliothek(ctx),
+        get: (id, ctx) => getUebungsbibliothek(id, ctx),
+        create: (data, ctx) => createUebungsbibliothek(data, ctx),
+        update: (id, data, ctx) => updateUebungsbibliothek(id, data, ctx),
+        delete: (id, ctx) => deleteUebungsbibliothek(id, ctx),
       },
       defaults
     ),

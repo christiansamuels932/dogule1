@@ -1046,6 +1046,22 @@ async function renderDetail(root, id) {
   }
 
   injectToast(detailSection);
+  const role = getSession()?.user?.role || "";
+  const canManage = isAdminOrDeveloper(role);
+  const canViewExtras = isAdminOrDeveloper(role);
+  let linkedHunde = [];
+  let hundeLoadFailed = false;
+  if (canViewExtras) {
+    try {
+      const allHunde = await listHunde();
+      linkedHunde = allHunde.filter((hund) => hund.kundenId === id);
+    } catch (error) {
+      hundeLoadFailed = true;
+      linkedHunde = [];
+      console.error("[KUNDEN_ERR_HUNDE_LOAD]", error);
+    }
+  }
+
   const detailCard = createStandardCard("Stammdaten");
   const detailBody = detailCard.querySelector(".ui-card__body");
   const rows = [
@@ -1080,14 +1096,18 @@ async function renderDetail(root, id) {
   ];
   detailBody.innerHTML = "";
   detailBody.appendChild(createDefinitionList(rows));
-  detailSection.appendChild(detailCard);
+  const detailGrid = document.createElement("div");
+  detailGrid.className = "kunden-detail-grid";
+  detailGrid.appendChild(detailCard);
+  if (canViewExtras) {
+    detailGrid.appendChild(renderKundenHundeCard(linkedHunde, hundeLoadFailed));
+  }
+  detailSection.appendChild(detailGrid);
 
   const actionsCard = createStandardCard("Aktionen");
   const actionsBody = actionsCard.querySelector(".ui-card__body");
   const actionsWrap = document.createElement("div");
   actionsWrap.className = "module-actions";
-  const role = getSession()?.user?.role || "";
-  const canManage = isAdminOrDeveloper(role);
   let deleteBtn = null;
   if (canManage) {
     const editBtn = createButton({
@@ -1143,28 +1163,25 @@ async function renderDetail(root, id) {
     }
   }
 
+  if (role === "trainer" || role === "trainer_rapport") {
+    const hundeLinkCard = createStandardCard("Hunde");
+    const linkBody = hundeLinkCard.querySelector(".ui-card__body");
+    if (linkBody) {
+      linkBody.innerHTML = "";
+      linkBody.appendChild(createUiLink("Zur Hundeübersicht", "#/hunde", "quiet"));
+    }
+    detailSection.appendChild(hundeLinkCard);
+  }
+
   root.appendChild(detailSection);
 
-  const canViewExtras = isAdminOrDeveloper(role);
   if (!canViewExtras) {
     focusHeading(root);
     return;
   }
 
-  let linkedHunde = [];
-  let hundeLoadFailed = false;
-  try {
-    const allHunde = await listHunde();
-    linkedHunde = allHunde.filter((hund) => hund.kundenId === id);
-  } catch (error) {
-    hundeLoadFailed = true;
-    linkedHunde = [];
-    console.error("[KUNDEN_ERR_HUNDE_LOAD]", error);
-  }
-
-  root.appendChild(renderKundenHundeSection(linkedHunde, hundeLoadFailed));
-
   let linkedKurse = [];
+  const teilnehmerByKursId = new Map();
   let kurseLoadFailed = false;
   try {
     const allKurse = await listKurse();
@@ -1182,6 +1199,14 @@ async function renderDetail(root, id) {
           const hasMatch = entries.some(
             (entry) => entry.kundeId === id || (entry.hundId && hundIds.has(entry.hundId))
           );
+          if (hasMatch) {
+            teilnehmerByKursId.set(
+              kurs.id,
+              entries.filter(
+                (entry) => entry.kundeId === id || (entry.hundId && hundIds.has(entry.hundId))
+              )
+            );
+          }
           return hasMatch ? kurs : null;
         } catch {
           return null;
@@ -1198,7 +1223,9 @@ async function renderDetail(root, id) {
     console.error("[KUNDEN_ERR_KURSE_LOAD]", error);
   }
 
-  root.appendChild(renderKundenKurseSection(linkedKurse, kurseLoadFailed));
+  root.appendChild(
+    renderKundenKurseSection(linkedKurse, teilnehmerByKursId, linkedHunde, kurseLoadFailed)
+  );
 
   let historie = [];
   let historieLoadFailed = false;
@@ -1283,11 +1310,7 @@ async function renderDetail(root, id) {
   focusHeading(root);
 }
 
-function renderKundenHundeSection(hunde = [], hasError = false) {
-  const section = createSectionBlock({
-    level: 2,
-    className: "kunden-detail-stack",
-  });
+function renderKundenHundeCard(hunde = [], hasError = false) {
   const card = createStandardCard("Hunde");
   const body = card.querySelector(".ui-card__body");
   if (body) {
@@ -1297,25 +1320,110 @@ function renderKundenHundeSection(hunde = [], hasError = false) {
     } else if (!hunde.length) {
       appendSharedEmptyState(body);
     } else {
-      const list = document.createElement("ul");
-      list.className = "kunden-hunde-list";
-      hunde.forEach((hund) => {
-        const item = document.createElement("li");
-        const link = document.createElement("a");
-        link.href = `#/hunde/${hund.id}`;
-        const label = formatHundName(hund) || "Unbekannt";
-        link.textContent = label;
-        item.appendChild(link);
-        list.appendChild(item);
+      const wrap = document.createElement("div");
+      wrap.className = "kunden-hunde-details";
+      const formatDate = (value) => {
+        if (!value) return "–";
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return value;
+        return date.toLocaleDateString("de-CH", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+        });
+      };
+      const formatBoolean = (value) => {
+        if (value === true) return "Ja";
+        if (value === false) return "Nein";
+        return "–";
+      };
+      const selectorWrap = document.createElement("div");
+      selectorWrap.className = "kunden-hunde-toggle";
+      const selectorLabel = document.createElement("span");
+      selectorLabel.textContent = "Hund auswählen";
+      const select = document.createElement("select");
+      select.className = "kunden-hunde-toggle__select";
+      hunde.forEach((hund, index) => {
+        const option = document.createElement("option");
+        option.value = String(index);
+        option.textContent = formatHundName(hund) || `Hund ${index + 1}`;
+        select.appendChild(option);
       });
-      body.appendChild(list);
+      selectorWrap.append(selectorLabel, select);
+
+      const detailHost = document.createElement("div");
+      detailHost.className = "kunden-hunde-detail-card";
+
+      const renderHundDetails = (hund) => {
+        detailHost.innerHTML = "";
+        const list = document.createElement("dl");
+        list.className = "hunde-detail-list";
+        const rows = [
+          {
+            label: "Name",
+            value: hund.name,
+            render: () => {
+              if (!isAdminOrDeveloper(getSession()?.user?.role || "")) {
+                const span = document.createElement("span");
+                span.textContent = valueOrDash(hund.name);
+                return span;
+              }
+              const link = document.createElement("a");
+              link.href = `#/hunde/${hund.id}`;
+              link.textContent = valueOrDash(hund.name);
+              return link;
+            },
+          },
+          { label: "Rufname", value: hund.rufname },
+          { label: "Rasse", value: hund.rasse },
+          { label: "Geschlecht", value: hund.geschlecht },
+          { label: "Status", value: hund.status },
+          { label: "Wurfdatum", value: formatDate(hund.geburtsdatum) },
+          { label: "Kastriert", value: formatBoolean(hund.kastriert) },
+          { label: "Felltyp", value: hund.felltyp || hund.fellTyp },
+          { label: "Fellfarbe", value: hund.fellfarbe || hund.fellFarbe },
+          { label: "Größe (Typ)", value: hund.groesseTyp || hund.groesseType },
+          { label: "Größe (cm)", value: hund.groesseCm },
+          { label: "Gewicht (kg)", value: hund.gewichtKg },
+          { label: "Herkunft", value: hund.herkunft },
+          { label: "Chip-Nr.", value: hund.chipNummer || hund.chipnummer },
+          { label: "Trainingsziele", value: hund.trainingsziele },
+          { label: "Notizen", value: hund.notizen },
+        ];
+        rows.forEach(({ label, value, render }) => {
+          const dt = document.createElement("dt");
+          dt.textContent = label;
+          const dd = document.createElement("dd");
+          if (typeof render === "function") {
+            dd.appendChild(render());
+          } else {
+            dd.textContent = valueOrDash(value);
+          }
+          list.append(dt, dd);
+        });
+        detailHost.appendChild(list);
+      };
+
+      renderHundDetails(hunde[0]);
+      select.addEventListener("change", () => {
+        const index = Number(select.value);
+        const hund = hunde[index] || hunde[0];
+        renderHundDetails(hund);
+      });
+
+      wrap.append(selectorWrap, detailHost);
+      body.appendChild(wrap);
     }
   }
-  section.appendChild(card);
-  return section;
+  return card;
 }
 
-function renderKundenKurseSection(kurse = [], hasError = false) {
+function renderKundenKurseSection(
+  kurse = [],
+  teilnehmerByKursId = new Map(),
+  hunde = [],
+  hasError = false
+) {
   const section = createSectionBlock({
     level: 2,
     className: "kunden-detail-stack",
@@ -1329,19 +1437,186 @@ function renderKundenKurseSection(kurse = [], hasError = false) {
     } else if (!kurse.length) {
       appendSharedEmptyState(body);
     } else {
-      const list = document.createElement("ul");
-      list.className = "kunden-kurse-list";
-      kurse.forEach((kurs) => {
-        const item = document.createElement("li");
-        const link = document.createElement("a");
-        link.href = `#/kurse/${kurs.id}`;
-        const label = kurs.title || kurs.code || "Kurs";
-        link.textContent = label;
-        item.appendChild(link);
-        list.appendChild(item);
+      const hundeById = new Map(hunde.map((hund) => [hund.id, hund]));
+      const formatKursDate = (value) => {
+        if (!value) return "–";
+        return String(value).slice(0, 10);
+      };
+      const resolveTrainerName = (kurs) => kurs.trainer?.name || kurs.trainerName || "–";
+      const resolveHundNames = (entries = []) => {
+        const names = entries
+          .map((entry) => {
+            const hund = hundeById.get(entry.hundId);
+            return formatHundName(hund) || entry.hundName || "";
+          })
+          .filter(Boolean);
+        return names.length ? names.join(", ") : "–";
+      };
+      const resolveStartDate = (kurs, entries = []) => {
+        const entryDate = entries.find((entry) => entry.startDatum)?.startDatum;
+        return formatKursDate(entryDate || kurs.date || "");
+      };
+
+      const rows = kurse.map((kurs) => {
+        const entries = teilnehmerByKursId.get(kurs.id) || [];
+        return {
+          kurs,
+          startdatum: resolveStartDate(kurs, entries),
+          kursname: kurs.title || kurs.code || "Kurs",
+          trainer: resolveTrainerName(kurs),
+          hunde: resolveHundNames(entries),
+        };
       });
-      body.appendChild(list);
-      body.appendChild(createUiLink("Zur Kursliste", "#/kurse", "quiet"));
+
+      const sortState = { key: "startdatum", direction: "desc" };
+      const columnDefinitions = {
+        startdatum: {
+          key: "startdatum",
+          label: "Startdatum",
+          value: (row) => valueOrDash(row.startdatum),
+          sortValue: (row) => String(row.startdatum || ""),
+        },
+        kursname: {
+          key: "kursname",
+          label: "Kursname",
+          value: (row) => valueOrDash(row.kursname),
+          sortValue: (row) => String(row.kursname || "").toLowerCase(),
+          isLink: true,
+        },
+        trainer: {
+          key: "trainer",
+          label: "Trainer",
+          value: (row) => valueOrDash(row.trainer),
+          sortValue: (row) => String(row.trainer || "").toLowerCase(),
+        },
+        hunde: {
+          key: "hunde",
+          label: "Teilnehmender Hund",
+          value: (row) => valueOrDash(row.hunde),
+          sortValue: (row) => String(row.hunde || "").toLowerCase(),
+        },
+      };
+
+      const tableWrapper = document.createElement("div");
+      tableWrapper.className = "kunden-list-scroll kunden-kurse-scroll";
+      const table = document.createElement("table");
+      table.className = "kunden-list-table";
+      const thead = document.createElement("thead");
+      const headerRow = document.createElement("tr");
+      const tbody = document.createElement("tbody");
+
+      function updateHeaderState() {
+        headerRow.querySelectorAll("th").forEach((th) => {
+          const key = th.dataset.sortKey;
+          if (!key) return;
+          const isActive = key === sortState.key;
+          th.setAttribute(
+            "aria-sort",
+            isActive ? (sortState.direction === "asc" ? "ascending" : "descending") : "none"
+          );
+          const button = th.querySelector("button");
+          if (!button) return;
+          const indicator = isActive ? (sortState.direction === "asc" ? "↑" : "↓") : "";
+          button.textContent = indicator
+            ? `${th.dataset.label} ${indicator}`
+            : th.dataset.label || "";
+        });
+      }
+
+      function renderHeader() {
+        headerRow.innerHTML = "";
+        Object.values(columnDefinitions).forEach((column) => {
+          const th = document.createElement("th");
+          th.dataset.sortKey = column.key;
+          th.dataset.label = column.label;
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "kunden-sort-btn";
+          button.addEventListener("click", () => {
+            if (sortState.key === column.key) {
+              sortState.direction = sortState.direction === "asc" ? "desc" : "asc";
+            } else {
+              sortState.key = column.key;
+              sortState.direction = "asc";
+            }
+            updateHeaderState();
+            renderRows();
+          });
+          th.appendChild(button);
+          headerRow.appendChild(th);
+        });
+        updateHeaderState();
+      }
+
+      function getSortedRows() {
+        const column = columnDefinitions[sortState.key] || columnDefinitions.startdatum;
+        const getValue = column?.sortValue || column?.value;
+        return rows
+          .map((row, index) => ({ row, index }))
+          .sort((a, b) => {
+            const aValue = (getValue ? getValue(a.row) : "").toString();
+            const bValue = (getValue ? getValue(b.row) : "").toString();
+            const compare = aValue.localeCompare(bValue, "de", { sensitivity: "base" });
+            if (compare !== 0) {
+              return sortState.direction === "asc" ? compare : -compare;
+            }
+            return a.index - b.index;
+          })
+          .map(({ row }) => row);
+      }
+
+      function renderRows() {
+        tbody.innerHTML = "";
+        const sortedRows = getSortedRows();
+        if (!sortedRows.length) {
+          const row = document.createElement("tr");
+          row.className = "kunden-list-row";
+          const cell = document.createElement("td");
+          cell.colSpan = Object.keys(columnDefinitions).length;
+          cell.textContent = "Keine Kurse vorhanden.";
+          row.appendChild(cell);
+          tbody.appendChild(row);
+          return;
+        }
+
+        sortedRows.forEach((rowData) => {
+          const row = document.createElement("tr");
+          row.className = "kunden-list-row";
+          row.tabIndex = 0;
+          row.addEventListener("click", (event) => {
+            if (event.target && event.target.closest("a")) return;
+            window.location.hash = `#/kurse/${rowData.kurs.id}`;
+          });
+          row.addEventListener("keydown", (event) => {
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              window.location.hash = `#/kurse/${rowData.kurs.id}`;
+            }
+          });
+
+          Object.values(columnDefinitions).forEach((column) => {
+            const cell = document.createElement("td");
+            if (column.isLink) {
+              const link = document.createElement("a");
+              link.href = `#/kurse/${rowData.kurs.id}`;
+              link.className = "kunden-list__link";
+              link.textContent = column.value(rowData);
+              cell.appendChild(link);
+            } else {
+              cell.textContent = column.value(rowData);
+            }
+            row.appendChild(cell);
+          });
+          tbody.appendChild(row);
+        });
+      }
+
+      thead.appendChild(headerRow);
+      table.append(thead, tbody);
+      tableWrapper.appendChild(table);
+      body.appendChild(tableWrapper);
+      renderHeader();
+      renderRows();
     }
   }
   section.appendChild(card);

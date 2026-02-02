@@ -244,7 +244,11 @@ function getModuleHelp(module) {
     },
     schulungen: {
       label: "Schulungen",
-      text: "Verwalten Sie Schulungsinhalte, Texte und Bilder. Öffnen Sie eine Schulung, um Details zu prüfen.",
+      text: "Verwalten Sie Schulungen mit Texten und Bildern. Öffnen Sie eine Schulung, um Details zu prüfen.",
+    },
+    uebungsbibliothek: {
+      label: "Übungsbibliothek",
+      text: "Verwalten Sie Inhalte, Texte und Bilder. Öffnen Sie einen Eintrag, um Details zu prüfen.",
     },
   };
   const fallback = {

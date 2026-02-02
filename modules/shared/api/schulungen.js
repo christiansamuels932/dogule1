@@ -1,4 +1,4 @@
-import { list, create, remove } from "./crud.js";
+import { list, create, update, remove } from "./crud.js";
 import { isHttpMode, httpRequest } from "./httpClient.js";
 
 const TABLE = "schulungen";
@@ -24,6 +24,14 @@ export async function createSchulung(data = {}, options) {
     return httpRequest("/schulungen", { method: "POST", body: data });
   }
   return create(TABLE, data, options);
+}
+
+export async function updateSchulung(id, data = {}, options) {
+  if (!id) return null;
+  if (isHttpMode()) {
+    return httpRequest(`/schulungen/${id}`, { method: "PATCH", body: data });
+  }
+  return update(TABLE, id, data, options);
 }
 
 export async function deleteSchulung(id, options) {
