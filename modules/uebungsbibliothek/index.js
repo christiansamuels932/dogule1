@@ -1,12 +1,12 @@
 /* globals document, window, console, FileReader */
 import {
-  listSchulungen,
-  getSchulung,
-  createSchulung,
-  updateSchulung,
-  uploadSchulungImage,
-  deleteSchulung,
-} from "../shared/api/schulungen.js";
+  listUebungsbibliothek,
+  getUebungsbibliothek,
+  createUebungsbibliothek,
+  updateUebungsbibliothek,
+  uploadUebungsbibliothekImage,
+  deleteUebungsbibliothek,
+} from "../shared/api/uebungsbibliothek.js";
 import {
   createCard,
   createNotice,
@@ -50,7 +50,9 @@ function resolveCreatorLabel(rawValue = "") {
 
 function canCreate() {
   const role = getSession()?.user?.role || "";
-  return role === "admin";
+  return (
+    role === "admin" || role === "developer" || role === "trainer" || role === "trainer_rapport"
+  );
 }
 
 function getCreatorLabel() {
@@ -73,10 +75,10 @@ function buildActionsCard() {
   actions.className = "module-actions";
   if (canCreate()) {
     const createBtn = createButton({
-      label: "Schulung erstellen",
+      label: "Eintrag erstellen",
       variant: "primary",
       onClick: () => {
-        window.location.hash = "#/schulungen/new";
+        window.location.hash = "#/uebungsbibliothek/new";
       },
     });
     actions.appendChild(createBtn);
@@ -102,7 +104,7 @@ function buildDetailActions(entry, statusSlot) {
     label: "Bearbeiten",
     variant: "primary",
     onClick: () => {
-      window.location.hash = `#/schulungen/${entry.id}/edit`;
+      window.location.hash = `#/uebungsbibliothek/${entry.id}/edit`;
     },
   });
   actions.appendChild(editBtn);
@@ -111,14 +113,14 @@ function buildDetailActions(entry, statusSlot) {
   deleteBtn.addEventListener("click", async () => {
     statusSlot.innerHTML = "";
     const ok = window.confirm(
-      `Schulung wirklich löschen?\n\n${valueOrDash(entry.title)}\n\nDieser Vorgang kann nicht rückgängig gemacht werden.`
+      `Eintrag wirklich löschen?\n\n${valueOrDash(entry.title)}\n\nDieser Vorgang kann nicht rückgängig gemacht werden.`
     );
     if (!ok) return;
     deleteBtn.disabled = true;
     try {
-      await deleteSchulung(entry.id);
-      statusSlot.appendChild(createNotice("Schulung gelöscht.", { variant: "ok", role: "status" }));
-      window.location.hash = "#/schulungen";
+      await deleteUebungsbibliothek(entry.id);
+      statusSlot.appendChild(createNotice("Eintrag gelöscht.", { variant: "ok", role: "status" }));
+      window.location.hash = "#/uebungsbibliothek";
     } catch (error) {
       console.error("[SCHULUNGEN_DELETE_FAILED]", error);
       statusSlot.appendChild(
@@ -142,7 +144,7 @@ async function renderListView(section) {
 
   const cardFragment = createCard({
     eyebrow: "",
-    title: "Schulungen",
+    title: "Übungsbibliothek",
     body: "",
     footer: "",
   });
@@ -152,12 +154,12 @@ async function renderListView(section) {
   const statusSlot = document.createElement("div");
   statusSlot.className = "schulungen-status";
   body.appendChild(statusSlot);
-  body.appendChild(createNotice("Lade Schulungen...", { variant: "info", role: "status" }));
+  body.appendChild(createNotice("Lade Übungsbibliothek...", { variant: "info", role: "status" }));
   section.appendChild(card);
 
   let entries = [];
   try {
-    entries = await listSchulungen();
+    entries = await listUebungsbibliothek();
   } catch (error) {
     console.error("[SCHULUNGEN_LIST_FAILED]", error);
     body.innerHTML = "";
@@ -169,7 +171,7 @@ async function renderListView(section) {
 
   if (!entries.length) {
     body.innerHTML = "";
-    body.appendChild(createEmptyState("Keine Schulungen vorhanden.", ""));
+    body.appendChild(createEmptyState("Keine Einträge vorhanden.", ""));
     return;
   }
 
@@ -322,7 +324,7 @@ async function renderListView(section) {
       row.className = "kunden-list-row";
       const cell = document.createElement("td");
       cell.colSpan = Object.keys(columnDefinitions).length;
-      cell.textContent = "Keine Schulungen vorhanden.";
+      cell.textContent = "Keine Einträge vorhanden.";
       row.appendChild(cell);
       tbody.appendChild(row);
       return;
@@ -334,12 +336,12 @@ async function renderListView(section) {
       row.tabIndex = 0;
       row.addEventListener("click", (event) => {
         if (event.target && event.target.closest("a, button")) return;
-        window.location.hash = `#/schulungen/${entry.id}`;
+        window.location.hash = `#/uebungsbibliothek/${entry.id}`;
       });
       row.addEventListener("keydown", (event) => {
         if (event.key === "Enter" || event.key === " ") {
           event.preventDefault();
-          window.location.hash = `#/schulungen/${entry.id}`;
+          window.location.hash = `#/uebungsbibliothek/${entry.id}`;
         }
       });
 
@@ -347,7 +349,7 @@ async function renderListView(section) {
         const cell = document.createElement("td");
         if (column.isLink) {
           const link = document.createElement("a");
-          link.href = `#/schulungen/${entry.id}`;
+          link.href = `#/uebungsbibliothek/${entry.id}`;
           link.className = "kunden-list__link";
           link.textContent = column.value(entry);
           cell.appendChild(link);
@@ -386,7 +388,7 @@ function buildBlocksList(blocks = []) {
       link.rel = "noopener noreferrer";
       const image = document.createElement("img");
       image.className = "schulungen-block__image";
-      image.alt = block.title || "Schulung Bild";
+      image.alt = block.title || "Eintrag Bild";
       image.src = block.url || "";
       link.appendChild(image);
       blockEl.appendChild(link);
@@ -415,19 +417,19 @@ async function renderDetailView(section, id) {
   const card = detailCard.querySelector(".ui-card") || detailCard.firstElementChild;
   const body = card.querySelector(".ui-card__body");
   body.innerHTML = "";
-  body.appendChild(createNotice("Lade Schulung...", { variant: "info", role: "status" }));
+  body.appendChild(createNotice("Lade Eintrag...", { variant: "info", role: "status" }));
   section.appendChild(card);
 
   let entry = null;
   try {
-    entry = await getSchulung(id);
+    entry = await getUebungsbibliothek(id);
   } catch (error) {
     console.error("[SCHULUNGEN_GET_FAILED]", error);
     entry = null;
   }
   if (!entry) {
     body.innerHTML = "";
-    body.appendChild(createNotice("Schulung nicht gefunden.", { variant: "warn", role: "alert" }));
+    body.appendChild(createNotice("Eintrag nicht gefunden.", { variant: "warn", role: "alert" }));
     return;
   }
 
@@ -437,7 +439,7 @@ async function renderDetailView(section, id) {
 
   body.innerHTML = "";
   const title = document.createElement("h3");
-  title.textContent = entry.title || "Schulung";
+  title.textContent = entry.title || "Eintrag";
   const meta = document.createElement("div");
   meta.className = "schulungen-detail__meta";
   meta.textContent = formatDate(entry.occurredAt) || "";
@@ -479,7 +481,7 @@ function addBlockRow(container, type, blockData = {}) {
       preview.className = "schulungen-block__image-link";
       const image = document.createElement("img");
       image.className = "schulungen-block__image";
-      image.alt = blockData.title || "Schulung Bild";
+      image.alt = blockData.title || "Eintrag Bild";
       image.src = blockData.url;
       preview.appendChild(image);
       block.appendChild(preview);
@@ -522,7 +524,7 @@ function readFileAsDataUrl(file) {
 async function renderCreateView(section) {
   if (!canCreate()) {
     section.appendChild(
-      createNotice("Nur Trainer 001 kann Schulungen erstellen.", {
+      createNotice("Nur Trainer 001 kann Einträge erstellen.", {
         variant: "warn",
         role: "alert",
       })
@@ -530,12 +532,12 @@ async function renderCreateView(section) {
     return;
   }
 
-  const header = createSectionHeader({ title: "Neue Schulung", subtitle: "" });
+  const header = createSectionHeader({ title: "Neuer Eintrag", subtitle: "" });
   section.appendChild(header);
 
   const cardFragment = createCard({
     eyebrow: "",
-    title: "Schulung anlegen",
+    title: "Eintrag anlegen",
     body: "",
     footer: "",
   });
@@ -593,6 +595,7 @@ async function renderCreateView(section) {
   submitBtn.type = "submit";
   submitBtn.setAttribute("form", form.id);
   footer.innerHTML = "";
+  footer.classList.add("uebungsbibliothek-form-footer");
   footer.appendChild(submitBtn);
 
   addBlockRow(blocksWrap, "text");
@@ -669,7 +672,7 @@ async function renderCreateView(section) {
       for (const block of blocks) {
         if (block.type === "image") {
           const dataUrl = await readFileAsDataUrl(block.file);
-          const upload = await uploadSchulungImage({
+          const upload = await uploadUebungsbibliothekImage({
             fileName: block.file.name || "bild",
             dataUrl,
           });
@@ -693,12 +696,12 @@ async function renderCreateView(section) {
         blocks: resolvedBlocks,
         createdBy: getCreatorLabel(),
       };
-      const created = await createSchulung(payload);
-      window.location.hash = `#/schulungen/${created.id}`;
+      const created = await createUebungsbibliothek(payload);
+      window.location.hash = `#/uebungsbibliothek/${created.id}`;
     } catch (error) {
       console.error("[SCHULUNGEN_CREATE_FAILED]", error);
       statusSlot.appendChild(
-        createNotice("Schulung konnte nicht erstellt werden.", { variant: "warn", role: "alert" })
+        createNotice("Eintrag konnte nicht erstellt werden.", { variant: "warn", role: "alert" })
       );
     } finally {
       submitBtn.disabled = false;
@@ -712,7 +715,7 @@ async function renderCreateView(section) {
 async function renderEditView(section, id) {
   if (!canCreate()) {
     section.appendChild(
-      createNotice("Nur Trainer 001 kann Schulungen bearbeiten.", {
+      createNotice("Nur Trainer 001 kann Einträge bearbeiten.", {
         variant: "warn",
         role: "alert",
       })
@@ -720,12 +723,12 @@ async function renderEditView(section, id) {
     return;
   }
 
-  const header = createSectionHeader({ title: "Schulung bearbeiten", subtitle: "" });
+  const header = createSectionHeader({ title: "Eintrag bearbeiten", subtitle: "" });
   section.appendChild(header);
 
   const cardFragment = createCard({
     eyebrow: "",
-    title: "Schulung bearbeiten",
+    title: "Eintrag bearbeiten",
     body: "",
     footer: "",
   });
@@ -737,19 +740,19 @@ async function renderEditView(section, id) {
 
   body.innerHTML = "";
   body.appendChild(statusSlot);
-  body.appendChild(createNotice("Lade Schulung...", { variant: "info", role: "status" }));
+  body.appendChild(createNotice("Lade Eintrag...", { variant: "info", role: "status" }));
   section.appendChild(card);
 
   let entry = null;
   try {
-    entry = await getSchulung(id);
+    entry = await getUebungsbibliothek(id);
   } catch (error) {
     console.error("[SCHULUNGEN_GET_FAILED]", error);
     entry = null;
   }
   if (!entry) {
     body.innerHTML = "";
-    body.appendChild(createNotice("Schulung nicht gefunden.", { variant: "warn", role: "alert" }));
+    body.appendChild(createNotice("Eintrag nicht gefunden.", { variant: "warn", role: "alert" }));
     return;
   }
 
@@ -810,6 +813,7 @@ async function renderEditView(section, id) {
   submitBtn.type = "submit";
   submitBtn.setAttribute("form", form.id);
   footer.innerHTML = "";
+  footer.classList.add("uebungsbibliothek-form-footer");
   footer.appendChild(submitBtn);
 
   form.addEventListener("submit", async (event) => {
@@ -889,7 +893,7 @@ async function renderEditView(section, id) {
         if (block.type === "image") {
           if (block.file) {
             const dataUrl = await readFileAsDataUrl(block.file);
-            const upload = await uploadSchulungImage({
+            const upload = await uploadUebungsbibliothekImage({
               fileName: block.file.name || "bild",
               dataUrl,
             });
@@ -919,12 +923,12 @@ async function renderEditView(section, id) {
         occurredAt: dateValue,
         blocks: resolvedBlocks,
       };
-      const updated = await updateSchulung(entry.id, payload);
-      window.location.hash = `#/schulungen/${updated.id}`;
+      const updated = await updateUebungsbibliothek(entry.id, payload);
+      window.location.hash = `#/uebungsbibliothek/${updated.id}`;
     } catch (error) {
       console.error("[SCHULUNGEN_UPDATE_FAILED]", error);
       statusSlot.appendChild(
-        createNotice("Schulung konnte nicht gespeichert werden.", {
+        createNotice("Eintrag konnte nicht gespeichert werden.", {
           variant: "warn",
           role: "alert",
         })
@@ -943,7 +947,7 @@ export function initModule(container, routeInfo = {}) {
 
   const { mode, detailId } = parseRoute(routeInfo?.segments || []);
   const section = document.createElement("section");
-  section.className = "dogule-section schulungen-section";
+  section.className = "dogule-section schulungen-section uebungsbibliothek-section";
 
   if (mode === "list") {
     renderListView(section);

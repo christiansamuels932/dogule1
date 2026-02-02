@@ -16,6 +16,7 @@ Goal: Update the VPS runtime safely, avoid missing config, and prevent downtime.
 - `/opt/dogule1/config/dogule1.passwords`
 
 If `dogule1.env` is missing, `systemd` will fail with:
+
 - `Failed to load environment files: No such file or directory`
 - `Failed to spawn 'start' task: No such file or directory`
 
@@ -29,11 +30,20 @@ pnpm build
 
 ## 2) Deploy runtime payload to VPS
 
-Preferred: rsync from local:
+Preferred: rsync from local (safe: do NOT delete config/uploads/node_modules):
 
 ```
-rsync -av --delete /home/ran/codex/dogule1/dist/ /home/ran/codex/dogule1/modules/ /home/ran/codex/dogule1/tools/ dogule@144.91.86.20:/opt/dogule1/
+rsync -av --delete --exclude 'config/' --exclude 'uploads/' --exclude 'node_modules/' /home/ran/codex/dogule1/dist/ /home/ran/codex/dogule1/modules/ /home/ran/codex/dogule1/tools/ dogule@144.91.86.20:/opt/dogule1/
 ```
+
+⚠️ **Never** run plain `rsync --delete` against `/opt/dogule1`. It will delete:
+
+- `/opt/dogule1/config` (breaks service env)
+- `/opt/dogule1/uploads` (destroys images)
+- `/opt/dogule1/node_modules` (breaks runtime deps)
+- `/opt/dogule1/modules` or `/opt/dogule1/dist` (breaks API/UI)
+
+If you need to re-run rsync, always use the exact command above.
 
 ## 3) Ensure config exists on VPS
 
@@ -50,9 +60,10 @@ sudo bash -lc 'install -d -m 755 /opt/dogule1/config && ACCESS=$(openssl rand -h
 ```
 
 Notes:
+
 - This invalidates existing sessions and forces re-login.
 - If you need to preserve existing sessions, you must restore the previous secrets.
- - MariaDB may auto-select port 3307 when unset; set `DOGULE1_MARIADB_PORT=3306` in `dogule1.env` if needed.
+- MariaDB may auto-select port 3307 when unset; set `DOGULE1_MARIADB_PORT=3306` in `dogule1.env` if needed.
 
 ## 4) Copy password file
 
@@ -104,7 +115,36 @@ sudo journalctl -xeu dogule1.service --no-pager -n 200
 ```
 
 Common root cause:
+
 - Missing `/opt/dogule1/config/dogule1.env`.
+
+### Service won’t start (ERR_MODULE_NOT_FOUND: mariadb)
+
+Cause:
+
+- `node_modules` or `package.json` was deleted by a bad rsync.
+
+Fix:
+
+```
+scp /home/ran/codex/dogule1/package.json /home/ran/codex/dogule1/pnpm-lock.yaml dogule@144.91.86.20:/opt/dogule1/
+```
+
+```
+cd /opt/dogule1 && pnpm install --prod --ignore-scripts
+```
+
+### 404 on `/` (Not found)
+
+Cause:
+
+- `/opt/dogule1/dist` is missing.
+
+Fix:
+
+```
+rsync -av --delete /home/ran/codex/dogule1/dist/ dogule@144.91.86.20:/opt/dogule1/dist/
+```
 
 ### Port already in use (EADDRINUSE)
 
@@ -117,9 +157,11 @@ sudo ss -ltnp | rg 5177
 ### Auth suddenly fails after idle time
 
 Cause:
+
 - Access token expired (default 45 minutes).
 
 Mitigations:
+
 - UI auto-refreshes tokens on 401 and retries the request.
 - Logout/login remains as fallback.
 

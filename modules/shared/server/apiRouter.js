@@ -319,6 +319,9 @@ export function createApiRouter(options = {}) {
   const schulungenUploadRoot =
     process.env.DOGULE1_SCHULUNGEN_UPLOAD_ROOT ||
     path.resolve(process.cwd(), "uploads", "schulungen");
+  const uebungsbibliothekUploadRoot =
+    process.env.DOGULE1_UEBUNGSBIBLIOTHEK_UPLOAD_ROOT ||
+    path.resolve(process.cwd(), "uploads", "uebungsbibliothek");
   const authConfig = resolveAuthConfig({
     enabled: true,
   });
@@ -820,6 +823,128 @@ export function createApiRouter(options = {}) {
         jsonResponse(res, 200, result);
       } catch (error) {
         jsonResponse(res, 400, { message: "schulungen_delete_failed", code: error?.code });
+      }
+      return true;
+    }
+    if (entryMatch && (method === "PATCH" || method === "PUT")) {
+      if (!(await isRichardActor(actorId))) {
+        jsonResponse(res, 403, { message: "forbidden" });
+        return true;
+      }
+      try {
+        const updated = await storage.schulungen.update(entryMatch[1], body, { requestId });
+        if (!updated) {
+          jsonResponse(res, 404, { message: "not_found" });
+          return true;
+        }
+        jsonResponse(res, 200, updated);
+      } catch (error) {
+        jsonResponse(res, 400, { message: "schulungen_update_failed", code: error?.code });
+      }
+      return true;
+    }
+
+    jsonResponse(res, 404, { message: "not_found" });
+    return true;
+  }
+
+  async function handleUebungsbibliothekRoutes(req, res) {
+    const reqUrl = req?.url || "";
+    if (!reqUrl.startsWith("/api/uebungsbibliothek")) return false;
+
+    const body = await readJsonBody(req);
+    const pathOnly = reqUrl.split("?")[0];
+    const method = (req.method || "GET").toUpperCase();
+    const requestId = resolveRequestId(req);
+
+    if (pathOnly === "/api/uebungsbibliothek/uploads" && method === "POST") {
+      const payload = parseDataUrl(body?.dataUrl || "");
+      if (!payload) {
+        jsonResponse(res, 400, { message: "invalid_image" });
+        return true;
+      }
+      const fileName = buildUploadFileName(payload.mime);
+      const targetPath = path.join(uebungsbibliothekUploadRoot, fileName);
+      try {
+        await fs.mkdir(uebungsbibliothekUploadRoot, { recursive: true });
+        await fs.writeFile(targetPath, Buffer.from(payload.data, "base64"));
+        jsonResponse(res, 201, {
+          url: `/api/uebungsbibliothek/uploads/${fileName}`,
+          name: fileName,
+        });
+      } catch (error) {
+        jsonResponse(res, 500, { message: "upload_failed", code: error?.code });
+      }
+      return true;
+    }
+
+    if (pathOnly.startsWith("/api/uebungsbibliothek/uploads/") && method === "GET") {
+      const fileName = pathOnly.replace("/api/uebungsbibliothek/uploads/", "");
+      if (!fileName || fileName.includes("..") || fileName.includes("/")) {
+        jsonResponse(res, 400, { message: "invalid_file" });
+        return true;
+      }
+      const filePath = path.join(uebungsbibliothekUploadRoot, fileName);
+      try {
+        const data = await fs.readFile(filePath);
+        res.statusCode = 200;
+        res.setHeader("Content-Type", contentTypeForUpload(filePath));
+        res.end(data);
+      } catch {
+        jsonResponse(res, 404, { message: "not_found" });
+      }
+      return true;
+    }
+
+    if (pathOnly === "/api/uebungsbibliothek" && method === "GET") {
+      try {
+        const entries = await storage.uebungsbibliothek.list({ requestId });
+        jsonResponse(res, 200, entries);
+      } catch (error) {
+        jsonResponse(res, 500, { message: "uebungsbibliothek_list_failed", code: error?.code });
+      }
+      return true;
+    }
+
+    if (pathOnly === "/api/uebungsbibliothek" && method === "POST") {
+      try {
+        const created = await storage.uebungsbibliothek.create(body, { requestId });
+        jsonResponse(res, 201, created);
+      } catch (error) {
+        jsonResponse(res, 400, { message: "uebungsbibliothek_create_failed", code: error?.code });
+      }
+      return true;
+    }
+
+    const entryMatch = pathOnly.match(/^\/api\/uebungsbibliothek\/([^/]+)$/);
+    if (entryMatch && method === "GET") {
+      try {
+        const entry = await storage.uebungsbibliothek.get(entryMatch[1], { requestId });
+        jsonResponse(res, 200, entry);
+      } catch (error) {
+        jsonResponse(res, 404, { message: "not_found", code: error?.code });
+      }
+      return true;
+    }
+    if (entryMatch && method === "DELETE") {
+      try {
+        const result = await storage.uebungsbibliothek.delete(entryMatch[1], { requestId });
+        jsonResponse(res, 200, result);
+      } catch (error) {
+        jsonResponse(res, 400, { message: "uebungsbibliothek_delete_failed", code: error?.code });
+      }
+      return true;
+    }
+    if (entryMatch && (method === "PATCH" || method === "PUT")) {
+      try {
+        const updated = await storage.uebungsbibliothek.update(entryMatch[1], body, { requestId });
+        if (!updated) {
+          jsonResponse(res, 404, { message: "not_found" });
+          return true;
+        }
+        jsonResponse(res, 200, updated);
+      } catch (error) {
+        jsonResponse(res, 400, { message: "uebungsbibliothek_update_failed", code: error?.code });
       }
       return true;
     }
@@ -1458,7 +1583,7 @@ export function createApiRouter(options = {}) {
     }
 
     const entityMatch = reqUrl.match(
-      /^\/api\/(dashboard|kunden|hunde|kurse|trainer|kalender|finanzen|waren|zertifikate|schulungen|anmeldung|rapporte|historie)(?:\/|$)/
+      /^\/api\/(dashboard|kunden|hunde|kurse|trainer|kalender|finanzen|waren|zertifikate|schulungen|uebungsbibliothek|anmeldung|rapporte|historie)(?:\/|$)/
     );
     if (entityMatch) {
       const entity = entityMatch[1];
@@ -1476,6 +1601,7 @@ export function createApiRouter(options = {}) {
     if (await handleHistorieRoutes(req, res)) return true;
     if (await handleKursTeilnehmerRoutes(req, res)) return true;
     if (await handleSchulungenRoutes(req, res)) return true;
+    if (await handleUebungsbibliothekRoutes(req, res)) return true;
     if (await core.handle(req, res)) return true;
     return kommunikation.handle(req, res);
   }

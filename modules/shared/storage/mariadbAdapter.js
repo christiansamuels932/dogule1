@@ -451,6 +451,22 @@ function mapSchulungRow(row) {
     title: row.title,
     occurredAt: row.occurred_at,
     blocks: parseJson(row.blocks, []),
+    createdBy: row.created_by,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    schemaVersion: row.schema_version,
+    version: row.version,
+  };
+}
+
+function mapUebungsbibliothekRow(row) {
+  if (!row) return null;
+  return {
+    id: row.id,
+    title: row.title,
+    occurredAt: row.occurred_at,
+    blocks: parseJson(row.blocks, []),
+    createdBy: row.created_by,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     schemaVersion: row.schema_version,
@@ -860,6 +876,25 @@ function normalizeSchulung(data = {}, existing) {
     title: toStringValue(data.title ?? existing?.title),
     occurredAt: toStringValue(data.occurredAt ?? existing?.occurredAt ?? nowIso()),
     blocks: blocks || [],
+    createdBy: toStringValue(data.createdBy ?? existing?.createdBy),
+    createdAt,
+    updatedAt: nowIso(),
+    schemaVersion: Number(data.schemaVersion ?? existing?.schemaVersion ?? 1),
+    version: Number(data.version ?? existing?.version ?? 0),
+  };
+}
+
+function normalizeUebungsbibliothek(data = {}, existing) {
+  const createdAt = existing?.createdAt || data.createdAt || nowIso();
+  const blocks = Array.isArray(data.blocks)
+    ? data.blocks
+    : parseJson(data.blocks, existing?.blocks || []);
+  return {
+    id: data.id || existing?.id || uuidv7(),
+    title: toStringValue(data.title ?? existing?.title),
+    occurredAt: toStringValue(data.occurredAt ?? existing?.occurredAt ?? nowIso()),
+    blocks: blocks || [],
+    createdBy: toStringValue(data.createdBy ?? existing?.createdBy),
     createdAt,
     updatedAt: nowIso(),
     schemaVersion: Number(data.schemaVersion ?? existing?.schemaVersion ?? 1),
@@ -1886,10 +1921,7 @@ export function createMariaDbAdapter(options = {}) {
         [record.kursId, record.kundeId, record.hundId]
       );
       if (!rows || rows.length === 0) {
-        throw new StorageError(
-          STORAGE_ERROR_CODES.INVALID_DATA,
-          "KURS_TEILNEHMER_REQUIRED"
-        );
+        throw new StorageError(STORAGE_ERROR_CODES.INVALID_DATA, "KURS_TEILNEHMER_REQUIRED");
       }
     }
     const params = [
@@ -1947,10 +1979,7 @@ export function createMariaDbAdapter(options = {}) {
           [record.kursId, record.kundeId, record.hundId]
         );
         if (!rows || rows.length === 0) {
-          throw new StorageError(
-            STORAGE_ERROR_CODES.INVALID_DATA,
-            "KURS_TEILNEHMER_REQUIRED"
-          );
+          throw new StorageError(STORAGE_ERROR_CODES.INVALID_DATA, "KURS_TEILNEHMER_REQUIRED");
         }
       }
       const params = [
@@ -2361,6 +2390,7 @@ export function createMariaDbAdapter(options = {}) {
       record.title,
       record.occurredAt,
       toJson(record.blocks),
+      record.createdBy,
       record.createdAt,
       record.updatedAt,
       record.schemaVersion,
@@ -2368,12 +2398,51 @@ export function createMariaDbAdapter(options = {}) {
     ];
     try {
       await pool.query(
-        "INSERT INTO schulungen (id, title, occurred_at, blocks, created_at, updated_at, schema_version, version) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO schulungen (id, title, occurred_at, blocks, created_by, created_at, updated_at, schema_version, version) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
         params
       );
       return record;
     } catch (error) {
       throw toStorageError(error, "Failed to create schulungen");
+    }
+  }
+
+  async function updateSchulung(id, patch = {}) {
+    try {
+      const existing = await fetchOne(
+        pool,
+        "SELECT * FROM schulungen WHERE id = ?",
+        [id],
+        mapSchulungRow
+      );
+      if (!existing) return null;
+      const record = normalizeSchulung(
+        {
+          ...existing,
+          ...patch,
+          id: existing.id,
+          createdAt: existing.createdAt,
+          createdBy: existing.createdBy,
+        },
+        existing
+      );
+      ensureRequiredFields(record, ["title", "occurredAt"], "Schulung benötigt Titel und Datum");
+      const params = [
+        record.title,
+        record.occurredAt,
+        toJson(record.blocks),
+        record.updatedAt,
+        record.schemaVersion,
+        record.version,
+        record.id,
+      ];
+      await pool.query(
+        "UPDATE schulungen SET title=?, occurred_at=?, blocks=?, updated_at=?, schema_version=?, version=? WHERE id=?",
+        params
+      );
+      return record;
+    } catch (error) {
+      throw toStorageError(error, `Failed to update schulungen ${id}`);
     }
   }
 
@@ -2384,6 +2453,110 @@ export function createMariaDbAdapter(options = {}) {
       return { ok: true, id };
     } catch (error) {
       throw toStorageError(error, `Failed to delete schulungen ${id}`);
+    }
+  }
+
+  async function listUebungsbibliothek() {
+    try {
+      return await listAll(
+        pool,
+        "SELECT * FROM uebungsbibliothek ORDER BY occurred_at DESC",
+        [],
+        mapUebungsbibliothekRow
+      );
+    } catch (error) {
+      throw toStorageError(error, "Failed to list uebungsbibliothek");
+    }
+  }
+
+  async function getUebungsbibliothek(id) {
+    try {
+      const record = await fetchOne(
+        pool,
+        "SELECT * FROM uebungsbibliothek WHERE id = ?",
+        [id],
+        mapUebungsbibliothekRow
+      );
+      if (!record) {
+        throw new StorageError(STORAGE_ERROR_CODES.NOT_FOUND, `uebungsbibliothek ${id} not found`);
+      }
+      return record;
+    } catch (error) {
+      throw toStorageError(error, `Failed to get uebungsbibliothek ${id}`);
+    }
+  }
+
+  async function createUebungsbibliothek(data = {}) {
+    const record = normalizeUebungsbibliothek(data, null);
+    ensureRequiredFields(record, ["title", "occurredAt"], "Eintrag benötigt Titel und Datum");
+    const params = [
+      record.id,
+      record.title,
+      record.occurredAt,
+      toJson(record.blocks),
+      record.createdBy,
+      record.createdAt,
+      record.updatedAt,
+      record.schemaVersion,
+      record.version,
+    ];
+    try {
+      await pool.query(
+        "INSERT INTO uebungsbibliothek (id, title, occurred_at, blocks, created_by, created_at, updated_at, schema_version, version) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        params
+      );
+      return record;
+    } catch (error) {
+      throw toStorageError(error, "Failed to create uebungsbibliothek");
+    }
+  }
+
+  async function updateUebungsbibliothek(id, patch = {}) {
+    try {
+      const existing = await fetchOne(
+        pool,
+        "SELECT * FROM uebungsbibliothek WHERE id = ?",
+        [id],
+        mapUebungsbibliothekRow
+      );
+      if (!existing) return null;
+      const record = normalizeUebungsbibliothek(
+        {
+          ...existing,
+          ...patch,
+          id: existing.id,
+          createdAt: existing.createdAt,
+          createdBy: existing.createdBy,
+        },
+        existing
+      );
+      ensureRequiredFields(record, ["title", "occurredAt"], "Eintrag benötigt Titel und Datum");
+      const params = [
+        record.title,
+        record.occurredAt,
+        toJson(record.blocks),
+        record.updatedAt,
+        record.schemaVersion,
+        record.version,
+        record.id,
+      ];
+      await pool.query(
+        "UPDATE uebungsbibliothek SET title=?, occurred_at=?, blocks=?, updated_at=?, schema_version=?, version=? WHERE id=?",
+        params
+      );
+      return record;
+    } catch (error) {
+      throw toStorageError(error, `Failed to update uebungsbibliothek ${id}`);
+    }
+  }
+
+  async function deleteUebungsbibliothek(id) {
+    try {
+      await ensureExists(pool, "uebungsbibliothek", id);
+      await pool.query("DELETE FROM uebungsbibliothek WHERE id = ?", [id]);
+      return { ok: true, id };
+    } catch (error) {
+      throw toStorageError(error, `Failed to delete uebungsbibliothek ${id}`);
     }
   }
 
@@ -2472,7 +2645,15 @@ export function createMariaDbAdapter(options = {}) {
       list: listSchulungen,
       get: getSchulung,
       create: createSchulung,
+      update: updateSchulung,
       delete: deleteSchulung,
+    },
+    uebungsbibliothek: {
+      list: listUebungsbibliothek,
+      get: getUebungsbibliothek,
+      create: createUebungsbibliothek,
+      update: updateUebungsbibliothek,
+      delete: deleteUebungsbibliothek,
     },
     kursTeilnehmer: {
       list: listKursTeilnehmer,
