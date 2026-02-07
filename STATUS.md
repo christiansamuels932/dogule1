@@ -15,6 +15,56 @@ Quick stop (manual):
 - `pkill -f "tools/server/apiServer.js|vite dev|pnpm dev|vite" 2>/dev/null || true`
 - `sudo systemctl stop mariadb`
 
+# Date 2026-02-07 — VPS update fix + Trainer Übungsbibliothek write + Schulungen footer spacing
+
+## Kontext
+
+- Status: completed.
+- Scope: fix recurring VPS deploy failure, allow trainer create in Übungsbibliothek, and add Schulungen form footer spacing.
+
+## Ergebnis (kurz)
+
+- Confirmed root cause: rsync with trailing slashes flattened `tools/`, breaking `/opt/dogule1/tools/server/apiServer.js`.
+- `VPS_UPDATE_PROCESS.md` updated with minimal update flow and explicit “run rsync locally / no trailing slashes” warning.
+- RBAC: `trainer_rapport` can now write `uebungsbibliothek` (trainer create works).
+- Übungsbibliothek uploads: unauthenticated GET is allowed for `/api/uebungsbibliothek/uploads/*`.
+- Schulungen create/edit footer now has margin via `.schulungen-form-footer`.
+- Schulungen images still 404 until uploads are restored (folder empty on VPS).
+
+## Tests
+
+- VPS service active: `systemctl status dogule1` ✅
+- UI checks pending: trainer Übungsbibliothek create + Schulungen footer spacing
+
+## Offene Punkte
+
+- Restore/re-upload Schulungen images.
+- Confirm trainer create flow + Schulungen footer spacing after deploy.
+
+# Date 2026-02-07 — VPS deploy fix: rsync flattening + Übungsbibliothek uploads auth
+
+## Kontext
+
+- Status: in progress.
+- Scope: fix broken Übungsbibliothek/Schulungen images and recurring VPS deploy failure after rsync.
+
+## Ergebnis (kurz)
+
+- Identified recurring VPS crash: `Cannot find module '/opt/dogule1/tools/server/apiServer.js'` after deploy.
+- Root cause: rsync with trailing slashes flattened `tools/` into `/opt/dogule1/server/...` and removed `/opt/dogule1/tools/`.
+- Corrected deploy command (no trailing slashes) and documented in `VPS_UPDATE_PROCESS.md`, with explicit warning about flattening and missing `tools/`.
+- API change: allow unauthenticated GET for `/api/uebungsbibliothek/uploads/*` so images render in `<img>`.
+- Note: `/opt/dogule1/uploads/schulungen` is empty, causing `{"message":"not_found"}` for Schulungen images.
+
+## Tests
+
+- Pending: `systemctl status dogule1`, `/healthz`, and UI image re-check after corrected deploy + restart.
+
+## Offene Punkte
+
+- Verify VPS service running after restart.
+- Restore Schulungen uploads if source images exist (otherwise re-upload).
+
 # Date 2026-02-02 — Übungsbibliothek + Schulungen split, Kunden UI, VPS deploy recovery
 
 ## Kontext

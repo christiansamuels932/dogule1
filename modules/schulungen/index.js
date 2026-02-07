@@ -593,6 +593,7 @@ async function renderCreateView(section) {
   submitBtn.type = "submit";
   submitBtn.setAttribute("form", form.id);
   footer.innerHTML = "";
+  footer.classList.add("schulungen-form-footer");
   footer.appendChild(submitBtn);
 
   addBlockRow(blocksWrap, "text");
@@ -810,6 +811,7 @@ async function renderEditView(section, id) {
   submitBtn.type = "submit";
   submitBtn.setAttribute("form", form.id);
   footer.innerHTML = "";
+  footer.classList.add("schulungen-form-footer");
   footer.appendChild(submitBtn);
 
   form.addEventListener("submit", async (event) => {

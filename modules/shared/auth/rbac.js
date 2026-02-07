@@ -34,7 +34,7 @@ const API_ACCESS = {
   },
   trainer_rapport: {
     read: ["kunden", "hunde", "rapporte", "schulungen", "uebungsbibliothek"],
-    write: ["rapporte"],
+    write: ["rapporte", "uebungsbibliothek"],
   },
 };
 
