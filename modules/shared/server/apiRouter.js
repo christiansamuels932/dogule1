@@ -1551,6 +1551,12 @@ export function createApiRouter(options = {}) {
       return handleSchulungenRoutes(req, res);
     }
     if (
+      reqUrl.startsWith("/api/uebungsbibliothek/uploads/") &&
+      (req.method || "GET").toUpperCase() === "GET"
+    ) {
+      return handleUebungsbibliothekRoutes(req, res);
+    }
+    if (
       await handleAuthRoutes(req, res, authService, {
         listAuthOptions,
         ensureTrainerUsers,

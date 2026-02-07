@@ -10,6 +10,26 @@ Goal: Update the VPS runtime safely, avoid missing config, and prevent downtime.
 - Local repo: `/home/ran/codex/dogule1`
 - Deploy method: rsync/scp (no git repo on VPS)
 
+## Minimal update flow (most deploys)
+
+Run locally:
+
+```
+pnpm build
+rsync -av --delete --exclude 'config/' --exclude 'uploads/' --exclude 'node_modules/' /home/ran/codex/dogule1/dist /home/ran/codex/dogule1/modules /home/ran/codex/dogule1/tools dogule@144.91.86.20:/opt/dogule1/
+```
+
+Then on the VPS:
+
+```
+sudo systemctl restart dogule1
+```
+
+Notes:
+
+- Run the rsync command from your local machine (not on the VPS).
+- Do not add trailing slashes to the source paths; trailing slashes flatten the folders and break `/opt/dogule1/tools`.
+
 ## Files that MUST exist on VPS
 
 - `/opt/dogule1/config/dogule1.env`
@@ -30,18 +50,20 @@ pnpm build
 
 ## 2) Deploy runtime payload to VPS
 
-Preferred: rsync from local (safe: do NOT delete config/uploads/node_modules):
+Preferred: rsync from local (safe: do NOT delete config/uploads/node_modules).
+Important: no trailing slashes on the source paths (they would flatten the folders and break `/opt/dogule1/tools` and `/opt/dogule1/dist`).
 
 ```
-rsync -av --delete --exclude 'config/' --exclude 'uploads/' --exclude 'node_modules/' /home/ran/codex/dogule1/dist/ /home/ran/codex/dogule1/modules/ /home/ran/codex/dogule1/tools/ dogule@144.91.86.20:/opt/dogule1/
+rsync -av --delete --exclude 'config/' --exclude 'uploads/' --exclude 'node_modules/' /home/ran/codex/dogule1/dist /home/ran/codex/dogule1/modules /home/ran/codex/dogule1/tools dogule@144.91.86.20:/opt/dogule1/
 ```
 
-⚠️ **Never** run plain `rsync --delete` against `/opt/dogule1`. It will delete:
+⚠️ **Never** run plain `rsync --delete` against `/opt/dogule1`, and never add trailing slashes to the source paths. It will delete or flatten:
 
 - `/opt/dogule1/config` (breaks service env)
 - `/opt/dogule1/uploads` (destroys images)
 - `/opt/dogule1/node_modules` (breaks runtime deps)
 - `/opt/dogule1/modules` or `/opt/dogule1/dist` (breaks API/UI)
+- `/opt/dogule1/tools` (breaks `apiServer.js` path)
 
 If you need to re-run rsync, always use the exact command above.
 
@@ -117,6 +139,43 @@ sudo journalctl -xeu dogule1.service --no-pager -n 200
 Common root cause:
 
 - Missing `/opt/dogule1/config/dogule1.env`.
+
+### Service won’t start (apiServer.js missing)
+
+Symptoms:
+
+- `systemctl status dogule1` shows `code=exited, status=1/FAILURE`.
+- `journalctl -xeu dogule1.service` shows:
+  - `Error: Cannot find module '/opt/dogule1/tools/server/apiServer.js'`
+  - `code: 'MODULE_NOT_FOUND'`
+  - `Node.js v20.x`
+
+Cause:
+
+- `/opt/dogule1/tools/` did not get deployed (bad rsync path, wrong cwd, or trailing slash flattening).
+- When flattened, `apiServer.js` ends up at `/opt/dogule1/server/apiServer.js` instead of `/opt/dogule1/tools/server/apiServer.js`.
+
+Fix:
+
+1. On VPS, verify the file:
+
+```
+ls -la /opt/dogule1/tools/server/apiServer.js
+```
+
+2. If missing, re-deploy from local using the exact safe rsync command (includes `tools/`):
+
+```
+rsync -av --delete --exclude 'config/' --exclude 'uploads/' --exclude 'node_modules/' /home/ran/codex/dogule1/dist /home/ran/codex/dogule1/modules /home/ran/codex/dogule1/tools dogule@144.91.86.20:/opt/dogule1/
+```
+
+3. Restart and verify:
+
+```
+sudo systemctl restart dogule1
+sudo systemctl status dogule1 --no-pager -l
+curl -sS -i http://127.0.0.1:5177/healthz
+```
 
 ### Service won’t start (ERR_MODULE_NOT_FOUND: mariadb)
 
