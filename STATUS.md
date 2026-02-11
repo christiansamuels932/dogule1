@@ -4,6 +4,55 @@ READ-ONLY NOTE: provide only 1 step of instruction/guidance per message.
 READ-ONLY NOTE: A single "." from the user means "confirmed, ok, next"
 READ-ONLY NOTE: Each assistant response must start with "🔷 Topic — Subtitle — Progress: X% 🔷".
 
+## Date 2026-02-11 — HTTPS via Cloudflare + Nginx reverse proxy
+
+## Kontext
+
+- Status: completed.
+- Scope: ogule.net HTTPS with trusted padlock while app stays on :5177.
+
+## Ergebnis (kurz)
+
+- Nginx installed and enabled; ports 80/443 opened via UFW.
+- Cloudflare Origin Certificate created for `ogule.net` + `www.ogule.net`.
+- Cert/key installed on VPS: `/etc/ssl/cloudflare/ogule.net.pem` and `/etc/ssl/cloudflare/ogule.net.key`.
+- Nginx reverse proxy configured: 80 → 443 redirect, 443 → `http://127.0.0.1:5177`, WebSocket headers set.
+- Nginx config validated and reloaded.
+- Cloudflare SSL mode set to **Full (strict)**.
+- Cloudflare Page Rule set: Always Use HTTPS for `http://ogule.net/*`.
+
+## Tests
+
+- `curl -kI https://localhost` → `HTTP/2 200` ✅
+
+## Offene Punkte
+
+- None.
+
+## Date 2026-02-11 — Kunden Kurs-History split + Kurs hinzufügen prefill
+
+## Kontext
+
+- Status: in progress.
+- Scope: Kunden Detailview — Kursliste pro Teilnehmer-Startdatum getrennt; neuer “Zu Kurs hinzufügen” Flow mit Kursauswahl + Prefill im Kurs-Teilnehmer-Formular.
+
+## Ergebnis (kurz)
+
+- Kunden → Kurse: Wenn derselbe Kurs mehrfach mit unterschiedlichen Startdatum-Einträgen existiert, wird jeder Teilnehmer-Eintrag als eigene Zeile gerendert (statt zusammengeführt).
+- Kunden Detail: Button “Zu Kurs hinzufügen” zeigt eine Kursauswahl; Auswahl öffnet Kurs-Detail und prefillt den Teilnehmer-Dialog mit dem Kunden.
+- Kursauswahl bleibt verborgen bis “Zu Kurs hinzufügen” gedrückt wird (verhindert leere Dropdowns beim Laden).
+- Kurs-Teilnehmer-Formular unterstützt Prefill (Kunde vorselektiert).
+- UI spacing: `.kunden-kurs-add` hinzugefügt.
+
+## Tests
+
+- Not run (lokal und VPS).
+
+## Offene Punkte
+
+- Änderungen auf VPS deployen (rsync gemäß `VPS_UPDATE_PROCESS.md`) und Service neu starten.
+- UI-Verifikation auf VPS: Kunden Detail → “Zu Kurs hinzufügen” → Kursauswahl → Prefill im Teilnehmer-Dialog.
+
 Quick start (manual):
 
 - `sudo systemctl start mariadb && sudo systemctl status mariadb`

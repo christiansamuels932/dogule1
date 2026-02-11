@@ -33,6 +33,7 @@ import {
 let kundenCache = [];
 const TOAST_KEY = "__DOGULE_KUNDEN_TOAST__";
 const COLUMN_STORAGE_KEY = "__DOGULE_KUNDEN_COLUMNS__";
+const KURS_TEILNEHMER_PREFILL_KEY = "__DOGULE_KURS_TEILNEHMER_PREFILL__";
 
 function isAdminOrDeveloper(role) {
   return role === "admin" || role === "developer";
@@ -1049,6 +1050,22 @@ async function renderDetail(root, id) {
   const role = getSession()?.user?.role || "";
   const canManage = isAdminOrDeveloper(role);
   const canViewExtras = isAdminOrDeveloper(role);
+  let allKurse = [];
+  let kurseLoaded = false;
+  let kurseLoadFailed = false;
+  const loadAllKurse = async () => {
+    if (kurseLoaded) return allKurse;
+    try {
+      allKurse = await listKurse();
+    } catch (error) {
+      kurseLoadFailed = true;
+      allKurse = [];
+      console.error("[KUNDEN_ERR_KURSE_LOAD]", error);
+    } finally {
+      kurseLoaded = true;
+    }
+    return allKurse;
+  };
   let linkedHunde = [];
   let hundeLoadFailed = false;
   if (canViewExtras) {
@@ -1109,6 +1126,10 @@ async function renderDetail(root, id) {
   const actionsWrap = document.createElement("div");
   actionsWrap.className = "module-actions";
   let deleteBtn = null;
+  let kursSelect = null;
+  let kursAddWrap = null;
+  let kursStatus = null;
+  let kursAddMounted = false;
   if (canManage) {
     const editBtn = createButton({
       label: "Bearbeiten",
@@ -1118,13 +1139,106 @@ async function renderDetail(root, id) {
     editBtn.addEventListener("click", () => {
       window.location.hash = `#/kunden/${id}/edit`;
     });
+    const addToKursBtn = createButton({
+      label: "Zu Kurs hinzufügen",
+      variant: "secondary",
+    });
+    addToKursBtn.type = "button";
     deleteBtn = createButton({
       label: "Löschen",
       variant: "secondary",
     });
     deleteBtn.type = "button";
     deleteBtn.dataset.action = "delete";
-    actionsWrap.append(editBtn, deleteBtn);
+    actionsWrap.append(editBtn, addToKursBtn, deleteBtn);
+
+    const ensureKursAddWrap = () => {
+      if (kursAddMounted) return;
+      kursAddWrap = document.createElement("div");
+      kursAddWrap.className = "kunden-kurs-add";
+      kursAddWrap.hidden = true;
+      const kursRow = createFormRow({
+        id: `kunden-kurs-add-${id}`,
+        label: "Kurs auswählen",
+        control: "select",
+        required: false,
+        options: [{ value: "", label: "— Kurs auswählen —", selected: true }],
+      });
+      kursSelect = kursRow.querySelector("select");
+      kursStatus = document.createElement("div");
+      kursStatus.className = "kunden-card-status";
+      kursAddWrap.append(kursRow, kursStatus);
+      actionsBody.appendChild(kursAddWrap);
+      kursAddMounted = true;
+
+      if (kursSelect) {
+        kursSelect.addEventListener("change", () => {
+          const kursId = kursSelect?.value || "";
+          if (!kursId) return;
+          window[KURS_TEILNEHMER_PREFILL_KEY] = { kundeId: id, kursId };
+          window.location.hash = `#/kurse/${kursId}`;
+        });
+      }
+    };
+
+    const formatKursLabel = (kurs = {}) => {
+      const title = kurs.title || kurs.code || "Kurs";
+      const date = kurs.date ? String(kurs.date).slice(0, 10) : "";
+      return date ? `${title} · ${date}` : title;
+    };
+    const setKursOptions = (kurse = []) => {
+      if (!kursSelect) return;
+      kursSelect.innerHTML = "";
+      const placeholder = document.createElement("option");
+      placeholder.value = "";
+      placeholder.textContent = "— Kurs auswählen —";
+      placeholder.selected = true;
+      kursSelect.appendChild(placeholder);
+      const sorted = [...kurse].sort((a, b) => {
+        const dateCompare = String(b?.date || "").localeCompare(String(a?.date || ""));
+        if (dateCompare !== 0) return dateCompare;
+        return String(a?.title || "").localeCompare(String(b?.title || ""), "de", {
+          sensitivity: "base",
+        });
+      });
+      sorted.forEach((kurs) => {
+        const option = document.createElement("option");
+        option.value = kurs.id;
+        option.textContent = formatKursLabel(kurs);
+        kursSelect.appendChild(option);
+      });
+    };
+    const populateKursSelect = async () => {
+      ensureKursAddWrap();
+      if (!kursSelect || !kursStatus) return;
+      kursStatus.textContent = "";
+      kursSelect.disabled = true;
+      kursStatus.appendChild(
+        createNotice("Kurse werden geladen ...", { variant: "info", role: "status" })
+      );
+      const kurse = await loadAllKurse();
+      kursStatus.innerHTML = "";
+      if (!kurse.length) {
+        kursSelect.disabled = true;
+        const message = kurseLoadFailed
+          ? "Kurse konnten nicht geladen werden."
+          : "Keine Kurse vorhanden.";
+        kursStatus.appendChild(createNotice(message, { variant: "warn", role: "status" }));
+        return;
+      }
+      kursSelect.disabled = false;
+      setKursOptions(kurse);
+    };
+
+    addToKursBtn.addEventListener("click", async () => {
+      ensureKursAddWrap();
+      if (!kursAddWrap) return;
+      kursAddWrap.hidden = !kursAddWrap.hidden;
+      if (!kursAddWrap.hidden) {
+        await populateKursSelect();
+        kursSelect?.focus();
+      }
+    });
   }
   const backBtn = createButton({
     label: "Zur Übersicht",
@@ -1182,9 +1296,8 @@ async function renderDetail(root, id) {
 
   let linkedKurse = [];
   const teilnehmerByKursId = new Map();
-  let kurseLoadFailed = false;
   try {
-    const allKurse = await listKurse();
+    const allKurse = await loadAllKurse();
     const hundIds = new Set(linkedHunde.map((hund) => hund.id));
     const byId = new Map();
     allKurse.forEach((kurs) => {
@@ -1443,29 +1556,39 @@ function renderKundenKurseSection(
         return String(value).slice(0, 10);
       };
       const resolveTrainerName = (kurs) => kurs.trainer?.name || kurs.trainerName || "–";
-      const resolveHundNames = (entries = []) => {
-        const names = entries
-          .map((entry) => {
-            const hund = hundeById.get(entry.hundId);
-            return formatHundName(hund) || entry.hundName || "";
-          })
-          .filter(Boolean);
-        return names.length ? names.join(", ") : "–";
-      };
-      const resolveStartDate = (kurs, entries = []) => {
-        const entryDate = entries.find((entry) => entry.startDatum)?.startDatum;
-        return formatKursDate(entryDate || kurs.date || "");
+      const resolveEntryHundName = (entry) => {
+        if (!entry) return "–";
+        const hund = hundeById.get(entry.hundId);
+        return formatHundName(hund) || entry.hundName || "–";
       };
 
-      const rows = kurse.map((kurs) => {
+      const rows = [];
+      kurse.forEach((kurs) => {
         const entries = teilnehmerByKursId.get(kurs.id) || [];
-        return {
+        if (entries.length) {
+          entries.forEach((entry, index) => {
+            const startdatum = formatKursDate(entry.startDatum || kurs.date || "");
+            rows.push({
+              kurs,
+              entry,
+              rowKey: `${kurs.id}-${entry.id || index}`,
+              startdatum,
+              kursname: kurs.title || kurs.code || "Kurs",
+              trainer: resolveTrainerName(kurs),
+              hunde: resolveEntryHundName(entry),
+            });
+          });
+          return;
+        }
+        rows.push({
           kurs,
-          startdatum: resolveStartDate(kurs, entries),
+          entry: null,
+          rowKey: `${kurs.id}-single`,
+          startdatum: formatKursDate(kurs.date || ""),
           kursname: kurs.title || kurs.code || "Kurs",
           trainer: resolveTrainerName(kurs),
-          hunde: resolveHundNames(entries),
-        };
+          hunde: "–",
+        });
       });
 
       const sortState = { key: "startdatum", direction: "desc" };

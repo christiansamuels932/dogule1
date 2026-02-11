@@ -118,6 +118,13 @@ a:focus-visible {
   background: var(--color-paper);
 }
 
+.kunden-kurs-add {
+  margin-top: 0.75rem;
+  display: grid;
+  gap: 0.5rem;
+  max-width: 420px;
+}
+
 .card-stack-compact .ui-card + .ui-card {
   margin-top: 0.75rem;
 }

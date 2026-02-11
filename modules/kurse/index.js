@@ -43,6 +43,7 @@ const STATUS_OPTIONS = [
   { value: "aktiv", label: "Aktiv" },
   { value: "deaktiviert", label: "Deaktiviert" },
 ];
+const KURS_TEILNEHMER_PREFILL_KEY = "__DOGULE_KURS_TEILNEHMER_PREFILL__";
 
 async function fetchTrainer(force = false) {
   if (trainerCache.length && !force) {
@@ -213,16 +214,12 @@ function createTeilnehmerFormCard() {
   };
 
   const updateKundeOptions = (query = "") => {
-    const normalized = String(query || "").trim().toLowerCase();
+    const normalized = String(query || "")
+      .trim()
+      .toLowerCase();
     const filtered = normalized
       ? kunden.filter((kunde) => {
-          const text = [
-            kunde.nachname,
-            kunde.vorname,
-            kunde.ort,
-            kunde.email,
-            kunde.telefon,
-          ]
+          const text = [kunde.nachname, kunde.vorname, kunde.ort, kunde.email, kunde.telefon]
             .filter(Boolean)
             .join(" ")
             .toLowerCase();
@@ -307,6 +304,14 @@ function createTeilnehmerFormCard() {
       updateHundOptions("");
       if (startInput) startInput.value = "";
     },
+    prefill({ kundeId = "", hundId = "", startDatum = "" } = {}) {
+      if (searchInput) searchInput.value = "";
+      updateKundeOptions("");
+      if (kundeSelect) kundeSelect.value = kundeId || "";
+      updateHundOptions(kundeId || "");
+      if (hundId && hundSelect) hundSelect.value = hundId;
+      if (startInput && startDatum) startInput.value = startDatum;
+    },
   };
 
   return api;
@@ -319,14 +324,12 @@ function renderKursHistorieRows(
 ) {
   if (!tbody) return;
   tbody.innerHTML = "";
-  const normalizedFilter = String(filter || "").trim().toLowerCase();
+  const normalizedFilter = String(filter || "")
+    .trim()
+    .toLowerCase();
   const visibleEntries = normalizedFilter
     ? entries.filter((entry) => {
-        const searchText = [
-          entry?.kundeNachname,
-          entry?.kundeVorname,
-          entry?.hundName,
-        ]
+        const searchText = [entry?.kundeNachname, entry?.kundeVorname, entry?.hundName]
           .filter(Boolean)
           .join(" ")
           .toLowerCase();
@@ -585,6 +588,31 @@ async function renderDetail(section, id) {
     detailSection.appendChild(teilnehmerForm.card);
 
     let teilnehmerLoaded = false;
+    const ensureTeilnehmerData = async () => {
+      if (teilnehmerLoaded) return true;
+      try {
+        const [kunden, hunde] = await Promise.all([listKunden(), listHunde()]);
+        teilnehmerForm.setData(kunden, hunde);
+        teilnehmerLoaded = true;
+        return true;
+      } catch (error) {
+        console.error("[KURSE_ERR_TEILNEHMER_LOAD]", error);
+        teilnehmerForm.setStatus("Kunden/Hunde konnten nicht geladen werden.", "warn");
+        return false;
+      }
+    };
+    const openTeilnehmerForm = async (prefill = null) => {
+      teilnehmerForm.card.hidden = false;
+      teilnehmerForm.setStatus("Kunden werden geladen ...", "info");
+      teilnehmerForm.focus();
+      const ok = await ensureTeilnehmerData();
+      if (!ok) return;
+      teilnehmerForm.setStatus("");
+      if (prefill && (prefill.kundeId || prefill.hundId || prefill.startDatum)) {
+        teilnehmerForm.prefill(prefill);
+      }
+      teilnehmerForm.card.scrollIntoView({ behavior: "smooth", block: "start" });
+    };
     const refreshTeilnehmer = async () => {
       try {
         const list = await listKursTeilnehmer(kurs.id);
@@ -650,24 +678,18 @@ async function renderDetail(section, id) {
     });
     teilnehmerBtn.addEventListener("click", async () => {
       const isHidden = teilnehmerForm.card.hidden;
-      teilnehmerForm.card.hidden = !isHidden;
       if (isHidden) {
-        teilnehmerForm.setStatus("Kunden werden geladen ...", "info");
-        teilnehmerForm.focus();
-        if (!teilnehmerLoaded) {
-          try {
-            const [kunden, hunde] = await Promise.all([listKunden(), listHunde()]);
-            teilnehmerForm.setData(kunden, hunde);
-            teilnehmerLoaded = true;
-          } catch (error) {
-            console.error("[KURSE_ERR_TEILNEHMER_LOAD]", error);
-            teilnehmerForm.setStatus("Kunden/Hunde konnten nicht geladen werden.", "warn");
-          }
-        } else {
-          teilnehmerForm.setStatus("");
-        }
+        await openTeilnehmerForm();
+      } else {
+        teilnehmerForm.card.hidden = true;
       }
     });
+
+    const prefill = window[KURS_TEILNEHMER_PREFILL_KEY];
+    if (prefill?.kursId === kurs.id) {
+      delete window[KURS_TEILNEHMER_PREFILL_KEY];
+      await openTeilnehmerForm(prefill);
+    }
 
     const detailCard = createStandardCard("Stammdaten");
     const detailBody = detailCard.querySelector(".ui-card__body");
