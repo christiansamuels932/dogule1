@@ -40,6 +40,7 @@ import {
   updateUebungsbibliothek,
   deleteUebungsbibliothek,
 } from "../api/uebungsbibliothek.js";
+import { list, create } from "../api/crud.js";
 import { StorageError, STORAGE_ERROR_CODES } from "./errors.js";
 import { executeWriteContract } from "./writeContract.js";
 
@@ -241,6 +242,14 @@ export function createMockAdapter(options = {}) {
         create: (data, ctx) => createUebungsbibliothek(data, ctx),
         update: (id, data, ctx) => updateUebungsbibliothek(id, data, ctx),
         delete: (id, ctx) => deleteUebungsbibliothek(id, ctx),
+      },
+      defaults
+    ),
+    uebungsbibliothekKategorien: buildEntityAdapter(
+      "uebungsbibliothek_kategorien",
+      {
+        list: (ctx) => list("uebungsbibliothek_kategorien", ctx),
+        create: (data, ctx) => create("uebungsbibliothek_kategorien", data, ctx),
       },
       defaults
     ),

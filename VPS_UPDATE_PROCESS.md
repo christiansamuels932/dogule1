@@ -2,6 +2,90 @@
 
 Goal: Update the VPS runtime safely, avoid missing config, and prevent downtime.
 
+## VPS Overview (Merged from DEPLOYMENT_PLAN.md)
+
+Goal:
+
+- Run Dogule1 on Contabo VPS only. No NAS-Backup and no Windows installer scope.
+
+VPS profile:
+
+- Provider: Contabo
+- Specs: 4 vCPU / 150 GB SSD
+- OS: Ubuntu 24.04.3 LTS (GNU/Linux 6.8.0-90-generic x86_64)
+- IPv4: 144.91.86.20
+- IPv6: 2a02:c207:2305:2330::1
+- Access: stored offline
+
+Architecture:
+
+- Public API + UI served from the VPS.
+- Single runtime target: the VPS.
+- Data stored on VPS disk.
+
+DNS / TLS (legacy; verify current state in STATUS.md):
+
+- Domain: to be confirmed
+- TLS: to be confirmed (Caddy or Nginx)
+
+Ports (legacy; verify current state in STATUS.md):
+
+- Allow: 22 (SSH), 80/443 (HTTP/HTTPS)
+- App API: to be confirmed
+- UI: to be confirmed
+- Deny all other inbound ports
+
+VPS layout (legacy proposal; current runtime uses `/opt/dogule1/dist`, `/modules`, `/tools`):
+
+- `/opt/dogule1/`
+  - `app/` (UI dist)
+  - `api/` (Node server + modules)
+  - `db/` (MariaDB data directory)
+  - `logs/`
+  - `config/`
+  - `tools/`
+
+Service management:
+
+- Run API as a systemd service
+- Run UI as static files served by the API or by the reverse proxy
+
+Deployment method (VPS):
+
+- No git repo on VPS. Deploy from local machine via rsync or scp.
+- Preferred: rsync the runtime payload into `/opt/dogule1`:
+  - `dist/` → `/opt/dogule1/dist/`
+  - `modules/` → `/opt/dogule1/modules/`
+  - `tools/` → `/opt/dogule1/tools/`
+  - `package.json`, `pnpm-lock.yaml`
+- After sync: `pnpm install --prod --ignore-scripts`, then `sudo systemctl restart dogule1`.
+- Important: run rsync from local machine, not on the VPS.
+
+Data:
+
+- MariaDB on VPS
+- Backups: to be defined (local snapshot + offsite?)
+
+Open questions (legacy; verify current state in STATUS.md):
+
+- VPS OS/version
+- Domain name + TLS approach
+- API/UI ports
+- Backup strategy
+
+Progress (legacy snapshot):
+
+- 2026-01-30: OS updated and VPS rebooted; uptime verified.
+- 2026-01-30: Created `dogule` sudo user; SSH key auth set; root login + password auth disabled.
+- 2026-01-30: UFW enabled; OpenSSH + 80/443 allowed.
+- 2026-01-30: Installed core packages (curl/ca-certificates/gnupg/git/build-essential/mariadb-server).
+- 2026-01-30: Installed Node.js 20 LTS + pnpm (corepack).
+- 2026-01-30: Created `/opt/dogule1` and set ownership to `dogule`.
+
+Next step (legacy; verify current state in STATUS.md):
+
+- Confirm VPS OS, domain, and desired port mapping
+
 ## Preconditions
 
 - VPS: `dogule@144.91.86.20`
@@ -9,6 +93,74 @@ Goal: Update the VPS runtime safely, avoid missing config, and prevent downtime.
 - Service: `dogule1.service`
 - Local repo: `/home/ran/codex/dogule1`
 - Deploy method: rsync/scp (no git repo on VPS)
+
+## MariaDB Sync Workflow (VPS → Local → VPS)
+
+Goal: Pull VPS data to local, run schema/code updates locally, then push the updated DB back to VPS.
+
+Notes:
+
+- Local standard socket: `/run/mysqld/mysqld.sock` (avoid mixing sockets).
+- These steps overwrite the target DB. Keep the dump as your backup.
+
+### 1) Dump VPS database
+
+On VPS:
+
+```
+sudo bash -lc 'source /opt/dogule1/config/dogule1.env && mariadb-dump --single-transaction -u "$DOGULE1_MARIADB_USER" -p"$DOGULE1_MARIADB_PASSWORD" "$DOGULE1_MARIADB_DATABASE" > /tmp/dogule1_vps.sql && chown dogule:dogule /tmp/dogule1_vps.sql'
+```
+
+### 2) Copy dump to local
+
+On local:
+
+```
+scp dogule@144.91.86.20:/tmp/dogule1_vps.sql /tmp/dogule1_vps.sql
+```
+
+If scp fails, stream over SSH:
+
+```
+ssh dogule@144.91.86.20 "cat /tmp/dogule1_vps.sql" > /tmp/dogule1_vps.sql
+```
+
+### 3) Import into local MariaDB (full overwrite)
+
+On local:
+
+```
+sudo systemctl start mariadb
+mariadb --protocol=socket --socket /run/mysqld/mysqld.sock -u ran -p -e "DROP DATABASE IF EXISTS dogule1; CREATE DATABASE dogule1;"
+mariadb --protocol=socket --socket /run/mysqld/mysqld.sock -u ran -p dogule1 < /tmp/dogule1_vps.sql
+```
+
+### 4) Make schema + app changes locally
+
+- Apply migrations / schema updates.
+- Update the app locally.
+
+### 5) Dump local DB for VPS
+
+On local:
+
+```
+mariadb-dump --single-transaction --protocol=socket --socket /run/mysqld/mysqld.sock -u ran -p dogule1 > /tmp/dogule1_local.sql
+scp /tmp/dogule1_local.sql dogule@144.91.86.20:/tmp/dogule1_local.sql
+```
+
+### 6) Import back into VPS (full overwrite)
+
+On VPS:
+
+```
+sudo bash -lc 'source /opt/dogule1/config/dogule1.env && mariadb -u "$DOGULE1_MARIADB_USER" -p"$DOGULE1_MARIADB_PASSWORD" -e "DROP DATABASE IF EXISTS $DOGULE1_MARIADB_DATABASE; CREATE DATABASE $DOGULE1_MARIADB_DATABASE;"'
+sudo bash -lc 'source /opt/dogule1/config/dogule1.env && mariadb -u "$DOGULE1_MARIADB_USER" -p"$DOGULE1_MARIADB_PASSWORD" "$DOGULE1_MARIADB_DATABASE" < /tmp/dogule1_local.sql'
+```
+
+### 7) Deploy app to VPS
+
+Continue with the standard "Minimal update flow" below (build + rsync + restart).
 
 ## Minimal update flow (most deploys)
 

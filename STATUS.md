@@ -4,6 +4,132 @@ READ-ONLY NOTE: provide only 1 step of instruction/guidance per message.
 READ-ONLY NOTE: A single "." from the user means "confirmed, ok, next"
 READ-ONLY NOTE: Each assistant response must start with "🔷 Topic — Subtitle — Progress: X% 🔷".
 
+## Date 2026-02-14 — Archive Deployment Plan
+
+## Kontext
+
+- Status: completed.
+- Scope: move legacy `DEPLOYMENT_PLAN.md` into archive after merge.
+
+## Ergebnis (kurz)
+
+- Archived to `attachments/archive/DEPLOYMENT_PLAN.md`.
+
+## Tests
+
+- Not run (doc move).
+
+## Offene Punkte
+
+- None.
+
+## Date 2026-02-14 — VPS DB Sync + Deploy (Übungsbibliothek Kategorien)
+
+## Kontext
+
+- Status: in progress.
+- Scope: push local DB + app changes for Übungsbibliothek Kategorien to VPS.
+
+## Ergebnis (kurz)
+
+- VPS DB overwritten with local dump (`dogule1_local.sql`) after drop/create.
+- App deployed via `pnpm build` + safe rsync (dist/modules/tools).
+- Service restarted; API listening on `:5177`.
+
+## Tests
+
+- `systemctl status dogule1` ✅ (active)
+- `curl http://127.0.0.1:5177/healthz` ✅
+
+## Offene Punkte
+
+- VPS UI check: Kategorie column, Kategorie erstellen (Admin/Developer only), filters, category select, and document links.
+
+## Date 2026-02-14 — Übungsbibliothek Kategorien + Filter
+
+## Kontext
+
+- Status: in progress.
+- Scope: Kategorien (DB + UI), Kategorie-Spalte, Filter (Ersteller/Kategorie), Kategorie-Create nur Admin/Developer.
+
+## Ergebnis (kurz)
+
+- Migration hinzugefügt: `112_0_uebungsbibliothek_kategorien.sql` (Kategorien-Tabelle + `kategorie_id`).
+- API erweitert: `/api/uebungsbibliothek/kategorien` (GET/POST, POST nur Admin/Developer).
+- UI: “Kategorie erstellen” Button (Admin/Developer), Kategorie-Spalte, Filter-Buttons, Kategorie-Select in Create/Edit.
+- Fix: `actorRole` in `handleUebungsbibliothekRoutes` definiert (verhindert Runtime-Error).
+
+## Tests
+
+- Not run.
+
+## Offene Punkte
+
+- Migration lokal anwenden.
+- UI lokal prüfen (Kategorie erstellen, zuweisen, filtern, suchen).
+- Local → VPS DB-Upload + App-Deploy + VPS-UI-Check.
+
+## Date 2026-02-14 — Merge Deployment Plan into VPS Update Process
+
+## Kontext
+
+- Status: completed.
+- Scope: consolidate `DEPLOYMENT_PLAN.md` into `VPS_UPDATE_PROCESS.md` without losing information.
+
+## Ergebnis (kurz)
+
+- `VPS_UPDATE_PROCESS.md` now includes the full deployment plan content as a merged overview (legacy items clearly labeled).
+- `DEPLOYMENT_PLAN.md` marked as legacy snapshot pointing to the authoritative doc.
+
+## Tests
+
+- Not run (doc update).
+
+## Offene Punkte
+
+- None.
+
+## Date 2026-02-14 — VPS MariaDB Sync Workflow Added
+
+## Kontext
+
+- Status: completed.
+- Scope: document VPS → local → VPS MariaDB sync workflow in `VPS_UPDATE_PROCESS.md`.
+
+## Ergebnis (kurz)
+
+- Added a dedicated MariaDB sync section with dump/copy/import steps and socket guidance.
+- Notes include overwrite warning and fallback SSH streaming for dumps.
+
+## Tests
+
+- Not run (doc update).
+
+## Offene Punkte
+
+- Verify commands on next real sync.
+
+## Date 2026-02-14 — Übungsbibliothek/Schulungen Dokument-Uploads
+
+## Kontext
+
+- Status: completed.
+- Scope: PDF/DOC/DOCX Uploads in Übungsbibliothek + Schulungen; neuer Button “Dokument hinzufügen”; Dokumente öffnen im neuen Tab.
+
+## Ergebnis (kurz)
+
+- UI: neuer “Dokument hinzufügen”-Button in Create/Edit; Dokument-Blöcke rendern als Link mit `target="_blank"`.
+- API: Uploads akzeptieren PDF/DOC/DOCX; Content-Type + Dateiendungen korrekt gesetzt.
+- Bestehende Bild-Uploads unverändert.
+
+## Tests
+
+- Not run.
+
+## Offene Punkte
+
+- Dokument-Upload + Anzeige lokal und auf VPS prüfen.
+
 ## Date 2026-02-11 — HTTPS via Cloudflare + Nginx reverse proxy
 
 ## Kontext

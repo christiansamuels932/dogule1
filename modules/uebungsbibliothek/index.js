@@ -4,6 +4,8 @@ import {
   getUebungsbibliothek,
   createUebungsbibliothek,
   updateUebungsbibliothek,
+  listUebungsbibliothekKategorien,
+  createUebungsbibliothekKategorie,
   uploadUebungsbibliothekImage,
   deleteUebungsbibliothek,
 } from "../shared/api/uebungsbibliothek.js";
@@ -55,12 +57,112 @@ function canCreate() {
   );
 }
 
+function canManageCategories() {
+  const role = getSession()?.user?.role || "";
+  return role === "admin" || role === "developer";
+}
+
 function getCreatorLabel() {
   const user = getSession()?.user || {};
   return resolveCreatorLabel(user.username || user.id || "");
 }
 
-function buildActionsCard() {
+function buildCategoryOptions(categories = [], selectedId = "") {
+  const options = [{ value: "", label: "Keine Kategorie", selected: !selectedId }];
+  categories.forEach((category) => {
+    options.push({
+      value: category.id,
+      label: category.name || "Kategorie",
+      selected: category.id === selectedId,
+    });
+  });
+  return options;
+}
+
+function buildCategoryCreateForm({ onCreated }) {
+  const wrap = document.createElement("div");
+  wrap.className = "uebungsbibliothek-category-form";
+  wrap.hidden = true;
+  wrap.style.display = "none";
+
+  const statusSlot = document.createElement("div");
+  statusSlot.className = "schulungen-status";
+
+  const form = document.createElement("form");
+  form.className = "uebungsbibliothek-category-form__form";
+  form.noValidate = true;
+
+  const nameRow = createFormRow({
+    id: `uebungsbibliothek-category-name-${Math.random().toString(36).slice(2)}`,
+    label: "Kategorie",
+    required: true,
+  });
+  const nameInput = nameRow.querySelector("input");
+  if (nameInput) {
+    nameInput.name = "categoryName";
+  }
+  form.appendChild(nameRow);
+
+  const actions = document.createElement("div");
+  actions.className = "module-actions";
+  const saveBtn = createButton({ label: "Speichern", variant: "primary" });
+  saveBtn.type = "submit";
+  const cancelBtn = createButton({ label: "Abbrechen", variant: "secondary" });
+  cancelBtn.type = "button";
+  cancelBtn.addEventListener("click", () => {
+    form.reset();
+    statusSlot.innerHTML = "";
+    wrap.hidden = true;
+    wrap.style.display = "none";
+  });
+  actions.append(saveBtn, cancelBtn);
+  form.appendChild(actions);
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    statusSlot.innerHTML = "";
+    const nameValue = nameInput?.value.trim() || "";
+    if (!nameValue) {
+      statusSlot.appendChild(
+        createNotice("Kategorie benötigt einen Namen.", { variant: "warn", role: "alert" })
+      );
+      return;
+    }
+    saveBtn.disabled = true;
+    saveBtn.textContent = "Speichern ...";
+    try {
+      const created = await createUebungsbibliothekKategorie({
+        name: nameValue,
+        createdBy: getCreatorLabel(),
+      });
+      statusSlot.appendChild(
+        createNotice("Kategorie erstellt.", { variant: "ok", role: "status" })
+      );
+      if (typeof onCreated === "function") {
+        onCreated(created);
+      }
+      form.reset();
+      wrap.hidden = true;
+      wrap.style.display = "none";
+    } catch (error) {
+      console.error("[UEBUNGSBIBLIOTHEK_CATEGORY_CREATE_FAILED]", error);
+      statusSlot.appendChild(
+        createNotice("Kategorie konnte nicht erstellt werden.", {
+          variant: "warn",
+          role: "alert",
+        })
+      );
+    } finally {
+      saveBtn.disabled = false;
+      saveBtn.textContent = "Speichern";
+    }
+  });
+
+  wrap.append(statusSlot, form);
+  return { wrap, nameInput };
+}
+
+function buildActionsCard({ onCategoryCreated }) {
   const actionsCard = createCard({
     eyebrow: "",
     title: "Aktionen",
@@ -83,7 +185,32 @@ function buildActionsCard() {
     });
     actions.appendChild(createBtn);
   }
+  let categoryForm = null;
+  let categoryInput = null;
+  if (canManageCategories()) {
+    const categoryBtn = createButton({
+      label: "Kategorie erstellen",
+      variant: "secondary",
+    });
+    categoryBtn.type = "button";
+    const formParts = buildCategoryCreateForm({
+      onCreated: onCategoryCreated,
+    });
+    categoryForm = formParts.wrap;
+    categoryInput = formParts.nameInput;
+    categoryBtn.addEventListener("click", () => {
+      if (categoryForm) {
+        categoryForm.hidden = false;
+        categoryForm.style.display = "grid";
+        categoryInput?.focus();
+      }
+    });
+    actions.appendChild(categoryBtn);
+  }
   body.appendChild(actions);
+  if (categoryForm) {
+    body.appendChild(categoryForm);
+  }
   return card;
 }
 
@@ -139,7 +266,35 @@ function buildDetailActions(entry, statusSlot) {
 
 async function renderListView(section) {
   section.classList.add("card-stack-compact");
-  const actionsCard = buildActionsCard();
+  const categoryState = { items: [], map: new Map() };
+  let renderFilters = () => {};
+  let renderRows = () => {};
+
+  const updateCategoryState = (next = []) => {
+    const items = Array.isArray(next) ? next : [];
+    categoryState.items = items;
+    categoryState.map = new Map(
+      items.map((category) => [category.id, category.name || "Kategorie"])
+    );
+  };
+
+  const refreshCategories = async () => {
+    try {
+      const next = await listUebungsbibliothekKategorien();
+      updateCategoryState(next);
+    } catch (error) {
+      console.error("[UEBUNGSBIBLIOTHEK_CATEGORY_LIST_FAILED]", error);
+      updateCategoryState([]);
+    }
+    renderFilters();
+    renderRows();
+  };
+
+  const actionsCard = buildActionsCard({
+    onCategoryCreated: () => {
+      refreshCategories();
+    },
+  });
   if (actionsCard) section.appendChild(actionsCard);
 
   const cardFragment = createCard({
@@ -185,6 +340,22 @@ async function renderListView(section) {
   const searchState = {
     query: "",
   };
+  const filterState = {
+    creator: "",
+    categoryId: "",
+  };
+
+  const resolveKategorieLabel = (id) => {
+    if (!id) return "–";
+    return categoryState.map.get(id) || "–";
+  };
+
+  const creatorOptions = Array.from(
+    new Set(entries.map((entry) => resolveCreatorLabel(entry.createdBy)).filter(Boolean))
+  )
+    .sort((a, b) => a.localeCompare(b, "de", { sensitivity: "base" }))
+    .map((label) => ({ value: label, label }));
+
   const columnDefinitions = {
     createdAt: {
       key: "createdAt",
@@ -198,6 +369,12 @@ async function renderListView(section) {
       value: (entry) => valueOrDash(entry.title),
       sortValue: (entry) => normalizeSortValue(entry.title),
       isLink: true,
+    },
+    kategorie: {
+      key: "kategorie",
+      label: "Kategorie",
+      value: (entry) => valueOrDash(resolveKategorieLabel(entry.kategorieId)),
+      sortValue: (entry) => normalizeSortValue(resolveKategorieLabel(entry.kategorieId)),
     },
     createdBy: {
       key: "createdBy",
@@ -215,9 +392,11 @@ async function renderListView(section) {
   const colDate = document.createElement("col");
   colDate.style.width = "160px";
   const colTitle = document.createElement("col");
+  const colCategory = document.createElement("col");
+  colCategory.style.width = "180px";
   const colCreator = document.createElement("col");
   colCreator.style.width = "180px";
-  colgroup.append(colDate, colTitle, colCreator);
+  colgroup.append(colDate, colTitle, colCategory, colCreator);
   table.appendChild(colgroup);
   const thead = document.createElement("thead");
   const headerRow = document.createElement("tr");
@@ -226,7 +405,7 @@ async function renderListView(section) {
   const searchRow = createFormRow({
     id: "schulungen-search",
     label: "Suche",
-    placeholder: "Titel, Ersteller ...",
+    placeholder: "Titel, Ersteller, Kategorie ...",
     value: "",
     required: false,
   });
@@ -242,6 +421,10 @@ async function renderListView(section) {
   controlsWrap.className = "list-controls";
   controlsWrap.appendChild(searchRow);
   body.appendChild(controlsWrap);
+
+  const filtersWrap = document.createElement("div");
+  filtersWrap.className = "list-filters";
+  body.appendChild(filtersWrap);
 
   function updateHeaderState() {
     headerRow.querySelectorAll("th").forEach((th) => {
@@ -286,9 +469,11 @@ async function renderListView(section) {
 
   function matchesSearch(entry, query) {
     if (!query) return true;
+    const categoryLabel = resolveKategorieLabel(entry.kategorieId);
     const haystack = [
       entry.title,
-      entry.createdBy,
+      resolveCreatorLabel(entry.createdBy),
+      categoryLabel,
       formatDate(entry.createdAt || entry.occurredAt),
       formatDate(entry.occurredAt),
     ]
@@ -298,10 +483,18 @@ async function renderListView(section) {
     return haystack.includes(normalizeSortValue(query));
   }
 
+  function matchesFilters(entry) {
+    const creatorLabel = resolveCreatorLabel(entry.createdBy);
+    if (filterState.creator && creatorLabel !== filterState.creator) return false;
+    if (filterState.categoryId && entry.kategorieId !== filterState.categoryId) return false;
+    return true;
+  }
+
   function getSortedEntries() {
     const column = columnDefinitions[sortState.key] || columnDefinitions.createdAt;
     const getValue = column?.sortValue || column?.value;
     return entries
+      .filter((entry) => matchesFilters(entry))
       .filter((entry) => matchesSearch(entry, searchState.query))
       .map((entry, index) => ({ entry, index }))
       .sort((a, b) => {
@@ -316,7 +509,7 @@ async function renderListView(section) {
       .map(({ entry }) => entry);
   }
 
-  function renderRows() {
+  renderRows = function renderRows() {
     tbody.innerHTML = "";
     const rows = getSortedEntries();
     if (!rows.length) {
@@ -360,14 +553,64 @@ async function renderListView(section) {
       });
       tbody.appendChild(row);
     });
-  }
+  };
+
+  const buildFilterGroup = (label, options, selectedValue, onSelect) => {
+    const group = document.createElement("div");
+    group.className = "list-filter-group";
+    const title = document.createElement("div");
+    title.className = "list-filter-label";
+    title.textContent = label;
+    const actions = document.createElement("div");
+    actions.className = "list-filter-actions";
+    const allBtn = createButton({ label: "Alle", variant: "secondary" });
+    allBtn.type = "button";
+    allBtn.classList.add("list-filter-btn");
+    if (!selectedValue) allBtn.classList.add("is-active");
+    allBtn.addEventListener("click", () => {
+      onSelect("");
+    });
+    actions.appendChild(allBtn);
+    options.forEach((option) => {
+      const btn = createButton({ label: option.label, variant: "secondary" });
+      btn.type = "button";
+      btn.classList.add("list-filter-btn");
+      if (option.value === selectedValue) btn.classList.add("is-active");
+      btn.addEventListener("click", () => {
+        onSelect(option.value);
+      });
+      actions.appendChild(btn);
+    });
+    group.append(title, actions);
+    return group;
+  };
+
+  renderFilters = function renderFilters() {
+    filtersWrap.innerHTML = "";
+    const categoryOptions = categoryState.items.map((category) => ({
+      value: category.id,
+      label: category.name || "Kategorie",
+    }));
+    filtersWrap.append(
+      buildFilterGroup("Ersteller", creatorOptions, filterState.creator, (value) => {
+        filterState.creator = value;
+        renderRows();
+        renderFilters();
+      }),
+      buildFilterGroup("Kategorie", categoryOptions, filterState.categoryId, (value) => {
+        filterState.categoryId = value;
+        renderRows();
+        renderFilters();
+      })
+    );
+  };
 
   thead.appendChild(headerRow);
   table.append(thead, tbody);
   tableWrapper.appendChild(table);
   body.appendChild(tableWrapper);
   renderHeader();
-  renderRows();
+  await refreshCategories();
 }
 
 function buildBlocksList(blocks = []) {
@@ -391,6 +634,14 @@ function buildBlocksList(blocks = []) {
       image.alt = block.title || "Eintrag Bild";
       image.src = block.url || "";
       link.appendChild(image);
+      blockEl.appendChild(link);
+    } else if (block.type === "document") {
+      const link = document.createElement("a");
+      link.className = "schulungen-block__doc-link";
+      link.href = block.url || "";
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      link.textContent = block.name || "Dokument öffnen";
       blockEl.appendChild(link);
     } else {
       const text = document.createElement("div");
@@ -451,6 +702,7 @@ function addBlockRow(container, type, blockData = {}) {
   block.className = "schulungen-form-block";
   block.dataset.type = type;
   block.dataset.existingUrl = blockData.url || "";
+  block.dataset.existingName = blockData.name || "";
 
   const titleRow = createFormRow({
     id: `schulungen-block-title-${Math.random().toString(36).slice(2)}`,
@@ -484,6 +736,29 @@ function addBlockRow(container, type, blockData = {}) {
       image.alt = blockData.title || "Eintrag Bild";
       image.src = blockData.url;
       preview.appendChild(image);
+      block.appendChild(preview);
+    }
+  } else if (type === "document") {
+    const documentRow = createFormRow({
+      id: `schulungen-block-document-${Math.random().toString(36).slice(2)}`,
+      label: "Dokument",
+      control: "input",
+      type: "file",
+    });
+    const input = documentRow.querySelector("input");
+    if (input) {
+      input.accept =
+        "application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+      input.name = "blockDocument";
+    }
+    block.appendChild(documentRow);
+    if (blockData.url) {
+      const preview = document.createElement("a");
+      preview.className = "schulungen-block__doc-link";
+      preview.href = blockData.url;
+      preview.target = "_blank";
+      preview.rel = "noopener noreferrer";
+      preview.textContent = blockData.name || "Dokument öffnen";
       block.appendChild(preview);
     }
   } else {
@@ -535,6 +810,14 @@ async function renderCreateView(section) {
   const header = createSectionHeader({ title: "Neuer Eintrag", subtitle: "" });
   section.appendChild(header);
 
+  let categories = [];
+  try {
+    categories = await listUebungsbibliothekKategorien();
+  } catch (error) {
+    console.error("[UEBUNGSBIBLIOTHEK_CATEGORY_LIST_FAILED]", error);
+    categories = [];
+  }
+
   const cardFragment = createCard({
     eyebrow: "",
     title: "Eintrag anlegen",
@@ -566,7 +849,14 @@ async function renderCreateView(section) {
     required: true,
   });
 
-  form.append(dateRow, titleRow);
+  const categoryRow = createFormRow({
+    id: "uebungsbibliothek-kategorie",
+    label: "Kategorie",
+    control: "select",
+    options: buildCategoryOptions(categories),
+  });
+
+  form.append(dateRow, titleRow, categoryRow);
 
   const blocksHeader = document.createElement("h4");
   blocksHeader.textContent = "Inhalte";
@@ -585,7 +875,10 @@ async function renderCreateView(section) {
   const addImageBtn = createButton({ label: "Bild hinzufügen", variant: "secondary" });
   addImageBtn.type = "button";
   addImageBtn.addEventListener("click", () => addBlockRow(blocksWrap, "image"));
-  addActions.append(addTextBtn, addImageBtn);
+  const addDocumentBtn = createButton({ label: "Dokument hinzufügen", variant: "secondary" });
+  addDocumentBtn.type = "button";
+  addDocumentBtn.addEventListener("click", () => addBlockRow(blocksWrap, "document"));
+  addActions.append(addTextBtn, addImageBtn, addDocumentBtn);
   form.appendChild(addActions);
 
   body.innerHTML = "";
@@ -605,8 +898,10 @@ async function renderCreateView(section) {
     statusSlot.innerHTML = "";
     const dateInput = dateRow.querySelector("input");
     const titleInput = titleRow.querySelector("input");
+    const categorySelect = categoryRow.querySelector("select");
     const dateValue = dateInput?.value || "";
     const titleValue = titleInput?.value.trim() || "";
+    const categoryValue = categorySelect?.value || "";
 
     const blockNodes = Array.from(blocksWrap.querySelectorAll(".schulungen-form-block"));
     const blocks = [];
@@ -625,6 +920,11 @@ async function renderCreateView(section) {
         const file = fileInput?.files?.[0] || null;
         if (!file) continue;
         blocks.push({ type: "image", title: blockTitle, file });
+      } else if (type === "document") {
+        const fileInput = node.querySelector("input[name='blockDocument']");
+        const file = fileInput?.files?.[0] || null;
+        if (!file) continue;
+        blocks.push({ type: "document", title: blockTitle, file, name: file.name || "" });
       } else {
         const textValue = node.querySelector("textarea[name='blockText']")?.value || "";
         if (textValue.trim()) {
@@ -681,6 +981,18 @@ async function renderCreateView(section) {
             title: block.title,
             url: upload?.url || "",
           });
+        } else if (block.type === "document") {
+          const dataUrl = await readFileAsDataUrl(block.file);
+          const upload = await uploadUebungsbibliothekImage({
+            fileName: block.file.name || "dokument",
+            dataUrl,
+          });
+          resolvedBlocks.push({
+            type: "document",
+            title: block.title,
+            url: upload?.url || "",
+            name: block.name || block.file?.name || "",
+          });
         } else {
           resolvedBlocks.push({
             type: "text",
@@ -693,6 +1005,7 @@ async function renderCreateView(section) {
       const payload = {
         title: titleValue,
         occurredAt: dateValue,
+        kategorieId: categoryValue || "",
         blocks: resolvedBlocks,
         createdBy: getCreatorLabel(),
       };
@@ -725,6 +1038,14 @@ async function renderEditView(section, id) {
 
   const header = createSectionHeader({ title: "Eintrag bearbeiten", subtitle: "" });
   section.appendChild(header);
+
+  let categories = [];
+  try {
+    categories = await listUebungsbibliothekKategorien();
+  } catch (error) {
+    console.error("[UEBUNGSBIBLIOTHEK_CATEGORY_LIST_FAILED]", error);
+    categories = [];
+  }
 
   const cardFragment = createCard({
     eyebrow: "",
@@ -775,7 +1096,13 @@ async function renderEditView(section, id) {
     required: true,
     value: entry.title || "",
   });
-  form.append(dateRow, titleRow);
+  const categoryRow = createFormRow({
+    id: "uebungsbibliothek-kategorie",
+    label: "Kategorie",
+    control: "select",
+    options: buildCategoryOptions(categories, entry.kategorieId || ""),
+  });
+  form.append(dateRow, titleRow, categoryRow);
 
   const blocksHeader = document.createElement("h4");
   blocksHeader.textContent = "Inhalte";
@@ -794,7 +1121,10 @@ async function renderEditView(section, id) {
   const addImageBtn = createButton({ label: "Bild hinzufügen", variant: "secondary" });
   addImageBtn.type = "button";
   addImageBtn.addEventListener("click", () => addBlockRow(blocksWrap, "image"));
-  addActions.append(addTextBtn, addImageBtn);
+  const addDocumentBtn = createButton({ label: "Dokument hinzufügen", variant: "secondary" });
+  addDocumentBtn.type = "button";
+  addDocumentBtn.addEventListener("click", () => addBlockRow(blocksWrap, "document"));
+  addActions.append(addTextBtn, addImageBtn, addDocumentBtn);
   form.appendChild(addActions);
 
   const existingBlocks = Array.isArray(entry.blocks) ? entry.blocks : [];
@@ -821,8 +1151,10 @@ async function renderEditView(section, id) {
     statusSlot.innerHTML = "";
     const dateInput = dateRow.querySelector("input");
     const titleInput = titleRow.querySelector("input");
+    const categorySelect = categoryRow.querySelector("select");
     const dateValue = dateInput?.value || "";
     const titleValue = titleInput?.value.trim() || "";
+    const categoryValue = categorySelect?.value || "";
 
     const blockNodes = Array.from(blocksWrap.querySelectorAll(".schulungen-form-block"));
     const blocks = [];
@@ -844,6 +1176,21 @@ async function renderEditView(section, id) {
           blocks.push({ type: "image", title: blockTitle, file });
         } else if (existingUrl) {
           blocks.push({ type: "image", title: blockTitle, url: existingUrl });
+        }
+      } else if (type === "document") {
+        const fileInput = node.querySelector("input[name='blockDocument']");
+        const file = fileInput?.files?.[0] || null;
+        const existingUrl = node.dataset.existingUrl || "";
+        const existingName = node.dataset.existingName || "";
+        if (file) {
+          blocks.push({ type: "document", title: blockTitle, file, name: file.name || "" });
+        } else if (existingUrl) {
+          blocks.push({
+            type: "document",
+            title: blockTitle,
+            url: existingUrl,
+            name: existingName,
+          });
         }
       } else {
         const textValue = node.querySelector("textarea[name='blockText']")?.value || "";
@@ -909,6 +1256,27 @@ async function renderEditView(section, id) {
               url: block.url,
             });
           }
+        } else if (block.type === "document") {
+          if (block.file) {
+            const dataUrl = await readFileAsDataUrl(block.file);
+            const upload = await uploadUebungsbibliothekImage({
+              fileName: block.file.name || "dokument",
+              dataUrl,
+            });
+            resolvedBlocks.push({
+              type: "document",
+              title: block.title,
+              url: upload?.url || "",
+              name: block.name || block.file?.name || "",
+            });
+          } else if (block.url) {
+            resolvedBlocks.push({
+              type: "document",
+              title: block.title,
+              url: block.url,
+              name: block.name || "",
+            });
+          }
         } else {
           resolvedBlocks.push({
             type: "text",
@@ -921,6 +1289,7 @@ async function renderEditView(section, id) {
       const payload = {
         title: titleValue,
         occurredAt: dateValue,
+        kategorieId: categoryValue || "",
         blocks: resolvedBlocks,
       };
       const updated = await updateUebungsbibliothek(entry.id, payload);

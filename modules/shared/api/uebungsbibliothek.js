@@ -2,6 +2,7 @@ import { list, create, update, remove } from "./crud.js";
 import { isHttpMode, httpRequest } from "./httpClient.js";
 
 const TABLE = "uebungsbibliothek";
+const CATEGORIES_TABLE = "uebungsbibliothek_kategorien";
 
 export async function listUebungsbibliothek(options) {
   if (isHttpMode()) {
@@ -47,4 +48,18 @@ export async function uploadUebungsbibliothekImage({ fileName = "", dataUrl = ""
     method: "POST",
     body: { fileName, dataUrl },
   });
+}
+
+export async function listUebungsbibliothekKategorien(options) {
+  if (isHttpMode()) {
+    return httpRequest("/uebungsbibliothek/kategorien", { method: "GET" });
+  }
+  return list(CATEGORIES_TABLE, options);
+}
+
+export async function createUebungsbibliothekKategorie(data = {}, options) {
+  if (isHttpMode()) {
+    return httpRequest("/uebungsbibliothek/kategorien", { method: "POST", body: data });
+  }
+  return create(CATEGORIES_TABLE, data, options);
 }
