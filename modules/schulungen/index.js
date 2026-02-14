@@ -390,6 +390,14 @@ function buildBlocksList(blocks = []) {
       image.src = block.url || "";
       link.appendChild(image);
       blockEl.appendChild(link);
+    } else if (block.type === "document") {
+      const link = document.createElement("a");
+      link.className = "schulungen-block__doc-link";
+      link.href = block.url || "";
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      link.textContent = block.name || "Dokument öffnen";
+      blockEl.appendChild(link);
     } else {
       const text = document.createElement("div");
       text.className = "schulungen-block__text";
@@ -449,6 +457,7 @@ function addBlockRow(container, type, blockData = {}) {
   block.className = "schulungen-form-block";
   block.dataset.type = type;
   block.dataset.existingUrl = blockData.url || "";
+  block.dataset.existingName = blockData.name || "";
 
   const titleRow = createFormRow({
     id: `schulungen-block-title-${Math.random().toString(36).slice(2)}`,
@@ -482,6 +491,29 @@ function addBlockRow(container, type, blockData = {}) {
       image.alt = blockData.title || "Schulung Bild";
       image.src = blockData.url;
       preview.appendChild(image);
+      block.appendChild(preview);
+    }
+  } else if (type === "document") {
+    const documentRow = createFormRow({
+      id: `schulungen-block-document-${Math.random().toString(36).slice(2)}`,
+      label: "Dokument",
+      control: "input",
+      type: "file",
+    });
+    const input = documentRow.querySelector("input");
+    if (input) {
+      input.accept =
+        "application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+      input.name = "blockDocument";
+    }
+    block.appendChild(documentRow);
+    if (blockData.url) {
+      const preview = document.createElement("a");
+      preview.className = "schulungen-block__doc-link";
+      preview.href = blockData.url;
+      preview.target = "_blank";
+      preview.rel = "noopener noreferrer";
+      preview.textContent = blockData.name || "Dokument öffnen";
       block.appendChild(preview);
     }
   } else {
@@ -583,7 +615,10 @@ async function renderCreateView(section) {
   const addImageBtn = createButton({ label: "Bild hinzufügen", variant: "secondary" });
   addImageBtn.type = "button";
   addImageBtn.addEventListener("click", () => addBlockRow(blocksWrap, "image"));
-  addActions.append(addTextBtn, addImageBtn);
+  const addDocumentBtn = createButton({ label: "Dokument hinzufügen", variant: "secondary" });
+  addDocumentBtn.type = "button";
+  addDocumentBtn.addEventListener("click", () => addBlockRow(blocksWrap, "document"));
+  addActions.append(addTextBtn, addImageBtn, addDocumentBtn);
   form.appendChild(addActions);
 
   body.innerHTML = "";
@@ -623,6 +658,11 @@ async function renderCreateView(section) {
         const file = fileInput?.files?.[0] || null;
         if (!file) continue;
         blocks.push({ type: "image", title: blockTitle, file });
+      } else if (type === "document") {
+        const fileInput = node.querySelector("input[name='blockDocument']");
+        const file = fileInput?.files?.[0] || null;
+        if (!file) continue;
+        blocks.push({ type: "document", title: blockTitle, file, name: file.name || "" });
       } else {
         const textValue = node.querySelector("textarea[name='blockText']")?.value || "";
         if (textValue.trim()) {
@@ -678,6 +718,18 @@ async function renderCreateView(section) {
             type: "image",
             title: block.title,
             url: upload?.url || "",
+          });
+        } else if (block.type === "document") {
+          const dataUrl = await readFileAsDataUrl(block.file);
+          const upload = await uploadSchulungImage({
+            fileName: block.file.name || "dokument",
+            dataUrl,
+          });
+          resolvedBlocks.push({
+            type: "document",
+            title: block.title,
+            url: upload?.url || "",
+            name: block.name || block.file?.name || "",
           });
         } else {
           resolvedBlocks.push({
@@ -792,7 +844,10 @@ async function renderEditView(section, id) {
   const addImageBtn = createButton({ label: "Bild hinzufügen", variant: "secondary" });
   addImageBtn.type = "button";
   addImageBtn.addEventListener("click", () => addBlockRow(blocksWrap, "image"));
-  addActions.append(addTextBtn, addImageBtn);
+  const addDocumentBtn = createButton({ label: "Dokument hinzufügen", variant: "secondary" });
+  addDocumentBtn.type = "button";
+  addDocumentBtn.addEventListener("click", () => addBlockRow(blocksWrap, "document"));
+  addActions.append(addTextBtn, addImageBtn, addDocumentBtn);
   form.appendChild(addActions);
 
   const existingBlocks = Array.isArray(entry.blocks) ? entry.blocks : [];
@@ -842,6 +897,21 @@ async function renderEditView(section, id) {
           blocks.push({ type: "image", title: blockTitle, file });
         } else if (existingUrl) {
           blocks.push({ type: "image", title: blockTitle, url: existingUrl });
+        }
+      } else if (type === "document") {
+        const fileInput = node.querySelector("input[name='blockDocument']");
+        const file = fileInput?.files?.[0] || null;
+        const existingUrl = node.dataset.existingUrl || "";
+        const existingName = node.dataset.existingName || "";
+        if (file) {
+          blocks.push({ type: "document", title: blockTitle, file, name: file.name || "" });
+        } else if (existingUrl) {
+          blocks.push({
+            type: "document",
+            title: blockTitle,
+            url: existingUrl,
+            name: existingName,
+          });
         }
       } else {
         const textValue = node.querySelector("textarea[name='blockText']")?.value || "";
@@ -905,6 +975,27 @@ async function renderEditView(section, id) {
               type: "image",
               title: block.title,
               url: block.url,
+            });
+          }
+        } else if (block.type === "document") {
+          if (block.file) {
+            const dataUrl = await readFileAsDataUrl(block.file);
+            const upload = await uploadSchulungImage({
+              fileName: block.file.name || "dokument",
+              dataUrl,
+            });
+            resolvedBlocks.push({
+              type: "document",
+              title: block.title,
+              url: upload?.url || "",
+              name: block.name || block.file?.name || "",
+            });
+          } else if (block.url) {
+            resolvedBlocks.push({
+              type: "document",
+              title: block.title,
+              url: block.url,
+              name: block.name || "",
             });
           }
         } else {

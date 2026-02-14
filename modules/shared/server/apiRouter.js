@@ -714,19 +714,48 @@ export function createApiRouter(options = {}) {
     if (ext === ".jpg" || ext === ".jpeg") return "image/jpeg";
     if (ext === ".gif") return "image/gif";
     if (ext === ".webp") return "image/webp";
+    if (ext === ".pdf") return "application/pdf";
+    if (ext === ".doc") return "application/msword";
+    if (ext === ".docx")
+      return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
     return "application/octet-stream";
   }
 
+  function isAllowedUploadMime(mimeType) {
+    const mime = String(mimeType || "").toLowerCase();
+    if (!mime) return false;
+    if (mime.startsWith("image/")) return true;
+    if (mime === "application/pdf") return true;
+    if (mime === "application/msword") return true;
+    if (mime === "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+      return true;
+    return false;
+  }
+
+  function extensionForUploadMime(mimeType) {
+    const mime = String(mimeType || "").toLowerCase();
+    if (mime === "application/pdf") return "pdf";
+    if (mime === "application/msword") return "doc";
+    if (mime === "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+      return "docx";
+    if (mime.startsWith("image/")) {
+      const ext = mime.split("/")[1] || "";
+      return ext.replace(/[^a-z0-9]+/gi, "").toLowerCase();
+    }
+    return "";
+  }
+
   function buildUploadFileName(mimeType) {
-    const ext = mimeType.split("/")[1] || "";
-    const safeExt = ext.replace(/[^a-z0-9]+/gi, "").toLowerCase();
+    const safeExt = extensionForUploadMime(mimeType);
     return safeExt ? `${uuidv7()}.${safeExt}` : `${uuidv7()}`;
   }
 
   function parseDataUrl(dataUrl = "") {
-    const match = String(dataUrl).match(/^data:(image\/[a-z0-9.+-]+);base64,(.+)$/i);
+    const match = String(dataUrl).match(/^data:([^;]+);base64,(.+)$/i);
     if (!match) return null;
-    return { mime: match[1].toLowerCase(), data: match[2] };
+    const mime = match[1].toLowerCase();
+    if (!isAllowedUploadMime(mime)) return null;
+    return { mime, data: match[2] };
   }
 
   async function handleSchulungenRoutes(req, res) {
@@ -856,6 +885,7 @@ export function createApiRouter(options = {}) {
     const pathOnly = reqUrl.split("?")[0];
     const method = (req.method || "GET").toUpperCase();
     const requestId = resolveRequestId(req);
+    const actorRole = String(req.headers["x-dogule-actor-role"] || "");
 
     if (pathOnly === "/api/uebungsbibliothek/uploads" && method === "POST") {
       const payload = parseDataUrl(body?.dataUrl || "");
@@ -892,6 +922,36 @@ export function createApiRouter(options = {}) {
         res.end(data);
       } catch {
         jsonResponse(res, 404, { message: "not_found" });
+      }
+      return true;
+    }
+
+    if (pathOnly === "/api/uebungsbibliothek/kategorien" && method === "GET") {
+      try {
+        const entries = await storage.uebungsbibliothekKategorien.list({ requestId });
+        jsonResponse(res, 200, entries);
+      } catch (error) {
+        jsonResponse(res, 500, {
+          message: "uebungsbibliothek_kategorien_list_failed",
+          code: error?.code,
+        });
+      }
+      return true;
+    }
+
+    if (pathOnly === "/api/uebungsbibliothek/kategorien" && method === "POST") {
+      if (!(actorRole === "admin" || actorRole === "developer")) {
+        jsonResponse(res, 403, { message: "forbidden" });
+        return true;
+      }
+      try {
+        const created = await storage.uebungsbibliothekKategorien.create(body, { requestId });
+        jsonResponse(res, 201, created);
+      } catch (error) {
+        jsonResponse(res, 400, {
+          message: "uebungsbibliothek_kategorien_create_failed",
+          code: error?.code,
+        });
       }
       return true;
     }

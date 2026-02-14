@@ -388,3 +388,31 @@ CREATE TABLE IF NOT EXISTS schulungen (
   PRIMARY KEY (id),
   KEY idx_schulungen_occurred (occurred_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS uebungsbibliothek_kategorien (
+  id CHAR(36) NOT NULL,
+  name VARCHAR(160) NOT NULL,
+  created_by VARCHAR(160) NOT NULL DEFAULT '',
+  created_at VARCHAR(32) NOT NULL,
+  updated_at VARCHAR(32) NOT NULL,
+  schema_version INT NOT NULL DEFAULT 1,
+  version INT NOT NULL DEFAULT 0,
+  PRIMARY KEY (id),
+  UNIQUE KEY idx_uebungsbibliothek_kategorien_name (name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS uebungsbibliothek (
+  id CHAR(36) NOT NULL,
+  title VARCHAR(160) NOT NULL,
+  occurred_at VARCHAR(32) NOT NULL,
+  kategorie_id CHAR(36) DEFAULT NULL,
+  blocks TEXT NOT NULL,
+  created_by VARCHAR(160) NOT NULL DEFAULT '',
+  created_at VARCHAR(32) NOT NULL,
+  updated_at VARCHAR(32) NOT NULL,
+  schema_version INT NOT NULL DEFAULT 1,
+  version INT NOT NULL DEFAULT 0,
+  PRIMARY KEY (id),
+  KEY idx_uebungsbibliothek_occurred (occurred_at),
+  KEY idx_uebungsbibliothek_kategorie_id (kategorie_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

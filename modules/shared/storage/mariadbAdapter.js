@@ -459,12 +459,26 @@ function mapSchulungRow(row) {
   };
 }
 
+function mapUebungsbibliothekKategorieRow(row) {
+  if (!row) return null;
+  return {
+    id: row.id,
+    name: row.name,
+    createdBy: row.created_by,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    schemaVersion: row.schema_version,
+    version: row.version,
+  };
+}
+
 function mapUebungsbibliothekRow(row) {
   if (!row) return null;
   return {
     id: row.id,
     title: row.title,
     occurredAt: row.occurred_at,
+    kategorieId: row.kategorie_id,
     blocks: parseJson(row.blocks, []),
     createdBy: row.created_by,
     createdAt: row.created_at,
@@ -893,7 +907,23 @@ function normalizeUebungsbibliothek(data = {}, existing) {
     id: data.id || existing?.id || uuidv7(),
     title: toStringValue(data.title ?? existing?.title),
     occurredAt: toStringValue(data.occurredAt ?? existing?.occurredAt ?? nowIso()),
+    kategorieId: toStringValue(
+      data.kategorieId ?? data.kategorie_id ?? existing?.kategorieId ?? existing?.kategorie_id
+    ),
     blocks: blocks || [],
+    createdBy: toStringValue(data.createdBy ?? existing?.createdBy),
+    createdAt,
+    updatedAt: nowIso(),
+    schemaVersion: Number(data.schemaVersion ?? existing?.schemaVersion ?? 1),
+    version: Number(data.version ?? existing?.version ?? 0),
+  };
+}
+
+function normalizeUebungsbibliothekKategorie(data = {}, existing) {
+  const createdAt = existing?.createdAt || data.createdAt || nowIso();
+  return {
+    id: data.id || existing?.id || uuidv7(),
+    name: toStringValue(data.name ?? existing?.name),
     createdBy: toStringValue(data.createdBy ?? existing?.createdBy),
     createdAt,
     updatedAt: nowIso(),
@@ -2493,6 +2523,7 @@ export function createMariaDbAdapter(options = {}) {
       record.id,
       record.title,
       record.occurredAt,
+      record.kategorieId || null,
       toJson(record.blocks),
       record.createdBy,
       record.createdAt,
@@ -2502,7 +2533,7 @@ export function createMariaDbAdapter(options = {}) {
     ];
     try {
       await pool.query(
-        "INSERT INTO uebungsbibliothek (id, title, occurred_at, blocks, created_by, created_at, updated_at, schema_version, version) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO uebungsbibliothek (id, title, occurred_at, kategorie_id, blocks, created_by, created_at, updated_at, schema_version, version) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         params
       );
       return record;
@@ -2534,6 +2565,7 @@ export function createMariaDbAdapter(options = {}) {
       const params = [
         record.title,
         record.occurredAt,
+        record.kategorieId || null,
         toJson(record.blocks),
         record.updatedAt,
         record.schemaVersion,
@@ -2541,7 +2573,7 @@ export function createMariaDbAdapter(options = {}) {
         record.id,
       ];
       await pool.query(
-        "UPDATE uebungsbibliothek SET title=?, occurred_at=?, blocks=?, updated_at=?, schema_version=?, version=? WHERE id=?",
+        "UPDATE uebungsbibliothek SET title=?, occurred_at=?, kategorie_id=?, blocks=?, updated_at=?, schema_version=?, version=? WHERE id=?",
         params
       );
       return record;
@@ -2557,6 +2589,42 @@ export function createMariaDbAdapter(options = {}) {
       return { ok: true, id };
     } catch (error) {
       throw toStorageError(error, `Failed to delete uebungsbibliothek ${id}`);
+    }
+  }
+
+  async function listUebungsbibliothekKategorien() {
+    try {
+      return await listAll(
+        pool,
+        "SELECT * FROM uebungsbibliothek_kategorien ORDER BY name ASC",
+        [],
+        mapUebungsbibliothekKategorieRow
+      );
+    } catch (error) {
+      throw toStorageError(error, "Failed to list uebungsbibliothek kategorien");
+    }
+  }
+
+  async function createUebungsbibliothekKategorie(data = {}) {
+    const record = normalizeUebungsbibliothekKategorie(data, null);
+    ensureRequiredFields(record, ["name"], "Kategorie benötigt einen Namen");
+    const params = [
+      record.id,
+      record.name,
+      record.createdBy,
+      record.createdAt,
+      record.updatedAt,
+      record.schemaVersion,
+      record.version,
+    ];
+    try {
+      await pool.query(
+        "INSERT INTO uebungsbibliothek_kategorien (id, name, created_by, created_at, updated_at, schema_version, version) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        params
+      );
+      return record;
+    } catch (error) {
+      throw toStorageError(error, "Failed to create uebungsbibliothek kategorie");
     }
   }
 
@@ -2654,6 +2722,10 @@ export function createMariaDbAdapter(options = {}) {
       create: createUebungsbibliothek,
       update: updateUebungsbibliothek,
       delete: deleteUebungsbibliothek,
+    },
+    uebungsbibliothekKategorien: {
+      list: listUebungsbibliothekKategorien,
+      create: createUebungsbibliothekKategorie,
     },
     kursTeilnehmer: {
       list: listKursTeilnehmer,

@@ -1,4 +1,7 @@
-# DEPLOYMENT PLAN — Dogule1 (VPS-only)
+# DEPLOYMENT PLAN — Dogule1 (Legacy Snapshot)
+
+This plan has been merged into `VPS_UPDATE_PROCESS.md` as the single authoritative VPS doc.
+Do not update this file; keep for historical reference only.
 
 ## Goal
 
