@@ -4,6 +4,49 @@ READ-ONLY NOTE: provide only 1 step of instruction/guidance per message.
 READ-ONLY NOTE: A single "." from the user means "confirmed, ok, next"
 READ-ONLY NOTE: Each assistant response must start with "🔷 Topic — Subtitle — Progress: X% 🔷".
 
+## Date 2026-02-24 — Sub-Kurse Batch Import + VPS Update (Process-Conform)
+
+## Kontext
+
+- Status: completed.
+- Scope: neue Sub-Kurse aus `Subkurse.txt` lokal anlegen, danach vollständigen VPS-Update strikt nach `VPS_UPDATE_PROCESS.md` durchführen.
+- Zielpunkte:
+- Duplicate-safe Sub-Kurs Import.
+- Local→VPS DB-Overwrite inklusive Runtime-Deploy und Verifikation.
+
+## Ergebnis (kurz)
+
+- Lokaler Sub-Kurs Import abgeschlossen (mehrere Batches), inklusive Alias-/Format-Normalisierung:
+- `Richi Fontana` → `Fontana Richard`.
+- `19.00`/`09.30` → `19:00`/`09:30`.
+- Zusätzliche Trainer-Zeile unterstützt (`Weitere Trainer: ...`).
+- Für folgende Kurse sind neue/aktualisierte Sub-Kurse lokal vorhanden:
+- `KS-001`, `KS-002`, `KS-004`, `KS-005`, `KS-006`.
+- VPS-Update gemäss Prozessdokument durchgeführt:
+- `pnpm build` lokal.
+- Lokaler DB-Dump nach `/tmp/dogule1_local.sql`.
+- `scp` Dump auf VPS nach `/tmp/dogule1_local.sql`.
+- VPS DB `DROP/CREATE` + Import des Dumps.
+- Safe `rsync` von `dist`, `modules`, `tools` nach `/opt/dogule1`.
+- Passwortdatei nach `/opt/dogule1/config/dogule1.passwords` kopiert und gesetzt.
+- `dogule1` Service neu gestartet.
+
+## Tests
+
+- Lokal:
+- `pnpm build` ✅
+- DB-Dump Erstellung (`/tmp/dogule1_local.sql`) ✅
+- VPS:
+- `systemctl status dogule1 --no-pager -l` = `active (running)` ✅
+- `curl -i http://127.0.0.1:5177/healthz` = `200 OK` + `{"status":"ok","storageMb":1.7}` ✅
+- `curl -i http://127.0.0.1:5177/api/auth/options` = `200 OK` ✅
+- SQL-Spotcheck auf VPS (`sub_kurse` join `kurse`) zeigt erwartete Einträge für `KS-001/002/004/005/006` ✅
+
+## Offene Punkte
+
+- Browser-Hard-Reload nach Deploy empfohlen (`Shift+Reload`) wegen hash-basierten Assets.
+- Für Folgestände denselben `VPS_UPDATE_PROCESS.md` Ablauf beibehalten.
+
 ## Date 2026-02-24 — Complete Check Fixes + VPS Update (Zertifikat/Kurs + Backups)
 
 ## Kontext
