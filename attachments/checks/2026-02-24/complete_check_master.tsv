@@ -1,0 +1,72 @@
+item_id	result	http_status	detail	evidence
+C1-001	PASS	401	GET /api/kunden without token	c1_no_token_kunden
+C1-002	PASS	401	GET /api/kunden with invalid token	c1_invalid_token_kunden
+AUTH-OPTIONS	PASS	200	auth options available	auth_options
+AUTH-TRAINER-ROLE	BLOCKED	200	no trainer role user available in auth options	auth_options
+AUTH-DEVELOPER-LOGIN	PASS	200	login for Developer	auth_login_developer
+AUTH-ADMIN-LOGIN	PASS	200	login for info	auth_login_admin
+AUTH-RAPPORT-LOGIN	PASS	200	login for patty.bruehwiler	auth_login_rapport
+B0-TRAINER-LIST	PASS	200	load trainer list	b_ref_trainers
+B0-TRAINER-REF	PASS	200	trainer selected: 019b8ed7-920a-719f-8d71-d244c7eccda3	b_ref_trainers
+B1-001	PASS	201	create kunde	b1_create_kunde
+B1-002	PASS	201	create hund linked to kunde	b1_create_hund
+B1-003	PASS	201	create kurs	b1_create_kurs
+B1-004	PASS	201	create sub-kurs	b1_create_subkurs
+B1-005	PASS	201	add teilnehmer with sub-kurs	b1_add_teilnehmer_subkurs
+B1-006	PASS	200	list teilnehmer by kurs	b1_list_teilnehmer_kurs
+B1-007	PASS	200	teilnehmer appears in kurs list	b1_list_teilnehmer_kurs
+B1-008	PASS	200	list teilnehmer by kunde	b1_list_teilnehmer_kunde
+B1-009	PASS	200	teilnehmer appears in kunde list	b1_list_teilnehmer_kunde
+B1-010	PASS	200	list teilnehmer by hund	b1_list_teilnehmer_hund
+B1-011	PASS	200	teilnehmer appears in hund list	b1_list_teilnehmer_hund
+B1-012	PASS	200	list teilnehmer by sub-kurs	b1_list_teilnehmer_subkurs
+B1-013	PASS	200	teilnehmer appears in sub-kurs list	b1_list_teilnehmer_subkurs
+B2-001	PASS	201	add teilnehmer direct kurs	b2_add_teilnehmer_direct
+B2-002	PASS	200	verify direct teilnehmer	b2_verify_direct
+B2-003	PASS	200	direct teilnehmer has empty subKursId	b2_verify_direct
+B4-001	PASS	409	delete sub-kurs with linked teilnehmer is blocked	b4_delete_subkurs_guard
+B1-014	PASS	201	create zertifikat from participant chain	b1_create_zertifikat
+B1-015	PASS	200	list zertifikate	b1_list_zertifikate
+B1-016	PASS	200	zertifikat appears in list	b1_list_zertifikate
+B3-001	FAIL	500	expected=200; delete kurs with linked history	b3_delete_kurs
+B3-002	FAIL	200	expected=404; deleted kurs not loadable	b3_get_deleted_kurs
+B3-003	PASS	200	historical teilnehmer entries still queryable	b3_kunde_history_after_delete
+B3-004	PASS	200	snapshot fields retained after kurs deletion	b3_kunde_history_after_delete
+C2-001	PASS	200	developer can read backups	c2_dev_backups
+C2-002	PASS	200	backup slots 24h/72h present	c2_dev_backups
+C2-003	PASS	403	admin denied developer route	c2_admin_backups_denied
+C2-004	PASS	403	trainer_rapport denied developer route	c2_rapport_backups_denied
+C2-005	PASS	400	developer restore validates slot	c2_dev_restore_invalid_slot
+C2-006	PASS	200	trainer_rapport can read kurse	c2_rapport_get_kurse
+C2-007	PASS	403	trainer_rapport cannot create kurs	c2_rapport_post_kurs_denied
+C2-008	PASS	403	trainer_rapport cannot add teilnehmer	c2_rapport_post_teilnehmer_denied
+C2-009	PASS	200	trainer_rapport can read kunden	c2_rapport_get_kunden
+C2-010	PASS	403	trainer_rapport cannot create kunde	c2_rapport_post_kunden_denied
+C2-011	PASS	403	trainer_rapport cannot read zertifikate	c2_rapport_get_zertifikate_denied
+C2-012	PASS	403	trainer_rapport cannot create zertifikat	c2_rapport_post_zertifikat_denied
+C3-001	PASS	201	script payload accepted as text without crash	c3_script_payload_create
+C3-002	PASS	200	readback script payload	c3_script_payload_readback
+C3-003	PASS	200	script string stored as plain data	c3_script_payload_readback
+C3-004	PASS	200	long payload should not crash server	c3_long_payload_patch
+C3-005	PASS	404	invalid id route returns not_found	c3_invalid_uuid_route
+B5-001	PASS	200	trainer_rapport can view sub-kurs detail	b5_rapport_get_subkurs_detail
+B5-002	PASS	403	trainer_rapport cannot delete sub-kurs	b5_rapport_delete_subkurs_denied
+BASE-LOCAL-BUILD	PASS	0	pnpm build baseline	local_pnpm_build.log
+BASE-LOCAL-LINT	PASS	0	pnpm lint baseline	local_pnpm_lint.log
+BASE-LOCAL-TEST	FAIL	1	pnpm test baseline	local_pnpm_test_raw.log
+BASE-LOCAL-AUDIT	PASS	0	pnpm audit --prod baseline	local_pnpm_audit_prod.log
+A1-GLOBAL-UI	BLOCKED	N/A	UI coherence needs browser visual checks/screenshots	Complete_Check.md
+A2-KURSE-UI	BLOCKED	N/A	Kurse/sub-kurse visual layout checks need browser	Complete_Check.md
+A3-LINKED-TABLE-UI	BLOCKED	N/A	Kunden/Hunde linked table visual checks need browser	Complete_Check.md
+BASE-VPS-HEALTHZ	PASS	200	curl 127.0.0.1:5177/healthz	vps_healthz.txt
+BASE-VPS-SVC-STATUS	PASS	active	systemctl status dogule1	vps_service_status.txt
+VPS-AUTH-OPTIONS	PASS	200	auth options on VPS	vps_auth_options.txt
+VPS-LOGIN-DEVELOPER	PASS	200	developer login on VPS	vps_login_developer.txt
+VPS-LOGIN-ADMIN	PASS	200	admin login on VPS	vps_login_admin.txt
+VPS-DEV-BACKUPS-DEVELOPER	PASS	200	developer can GET /api/developer/backups	vps_developer_backups_as_developer.txt
+VPS-DEV-BACKUPS-ADMIN	PASS	403	admin denied /api/developer/backups	vps_developer_backups_as_admin.txt
+VPS-DEV-RESTORE-INVALID	PASS	400	invalid restore slot rejected	vps_developer_restore_invalid.txt
+VPS-DEV-RESTORE-24H	BLOCKED	404	no snapshot exists, restore path not end-to-end testable	vps_developer_restore_24h.txt
+VPS-JOURNAL-ERRORS	PASS	0	no error signatures since service start	vps_journal_errors_since_start.txt
+LOCAL-HEALTH-POST-5181	PASS	200	health after local checks	local_healthz_after_checks_5181.txt
+LOCAL-HEALTH-POST-5177	PASS	200	health after local checks	local_healthz_after_checks_5177.txt

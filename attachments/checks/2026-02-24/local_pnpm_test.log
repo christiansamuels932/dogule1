@@ -1,0 +1,235 @@
+
+> dogule1@0.0.0 test /home/ran/codex/dogule1
+> vitest
+
+
+ RUN  v4.0.12 /home/ran/codex/dogule1
+
+ ✓ modules/kalender/utils/routes.test.js (22 tests) 5ms
+ ✓ modules/kalender/utils/date.test.js (15 tests) 5ms
+ ✓ modules/kalender/utils/layout.test.js (8 tests) 9ms
+ ✓ modules/shared/logging/logger.test.js (3 tests) 70ms
+ ✓ modules/shared/logging/alerts.test.js (3 tests) 45ms
+ ✓ modules/shared/storage/writeContract.test.js (4 tests) 7ms
+{"actionId":"kommunikation.infochannel.publish","actor":{"type":"user","id":"admin-1","role":"admin"},"target":{"type":"api","id":"kommunikation.infochannel.publish"},"result":"error","requestId":"infochannel-api","message":"INFOCHANNEL-API","level":"info","severity":"INFO","meta":{"code":"denied"},"ts":"2026-02-24T11:51:35.814Z"}
+ ❯ modules/kommunikation/infochannel/apiRoutes.test.js (1 test | 1 failed) 12ms
+     × supports publish, list, and confirm 11ms
+ ❯ modules/kommunikation/infochannel/sal.test.js (3 tests | 3 failed) 9ms
+     × publishes notices with trainer targets and audits 7ms
+     × is idempotent on trainer confirmation 1ms
+     × runs SLA job with escalation events and skips duplicates 1ms
+stdout | modules/kommunikation/groupchat/ui.test.js > Kommunikation Chats UI > sends a message and shows it after refresh
+{
+  actionId: 'kommunikation.infochannel.view',
+  actor: { type: 'user', id: 'test-user', role: 'admin' },
+  target: { type: 'kommunikation', id: 'global' },
+  result: 'pending',
+  level: 'info',
+  severity: 'INFO',
+  message: 'KOMMUNIKATION-VIEW',
+  meta: undefined
+}
+
+stdout | modules/kommunikation/groupchat/ui.test.js > Kommunikation Chats UI > sends a message and shows it after refresh
+{
+  actionId: 'kommunikation.infochannel.view',
+  actor: { type: 'user', id: 'test-user', role: 'admin' },
+  target: { type: 'kommunikation', id: 'global' },
+  result: 'error',
+  level: 'info',
+  severity: 'INFO',
+  message: 'KOMMUNIKATION-VIEW',
+  meta: { code: 'LOAD_ERROR' }
+}
+
+ ✓ modules/shared/api/finanzen.trainer.test.js (3 tests) 19ms
+{"actionId":"kommunikation.chat.send","actor":{"type":"user","id":"u1","role":"admin"},"target":{"type":"api","id":"kommunikation.chat.send"},"result":"success","requestId":"groupchat-api","message":"GROUPCHAT-API","level":"info","severity":"INFO","ts":"2026-02-24T11:51:35.880Z"}
+{"ts":"2026-02-24T11:51:35.887Z","level":"warning","severity":"WARNING","actionId":"kommunikation.chat.send","actor":{"type":"user","id":"u2","role":"admin"},"target":{"type":"ratelimit","id":"kommunikation.chat.send:u2:60000"},"result":"rate_limited","requestId":"groupchat","message":"RATE-LIMIT-HIT","meta":{"code":"RATE-LIMIT-HIT"}}
+{"actionId":"kommunikation.chat.send","actor":{"type":"user","id":"u2","role":"admin"},"target":{"type":"ratelimit","id":"kommunikation.chat.send:u2:60000"},"result":"rate_limited","requestId":"groupchat","message":"RATE-LIMIT-HIT","level":"warning","severity":"WARNING","meta":{"code":"RATE-LIMIT-HIT"},"ts":"2026-02-24T11:51:35.887Z"}
+{"actionId":"kommunikation.chat.send","actor":{"type":"user","id":"u2","role":"admin"},"target":{"type":"api","id":"kommunikation.chat.send"},"result":"error","requestId":"groupchat-api","message":"GROUPCHAT-API","level":"info","severity":"INFO","meta":{"code":"rate_limited"},"ts":"2026-02-24T11:51:35.887Z"}
+{"actionId":"kommunikation.chat.send","actor":{"type":"user","id":"u3","role":"staff"},"target":{"type":"api","id":"kommunikation.chat.send"},"result":"error","requestId":"groupchat-api","message":"GROUPCHAT-API","level":"info","severity":"INFO","meta":{"code":"denied"},"ts":"2026-02-24T11:51:35.888Z"}
+ ✓ modules/kommunikation/groupchat/apiRoutes.test.js (3 tests) 69ms
+stdout | modules/kommunikation/groupchat/ui.test.js > Kommunikation Chats UI > shows retention notices when enabled
+{
+  actionId: 'kommunikation.infochannel.view',
+  actor: { type: 'user', id: 'test-user', role: 'admin' },
+  target: { type: 'kommunikation', id: 'global' },
+  result: 'pending',
+  level: 'info',
+  severity: 'INFO',
+  message: 'KOMMUNIKATION-VIEW',
+  meta: undefined
+}
+
+stdout | modules/kommunikation/groupchat/ui.test.js > Kommunikation Chats UI > shows retention notices when enabled
+{
+  actionId: 'kommunikation.infochannel.view',
+  actor: { type: 'user', id: 'test-user', role: 'admin' },
+  target: { type: 'kommunikation', id: 'global' },
+  result: 'error',
+  level: 'info',
+  severity: 'INFO',
+  message: 'KOMMUNIKATION-VIEW',
+  meta: { code: 'LOAD_ERROR' }
+}
+
+ ❯ modules/kommunikation/groupchat/ui.test.js (2 tests | 2 failed) 92ms
+     × sends a message and shows it after refresh 13ms
+     × shows retention notices when enabled 77ms
+ ✓ modules/shared/logging/schema.test.js (6 tests) 4ms
+ ✓ apps/web/routerUtils.test.js (4 tests) 3ms
+ ✓ modules/shared/ratelimit/limiter.test.js (4 tests) 4ms
+ ✓ modules/kalender/utils/eventContext.test.js (3 tests) 4ms
+ ✓ modules/shared/server/health.test.js (3 tests) 4ms
+ ❯ modules/shared/auth/authService.test.js (7 tests | 1 failed) 272ms
+     ✓ logs in with a valid user and returns tokens 50ms
+     ✓ rejects unknown users and triggers lockout after threshold 23ms
+     ✓ refreshes tokens and revokes old refresh token 41ms
+     ✓ logout revokes session 43ms
+     × denies validateAccessToken for expired tokens 50ms
+     ✓ fails when auth is disabled 21ms
+     ✓ enforces admin 2FA flag when required 42ms
+ ✓ modules/kommunikation/groupchat/sal.test.js (11 tests) 371ms
+ ✓ modules/shared/storage/storage.test.js (4 tests) 319ms
+     ✓ routes mock writes through executeWriteContract  305ms
+ ✓ modules/shared/storage/real/realAdapter.test.js (9 tests) 2403ms
+     ✓ returns usable records in both modes  2295ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 7 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  modules/kommunikation/groupchat/ui.test.js > Kommunikation Chats UI > sends a message and shows it after refresh
+AssertionError: expected null to be truthy
+
+- Expected: 
+true
+
++ Received: 
+null
+
+ ❯ modules/kommunikation/groupchat/ui.test.js:127:22
+    125|     const textarea = container.querySelector("textarea");
+    126|     const sendButton = container.querySelector(".kommunikation-send");
+    127|     expect(textarea).toBeTruthy();
+       |                      ^
+    128|     textarea.value = "Testnachricht";
+    129|     sendButton.click();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/7]⎯
+
+ FAIL  modules/kommunikation/groupchat/ui.test.js > Kommunikation Chats UI > shows retention notices when enabled
+AssertionError: expected '\n    \n      Fehler beim Laden der K…' to contain 'Aufbewahrung: Nachrichten werden nach…'
+
+- Expected
++ Received
+
+- Aufbewahrung: Nachrichten werden nach 1 Tagen automatisch gelöscht.
++
++     
++       Fehler beim Laden der Kommunikation.
++     
++   
+
+ ❯ modules/kommunikation/groupchat/ui.test.js:172:35
+    170|     await new Promise((resolve) => setTimeout(resolve, 10));
+    171| 
+    172|     expect(container.textContent).toContain(
+       |                                   ^
+    173|       "Aufbewahrung: Nachrichten werden nach 1 Tagen automatisch gelös…
+    174|     );
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/7]⎯
+
+ FAIL  modules/kommunikation/infochannel/apiRoutes.test.js > infochannel API routes > supports publish, list, and confirm
+AssertionError: expected 403 to be 200 // Object.is equality
+
+- Expected
++ Received
+
+- 200
++ 403
+
+ ❯ modules/kommunikation/infochannel/apiRoutes.test.js:68:35
+     66|     const publishRes = mockRes();
+     67|     await api.handleCreateNotice(publishReq, publishRes);
+     68|     expect(publishRes.statusCode).toBe(200);
+       |                                   ^
+     69|     const publishBody = JSON.parse(publishRes.body);
+     70|     expect(publishBody.notice.title).toBe("Hinweis");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/7]⎯
+
+ FAIL  modules/kommunikation/infochannel/sal.test.js > infochannel SAL > publishes notices with trainer targets and audits
+InfochannelError: Only Richard Fontana can publish notices
+ ❯ Object.publishNotice modules/kommunikation/infochannel/sal.js:307:13
+    305|     }
+    306|     if (!(await isRichardPublisher(actorId, listTrainers))) {
+    307|       throw new InfochannelError("DENIED", "Only Richard Fontana can p…
+       |             ^
+    308|     }
+    309| 
+ ❯ modules/kommunikation/infochannel/sal.test.js:88:20
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/7]⎯
+
+ FAIL  modules/kommunikation/infochannel/sal.test.js > infochannel SAL > is idempotent on trainer confirmation
+InfochannelError: Only Richard Fontana can publish notices
+ ❯ Object.publishNotice modules/kommunikation/infochannel/sal.js:307:13
+    305|     }
+    306|     if (!(await isRichardPublisher(actorId, listTrainers))) {
+    307|       throw new InfochannelError("DENIED", "Only Richard Fontana can p…
+       |             ^
+    308|     }
+    309| 
+ ❯ modules/kommunikation/infochannel/sal.test.js:118:20
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/7]⎯
+
+ FAIL  modules/kommunikation/infochannel/sal.test.js > infochannel SAL > runs SLA job with escalation events and skips duplicates
+InfochannelError: Only Richard Fontana can publish notices
+ ❯ Object.publishNotice modules/kommunikation/infochannel/sal.js:307:13
+    305|     }
+    306|     if (!(await isRichardPublisher(actorId, listTrainers))) {
+    307|       throw new InfochannelError("DENIED", "Only Richard Fontana can p…
+       |             ^
+    308|     }
+    309| 
+ ❯ modules/kommunikation/infochannel/sal.test.js:141:20
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/7]⎯
+
+ FAIL  modules/shared/auth/authService.test.js > authService > denies validateAccessToken for expired tokens
+AssertionError: promise resolved "{ sub: 'user-developer', …(6) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "exp": 1735735500000,
++   "iat": 1735732800000,
++   "jti": "TGAtAPoaj9jZFBBH",
++   "role": "developer",
++   "sid": "A4LzvB6n4J5ypCnE",
++   "sub": "user-developer",
++   "type": "access",
+  }
+
+ ❯ modules/shared/auth/authService.test.js:109:65
+    107|     const login = await service.login("Developer", PASSWORD, {});
+    108|     now.mockReturnValue(FIXED_NOW + 16 * 60 * 1000); // beyond access …
+    109|     await expect(service.validateAccessToken(login.accessToken)).rejec…
+       |                                                                 ^
+    110|       "code",
+    111|       AUTH_ERROR_CODES.TOKEN_EXPIRED
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/7]⎯
+
+
+ Test Files  4 failed | 16 passed (20)
+      Tests  7 failed | 111 passed (118)
+   Start at  12:51:35
+   Duration  3.05s (transform 1.43s, setup 0ms, collect 2.33s, tests 3.72s, environment 4.25s, prepare 71ms)
+
+ ELIFECYCLE  Test failed. See above for more details.
+exit_code=0

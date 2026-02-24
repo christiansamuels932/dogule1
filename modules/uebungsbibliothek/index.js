@@ -619,10 +619,13 @@ function buildBlocksList(blocks = []) {
   blocks.forEach((block) => {
     const blockEl = document.createElement("div");
     blockEl.className = "schulungen-block";
-    const title = document.createElement("div");
-    title.className = "schulungen-block__title";
-    title.textContent = block.title || "";
-    blockEl.appendChild(title);
+    const blockTitle = String(block?.title || "").trim();
+    if (blockTitle) {
+      const title = document.createElement("div");
+      title.className = "schulungen-block__title";
+      title.textContent = blockTitle;
+      blockEl.appendChild(title);
+    }
     if (block.type === "image") {
       const link = document.createElement("a");
       link.className = "schulungen-block__image-link";
@@ -704,16 +707,20 @@ function addBlockRow(container, type, blockData = {}) {
   block.dataset.existingUrl = blockData.url || "";
   block.dataset.existingName = blockData.name || "";
 
-  const titleRow = createFormRow({
-    id: `schulungen-block-title-${Math.random().toString(36).slice(2)}`,
-    label: "Titel",
-    required: true,
-  });
-  const titleInput = titleRow.querySelector("input");
-  titleInput.name = "blockTitle";
-  titleInput.value = blockData.title || "";
-
-  block.appendChild(titleRow);
+  if (type === "image" || type === "document") {
+    const index =
+      container.querySelectorAll(`.schulungen-form-block[data-type="${type}"]`).length + 1;
+    const fallbackTitle = type === "image" ? `Bild ${index}` : `Dokument ${index}`;
+    const titleRow = createFormRow({
+      id: `schulungen-block-title-${Math.random().toString(36).slice(2)}`,
+      label: "Titel",
+      required: true,
+      value: String(blockData.title || "").trim() || fallbackTitle,
+    });
+    const titleInput = titleRow.querySelector("input");
+    titleInput.name = "blockTitle";
+    block.appendChild(titleRow);
+  }
 
   if (type === "image") {
     const imageRow = createFormRow({
@@ -771,6 +778,7 @@ function addBlockRow(container, type, blockData = {}) {
     const textarea = textRow.querySelector("textarea");
     textarea.name = "blockText";
     textarea.value = blockData.text || "";
+    textarea.placeholder = "Kurze Erklärung / Übersicht";
     block.appendChild(textRow);
   }
 
@@ -820,7 +828,7 @@ async function renderCreateView(section) {
 
   const cardFragment = createCard({
     eyebrow: "",
-    title: "Eintrag anlegen",
+    title: "Übung erstellen",
     body: "",
     footer: "",
   });
@@ -845,7 +853,7 @@ async function renderCreateView(section) {
   });
   const titleRow = createFormRow({
     id: "schulungen-title",
-    label: "Titel",
+    label: "Übungsname",
     required: true,
   });
 
@@ -911,7 +919,7 @@ async function renderCreateView(section) {
     for (const node of blockNodes) {
       const type = node.dataset.type || "text";
       const blockTitle = node.querySelector("input[name='blockTitle']")?.value.trim() || "";
-      if (!blockTitle) {
+      if (type !== "text" && !blockTitle) {
         missingTitle = true;
         break;
       }
@@ -930,19 +938,22 @@ async function renderCreateView(section) {
         if (textValue.trim()) {
           hasText = true;
         }
-        blocks.push({ type: "text", title: blockTitle, text: textValue });
+        blocks.push({ type: "text", text: textValue });
       }
     }
 
     if (!titleValue || !dateValue) {
       statusSlot.appendChild(
-        createNotice("Titel und Datum sind erforderlich.", { variant: "warn", role: "alert" })
+        createNotice("Übungsname und Datum sind erforderlich.", { variant: "warn", role: "alert" })
       );
       return;
     }
     if (missingTitle) {
       statusSlot.appendChild(
-        createNotice("Jeder Inhalt braucht einen Titel.", { variant: "warn", role: "alert" })
+        createNotice("Bilder und Dokumente brauchen einen Titel.", {
+          variant: "warn",
+          role: "alert",
+        })
       );
       return;
     }
@@ -996,7 +1007,6 @@ async function renderCreateView(section) {
         } else {
           resolvedBlocks.push({
             type: "text",
-            title: block.title,
             text: block.text || "",
           });
         }
@@ -1092,7 +1102,7 @@ async function renderEditView(section, id) {
   });
   const titleRow = createFormRow({
     id: "schulungen-title",
-    label: "Titel",
+    label: "Übungsname",
     required: true,
     value: entry.title || "",
   });
@@ -1164,7 +1174,7 @@ async function renderEditView(section, id) {
     for (const node of blockNodes) {
       const type = node.dataset.type || "text";
       const blockTitle = node.querySelector("input[name='blockTitle']")?.value.trim() || "";
-      if (!blockTitle) {
+      if (type !== "text" && !blockTitle) {
         missingTitle = true;
         break;
       }
@@ -1197,19 +1207,22 @@ async function renderEditView(section, id) {
         if (textValue.trim()) {
           hasText = true;
         }
-        blocks.push({ type: "text", title: blockTitle, text: textValue });
+        blocks.push({ type: "text", text: textValue });
       }
     }
 
     if (!titleValue || !dateValue) {
       statusSlot.appendChild(
-        createNotice("Titel und Datum sind erforderlich.", { variant: "warn", role: "alert" })
+        createNotice("Übungsname und Datum sind erforderlich.", { variant: "warn", role: "alert" })
       );
       return;
     }
     if (missingTitle) {
       statusSlot.appendChild(
-        createNotice("Jeder Inhalt braucht einen Titel.", { variant: "warn", role: "alert" })
+        createNotice("Bilder und Dokumente brauchen einen Titel.", {
+          variant: "warn",
+          role: "alert",
+        })
       );
       return;
     }
@@ -1280,7 +1293,6 @@ async function renderEditView(section, id) {
         } else {
           resolvedBlocks.push({
             type: "text",
-            title: block.title,
             text: block.text || "",
           });
         }

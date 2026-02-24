@@ -1,0 +1,14 @@
+● dogule1.service - Dogule1 API
+     Loaded: loaded (/etc/systemd/system/dogule1.service; enabled; preset: enabled)
+     Active: active (running) since Tue 2026-02-24 12:26:04 CET; 36min ago
+   Main PID: 864651 (node)
+      Tasks: 11 (limit: 9483)
+     Memory: 38.5M (peak: 39.2M)
+        CPU: 5.838s
+     CGroup: /system.slice/dogule1.service
+             └─864651 /usr/bin/node /opt/dogule1/tools/server/apiServer.js
+
+Feb 24 12:26:05 vmi3052330 node[864651]: [mariadb] connect host=127.0.0.1 port=3306 socket=/run/mysqld/mysqld.sock user=dogule db=dogule1
+Feb 24 12:26:05 vmi3052330 node[864651]: Dogule1 API server listening on http://localhost:5177
+---
+active

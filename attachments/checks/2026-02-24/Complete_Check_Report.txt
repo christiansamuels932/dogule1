@@ -1,0 +1,31 @@
+Complete Check Report
+Date: 2026-02-24
+Env: local + vps
+Branch: 26-02-04
+Commit: 5008d8d9ac16e958b50a81f97dc0d239ee354c40
+DB Snapshot: local @ 2026-02-24 12:51:07 (sha256 d87305ea48273a2cb0b2cab06a94edb618acf2bd6365d4b515b75ca6b74f1cf0)
+
+Summary:
+- Total checks: 71
+- Passed: 63
+- Failed: 3
+- Blocked: 5
+
+By Track:
+- UI coherence: FAIL
+- Linking/dependencies: FAIL
+- Security/safety: FAIL
+
+Open defects:
+- P0: 0
+- P1: 1
+- P2: 2
+- P3: 1
+
+Operational notes:
+- Service health: local /healthz OK (5177 and 5181); VPS /healthz OK and dogule1.service active.
+- Backup slot state: VPS developer backups reports 24h=missing, 72h=missing.
+
+Release recommendation:
+- NO-GO
+- Rationale: critical linking chain is not clean (course delete after certificate creation returns 500), UI coherence track was not fully executable in terminal-only mode, and backup/restore path could not be validated end-to-end due missing slots.

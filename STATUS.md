@@ -4,6 +4,54 @@ READ-ONLY NOTE: provide only 1 step of instruction/guidance per message.
 READ-ONLY NOTE: A single "." from the user means "confirmed, ok, next"
 READ-ONLY NOTE: Each assistant response must start with "🔷 Topic — Subtitle — Progress: X% 🔷".
 
+## Date 2026-02-24 — Session Consolidation (Übungsbibliothek UI + Sub-Kurse Local + VPS Rollout)
+
+## Kontext
+
+- Status: completed.
+- Scope: Form-UX in `#Übungsbibliothek` anpassen, Sub-Kurse aus `Subkurse.txt` lokal importieren (duplicate-safe), danach vollständigen VPS-Update nach `VPS_UPDATE_PROCESS.md` ausrollen.
+
+## Ergebnis (kurz)
+
+- Übungsbibliothek-Form überarbeitet (`modules/uebungsbibliothek/index.js`):
+- Card-Titel `Eintrag anlegen` → `Übung erstellen`.
+- Feldlabel `Titel` → `Übungsname` (Create/Edit).
+- Textblöcke ohne Block-Titel-Feld; nur `Text` mit Placeholder `Kurze Erklärung / Übersicht`.
+- Bild-/Dokumentblöcke behalten `Titel`, werden aber vorbefüllt (`Bild N` / `Dokument N`) und bleiben editierbar.
+- Validierung angepasst: Titelpflicht nur für Bild/Dokument, nicht für Text.
+- Detailansicht rendert Blocktitel nur, wenn vorhanden.
+- Sub-Kurse lokal aus `Subkurse.txt` importiert:
+- Zeitnormalisierung (`15.00` → `15:00`, `09.30` → `09:30`).
+- Trainer-Alias-Auflösung (`Richi Fontana` → `Fontana Richard`).
+- Unterstützung für `Weitere Trainer: ...` (zusätzliche `trainer_ids`).
+- Duplicate-Schutz aktiv (Schlüssel: `kursId + weekday + time + primaryTrainerId`).
+- Bestand nach Import umfasst Updates für:
+- `KS-001`, `KS-002`, `KS-004`, `KS-005`, `KS-006`.
+- VPS-Rollout gemäss Prozessdokument durchgeführt:
+- `pnpm build` lokal.
+- Local DB Dump `/tmp/dogule1_local.sql` erstellt und auf VPS kopiert.
+- VPS DB `DROP/CREATE` + Import des local Dumps.
+- Safe `rsync` (`dist`, `modules`, `tools`) nach `/opt/dogule1`.
+- `dogule1.passwords` auf VPS aktualisiert, Rechte gesetzt.
+- `dogule1.service` neu gestartet.
+
+## Tests
+
+- Lokal:
+- `pnpm lint` ✅
+- `pnpm test` ✅ (`20` Dateien, `118` Tests).
+- `pnpm build` ✅
+- Sub-Kurs Spotchecks in MariaDB ✅
+- VPS:
+- `systemctl status dogule1 --no-pager -l` = `active (running)` ✅
+- `curl -i http://127.0.0.1:5177/healthz` = `200` + `{"status":"ok","storageMb":1.7}` ✅
+- `curl -i http://127.0.0.1:5177/api/auth/options` = `200` ✅
+- SQL-Spotcheck `sub_kurse` für `KS-001/002/004/005/006` ✅
+
+## Offene Punkte
+
+- Browser-Hard-Reload (`Shift+Reload`) nach Deploy empfohlen (hash-basierte Assets).
+
 ## Date 2026-02-24 — Sub-Kurse Batch Import + VPS Update (Process-Conform)
 
 ## Kontext

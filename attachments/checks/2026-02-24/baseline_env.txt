@@ -1,0 +1,8 @@
+date_utc=2026-02-24T11:51:07Z
+branch=26-02-04
+commit=5008d8d9ac16e958b50a81f97dc0d239ee354c40
+status_short=3
+api_url=http://127.0.0.1:5177
+ui_url=http://127.0.0.1:5177
+db_socket=/run/mysqld/mysqld.sock
+db_now=2026-02-24 12:51:07
