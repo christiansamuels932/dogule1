@@ -1,0 +1,6 @@
+
+> dogule1@0.0.0 lint /home/ran/codex/dogule1
+> echo "DLX-LINT-001: running eslint" && eslint .
+
+DLX-LINT-001: running eslint
+exit_code=0

@@ -1,0 +1,8 @@
+HTTP/1.1 200 OK
+Content-Type: application/json
+Date: Tue, 24 Feb 2026 11:59:27 GMT
+Connection: keep-alive
+Keep-Alive: timeout=5
+Content-Length: 788
+
+{"user":{"id":"user-019b8ef7-3925-7eb4-8212-f6ded3718faa","username":"info","role":"admin"},"accessToken":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkRPR1VMRTEifQ.eyJzdWIiOiJ1c2VyLTAxOWI4ZWY3LTM5MjUtN2ViNC04MjEyLWY2ZGVkMzcxOGZhYSIsInJvbGUiOiJhZG1pbiIsInNpZCI6IkY5RnU4ZGM3aFVheXNybGYiLCJ0eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzcxOTM3MDY3NTY2LCJpYXQiOjE3NzE5MzQzNjc1NjYsImp0aSI6InRkT2dnYUdvU2xhc1NRSDkifQ.QVNm4XgxnS3NCYcVsal0avxYuBLwtNaC0znBJylz7W4","refreshToken":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkRPR1VMRTEifQ.eyJzdWIiOiJ1c2VyLTAxOWI4ZWY3LTM5MjUtN2ViNC04MjEyLWY2ZGVkMzcxOGZhYSIsInJvbGUiOiJhZG1pbiIsInNpZCI6IkY5RnU4ZGM3aFVheXNybGYiLCJ0eXBlIjoicmVmcmVzaCIsImV4cCI6MTc3MjUzOTE2NzU2NiwiaWF0IjoxNzcxOTM0MzY3NTY2LCJqdGkiOiJMeTlsTmNEY19sU25lOVR6In0.3qk8raswocPZDZ2rK4sPcQYpfQs3bNKbjdham2KTj6g","expiresAt":1771937067566}

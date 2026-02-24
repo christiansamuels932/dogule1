@@ -1,0 +1,8 @@
+HTTP/1.1 200 OK
+Content-Type: application/json
+Date: Tue, 24 Feb 2026 11:59:19 GMT
+Connection: keep-alive
+Keep-Alive: timeout=5
+Content-Length: 832
+
+{"users":[{"id":"user-developer","username":"Developer","label":"Developer","role":"developer"},{"id":"user-019b8ef6-aa39-7359-8b05-5baeb3647bac","username":"patty.bruehwiler","label":"Brühwiler Patricia (TR-003) - Rapport","role":"trainer_rapport"},{"id":"user-019b8ef6-73d1-7c5b-a885-85d117574f40","username":"eidara","label":"Christen Susann (TR-002) - Rapport","role":"trainer_rapport"},{"id":"user-019b8ed7-920a-719f-8d71-d244c7eccda3","username":"michael.damico","label":"D`Amico Michael (TR-005) - Rapport","role":"trainer_rapport"},{"id":"user-019b8ef7-3925-7eb4-8212-f6ded3718faa","username":"info","label":"Fontana Richard (TR-001)","role":"admin"},{"id":"user-019b8ef6-fdf4-70d1-93d1-24439cd298f3","username":"cornelia13","label":"Schneider Cornelia (TR-004) - Rapport","role":"trainer_rapport"}],"passwordlessUsers":[]}
