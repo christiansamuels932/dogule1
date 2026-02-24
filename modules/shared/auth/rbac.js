@@ -17,23 +17,25 @@ const ALL_MODULES = [
 const DISABLED_MODULES = new Set(["kalender", "finanzen", "waren"]);
 
 const ALL_API_ENTITIES = [...ALL_MODULES, "rapporte", "historie"];
+const DEVELOPER_MODULES = [...ALL_MODULES, "developer"];
+const DEVELOPER_API_ENTITIES = [...ALL_API_ENTITIES, "developer"];
 
 const ROLE_MODULES = {
   admin: ALL_MODULES,
-  developer: ALL_MODULES,
-  trainer: ["kunden", "hunde", "schulungen", "uebungsbibliothek", "kommunikation"],
-  trainer_rapport: ["kunden", "hunde", "schulungen", "uebungsbibliothek", "kommunikation"],
+  developer: DEVELOPER_MODULES,
+  trainer: ["kunden", "hunde", "kurse", "schulungen", "uebungsbibliothek", "kommunikation"],
+  trainer_rapport: ["kunden", "hunde", "kurse", "schulungen", "uebungsbibliothek", "kommunikation"],
 };
 
 const API_ACCESS = {
   admin: { read: ALL_API_ENTITIES, write: ALL_API_ENTITIES },
-  developer: { read: ALL_API_ENTITIES, write: ALL_API_ENTITIES },
+  developer: { read: DEVELOPER_API_ENTITIES, write: DEVELOPER_API_ENTITIES },
   trainer: {
-    read: ["kunden", "hunde", "rapporte", "schulungen", "uebungsbibliothek"],
+    read: ["kunden", "hunde", "kurse", "rapporte", "schulungen", "uebungsbibliothek"],
     write: ["kunden", "hunde", "rapporte", "uebungsbibliothek"],
   },
   trainer_rapport: {
-    read: ["kunden", "hunde", "rapporte", "schulungen", "uebungsbibliothek"],
+    read: ["kunden", "hunde", "kurse", "rapporte", "schulungen", "uebungsbibliothek"],
     write: ["rapporte", "uebungsbibliothek"],
   },
 };

@@ -21,14 +21,21 @@ import {
   updateKurs,
   deleteKurs,
   listKursTeilnehmer,
+  listKursTeilnehmerByFilter,
   createKursTeilnehmer,
   deleteKursTeilnehmer,
   listKunden,
   listHunde,
   listFinanzen,
   listTrainer,
+  listSubKurse,
+  getSubKurs,
+  createSubKurs,
+  updateSubKurs,
+  deleteSubKurs,
 } from "../shared/api/index.js";
 import { runIntegrityCheck } from "../shared/api/db/integrityCheck.js";
+import { getSession } from "../shared/auth/client.js";
 import {
   describeCertificateBackground,
   getCertificateBackgroundForKurs,
@@ -44,6 +51,10 @@ const STATUS_OPTIONS = [
   { value: "deaktiviert", label: "Deaktiviert" },
 ];
 const KURS_TEILNEHMER_PREFILL_KEY = "__DOGULE_KURS_TEILNEHMER_PREFILL__";
+
+function isAdminOrDeveloper(role = "") {
+  return role === "admin" || role === "developer";
+}
 
 async function fetchTrainer(force = false) {
   if (trainerCache.length && !force) {
@@ -134,6 +145,16 @@ function createTeilnehmerFormCard() {
   status.className = "kurse-teilnehmer-status";
   form.appendChild(status);
 
+  const subKursRow = createFormRow({
+    id: "kurs-teilnehmer-subkurs",
+    label: "Sub-Kurs",
+    control: "select",
+    required: false,
+    options: [{ value: "", label: "Direkt Kurs", selected: true }],
+  });
+  const subKursSelect = subKursRow.querySelector("select");
+  form.appendChild(subKursRow);
+
   const searchRow = createFormRow({
     id: "kurs-teilnehmer-kunde-search",
     label: "Kunde suchen",
@@ -213,6 +234,18 @@ function createTeilnehmerFormCard() {
     });
   };
 
+  const setSubKursOptions = (subKurse = []) => {
+    if (!subKursSelect) return;
+    const options = [
+      { value: "", label: "Direkt Kurs" },
+      ...(Array.isArray(subKurse) ? subKurse : []).map((entry) => ({
+        value: entry.id,
+        label: entry.name || "Sub-Kurs",
+      })),
+    ];
+    setSelectOptions(subKursSelect, options, subKursSelect.value || "");
+  };
+
   const updateKundeOptions = (query = "") => {
     const normalized = String(query || "")
       .trim()
@@ -276,6 +309,9 @@ function createTeilnehmerFormCard() {
       updateHundOptions(kundeSelect?.value || "");
       setStatus("");
     },
+    setSubKurse(nextSubKurse = []) {
+      setSubKursOptions(Array.isArray(nextSubKurse) ? nextSubKurse : []);
+    },
     setStatus,
     focus() {
       searchInput?.focus();
@@ -291,6 +327,7 @@ function createTeilnehmerFormCard() {
         kundeId: kundeSelect?.value || "",
         hundId: hundSelect?.value || "",
         startDatum: startInput?.value || "",
+        subKursId: subKursSelect?.value || "",
       };
     },
     getKundeById(id) {
@@ -300,11 +337,13 @@ function createTeilnehmerFormCard() {
       return hunde.find((item) => item.id === id) || null;
     },
     reset() {
+      if (subKursSelect) subKursSelect.value = "";
       if (kundeSelect) kundeSelect.value = "";
       updateHundOptions("");
       if (startInput) startInput.value = "";
     },
-    prefill({ kundeId = "", hundId = "", startDatum = "" } = {}) {
+    prefill({ kundeId = "", hundId = "", startDatum = "", subKursId = "" } = {}) {
+      if (subKursSelect) subKursSelect.value = subKursId || "";
       if (searchInput) searchInput.value = "";
       updateKundeOptions("");
       if (kundeSelect) kundeSelect.value = kundeId || "";
@@ -320,7 +359,7 @@ function createTeilnehmerFormCard() {
 function renderKursHistorieRows(
   tbody,
   entries = [],
-  { onDelete, onCreateZertifikat, filter = "" } = {}
+  { onDelete, onCreateZertifikat, filter = "", canManage = true } = {}
 ) {
   if (!tbody) return;
   tbody.innerHTML = "";
@@ -339,7 +378,7 @@ function renderKursHistorieRows(
   if (!visibleEntries.length) {
     const emptyRow = document.createElement("tr");
     const emptyCell = document.createElement("td");
-    emptyCell.colSpan = 8;
+    emptyCell.colSpan = canManage ? 8 : 7;
     emptyCell.textContent = "Keine Einträge vorhanden.";
     emptyRow.appendChild(emptyCell);
     tbody.appendChild(emptyRow);
@@ -367,6 +406,7 @@ function renderKursHistorieRows(
       entry?.kundeVorname,
       entry?.kundeOrt,
       entry?.hundName,
+      entry?.subKursNameSnapshot || "–",
       formatDate(entry?.startDatum),
       formatDate(entry?.createdAt),
     ];
@@ -375,23 +415,28 @@ function renderKursHistorieRows(
       td.textContent = valueOrDash(value);
       row.appendChild(td);
     });
-    const actionCell = document.createElement("td");
-    actionCell.className = "kurs-historie-actions";
-    const zertifikatBtn = createButton({ label: "Zertifikat erstellen", variant: "primary" });
-    zertifikatBtn.type = "button";
-    zertifikatBtn.addEventListener("click", () => onCreateZertifikat?.(entry));
-    actionCell.appendChild(zertifikatBtn);
-    const deleteBtn = createButton({ label: "Löschen", variant: "quiet" });
-    deleteBtn.type = "button";
-    deleteBtn.addEventListener("click", () => onDelete?.(entry));
-    actionCell.appendChild(deleteBtn);
-    row.appendChild(actionCell);
+    if (canManage) {
+      const actionCell = document.createElement("td");
+      actionCell.className = "kurs-historie-actions";
+      const zertifikatBtn = createButton({ label: "Zertifikat erstellen", variant: "primary" });
+      zertifikatBtn.type = "button";
+      zertifikatBtn.addEventListener("click", () => onCreateZertifikat?.(entry));
+      actionCell.appendChild(zertifikatBtn);
+      const deleteBtn = createButton({ label: "Löschen", variant: "quiet" });
+      deleteBtn.type = "button";
+      deleteBtn.addEventListener("click", () => onDelete?.(entry));
+      actionCell.appendChild(deleteBtn);
+      row.appendChild(actionCell);
+    }
     tbody.appendChild(row);
   });
 }
 
-function buildKursHistorieCard(kurs = {}, { onDelete, onCreateZertifikat } = {}) {
-  const card = createStandardCard("Kurs Historie");
+function buildKursHistorieCard(
+  kurs = {},
+  { onDelete, onCreateZertifikat, canManage = true, title = "Kurs Historie" } = {}
+) {
+  const card = createStandardCard(title);
   const body = card.querySelector(".ui-card__body");
   body.innerHTML = "";
 
@@ -414,7 +459,9 @@ function buildKursHistorieCard(kurs = {}, { onDelete, onCreateZertifikat } = {})
   const headerRow = document.createElement("tr");
   const tbody = document.createElement("tbody");
 
-  ["Name", "Vorname", "Ort", "Hund", "Startdatum", "Eintrag vom", ""].forEach((label) => {
+  const headers = ["Name", "Vorname", "Ort", "Hund", "Sub-Kurs", "Startdatum", "Eintrag vom"];
+  if (canManage) headers.push("");
+  headers.forEach((label) => {
     const th = document.createElement("th");
     th.textContent = label;
     headerRow.appendChild(th);
@@ -422,11 +469,11 @@ function buildKursHistorieCard(kurs = {}, { onDelete, onCreateZertifikat } = {})
   thead.appendChild(headerRow);
   const entries = Array.isArray(kurs.teilnehmerLog) ? kurs.teilnehmerLog : [];
   let filter = "";
-  renderKursHistorieRows(tbody, entries, { onDelete, onCreateZertifikat, filter });
+  renderKursHistorieRows(tbody, entries, { onDelete, onCreateZertifikat, filter, canManage });
   if (searchInput) {
     searchInput.addEventListener("input", (event) => {
       filter = event.target.value || "";
-      renderKursHistorieRows(tbody, entries, { onDelete, onCreateZertifikat, filter });
+      renderKursHistorieRows(tbody, entries, { onDelete, onCreateZertifikat, filter, canManage });
     });
   }
 
@@ -438,7 +485,7 @@ function buildKursHistorieCard(kurs = {}, { onDelete, onCreateZertifikat } = {})
     tbody,
     setEntries(nextEntries = []) {
       const list = Array.isArray(nextEntries) ? nextEntries : [];
-      renderKursHistorieRows(tbody, list, { onDelete, onCreateZertifikat, filter });
+      renderKursHistorieRows(tbody, list, { onDelete, onCreateZertifikat, filter, canManage });
     },
   };
 }
@@ -449,11 +496,16 @@ export async function initModule(container, routeContext = { segments: [] }) {
   section.className = "dogule-section kurse-view";
   container.appendChild(section);
 
-  const { view, id } = resolveView(routeContext);
+  const routeState = resolveView(routeContext);
+  const { view, id } = routeState;
 
   try {
     if (view === "detail" && id) {
       await renderDetail(section, id);
+    } else if (view === "subkurs-detail") {
+      await renderSubKursDetail(section, routeState);
+    } else if (view === "subkurs-create" || view === "subkurs-edit") {
+      await renderSubKursForm(section, routeState, view);
     } else if (view === "create" || (view === "edit" && id)) {
       await renderForm(section, view, id);
     } else {
@@ -486,8 +538,13 @@ export async function initModule(container, routeContext = { segments: [] }) {
 function resolveView(routeContext = {}) {
   const segments = routeContext.segments || [];
   if (!segments.length) return { view: "list" };
-  const [first, second] = segments;
+  const [first, second, third, fourth] = segments;
   if (first === "new") return { view: "create" };
+  if (second === "subkurse") {
+    if (third === "new") return { view: "subkurs-create", kursId: first };
+    if (fourth === "edit") return { view: "subkurs-edit", kursId: first, subKursId: third };
+    return { view: "subkurs-detail", kursId: first, subKursId: third };
+  }
   if (second === "edit") return { view: "edit", id: first };
   return { view: "detail", id: first };
 }
@@ -499,8 +556,10 @@ async function renderList(section) {
   scrollToTop();
   await fetchTrainer(true);
   injectToast(section);
+  const role = getSession()?.user?.role || "";
+  const canManage = isAdminOrDeveloper(role);
 
-  const toolbar = buildCourseToolbarCard();
+  const toolbar = buildCourseToolbarCard({ canManage });
   if (toolbar) {
     section.appendChild(toolbar);
   }
@@ -525,6 +584,8 @@ async function renderDetail(section, id) {
   section.innerHTML = "";
   scrollToTop();
   await fetchTrainer(true);
+  const role = getSession()?.user?.role || "";
+  const canManage = isAdminOrDeveloper(role);
   const detailSection = document.createElement("section");
   detailSection.className = "dogule-section kurse-section kurse-detail card-stack-compact";
   section.appendChild(detailSection);
@@ -552,25 +613,29 @@ async function renderDetail(section, id) {
     const actionsBody = actionsCard.querySelector(".ui-card__body");
     const actionsWrap = document.createElement("div");
     actionsWrap.className = "module-actions";
-    const teilnehmerBtn = createButton({
-      label: "+ neuer Teilnehmer",
-      variant: "secondary",
-    });
-    teilnehmerBtn.type = "button";
-    const editBtn = createButton({
-      label: "Kurs bearbeiten",
-      variant: "primary",
-    });
-    editBtn.type = "button";
-    editBtn.addEventListener("click", () => {
-      window.location.hash = `#/kurse/${kurs.id}/edit`;
-    });
-    const deleteBtn = createButton({
-      label: "Kurs löschen",
-      variant: "secondary",
-    });
-    deleteBtn.type = "button";
-    deleteBtn.addEventListener("click", () => handleDeleteKurs(section, kurs.id, deleteBtn));
+    let teilnehmerBtn = null;
+    if (canManage) {
+      teilnehmerBtn = createButton({
+        label: "+ neuer Teilnehmer",
+        variant: "secondary",
+      });
+      teilnehmerBtn.type = "button";
+      const editBtn = createButton({
+        label: "Kurs bearbeiten",
+        variant: "primary",
+      });
+      editBtn.type = "button";
+      editBtn.addEventListener("click", () => {
+        window.location.hash = `#/kurse/${kurs.id}/edit`;
+      });
+      const deleteBtn = createButton({
+        label: "Kurs löschen",
+        variant: "secondary",
+      });
+      deleteBtn.type = "button";
+      deleteBtn.addEventListener("click", () => handleDeleteKurs(section, kurs.id, deleteBtn));
+      actionsWrap.append(teilnehmerBtn, editBtn, deleteBtn);
+    }
     const backBtn = createButton({
       label: "Zur Übersicht",
       variant: "quiet",
@@ -579,29 +644,151 @@ async function renderDetail(section, id) {
     backBtn.addEventListener("click", () => {
       window.location.hash = "#/kurse";
     });
-    actionsWrap.append(teilnehmerBtn, editBtn, deleteBtn, backBtn);
+    actionsWrap.append(backBtn);
     actionsBody.appendChild(actionsWrap);
     detailSection.appendChild(actionsCard);
 
-    const teilnehmerForm = createTeilnehmerFormCard();
-    teilnehmerForm.card.hidden = true;
-    detailSection.appendChild(teilnehmerForm.card);
+    const subKurseCard = createStandardCard("Sub-Kurse");
+    const subKurseBody = subKurseCard.querySelector(".ui-card__body");
+    const renderSubKurse = (items = [], hasError = false) => {
+      if (!subKurseBody) return;
+      subKurseBody.innerHTML = "";
+      if (canManage) {
+        const actions = document.createElement("div");
+        actions.className = "module-actions subkurse-actions";
+        const createBtn = createButton({
+          label: "+ Sub-Kurs erstellen",
+          variant: "secondary",
+        });
+        createBtn.type = "button";
+        createBtn.addEventListener("click", () => {
+          window.location.hash = `#/kurse/${kurs.id}/subkurse/new`;
+        });
+        actions.appendChild(createBtn);
+        subKurseBody.appendChild(actions);
+      }
+      if (hasError) {
+        subKurseBody.appendChild(createErrorNotice());
+        return;
+      }
+      if (!items.length) {
+        subKurseBody.appendChild(createEmptyState("Keine Sub-Kurse vorhanden.", ""));
+        return;
+      }
+      const tableWrapper = document.createElement("div");
+      tableWrapper.className = "kunden-list-scroll";
+      const table = document.createElement("table");
+      table.className = "kunden-list-table";
+      const thead = document.createElement("thead");
+      const headerRow = document.createElement("tr");
+      ["Sub-Kurs", "Wochentag", "Uhrzeit", "Trainer", ""]
+        .filter((label, index, arr) => (canManage ? true : index < arr.length - 1))
+        .forEach((label) => {
+          const th = document.createElement("th");
+          th.textContent = label;
+          headerRow.appendChild(th);
+        });
+      thead.appendChild(headerRow);
+      const tbody = document.createElement("tbody");
+      items.forEach((subKurs) => {
+        const row = document.createElement("tr");
+        row.className = "kunden-list-row";
+        const nameCell = document.createElement("td");
+        const link = document.createElement("a");
+        link.href = `#/kurse/${kurs.id}/subkurse/${subKurs.id}`;
+        link.textContent = subKurs.name || "Sub-Kurs";
+        nameCell.appendChild(link);
+        row.appendChild(nameCell);
+
+        const weekdayCell = document.createElement("td");
+        weekdayCell.textContent = valueOrDash(subKurs.weekday);
+        row.appendChild(weekdayCell);
+
+        const timeCell = document.createElement("td");
+        timeCell.textContent = valueOrDash(subKurs.time);
+        row.appendChild(timeCell);
+
+        const trainerNames = (Array.isArray(subKurs.trainerIds) ? subKurs.trainerIds : [])
+          .map((trainerId) => formatTrainerLabel(findTrainerById(trainerId), "", trainerId))
+          .filter(Boolean)
+          .join(", ");
+        const trainerCell = document.createElement("td");
+        trainerCell.textContent = trainerNames || "–";
+        row.appendChild(trainerCell);
+
+        if (canManage) {
+          const actionCell = document.createElement("td");
+          actionCell.className = "kurs-historie-actions";
+          const deleteBtn = createButton({ label: "Löschen", variant: "quiet" });
+          deleteBtn.type = "button";
+          deleteBtn.addEventListener("click", async (event) => {
+            event.preventDefault();
+            const confirmed = window.confirm(
+              "Sub-Kurs löschen?\nDieser Vorgang kann nicht rückgängig gemacht werden."
+            );
+            if (!confirmed) return;
+            try {
+              await deleteSubKurs(kurs.id, subKurs.id);
+              await refreshSubKurse();
+            } catch (error) {
+              const code = error?.code || "";
+              const message =
+                code === "SUBKURS_HAS_TEILNEHMER"
+                  ? "Sub-Kurs kann nicht gelöscht werden, da Teilnehmer zugeordnet sind."
+                  : "Sub-Kurs konnte nicht gelöscht werden.";
+              showInlineToast(detailSection, message, "error");
+            }
+          });
+          actionCell.appendChild(deleteBtn);
+          row.appendChild(actionCell);
+        }
+
+        tbody.appendChild(row);
+      });
+      table.append(thead, tbody);
+      tableWrapper.appendChild(table);
+      subKurseBody.appendChild(tableWrapper);
+    };
+
+    const refreshSubKurse = async () => {
+      try {
+        const list = await listSubKurse(kurs.id);
+        renderSubKurse(list, false);
+      } catch (error) {
+        console.error("[KURSE_ERR_SUBKURSE_LOAD]", error);
+        renderSubKurse([], true);
+      }
+    };
+    await refreshSubKurse();
+    detailSection.appendChild(subKurseCard);
+
+    const teilnehmerForm = canManage ? createTeilnehmerFormCard() : null;
+    if (teilnehmerForm) {
+      teilnehmerForm.card.hidden = true;
+      detailSection.appendChild(teilnehmerForm.card);
+    }
 
     let teilnehmerLoaded = false;
     const ensureTeilnehmerData = async () => {
       if (teilnehmerLoaded) return true;
       try {
-        const [kunden, hunde] = await Promise.all([listKunden(), listHunde()]);
+        const [kunden, hunde, subKurse] = await Promise.all([
+          listKunden(),
+          listHunde(),
+          listSubKurse(kurs.id).catch(() => []),
+        ]);
         teilnehmerForm.setData(kunden, hunde);
+        teilnehmerForm.setSubKurse(subKurse);
         teilnehmerLoaded = true;
         return true;
       } catch (error) {
         console.error("[KURSE_ERR_TEILNEHMER_LOAD]", error);
-        teilnehmerForm.setStatus("Kunden/Hunde konnten nicht geladen werden.", "warn");
+        teilnehmerForm?.setStatus("Kunden/Hunde konnten nicht geladen werden.", "warn");
         return false;
       }
     };
     const openTeilnehmerForm = async (prefill = null) => {
+      if (!teilnehmerForm) return;
       teilnehmerForm.card.hidden = false;
       teilnehmerForm.setStatus("Kunden werden geladen ...", "info");
       teilnehmerForm.focus();
@@ -644,51 +831,58 @@ async function renderDetail(section, id) {
         window.location.hash = `#/kunden/${entry.kundeId}`;
       }
     };
-    teilnehmerForm.onClose(() => {
-      teilnehmerForm.close();
-    });
-    teilnehmerForm.onSubmit(async (event) => {
-      event.preventDefault();
-      const { kundeId, hundId, startDatum } = teilnehmerForm.getValues();
-      if (!kundeId || !hundId || !startDatum) {
-        teilnehmerForm.setStatus("Bitte Kunde, Hund und Startdatum auswählen.", "warn");
-        return;
-      }
-      const kunde = teilnehmerForm.getKundeById(kundeId);
-      const hund = teilnehmerForm.getHundById(hundId);
-      try {
-        await createKursTeilnehmer({
-          kursId: kurs.id,
-          kundeId,
-          hundId,
-          kundeNachname: kunde?.nachname || "",
-          kundeVorname: kunde?.vorname || "",
-          kundeOrt: kunde?.ort || kunde?.heimatort || kunde?.heimatOrt || "",
-          hundName: hund?.rufname || hund?.name || "",
-          startDatum,
-        });
-        await refreshTeilnehmer();
-        teilnehmerForm.setStatus("Teilnehmer eingetragen.", "success");
-        teilnehmerForm.reset();
-      } catch (error) {
-        console.error("[KURSE_ERR_TEILNEHMER_CREATE]", error);
-        const detail = error?.code ? ` (${error.code})` : "";
-        teilnehmerForm.setStatus(`Teilnehmer konnte nicht gespeichert werden.${detail}`, "warn");
-      }
-    });
-    teilnehmerBtn.addEventListener("click", async () => {
-      const isHidden = teilnehmerForm.card.hidden;
-      if (isHidden) {
-        await openTeilnehmerForm();
-      } else {
-        teilnehmerForm.card.hidden = true;
-      }
-    });
+    if (teilnehmerForm) {
+      teilnehmerForm.onClose(() => {
+        teilnehmerForm.close();
+      });
+      teilnehmerForm.onSubmit(async (event) => {
+        event.preventDefault();
+        const { kundeId, hundId, startDatum, subKursId } = teilnehmerForm.getValues();
+        if (!kundeId || !hundId || !startDatum) {
+          teilnehmerForm.setStatus("Bitte Kunde, Hund und Startdatum auswählen.", "warn");
+          return;
+        }
+        const kunde = teilnehmerForm.getKundeById(kundeId);
+        const hund = teilnehmerForm.getHundById(hundId);
+        try {
+          await createKursTeilnehmer({
+            kursId: kurs.id,
+            subKursId: subKursId || null,
+            kundeId,
+            hundId,
+            kundeNachname: kunde?.nachname || "",
+            kundeVorname: kunde?.vorname || "",
+            kundeOrt: kunde?.ort || kunde?.heimatort || kunde?.heimatOrt || "",
+            hundName: hund?.rufname || hund?.name || "",
+            startDatum,
+          });
+          await refreshTeilnehmer();
+          teilnehmerForm.setStatus("Teilnehmer eingetragen.", "success");
+          teilnehmerForm.reset();
+        } catch (error) {
+          console.error("[KURSE_ERR_TEILNEHMER_CREATE]", error);
+          const detail = error?.code ? ` (${error.code})` : "";
+          teilnehmerForm.setStatus(`Teilnehmer konnte nicht gespeichert werden.${detail}`, "warn");
+        }
+      });
+    }
+    if (teilnehmerBtn && teilnehmerForm) {
+      teilnehmerBtn.addEventListener("click", async () => {
+        const isHidden = teilnehmerForm.card.hidden;
+        if (isHidden) {
+          await openTeilnehmerForm();
+        } else {
+          teilnehmerForm.card.hidden = true;
+        }
+      });
+    }
 
     const prefill = window[KURS_TEILNEHMER_PREFILL_KEY];
     if (prefill?.kursId === kurs.id) {
       delete window[KURS_TEILNEHMER_PREFILL_KEY];
-      await openTeilnehmerForm(prefill);
+      if (teilnehmerForm) {
+        await openTeilnehmerForm(prefill);
+      }
     }
 
     const detailCard = createStandardCard("Stammdaten");
@@ -787,8 +981,9 @@ async function renderDetail(section, id) {
       window.location.hash = `#/zertifikate/new?${params.toString()}`;
     };
     const kursHistorie = buildKursHistorieCard(kurs, {
-      onDelete: handleDeleteTeilnehmer,
-      onCreateZertifikat: handleCreateZertifikat,
+      onDelete: canManage ? handleDeleteTeilnehmer : null,
+      onCreateZertifikat: canManage ? handleCreateZertifikat : null,
+      canManage,
     });
     detailSection.appendChild(kursHistorie.card);
   } catch (error) {
@@ -812,6 +1007,30 @@ function formatTrainerLabel(trainer = {}, fallbackName = "", fallbackId = "") {
   if (name) return name;
   if (code) return code;
   return fallbackId || "Noch nicht zugewiesen";
+}
+
+function buildTrainerCodeFromName(name = "") {
+  const cleaned = String(name || "")
+    .replace(/[^A-Za-zÄÖÜäöüß\\s-]/g, " ")
+    .replace(/\\s+/g, " ")
+    .trim();
+  if (!cleaned) return "";
+  const parts = cleaned.split(" ").filter(Boolean);
+  const first = parts[0] || "";
+  const last = parts[parts.length - 1] || "";
+  const take = (value, count) => value.slice(0, count).padEnd(count, " ").replace(/\\s/g, "");
+  let code = "";
+  if (first && last && first !== last) {
+    code = `${take(first, 2)}${take(last, 2)}`;
+  } else {
+    code = take(first || last, 4);
+  }
+  return code ? code[0].toUpperCase() + code.slice(1) : "";
+}
+
+function buildSubKursName(weekday = "", time = "", trainerCode = "") {
+  if (!weekday || !time || !trainerCode) return "";
+  return `${weekday}-${time}-${trainerCode}`;
 }
 
 function renderTrainerInline(kurs = {}) {
@@ -868,7 +1087,7 @@ function createCourseListItem(course = {}) {
   link.href = `#/kurse/${course.id}`;
   link.className = "kurse-list__item";
   const cardFragment = createCard({
-    eyebrow: course.code || "Code folgt",
+    eyebrow: "",
     title: course.title || "Ohne Titel",
     body: "",
     footer: "",
@@ -876,39 +1095,29 @@ function createCourseListItem(course = {}) {
   const card = cardFragment.querySelector(".ui-card") || cardFragment.firstElementChild;
   if (!card) return null;
   card.classList.add("kurse-list-item");
+  const eyebrow = card.querySelector(".ui-card__eyebrow");
+  if (eyebrow) eyebrow.hidden = true;
   const body = card.querySelector(".ui-card__body");
   const footer = card.querySelector(".ui-card__footer");
   if (body) {
     body.innerHTML = "";
     const metaList = document.createElement("ul");
     metaList.className = "kurse-list__meta";
-    const trainerLabel =
-      course.trainerLabel ||
-      formatTrainerLabel(course.trainer, course.trainerName, course.trainerId);
-    [
-      {
-        label: "Trainer",
-        value: trainerLabel,
-        link: course.trainerId ? `#/trainer/${course.trainerId}` : "",
-      },
-      { label: "Alter Hund", value: course.alterHund || "–" },
-      { label: "Preis", value: formatPrice(course.price) },
-    ].forEach(({ label, value, link }) => {
-      const item = document.createElement("li");
+    const metaRow = document.createElement("li");
+    metaRow.className = "kurse-list__meta-row";
+    const appendMetaItem = (label, value) => {
+      const item = document.createElement("span");
+      item.className = "kurse-list__meta-item";
       const strong = document.createElement("strong");
       strong.textContent = `${label}: `;
       const span = document.createElement("span");
-      if (link) {
-        const anchor = document.createElement("a");
-        anchor.href = link;
-        anchor.textContent = value;
-        span.appendChild(anchor);
-      } else {
-        span.textContent = value;
-      }
+      span.textContent = value;
       item.append(strong, span);
-      metaList.appendChild(item);
-    });
+      metaRow.appendChild(item);
+    };
+    appendMetaItem("Alter Hund", course.alterHund || "–");
+    appendMetaItem("Preis", formatPrice(course.price));
+    metaList.appendChild(metaRow);
     body.appendChild(metaList);
   }
   if (footer) {
@@ -1192,6 +1401,14 @@ async function renderForm(section, view, id) {
   });
   submit.type = "submit";
   submit.setAttribute("form", formId);
+  submit.addEventListener("click", (event) => {
+    if (form.contains(submit) || submit.getAttribute("form") === formId) return;
+    event.preventDefault();
+    if (typeof form.requestSubmit === "function") {
+      form.requestSubmit();
+    }
+  });
+  submit.setAttribute("form", formId);
   const cancel = createButton({
     label: "Abbrechen",
     variant: "quiet",
@@ -1208,7 +1425,7 @@ async function renderForm(section, view, id) {
   actions.append(submit, cancel);
   const footerHost = formCard.querySelector(".ui-card__footer");
   footerHost.innerHTML = "";
-  footerHost.appendChild(actions);
+  form.appendChild(actions);
 
   const submitContext = {
     mode,
@@ -1220,6 +1437,436 @@ async function renderForm(section, view, id) {
   };
 
   form.addEventListener("submit", (event) => handleKursFormSubmit(event, submitContext));
+
+  focusHeading(section);
+}
+
+function validateSubKurs(values = {}, trainerList = []) {
+  const errors = {};
+  const safe = { ...values };
+  safe.weekday = ensureString(values.weekday, "").trim();
+  safe.time = ensureString(values.time, "").trim();
+  safe.primaryTrainerId = ensureString(values.primaryTrainerId, "").trim();
+  if (!safe.weekday) errors.weekday = "Bitte Wochentag auswählen.";
+  if (!safe.time) errors.time = "Bitte Uhrzeit auswählen.";
+  if (!safe.primaryTrainerId) errors.primaryTrainerId = "Bitte Trainer auswählen.";
+  const validTrainerIds = Array.isArray(trainerList) ? trainerList.map((t) => t.id) : [];
+  if (
+    safe.primaryTrainerId &&
+    validTrainerIds.length &&
+    !validTrainerIds.includes(safe.primaryTrainerId)
+  ) {
+    errors.primaryTrainerId = "Ausgewählter Trainer ist ungültig.";
+  }
+  const additional = collectAdditionalTrainerIds(values);
+  const invalidAdditional = additional.filter(
+    (id) => validTrainerIds.length && !validTrainerIds.includes(id)
+  );
+  if (invalidAdditional.length) {
+    ["trainerIds1", "trainerIds2", "trainerIds3"].forEach((key) => {
+      const value = ensureString(values[key]).trim();
+      if (value && invalidAdditional.includes(value)) {
+        errors[key] = "Ausgewählter Zusatz-Trainer ist ungültig.";
+      }
+    });
+  }
+  safe.trainerIds = additional;
+  return { errors, values: safe };
+}
+
+function buildSubKursPayload(values = {}, trainerList = []) {
+  const primaryTrainer = findTrainerById(values.primaryTrainerId, trainerList);
+  const trainerCode = buildTrainerCodeFromName(primaryTrainer?.name || "");
+  const name = buildSubKursName(values.weekday, values.time, trainerCode);
+  const trainerIds = collectAdditionalTrainerIds(values).filter(
+    (id) => id !== values.primaryTrainerId
+  );
+  if (values.primaryTrainerId && !trainerIds.includes(values.primaryTrainerId)) {
+    trainerIds.unshift(values.primaryTrainerId);
+  }
+  return {
+    name,
+    weekday: values.weekday,
+    time: values.time,
+    primaryTrainerId: values.primaryTrainerId,
+    trainerIds,
+  };
+}
+
+async function renderSubKursDetail(section, routeState = {}) {
+  if (!section) return;
+  section.innerHTML = "";
+  scrollToTop();
+  injectToast(section);
+  await fetchTrainer(true);
+  const role = getSession()?.user?.role || "";
+  const canManage = isAdminOrDeveloper(role);
+  const kursId = routeState.kursId || "";
+  const subKursId = routeState.subKursId || "";
+  if (!kursId || !subKursId) {
+    section.appendChild(createErrorNotice());
+    focusHeading(section);
+    return;
+  }
+
+  const detailSection = document.createElement("section");
+  detailSection.className = "dogule-section kurse-section kurse-detail card-stack-compact";
+  section.appendChild(detailSection);
+
+  try {
+    const [kurs, subKurs, teilnehmerLog] = await Promise.all([
+      getKurs(kursId).catch(() => null),
+      getSubKurs(kursId, subKursId),
+      listKursTeilnehmerByFilter({ kursId, subKursId }).catch(() => []),
+    ]);
+    if (!subKurs) {
+      throw new Error(`Sub-Kurs ${subKursId} nicht gefunden`);
+    }
+
+    const actionsCard = createStandardCard("Aktionen");
+    const actionsBody = actionsCard.querySelector(".ui-card__body");
+    const actionsWrap = document.createElement("div");
+    actionsWrap.className = "module-actions";
+    if (canManage) {
+      const editBtn = createButton({
+        label: "Sub-Kurs bearbeiten",
+        variant: "primary",
+      });
+      editBtn.type = "button";
+      editBtn.addEventListener("click", () => {
+        window.location.hash = `#/kurse/${kursId}/subkurse/${subKursId}/edit`;
+      });
+      actionsWrap.appendChild(editBtn);
+    }
+    const backBtn = createButton({
+      label: "Zur Kurs-Detailansicht",
+      variant: "quiet",
+    });
+    backBtn.type = "button";
+    backBtn.addEventListener("click", () => {
+      window.location.hash = `#/kurse/${kursId}`;
+    });
+    actionsWrap.appendChild(backBtn);
+    actionsBody.appendChild(actionsWrap);
+    detailSection.appendChild(actionsCard);
+
+    const detailCard = createStandardCard("Sub-Kurs Details");
+    const detailBody = detailCard.querySelector(".ui-card__body");
+    const additionalTrainerIds = (
+      Array.isArray(subKurs.trainerIds) ? subKurs.trainerIds : []
+    ).filter((trainerId) => trainerId && trainerId !== subKurs.primaryTrainerId);
+    const renderTrainerLinks = (trainerIds = []) => {
+      const ids = Array.isArray(trainerIds) ? trainerIds.filter(Boolean) : [];
+      if (!ids.length) {
+        const span = document.createElement("span");
+        span.textContent = "–";
+        return span;
+      }
+      if (ids.length === 1) return renderTrainerLinkById(ids[0]);
+      const wrapper = document.createElement("span");
+      ids.forEach((trainerId, index) => {
+        wrapper.appendChild(renderTrainerLinkById(trainerId));
+        if (index < ids.length - 1) {
+          wrapper.appendChild(document.createTextNode(", "));
+        }
+      });
+      return wrapper;
+    };
+    const rows = [
+      { label: "Kurs", value: kurs?.title || kurs?.code || kursId },
+      { label: "Sub-Kurs-ID", value: subKurs.id },
+      { label: "Sub-Kursname", value: subKurs.name },
+      { label: "Wochentag", value: subKurs.weekday },
+      { label: "Uhrzeit", value: subKurs.time },
+      {
+        label: "Haupttrainer",
+        render: () => renderTrainerLinkById(subKurs.primaryTrainerId),
+      },
+      {
+        label: "Weitere Trainer",
+        render: () => renderTrainerLinks(additionalTrainerIds),
+      },
+      { label: "Erstellt am", value: formatDateTime(subKurs.createdAt) },
+      { label: "Aktualisiert am", value: formatDateTime(subKurs.updatedAt) },
+    ];
+    detailBody.innerHTML = "";
+    detailBody.appendChild(createDefinitionList(rows));
+    detailSection.appendChild(detailCard);
+
+    const historieCard = buildKursHistorieCard(
+      { teilnehmerLog: Array.isArray(teilnehmerLog) ? teilnehmerLog : [] },
+      { canManage: false, title: "Teilnehmer" }
+    );
+    detailSection.appendChild(historieCard.card);
+  } catch (error) {
+    console.error("[SUBKURSE_ERR_DETAIL]", error);
+    const errorCard = createStandardCard("Sub-Kurs Details");
+    const errorBody = errorCard.querySelector(".ui-card__body");
+    errorBody.innerHTML = "";
+    errorBody.appendChild(createErrorNotice());
+    detailSection.appendChild(errorCard);
+  }
+  focusHeading(section);
+}
+
+async function renderSubKursForm(section, routeState = {}, view) {
+  if (!section) return;
+  section.innerHTML = "";
+  scrollToTop();
+  const role = getSession()?.user?.role || "";
+  if (!isAdminOrDeveloper(role)) {
+    section.appendChild(createNotice("Keine Berechtigung.", { variant: "warn", role: "alert" }));
+    focusHeading(section);
+    return;
+  }
+  const mode = view === "subkurs-create" ? "create" : "edit";
+  const kursId = routeState.kursId || "";
+  const subKursId = routeState.subKursId || "";
+  if (!kursId || (mode === "edit" && !subKursId)) {
+    section.appendChild(createErrorNotice());
+    focusHeading(section);
+    return;
+  }
+  injectToast(section);
+
+  let trainerList = [];
+  try {
+    trainerList = await fetchTrainer(true);
+  } catch (error) {
+    console.error("[SUBKURSE_ERR_TRAINER]", error);
+  }
+  if (!trainerList.length) {
+    section.appendChild(
+      createNotice("Ohne Trainer kann kein Sub-Kurs erstellt werden.", {
+        variant: "warn",
+        role: "alert",
+      })
+    );
+    focusHeading(section);
+    return;
+  }
+
+  let existing = null;
+  if (mode === "edit") {
+    try {
+      existing = await getSubKurs(kursId, subKursId);
+    } catch (error) {
+      console.error("[SUBKURSE_ERR_LOAD]", error);
+    }
+    if (!existing) {
+      section.appendChild(createErrorNotice());
+      focusHeading(section);
+      return;
+    }
+  }
+
+  const formCardFragment = createCard({
+    eyebrow: "",
+    title: mode === "create" ? "Sub-Kurs erstellen" : "Sub-Kurs bearbeiten",
+    body: "",
+    footer: "",
+  });
+  const formCard = formCardFragment.querySelector(".ui-card") || formCardFragment.firstElementChild;
+  if (!formCard) return;
+  section.appendChild(formCard);
+
+  const form = document.createElement("form");
+  const formId = `subkurse-form-${mode}-${subKursId || "new"}`;
+  form.id = formId;
+  form.noValidate = true;
+  const body = formCard.querySelector(".ui-card__body");
+  body.innerHTML = "";
+  body.appendChild(form);
+
+  const trainerOptions = buildTrainerOptions(trainerList, existing);
+  const weekdayValue = existing?.weekday || "";
+  const timeValue = existing?.time || "";
+  const primaryTrainerId = existing?.primaryTrainerId || "";
+  const trainerIds = Array.isArray(existing?.trainerIds) ? existing.trainerIds : [];
+  const additionalTrainerIds = trainerIds.filter((id) => id && id !== primaryTrainerId);
+
+  const fields = [
+    {
+      name: "name",
+      value: existing?.name || "",
+      readOnly: true,
+      config: {
+        id: "subkurs-name",
+        label: "Sub-Kursname",
+        placeholder: "Wird automatisch generiert",
+        describedByText: "Wird aus Wochentag, Uhrzeit und Trainer erzeugt.",
+      },
+    },
+    {
+      name: "weekday",
+      value: weekdayValue,
+      config: {
+        id: "subkurs-weekday",
+        label: "Wochentag",
+        control: "select",
+        required: true,
+        options: [
+          { value: "", label: "Bitte wählen", selected: !weekdayValue },
+          { value: "Mo", label: "Mo", selected: weekdayValue === "Mo" },
+          { value: "Di", label: "Di", selected: weekdayValue === "Di" },
+          { value: "Mi", label: "Mi", selected: weekdayValue === "Mi" },
+          { value: "Do", label: "Do", selected: weekdayValue === "Do" },
+          { value: "Fr", label: "Fr", selected: weekdayValue === "Fr" },
+          { value: "Sa", label: "Sa", selected: weekdayValue === "Sa" },
+          { value: "So", label: "So", selected: weekdayValue === "So" },
+        ],
+      },
+    },
+    {
+      name: "time",
+      value: timeValue,
+      config: {
+        id: "subkurs-time",
+        label: "Uhrzeit",
+        placeholder: "HH:MM",
+        required: true,
+      },
+      type: "time",
+    },
+    {
+      name: "primaryTrainerId",
+      value: primaryTrainerId,
+      config: {
+        id: "subkurs-primary-trainer",
+        label: "Haupttrainer",
+        control: "select",
+        required: true,
+        options: buildTrainerSelectOptions(trainerOptions, primaryTrainerId),
+      },
+    },
+    {
+      name: "trainerIds1",
+      value: additionalTrainerIds[0] || "",
+      config: {
+        id: "subkurs-trainer-ids-1",
+        label: "Weitere Trainer 1",
+        control: "select",
+        options: buildAdditionalTrainerOptions(trainerOptions, additionalTrainerIds[0] || ""),
+      },
+    },
+    {
+      name: "trainerIds2",
+      value: additionalTrainerIds[1] || "",
+      config: {
+        id: "subkurs-trainer-ids-2",
+        label: "Weitere Trainer 2",
+        control: "select",
+        options: buildAdditionalTrainerOptions(trainerOptions, additionalTrainerIds[1] || ""),
+      },
+    },
+    {
+      name: "trainerIds3",
+      value: additionalTrainerIds[2] || "",
+      config: {
+        id: "subkurs-trainer-ids-3",
+        label: "Weitere Trainer 3",
+        control: "select",
+        options: buildAdditionalTrainerOptions(trainerOptions, additionalTrainerIds[2] || ""),
+      },
+    },
+  ];
+
+  const refs = {};
+  fields.forEach((field) => {
+    const row = createFormRow(field.config);
+    const input = row.querySelector("input, select, textarea");
+    if (field.type === "time" && input) {
+      input.type = "time";
+    }
+    input.name = field.name;
+    if (field.readOnly) {
+      input.readOnly = true;
+      input.setAttribute("aria-readonly", "true");
+    }
+    if (field.value !== undefined) {
+      input.value = field.value;
+    }
+    const hint = row.querySelector(".ui-form-row__hint");
+    if (!field.config.describedByText) {
+      hint.classList.add("sr-only");
+    }
+    refs[field.name] = { input, hint, row };
+    form.appendChild(row);
+  });
+
+  const updateName = () => {
+    const weekday = refs.weekday?.input?.value || "";
+    const time = refs.time?.input?.value || "";
+    const trainerId = refs.primaryTrainerId?.input?.value || "";
+    const trainer = findTrainerById(trainerId, trainerList);
+    const trainerCode = buildTrainerCodeFromName(trainer?.name || "");
+    const name = buildSubKursName(weekday, time, trainerCode);
+    if (refs.name?.input) refs.name.input.value = name;
+  };
+  refs.weekday?.input?.addEventListener("change", updateName);
+  refs.time?.input?.addEventListener("change", updateName);
+  refs.primaryTrainerId?.input?.addEventListener("change", updateName);
+  updateName();
+
+  const actions = document.createElement("div");
+  actions.className = "module-actions";
+  const submit = createButton({
+    label: mode === "create" ? "Erstellen" : "Speichern",
+    variant: "primary",
+  });
+  submit.type = "submit";
+  submit.setAttribute("form", formId);
+  const cancel = createButton({ label: "Abbrechen", variant: "quiet" });
+  cancel.type = "button";
+  cancel.addEventListener("click", () => {
+    window.location.hash =
+      mode === "create" ? `#/kurse/${kursId}` : `#/kurse/${kursId}/subkurse/${subKursId}`;
+  });
+  actions.append(submit, cancel);
+  const footerHost = formCard.querySelector(".ui-card__footer");
+  footerHost.innerHTML = "";
+  form.appendChild(actions);
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const values = collectFormValues(refs);
+    const { errors, values: safeValues } = validateSubKurs(values, trainerList);
+    applyErrors(refs, errors);
+    if (Object.keys(errors).length) {
+      const firstError = Object.values(refs).find((ref) => !ref.hint.classList.contains("sr-only"));
+      firstError?.input.focus();
+      return;
+    }
+    const payload = buildSubKursPayload(safeValues, trainerList);
+    submit.disabled = true;
+    const originalLabel = submit.textContent;
+    submit.textContent = mode === "create" ? "Erstelle ..." : "Speichere ...";
+    try {
+      if (mode === "create") {
+        const created = await createSubKurs(kursId, payload);
+        setToast("Sub-Kurs wurde erstellt.", "success");
+        window.location.hash = created?.id
+          ? `#/kurse/${kursId}/subkurse/${created.id}`
+          : `#/kurse/${kursId}`;
+      } else {
+        await updateSubKurs(kursId, subKursId, payload);
+        setToast("Sub-Kurs wurde aktualisiert.", "success");
+        window.location.hash = `#/kurse/${kursId}/subkurse/${subKursId}`;
+      }
+    } catch (error) {
+      console.error("[SUBKURSE_ERR_SUBMIT]", error);
+      showInlineToast(
+        section,
+        mode === "create"
+          ? "Sub-Kurs konnte nicht erstellt werden."
+          : "Sub-Kurs konnte nicht gespeichert werden.",
+        "error"
+      );
+    } finally {
+      submit.disabled = false;
+      submit.textContent = originalLabel;
+    }
+  });
 
   focusHeading(section);
 }
@@ -1236,7 +1883,8 @@ async function fetchKurse() {
   }
 }
 
-function buildCourseToolbarCard() {
+function buildCourseToolbarCard({ canManage = true } = {}) {
+  if (!canManage) return null;
   const cardFragment = createCard({
     eyebrow: "",
     title: "Aktionen",
@@ -2148,16 +2796,18 @@ async function handleDeleteKurs(section, id, button) {
   button.disabled = true;
   button.textContent = "Prüfe ...";
   try {
-    const [kursRecord, finanzen] = await Promise.all([getKurs(id), listFinanzen().catch(() => [])]);
+    const [kursRecord, finanzen, subKurse] = await Promise.all([
+      getKurs(id),
+      listFinanzen().catch(() => []),
+      listSubKurse(id).catch(() => []),
+    ]);
     if (!kursRecord) {
       throw new Error("Kurs nicht gefunden");
     }
-    const hasParticipants = Array.isArray(kursRecord.hundIds) && kursRecord.hundIds.length > 0;
     const hasFinanzen =
       Array.isArray(finanzen) && finanzen.some((entry) => entry?.kursId === kursRecord.id);
-    if (hasParticipants || hasFinanzen) {
+    if (hasFinanzen) {
       const reasons = [];
-      if (hasParticipants) reasons.push("Teilnehmer (Hunde) sind zugeordnet.");
       if (hasFinanzen)
         reasons.push("Finanzbuchungen verknüpfen diesen Kurs (kursId in Zahlungen).");
       guardHost.innerHTML = "";
@@ -2166,8 +2816,11 @@ async function handleDeleteKurs(section, id, button) {
       resetButton();
       return;
     }
+    const subKurseCount = Array.isArray(subKurse) ? subKurse.length : 0;
     const confirmed = window.confirm(
-      "Kurs löschen?\nMöchtest du diesen Kurs wirklich löschen? Dieser Vorgang kann nicht rückgängig gemacht werden."
+      `Kurs löschen?\nMöchtest du diesen Kurs wirklich löschen? Dieser Vorgang kann nicht rückgängig gemacht werden.${
+        subKurseCount ? `\n\nHinweis: ${subKurseCount} Sub-Kurs(e) werden mit gelöscht.` : ""
+      }\nTeilnehmer-Historie bleibt erhalten, Kursdetails werden entfernt.`
     );
     if (!confirmed) {
       resetButton();

@@ -4,6 +4,134 @@ READ-ONLY NOTE: provide only 1 step of instruction/guidance per message.
 READ-ONLY NOTE: A single "." from the user means "confirmed, ok, next"
 READ-ONLY NOTE: Each assistant response must start with "🔷 Topic — Subtitle — Progress: X% 🔷".
 
+## Date 2026-02-24 — VPS Deploy abgeschlossen (Kurse/Sub-Kurse + Developer Backup UI)
+
+## Kontext
+
+- Status: completed.
+- Scope: lokalen Stand (Sub-Kurse, gekoppelte Listen, Developer-Backup-Modul) auf VPS ausrollen inkl. DB-Overwrite und Service-Neustart.
+
+## Ergebnis (kurz)
+
+- DB-Transfer local → VPS durchgeführt:
+- `/tmp/dogule1_local.sql` nach VPS kopiert.
+- VPS-Datenbank vollständig neu erstellt und mit aktuellem Dump importiert.
+- App-Deploy durchgeführt:
+- `pnpm build` lokal erfolgreich.
+- `rsync` von `dist`, `modules`, `tools` nach `/opt/dogule1/`.
+- `dogule1` Service auf VPS neu gestartet.
+- Runtime-Check:
+- `systemctl status dogule1` = `active (running)`.
+- API bindet auf `http://localhost:5177`.
+- Healthcheck extern erfolgreich: `{"status":"ok","storageMb":1.7}`.
+- Funktionscheck:
+- `#/developer` als `Developer` erreichbar.
+- Buttons `Restore 24h` und `Restore 72h` sichtbar.
+- Slot-Status aktuell erwartungsgemäss `Nicht vorhanden`.
+
+## Tests
+
+- Deploy smoke:
+- `pnpm build` ✅
+- `sudo systemctl status dogule1 --no-pager` ✅
+- `curl -s http://144.91.86.20:5177/healthz` ✅
+- UI smoke:
+- Developer-Backup-Seite lädt und zeigt Buttons ✅
+
+## Offene Punkte
+
+- Geplante Backup-Snapshots auf VPS nach 23:59 (`Europe/Zurich`) prüfen.
+- Nach erster/zweiter Nacht Slot-Rotation (`24h`/`72h`) validieren.
+- Restore-Ablauf mit real vorhandenem Slot end-to-end prüfen.
+
+## Date 2026-02-24 — Kurse/Sub-Kurse + Developer Backup Modul (Local Integration)
+
+## Kontext
+
+- Status: in progress.
+- Scope: kompletter Local-Stand für Sub-Kurse in `#Kurse`, gekoppelte Listen in `#Kunden/#Hunde`, sowie verstecktes Developer-Backup-Modul inkl. Restore-Buttons.
+
+## Ergebnis (kurz)
+
+- Lokale DB-Synchronisierung mit VPS-Dump durchgeführt und verifiziert (normalisierter Dump-Vergleich ohne fachliche Differenzen).
+- Migration `113_0_subkurse.sql` lokal angewendet und geprüft:
+- `sub_kurse` Tabelle vorhanden.
+- `kurs_teilnehmer` erweitert um `sub_kurs_id` und Snapshot-Spalten.
+- Kurse UI verdichtet:
+- Kurscode/Trainer-Zeile aus Kurs-Karten entfernt.
+- `Alter Hund` + `Preis` in einer Zeile.
+- Sub-Kurse:
+- eigener Bereich in Kurs-Detail mit zusätzlichem Abstand unter `+ Sub-Kurs erstellen`.
+- Route geändert: `#/kurse/:kursId/subkurse/:subKursId` öffnet jetzt Detailansicht (nicht Edit).
+- Edit liegt unter `#/kurse/:kursId/subkurse/:subKursId/edit`.
+- Neue Sub-Kurs-Detailansicht mit:
+- read-only Stammdaten,
+- Teilnehmerliste als scrollbare Tabelle unten,
+- gleiche Spaltenstruktur wie Kurs-Historie (inkl. Sub-Kurs/Startdatum/Eintrag vom),
+- Aktionen `Sub-Kurs bearbeiten` + `Zur Kurs-Detailansicht`.
+- Kunden/Hunde gekoppelte Listen auf einheitliches Scroll-Table-Layout (wie Übungsbibliothek) umgestellt:
+- `Kunden Detail -> Kurse` und `Kunden Detail -> Zertifikate`.
+- `Hunde Detail -> Kurse` und `Hunde Detail -> Zertifikate`.
+- `Hunde Detail -> Kurse` enthält jetzt `Kurs`, `Sub-Kurs`, `Startdatum`.
+- Abstand oberhalb `Zur Kursliste` ergänzt.
+- Bugfixes:
+- Crash `Cannot read properties of null (reading 'trainer')` in Kunden-Kurse-Render behoben (null-safe Trainerauflösung).
+- Falsch-graue Kurslinks in Kunden-Detail behoben (orphan-Mapping korrigiert; nur echte gelöschte Kurse bleiben grau/nicht klickbar).
+- Developer Backup Modul:
+- versteckte Route `#/developer` aktiviert (Router kannte `developer` zuvor nicht).
+- UI zeigt Restore-Buttons zuverlässig (`Restore 24h`, `Restore 72h`), auch wenn Slot-Metadaten nicht ladbar sind.
+- API-Bug im Developer-Handler behoben (lokale Variable `path` hat Node-`path` Modul überschattet; führte zu Backup-Load-Fehlern).
+- Aktueller UI-Stand als Developer: Buttons sichtbar, Slots derzeit `Nicht vorhanden`.
+
+## Tests
+
+- DB-Check:
+- `/tmp/dogule1_vps.sql` vorhanden.
+- normalisierter Diff VPS vs lokal: keine fachlichen Unterschiede.
+- Migration-Check:
+- `SHOW TABLES LIKE 'sub_kurse'` ✅
+- Snapshot-/Subkurs-Spalten in `information_schema.columns` ✅
+- Build:
+- `pnpm build` mehrfach erfolgreich ✅
+- Manuelle UI-Prüfung:
+- Sub-Kurs erstellen klickbar/funktionsfähig.
+- Sub-Kurs-Detailroute + Editroute funktionieren.
+- Kunden/Hunde Tabellenlayout und Scrollverhalten sichtbar.
+- Developer-Route `#/developer` lädt und zeigt Buttons.
+
+## Offene Punkte
+
+- VPS-Deploy der aktuellen Änderungen steht noch aus.
+- Produktive Backup-Pipeline verifizieren:
+- tägliche Snapshots 23:59 (`Europe/Zurich`),
+- verschlüsselte Ablage,
+- erwartete Slot-Rotation (`24h`/`72h`),
+- Restore-Flow inkl. Service-Neustart und Berechtigungen (`sudo`/Script-Pfad).
+- Nach erster/zweiter Nacht (`24h`/`72h`) Slots auf VPS erneut prüfen und ggf. nachjustieren.
+
+## Date 2026-02-24 — Kurse Sub-Kurs Submit + Übersicht kompakt
+
+## Kontext
+
+- Status: in progress.
+- Scope: fix non-working "Erstellen" in Sub-Kurs form and reduce vertical space in Kurs cards.
+
+## Ergebnis (kurz)
+
+- Kursübersicht-Karten verdichtet: Kurscode-Zeile entfernt, Trainer-Zeile entfernt, `Alter Hund` + `Preis` auf einer Zeile.
+- Sub-Kurs Form-Fix in `modules/kurse/index.js`:
+- Submit-Button an Form gebunden (`form`-Attribut gesetzt).
+- Aktions-Buttons in das Form verschoben (`form.appendChild(actions)`), damit `submit` zuverlässig auslöst.
+
+## Tests
+
+- Manuell geprüft: Sub-Kurs-Form lädt; vorheriges Problem reproduzierbar ("Erstellen" ohne Aktion).
+- Automatisierte Tests: nicht ausgeführt.
+
+## Offene Punkte
+
+- Nach Neustart lokal erneut manuell prüfen: Sub-Kurs anlegen, speichern, in Liste sichtbar.
+
 ## Date 2026-02-14 — Archive Deployment Plan
 
 ## Kontext
@@ -179,7 +307,7 @@ READ-ONLY NOTE: Each assistant response must start with "🔷 Topic — Subtitle
 - Änderungen auf VPS deployen (rsync gemäß `VPS_UPDATE_PROCESS.md`) und Service neu starten.
 - UI-Verifikation auf VPS: Kunden Detail → “Zu Kurs hinzufügen” → Kursauswahl → Prefill im Teilnehmer-Dialog.
 
-Quick start (manual):
+Quick start, 3 Launchcodes (manual):
 
 - `sudo systemctl start mariadb && sudo systemctl status mariadb`
 - `DOGULE1_STORAGE_MODE=mariadb DOGULE1_MARIADB_SOCKET=/run/mysqld/mysqld.sock DOGULE1_MARIADB_USER=ran node tools/server/apiServer.js`

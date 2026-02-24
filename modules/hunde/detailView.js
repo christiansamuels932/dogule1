@@ -8,7 +8,7 @@ import {
 } from "../shared/components/components.js";
 import { deleteHund, listHunde } from "../shared/api/hunde.js";
 import { getKunde } from "../shared/api/kunden.js";
-import { getKurseForHund } from "../shared/api/kurse.js";
+import { getKurseForHund, listKursTeilnehmerByFilter } from "../shared/api/kurse.js";
 import { listZertifikate } from "../shared/api/zertifikate.js";
 import { createRapporteDraft } from "../shared/api/rapporteDrafts.js";
 import {
@@ -492,22 +492,43 @@ async function buildZertifikateSection(hundId) {
     } else if (!zertifikate.length) {
       body.appendChild(createEmptyState("Keine Daten vorhanden.", ""));
     } else {
-      const list = document.createElement("ul");
-      list.className = "hunde-zertifikate-list";
-      zertifikate.forEach((zertifikat) => {
-        const item = document.createElement("li");
+      const rows = [...zertifikate].sort((a, b) => {
+        const aTime = new Date(a.ausstellungsdatum || a.createdAt || 0).getTime();
+        const bTime = new Date(b.ausstellungsdatum || b.createdAt || 0).getTime();
+        return bTime - aTime;
+      });
+      const tableWrapper = document.createElement("div");
+      tableWrapper.className = "kunden-list-scroll";
+      const table = document.createElement("table");
+      table.className = "kunden-list-table";
+      const thead = document.createElement("thead");
+      const headerRow = document.createElement("tr");
+      ["Zertifikat", "Ausstellungsdatum"].forEach((label) => {
+        const th = document.createElement("th");
+        th.textContent = label;
+        headerRow.appendChild(th);
+      });
+      thead.appendChild(headerRow);
+      const tbody = document.createElement("tbody");
+      rows.forEach((zertifikat) => {
+        const row = document.createElement("tr");
+        row.className = "kunden-list-row";
+        const titleCell = document.createElement("td");
         const link = document.createElement("a");
         link.href = `#/zertifikate/${zertifikat.id}`;
-        link.className = "hunde-zertifikate-link";
-        const label = zertifikat.kursTitelSnapshot || zertifikat.code || "Zertifikat";
-        const meta = zertifikat.ausstellungsdatum
-          ? ` · ${formatDateTime(zertifikat.ausstellungsdatum)}`
-          : "";
-        link.textContent = `${label}${meta}`;
-        item.appendChild(link);
-        list.appendChild(item);
+        link.className = "kunden-list__link";
+        link.textContent = zertifikat.kursTitelSnapshot || zertifikat.code || "Zertifikat";
+        titleCell.appendChild(link);
+        row.appendChild(titleCell);
+
+        const dateCell = document.createElement("td");
+        dateCell.textContent = formatDateTime(zertifikat.ausstellungsdatum);
+        row.appendChild(dateCell);
+        tbody.appendChild(row);
       });
-      body.appendChild(list);
+      table.append(thead, tbody);
+      tableWrapper.appendChild(table);
+      body.appendChild(tableWrapper);
     }
   }
   section.appendChild(card);
@@ -543,25 +564,97 @@ async function buildKurseSection(hundId) {
           role: "alert",
         })
       );
-    } else if (!kurse.length) {
-      body.appendChild(createEmptyState("Keine Daten vorhanden.", ""));
     } else {
-      const list = document.createElement("ul");
-      list.className = "hunde-kurse-list";
-      kurse.forEach((kurs) => {
-        const item = document.createElement("li");
-        const link = document.createElement("a");
-        link.href = `#/kurse/${kurs.id}`;
-        const label = kurs.title || kurs.code || "Kurs";
-        link.textContent = label;
-        item.appendChild(link);
-        list.appendChild(item);
+      let teilnehmerEntries = [];
+      try {
+        teilnehmerEntries = await listKursTeilnehmerByFilter({ hundId });
+      } catch (error) {
+        console.error("[HUNDE_ERR_TEILNEHMER]", error);
+      }
+      const kursMap = new Map(kurse.map((kurs) => [kurs.id, kurs]));
+      const rows = [];
+      const seenLegacy = new Set();
+      const formatStartdatum = (value) => {
+        if (!value) return "–";
+        return String(value).slice(0, 10) || "–";
+      };
+      teilnehmerEntries.forEach((entry, index) => {
+        const kurs = entry.kursId ? kursMap.get(entry.kursId) : null;
+        const kursName =
+          entry.kursTitleSnapshot || entry.kursCodeSnapshot || kurs?.title || kurs?.code || "Kurs";
+        const subKursName = entry.subKursNameSnapshot || "–";
+        rows.push({
+          rowKey: entry.id || `entry-${index}`,
+          kurs,
+          label: kursName,
+          subkurs: subKursName,
+          startdatum: formatStartdatum(entry.startDatum || entry.kursDateSnapshot || ""),
+        });
+        if (kurs?.id) seenLegacy.add(kurs.id);
       });
-      body.appendChild(list);
-      const linkWrap = document.createElement("div");
-      linkWrap.className = "module-actions";
-      linkWrap.appendChild(createNavLink("Zur Kursliste", "#/kurse", "quiet"));
-      body.appendChild(linkWrap);
+      kurse.forEach((kurs, index) => {
+        if (seenLegacy.has(kurs.id)) return;
+        rows.push({
+          rowKey: `kurs-${kurs.id || index}`,
+          kurs,
+          label: kurs.title || kurs.code || "Kurs",
+          subkurs: "–",
+          startdatum: formatStartdatum(kurs.date || ""),
+        });
+      });
+
+      if (!rows.length) {
+        body.appendChild(createEmptyState("Keine Daten vorhanden.", ""));
+      } else {
+        const tableWrapper = document.createElement("div");
+        tableWrapper.className = "kunden-list-scroll";
+        const table = document.createElement("table");
+        table.className = "kunden-list-table";
+        const thead = document.createElement("thead");
+        const headerRow = document.createElement("tr");
+        ["Kurs", "Sub-Kurs", "Startdatum"].forEach((label) => {
+          const th = document.createElement("th");
+          th.textContent = label;
+          headerRow.appendChild(th);
+        });
+        thead.appendChild(headerRow);
+        const tbody = document.createElement("tbody");
+        rows.forEach((rowData) => {
+          const row = document.createElement("tr");
+          row.className = "kunden-list-row";
+          const titleCell = document.createElement("td");
+          if (rowData.kurs) {
+            const link = document.createElement("a");
+            link.href = `#/kurse/${rowData.kurs.id}`;
+            link.className = "kunden-list__link";
+            link.textContent = rowData.label;
+            titleCell.appendChild(link);
+          } else {
+            const span = document.createElement("span");
+            span.className = "kunden-list__link kunden-list__link--disabled";
+            span.textContent = rowData.label;
+            titleCell.appendChild(span);
+            row.classList.add("kunden-list-row--disabled");
+          }
+          row.appendChild(titleCell);
+
+          const subKursCell = document.createElement("td");
+          subKursCell.textContent = valueOrDash(rowData.subkurs);
+          row.appendChild(subKursCell);
+
+          const startDatumCell = document.createElement("td");
+          startDatumCell.textContent = valueOrDash(rowData.startdatum);
+          row.appendChild(startDatumCell);
+          tbody.appendChild(row);
+        });
+        table.append(thead, tbody);
+        tableWrapper.appendChild(table);
+        body.appendChild(tableWrapper);
+        const linkWrap = document.createElement("div");
+        linkWrap.className = "module-actions hunde-kurse-actions";
+        linkWrap.appendChild(createNavLink("Zur Kursliste", "#/kurse", "quiet"));
+        body.appendChild(linkWrap);
+      }
     }
   }
   section.appendChild(card);

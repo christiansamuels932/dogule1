@@ -127,6 +127,29 @@ CREATE TABLE IF NOT EXISTS kurse (
     ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+CREATE TABLE IF NOT EXISTS sub_kurse (
+  id CHAR(36) NOT NULL,
+  kurs_id CHAR(36) NOT NULL,
+  name VARCHAR(64) NOT NULL DEFAULT '',
+  weekday VARCHAR(2) NOT NULL DEFAULT '',
+  time VARCHAR(16) NOT NULL DEFAULT '',
+  primary_trainer_id CHAR(36) NOT NULL,
+  trainer_ids JSON NULL,
+  created_at VARCHAR(32) NOT NULL,
+  updated_at VARCHAR(32) NOT NULL,
+  schema_version INT NOT NULL DEFAULT 1,
+  version INT NOT NULL DEFAULT 0,
+  PRIMARY KEY (id),
+  KEY idx_sub_kurse_kurs (kurs_id),
+  KEY idx_sub_kurse_trainer (primary_trainer_id),
+  CONSTRAINT fk_sub_kurse_kurs FOREIGN KEY (kurs_id) REFERENCES kurse(id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+  CONSTRAINT fk_sub_kurse_trainer FOREIGN KEY (primary_trainer_id) REFERENCES trainer(id)
+    ON DELETE RESTRICT
+    ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 CREATE TABLE IF NOT EXISTS kalender (
   id CHAR(36) NOT NULL,
   code VARCHAR(64) NOT NULL DEFAULT '',
@@ -261,7 +284,8 @@ CREATE TABLE IF NOT EXISTS zertifikate (
 
 CREATE TABLE IF NOT EXISTS kurs_teilnehmer (
   id CHAR(36) NOT NULL,
-  kurs_id CHAR(36) NOT NULL,
+  kurs_id CHAR(36) NULL,
+  sub_kurs_id CHAR(36) NULL,
   kunde_id CHAR(36) NOT NULL,
   hund_id CHAR(36) NOT NULL,
   kunde_nachname VARCHAR(128) NOT NULL DEFAULT '',
@@ -269,16 +293,26 @@ CREATE TABLE IF NOT EXISTS kurs_teilnehmer (
   kunde_ort VARCHAR(255) NOT NULL DEFAULT '',
   hund_name VARCHAR(128) NOT NULL DEFAULT '',
   start_datum VARCHAR(32) NOT NULL DEFAULT '',
+  kurs_code_snapshot VARCHAR(64) NOT NULL DEFAULT '',
+  kurs_title_snapshot VARCHAR(255) NOT NULL DEFAULT '',
+  kurs_date_snapshot VARCHAR(32) NOT NULL DEFAULT '',
+  kurs_ort_snapshot VARCHAR(255) NOT NULL DEFAULT '',
+  trainer_label_snapshot VARCHAR(255) NOT NULL DEFAULT '',
+  sub_kurs_name_snapshot VARCHAR(64) NOT NULL DEFAULT '',
   created_at VARCHAR(32) NOT NULL,
   created_by TEXT NULL,
   schema_version INT NOT NULL DEFAULT 1,
   version INT NOT NULL DEFAULT 0,
   PRIMARY KEY (id),
   KEY idx_kurs_teilnehmer_kurs (kurs_id),
+  KEY idx_kurs_teilnehmer_subkurs (sub_kurs_id),
   KEY idx_kurs_teilnehmer_kunde (kunde_id),
   KEY idx_kurs_teilnehmer_hund (hund_id),
   CONSTRAINT fk_kurs_teilnehmer_kurs FOREIGN KEY (kurs_id) REFERENCES kurse(id)
-    ON DELETE RESTRICT
+    ON DELETE SET NULL
+    ON UPDATE CASCADE,
+  CONSTRAINT fk_kurs_teilnehmer_subkurs FOREIGN KEY (sub_kurs_id) REFERENCES sub_kurse(id)
+    ON DELETE SET NULL
     ON UPDATE CASCADE,
   CONSTRAINT fk_kurs_teilnehmer_kunde FOREIGN KEY (kunde_id) REFERENCES kunden(id)
     ON DELETE RESTRICT
