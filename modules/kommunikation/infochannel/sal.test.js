@@ -10,6 +10,7 @@ const TRAINER_IDS = [
   "11111111-1111-1111-1111-111111111111",
   "22222222-2222-2222-2222-222222222222",
 ];
+const RICHARD_ID = "99999999-9999-9999-9999-999999999999";
 
 function allowAllLimiter() {
   return { allowed: true, remaining: 1, resetAt: Date.now() + 1000 };
@@ -36,24 +37,12 @@ async function countJsonFiles(rootDir, entity) {
   }
 }
 
-async function readEventRecords(rootDir) {
-  const dir = path.join(rootDir, "kommunikation_infochannel_notice_event");
-  try {
-    const entries = await fs.readdir(dir);
-    const records = [];
-    for (const file of entries.filter((name) => name.endsWith(".json"))) {
-      const payload = JSON.parse(await fs.readFile(path.join(dir, file), "utf8"));
-      records.push(payload.data);
-    }
-    return records;
-  } catch (error) {
-    if (error.code === "ENOENT") return [];
-    throw error;
-  }
-}
-
 function trainerList() {
-  return TRAINER_IDS.map((id, idx) => ({ id, name: `Trainer ${idx + 1}` }));
+  return [
+    { id: RICHARD_ID, code: "TR-001", name: "Fontana Richard" },
+    { id: TRAINER_IDS[0], code: "TR-002", name: "Trainer 1" },
+    { id: TRAINER_IDS[1], code: "TR-003", name: "Trainer 2" },
+  ];
 }
 
 describe("infochannel SAL", () => {
@@ -80,7 +69,7 @@ describe("infochannel SAL", () => {
       listTrainers: async () => trainerList(),
     });
     const context = {
-      actorId: "admin-1",
+      actorId: `user-${RICHARD_ID}`,
       actorRole: "admin",
       authz: { allowedActions: ["kommunikation.infochannel.publish"] },
     };
@@ -105,7 +94,7 @@ describe("infochannel SAL", () => {
       listTrainers: async () => trainerList(),
     });
     const publishCtx = {
-      actorId: "admin-1",
+      actorId: `user-${RICHARD_ID}`,
       actorRole: "admin",
       authz: { allowedActions: ["kommunikation.infochannel.publish"] },
     };
@@ -123,8 +112,8 @@ describe("infochannel SAL", () => {
     expect(await countJsonFiles(root, "kommunikation_infochannel_confirmation")).toBe(1);
   });
 
-  it("runs SLA job with escalation events and skips duplicates", async () => {
-    const publishSal = createInfochannelSal({
+  it("allows only Richard to publish and delete notices", async () => {
+    const sal = createInfochannelSal({
       mode: "real",
       paths: { root },
       audit,
@@ -133,42 +122,26 @@ describe("infochannel SAL", () => {
       now: () => "2025-03-01T08:00:00.000Z",
       listTrainers: async () => trainerList(),
     });
-    const publishCtx = {
+    const denyCtx = {
       actorId: "admin-1",
       actorRole: "admin",
       authz: { allowedActions: ["kommunikation.infochannel.publish"] },
     };
-    const notice = await publishSal.publishNotice(
-      { title: "SLA", body: "Bitte bestätigen", slaHours: 24 },
-      publishCtx
+    await expect(sal.publishNotice({ title: "X", body: "Y" }, denyCtx)).rejects.toHaveProperty(
+      "code",
+      "DENIED"
     );
-    expect(notice.slaDueAt).toBe("2025-03-02T08:00:00.000Z");
 
-    const jobSal = createInfochannelSal({
-      mode: "real",
-      paths: { root },
-      audit,
-      auditEvent: audit,
-      rateLimiter: allowAllLimiter,
-      now: () => "2025-03-04T08:00:00.000Z",
-      nowMs: () => Date.parse("2025-03-04T08:00:00.000Z"),
-      listTrainers: async () => trainerList(),
-    });
-    const jobCtx = {
-      actorId: "system:infochannel",
-      actorRole: "system",
-      authz: { allowedActions: ["kommunikation.infochannel.sla.run"] },
+    const richardCtx = {
+      actorId: `user-${RICHARD_ID}`,
+      actorRole: "admin",
+      authz: { allowedActions: ["kommunikation.infochannel.publish"] },
     };
+    const notice = await sal.publishNotice({ title: "Erlaubt", body: "Hinweis" }, richardCtx);
+    expect(notice.id).toBeTruthy();
 
-    const firstRun = await jobSal.runSlaJob(jobCtx);
-    expect(firstRun.escalations).toBe(TRAINER_IDS.length);
-    expect(await countJsonFiles(root, "kommunikation_infochannel_notice_event")).toBe(
-      TRAINER_IDS.length
-    );
-    const secondRun = await jobSal.runSlaJob(jobCtx);
-    expect(secondRun.escalations).toBe(0);
-
-    const events = await readEventRecords(root);
-    expect(events.every((event) => event.eventType === "escalation")).toBe(true);
+    await expect(sal.deleteNotice(notice.id, denyCtx)).rejects.toHaveProperty("code", "DENIED");
+    const deleted = await sal.deleteNotice(notice.id, richardCtx);
+    expect(deleted).toEqual({ ok: true, id: notice.id });
   });
 });

@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS zertifikate (
   code VARCHAR(64) NOT NULL DEFAULT '',
   kunde_id CHAR(36) NOT NULL,
   hund_id CHAR(36) NOT NULL,
-  kurs_id CHAR(36) NOT NULL,
+  kurs_id CHAR(36) NULL,
   kunde_name_snapshot VARCHAR(255) NOT NULL DEFAULT '',
   kunde_geschlecht_snapshot VARCHAR(32) NOT NULL DEFAULT '',
   hund_name_snapshot VARCHAR(255) NOT NULL DEFAULT '',
@@ -46,6 +46,6 @@ CREATE TABLE IF NOT EXISTS zertifikate (
     ON DELETE RESTRICT
     ON UPDATE CASCADE,
   CONSTRAINT fk_zertifikate_kurs FOREIGN KEY (kurs_id) REFERENCES kurse(id)
-    ON DELETE RESTRICT
+    ON DELETE SET NULL
     ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

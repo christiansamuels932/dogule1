@@ -105,7 +105,8 @@ describe("authService", () => {
 
   it("denies validateAccessToken for expired tokens", async () => {
     const login = await service.login("Developer", PASSWORD, {});
-    now.mockReturnValue(FIXED_NOW + 16 * 60 * 1000); // beyond access ttl
+    const accessTtlMs = resolveAuthConfig(baseConfig()).tokens.accessTtlMs;
+    now.mockReturnValue(FIXED_NOW + accessTtlMs + 60 * 1000);
     await expect(service.validateAccessToken(login.accessToken)).rejects.toHaveProperty(
       "code",
       AUTH_ERROR_CODES.TOKEN_EXPIRED

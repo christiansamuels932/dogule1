@@ -4,6 +4,69 @@ READ-ONLY NOTE: provide only 1 step of instruction/guidance per message.
 READ-ONLY NOTE: A single "." from the user means "confirmed, ok, next"
 READ-ONLY NOTE: Each assistant response must start with "🔷 Topic — Subtitle — Progress: X% 🔷".
 
+## Date 2026-02-24 — Complete Check Fixes + VPS Update (Zertifikat/Kurs + Backups)
+
+## Kontext
+
+- Status: completed.
+- Scope: die 3 grössten offenen Punkte aus dem Complete Check beheben, lokal verifizieren und auf den VPS ausrollen.
+- Zielpunkte:
+- Kurs-Löschen mit verknüpftem Zertifikat darf keinen `500 storage_error` mehr erzeugen.
+- Test-Suite muss wieder vollständig grün sein.
+- Backup-Slots `24h`/`72h` müssen auch auf frischen Setups nutzbar sein.
+
+## Ergebnis (kurz)
+
+- Zertifikat/Kurs-Löschpfad stabilisiert:
+- `zertifikate.kurs_id` auf `NULL` erlaubt und FK auf `ON DELETE SET NULL` gesetzt.
+- Neue Migration hinzugefügt: `tools/mariadb/migrations/114_0_zertifikate_kurs_set_null.sql`.
+- Adapter-Validierung angepasst:
+- `createZertifikat` verlangt weiterhin `kursId`.
+- `updateZertifikat` erlaubt historische Datensätze mit `kursId = null` nach Kurs-Löschung.
+- Test-Fixes abgeschlossen:
+- UI-Test `modules/kommunikation/groupchat/ui.test.js` auf aktuellen Infochannel-Flow gebracht.
+- Fehlende Template-Mocks (`#ui-btn`, `#ui-form-row-template`) ergänzt.
+- Infochannel- und Auth-Tests auf aktuelle Regeln/TTL angepasst.
+- Backup-Flow gehärtet:
+- `tools/backup/backup_db.sh` bootstrapped `backup_24h.sql.gz.gpg` und `backup_72h.sql.gz.gpg` aus dem neuesten Daily-Snapshot, falls Slots noch fehlen.
+- Smoke-Script korrigiert:
+- `tools/mariadb/smokeTest.js` setzt für Kurs-Erstellung nun `ort`, damit der aktuelle Validator nicht fehlschlägt.
+- VPS ausgerollt:
+- `pnpm build` lokal.
+- `rsync` von `dist`, `modules`, `tools` nach `/opt/dogule1`.
+- Migration `114_0` auf VPS-DB angewendet.
+- `dogule1.service` via systemd neu gestartet und wieder als laufender Dienst bestätigt.
+
+## Tests
+
+- Lokal:
+- `pnpm lint` ✅
+- `pnpm test` ✅ (`20` Testdateien, `118` Tests)
+- DB-Verifikation lokal (`information_schema`) ✅
+- `zertifikate.kurs_id` = nullable
+- `fk_zertifikate_kurs` = `SET NULL`
+- Regressionsszenario lokal (Kurs+Teilnehmer+Zertifikat → Kurs löschen) ✅
+- Zertifikat bleibt bestehen, `kursId` wird `null`, Snapshot-Felder bleiben erhalten.
+- Backup-Bootstrap lokal per isoliertem Script-Test ✅
+- Daily + Slot-Dateien werden korrekt angelegt.
+- VPS:
+- `systemctl status dogule1` = `active (running)` ✅
+- `curl http://127.0.0.1:5177/healthz` = `{"status":"ok","storageMb":1.7}` ✅
+- DB-Verifikation VPS (`information_schema`) ✅
+- `zertifikate.kurs_id` = `YES`
+- `fk_zertifikate_kurs` = `SET NULL`
+- Backup-Dateien vorhanden ✅
+- `/opt/dogule1/backups/daily/2026-02-24.sql.gz.gpg`
+- `/opt/dogule1/backups/backup_24h.sql.gz.gpg`
+- `/opt/dogule1/backups/backup_72h.sql.gz.gpg`
+
+## Offene Punkte
+
+- Optionaler manueller End-to-End UI-Smoke auf VPS:
+- Kurs mit Zertifikat anlegen, Kurs löschen, Zertifikat-Detail prüfen.
+- Sicherheits-Hygiene:
+- sudo-Passwort und DB-Passwort trennen/rotieren (falls aktuell identisch).
+
 ## Date 2026-02-24 — VPS Deploy abgeschlossen (Kurse/Sub-Kurse + Developer Backup UI)
 
 ## Kontext

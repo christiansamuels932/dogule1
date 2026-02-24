@@ -8,6 +8,7 @@ import { createInfochannelSal } from "./sal.js";
 
 const TMP_ROOT = path.join(process.cwd(), ".tmp-infochannel-api");
 const TRAINER_ID = "33333333-3333-3333-3333-333333333333";
+const RICHARD_ID = "99999999-9999-9999-9999-999999999999";
 
 async function makeTempRoot() {
   const dir = path.join(TMP_ROOT, crypto.randomUUID());
@@ -53,14 +54,17 @@ describe("infochannel API routes", () => {
       mode: "real",
       paths: { root },
       rateLimiter: () => ({ allowed: true, remaining: 1, resetAt: Date.now() + 1000 }),
-      listTrainers: async () => [{ id: TRAINER_ID, name: "Trainer A" }],
+      listTrainers: async () => [
+        { id: RICHARD_ID, code: "TR-001", name: "Fontana Richard" },
+        { id: TRAINER_ID, code: "TR-002", name: "Trainer A" },
+      ],
       now: () => "2025-04-01T10:00:00.000Z",
     });
     const api = createInfochannelApiHandlers({ sal });
 
     const publishReq = mockReq({
       body: { title: "Hinweis", body: "Bitte lesen." },
-      actor: { id: "admin-1", role: "admin" },
+      actor: { id: `user-${RICHARD_ID}`, role: "admin" },
       authz: { allowedActions: ["kommunikation.infochannel.publish"] },
     });
     const publishRes = mockRes();

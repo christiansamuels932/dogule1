@@ -45,6 +45,19 @@ if [ -f "$BACKUP_DAILY_DIR/${THREE_DAYS}.sql.gz.gpg" ]; then
   cp -f "$BACKUP_DAILY_DIR/${THREE_DAYS}.sql.gz.gpg" "$BACKUP_ROOT/backup_72h.sql.gz.gpg"
 fi
 
+LATEST_DAILY=""
+if ls "$BACKUP_DAILY_DIR"/*.sql.gz.gpg >/dev/null 2>&1; then
+  LATEST_DAILY="$(ls -1 "$BACKUP_DAILY_DIR"/*.sql.gz.gpg | sort | tail -n1)"
+fi
+
+# Bootstrap slots for fresh installations until day-1/day-3 files exist.
+if [ ! -f "$BACKUP_ROOT/backup_24h.sql.gz.gpg" ] && [ -n "$LATEST_DAILY" ]; then
+  cp -f "$LATEST_DAILY" "$BACKUP_ROOT/backup_24h.sql.gz.gpg"
+fi
+if [ ! -f "$BACKUP_ROOT/backup_72h.sql.gz.gpg" ] && [ -n "$LATEST_DAILY" ]; then
+  cp -f "$LATEST_DAILY" "$BACKUP_ROOT/backup_72h.sql.gz.gpg"
+fi
+
 # Keep only last 4 days in daily folder
 find "$BACKUP_DAILY_DIR" -type f -name "*.sql.gz.gpg" -mtime +4 -delete
 
