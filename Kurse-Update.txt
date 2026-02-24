@@ -1,0 +1,85 @@
+Kurse Status Quo (2026-02-24)
+Branch: 26-02-04
+Scope: #/kurse module, API/storage, MariaDB schema, linked modules.
+
+1) Entry points / key files
+- modules/kurse/index.js (UI list/detail/form/teilnehmer)
+- modules/shared/api/kurse.js (client API + local validation)
+- modules/shared/server/coreApiRouter.js (CRUD /api/kurse)
+- modules/shared/server/apiRouter.js (kurs_teilnehmer endpoints)
+- modules/shared/storage/mariadbAdapter.js (MariaDB mapping + CRUD)
+- tools/mariadb/schema.sql (tables + FK rules)
+
+2) MariaDB data model
+- kurse table fields: id, code, title, trainer_name, trainer_id, trainer_ids (JSON), date, start_time, end_time, location, ort, status, abo_form, alter_hund, aufbauend, capacity, booked_count, level, price, notes, inhalt_theorie, inhalt_praxis, zertifikat_hintergrund, hund_ids (JSON), kunden_ids (JSON), outlook_event_id/date/start/end/location, inventory_flag, portfolio_flag, created_at, updated_at, schema_version, version.
+- FK: kurse.trainer_id -> trainer.id (ON DELETE RESTRICT, ON UPDATE CASCADE).
+- kurs_teilnehmer: id, kurs_id, kunde_id, hund_id, kunde_* snapshot, hund_name snapshot, start_datum, created_at, created_by, schema_version, version. FK to kurse/kunden/hunde (ON DELETE RESTRICT).
+- zertifikate: FK to kurse/kunden/hunde (ON DELETE RESTRICT); stores snapshots from kurs (titel, datum, ort, inhalt).
+- kalender: optional kurs_id FK (ON DELETE SET NULL).
+- zahlungen: optional kurs_id FK (ON DELETE SET NULL).
+- anmeldung_drafts: optional kurs_id FK (ON DELETE SET NULL).
+- Deleting kurse with linked zertifikate or kurs_teilnehmer will be blocked by FK; kalender/zahlungen will be nulled.
+
+3) Storage + API flow (MariaDB)
+- DOGULE1_STORAGE_MODE is required and forced to "mariadb" (modules/shared/storage/config.js); createStorage returns MariaDB adapter.
+- MariaDB connection config in mariadbAdapter: DOGULE1_MARIADB_SOCKET, DOGULE1_MARIADB_HOST, DOGULE1_MARIADB_PORT (default 3307), DOGULE1_MARIADB_USER, DOGULE1_MARIADB_PASSWORD, DOGULE1_MARIADB_DATABASE.
+- CRUD for /api/kurse is handled by coreApiRouter (modules/shared/server/coreApiRouter.js), backed by storage.kurse.
+- /api/kurse/:id/teilnehmer is handled by apiRouter (modules/shared/server/apiRouter.js) and storage.kursTeilnehmer.
+- UI uses shared/api/kurse.js; in HTTP mode it calls the endpoints above. In non-HTTP (mock) mode it enforces trainer + ort rules and syncs kalender; in HTTP mode kalender sync is not triggered by the client.
+
+4) Kurse UI (#/kurse) - modules/kurse/index.js
+List view:
+- fetchKurse() -> listKurse() -> hydrateKurseWithTrainer() to add trainer labels.
+- Search (title, code, trainer, status, aboForm, alterHund, aufbauend, price).
+- Filter by status (aktiv/deaktiviert); "geplant/offen/ausgebucht" normalize to aktiv, "abgesagt" to deaktiviert.
+- Sorting (status/title/code/trainer/createdAt) + pagination (25/50/100).
+- Each list item links to #/kurse/:id and shows trainer, alterHund, price.
+- "Neuer Kurs" opens create form; "Plan exportieren" button exists but no handler.
+
+Detail view:
+- Loads kurs (cache or GET) and attaches teilnehmerLog via listKursTeilnehmer(kurs.id).
+- Actions: add participant, edit, delete, back.
+- Teilnehmer form: search/select Kunde, select Hund (filtered by Kunde), pick start date; creates kurs_teilnehmer row.
+- Teilnehmer delete asks for confirmation; after delete optionally offers to create a Kunden rapport (navigates to #/kunden/:id with window.__DOGULE_RAPPORT_TARGET__).
+- Stammdaten card shows ID, code, title, trainer(s) with links to trainer module, pricing/status/notes, inhaltTheorie/Praxis, created/updated.
+- Zertifikat background preview if assigned; collapsible preview.
+- Kurs Historie table shows teilnehmerLog with search and actions "Zertifikat erstellen" and "Loeschen". "Zertifikat erstellen" navigates to #/zertifikate/new with prefilled kurs/kunde/hund and snapshots.
+
+Create/Edit form:
+- Fields: code (auto KS-###, manual override toggle), title, ort, trainer (required), 4 optional additional trainers, aboForm, alterHund, price, aufbauend, status, zertifikatHintergrund, notes, inhaltTheorie (5 lines), inhaltPraxis (5 lines).
+- Validation: title + ort required; trainerId must exist; additional trainers validated; kursCode generated if empty.
+- Payload: location mirrors ort; trainerName stored from trainer list; trainerIds includes primary trainerId.
+- On save: createKurs/updateKurs, refetch list, runIntegrityCheck (only meaningful in non-production/in-memory), then navigate to detail.
+
+Delete guard:
+- Before delete, UI checks for kursRecord.hundIds and finanzen entries (zahlungen with kursId). If present, delete is blocked with reasons.
+- Note: kurs_teilnehmer rows and zertifikate are not checked in the UI guard; MariaDB FK will still block deletes if they exist.
+
+5) Linked modules
+Trainer:
+- kurs.trainerId is mandatory; kurse.trainerIds stores additional trainers.
+- Trainer list is used to label courses and populate selects.
+- deleteTrainer checks getKurseForTrainer() and blocks delete if any kurse reference the trainer.
+
+Hunde:
+- Hunde detail uses getKurseForHund(hundId) to list linked kurse and link to #/kurse/:id.
+- getKurseForHund checks both kurs.hundIds and kurs_teilnehmer entries (via listKursTeilnehmer).
+- Hund delete is blocked if any kurse are linked via getKurseForHund.
+
+Kunden:
+- Kunden detail shows a Kurse table built from listKurse + kurs_teilnehmer entries.
+- Kurs rows are split by teilnehmer start date (one row per participant entry) and link to #/kurse/:id.
+- "Zu Kurs hinzufuegen" shows a Kurs select; selecting sets window.__DOGULE_KURS_TEILNEHMER_PREFILL__ and navigates to the kurs detail, which opens the participant form prefilled.
+- Kunde delete is blocked if linked Hunde, kurse (via hundIds), finanzen, or waren exist.
+
+Zertifikate:
+- Kurse detail lets you create a certificate for a participant; it pre-fills kundeId, hundId, kursId and snapshots (kurs date/ort).
+- Zertifikate module loads kurse list and uses kurs data to build snapshot fields (titel, datum, ort, inhaltTheorie/Praxis, trainer names).
+- MariaDB zertifikate table references kurs_id (ON DELETE RESTRICT), so kurs deletion is blocked if certificates exist.
+
+6) Other couplings and gaps
+- kalender: there is a kalender table with kurs_id FK (ON DELETE SET NULL). In mock mode kurse create/update calls upsertKalenderEventForKurs; in HTTP/MariaDB mode there is no automatic sync in the API router.
+- finanzen: zahlungen.kurs_id links kurse to payments; kurs delete guard checks finanzen and blocks in UI even though FK is SET NULL.
+- anmeldung_drafts: optional kurs_id in draft registrations; not used in kurse UI directly.
+- kurse.hundIds and kurse.kundenIds exist in schema but UI does not edit them; primary participant tracking happens via kurs_teilnehmer. This can lead to mismatches (e.g., delete guard only looks at hundIds, not kurs_teilnehmer).
+- outlook_* fields and inventory_flag/portfolio_flag exist in schema but are not surfaced in UI.

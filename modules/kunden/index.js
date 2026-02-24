@@ -8,7 +8,7 @@ import {
   deleteKunde,
 } from "../shared/api/kunden.js";
 import { listHunde, createHund } from "../shared/api/hunde.js";
-import { listKurse, listKursTeilnehmer } from "../shared/api/kurse.js";
+import { listKurse, listKursTeilnehmerByFilter } from "../shared/api/kurse.js";
 import { listFinanzen } from "../shared/api/finanzen.js";
 import { listWarenByKundeId } from "../shared/api/waren.js";
 import { listZertifikate } from "../shared/api/zertifikate.js";
@@ -1296,8 +1296,10 @@ async function renderDetail(root, id) {
 
   let linkedKurse = [];
   const teilnehmerByKursId = new Map();
+  let orphanTeilnehmer = [];
   try {
     const allKurse = await loadAllKurse();
+    const kursById = new Map(allKurse.map((kurs) => [kurs.id, kurs]));
     const hundIds = new Set(linkedHunde.map((hund) => hund.id));
     const byId = new Map();
     allKurse.forEach((kurs) => {
@@ -1305,39 +1307,43 @@ async function renderDetail(root, id) {
         byId.set(kurs.id, kurs);
       }
     });
-    const teilnehmerMatches = await Promise.all(
-      allKurse.map(async (kurs) => {
-        try {
-          const entries = await listKursTeilnehmer(kurs.id);
-          const hasMatch = entries.some(
-            (entry) => entry.kundeId === id || (entry.hundId && hundIds.has(entry.hundId))
-          );
-          if (hasMatch) {
-            teilnehmerByKursId.set(
-              kurs.id,
-              entries.filter(
-                (entry) => entry.kundeId === id || (entry.hundId && hundIds.has(entry.hundId))
-              )
-            );
-          }
-          return hasMatch ? kurs : null;
-        } catch {
-          return null;
-        }
-      })
-    );
-    teilnehmerMatches.forEach((kurs) => {
-      if (kurs) byId.set(kurs.id, kurs);
+    const teilnehmerEntries = await listKursTeilnehmerByFilter({ kundeId: id });
+    teilnehmerEntries.forEach((entry) => {
+      const matchesHund = entry.hundId && hundIds.has(entry.hundId);
+      if (entry.kundeId !== id && !matchesHund) return;
+      if (!entry.kursId) {
+        orphanTeilnehmer.push(entry);
+        return;
+      }
+      const bucket = teilnehmerByKursId.get(entry.kursId) || [];
+      bucket.push(entry);
+      teilnehmerByKursId.set(entry.kursId, bucket);
+    });
+    Array.from(teilnehmerByKursId.entries()).forEach(([kursId, entries]) => {
+      const kurs = kursById.get(kursId);
+      if (kurs) {
+        byId.set(kursId, kurs);
+        return;
+      }
+      orphanTeilnehmer.push(...entries);
+      teilnehmerByKursId.delete(kursId);
     });
     linkedKurse = Array.from(byId.values());
   } catch (error) {
     kurseLoadFailed = true;
     linkedKurse = [];
+    orphanTeilnehmer = [];
     console.error("[KUNDEN_ERR_KURSE_LOAD]", error);
   }
 
   root.appendChild(
-    renderKundenKurseSection(linkedKurse, teilnehmerByKursId, linkedHunde, kurseLoadFailed)
+    renderKundenKurseSection(
+      linkedKurse,
+      teilnehmerByKursId,
+      linkedHunde,
+      kurseLoadFailed,
+      orphanTeilnehmer
+    )
   );
 
   let historie = [];
@@ -1535,7 +1541,8 @@ function renderKundenKurseSection(
   kurse = [],
   teilnehmerByKursId = new Map(),
   hunde = [],
-  hasError = false
+  hasError = false,
+  orphanTeilnehmer = []
 ) {
   const section = createSectionBlock({
     level: 2,
@@ -1547,7 +1554,7 @@ function renderKundenKurseSection(
     body.innerHTML = "";
     if (hasError) {
       showErrorNotice(body);
-    } else if (!kurse.length) {
+    } else if (!kurse.length && !(Array.isArray(orphanTeilnehmer) && orphanTeilnehmer.length)) {
       appendSharedEmptyState(body);
     } else {
       const hundeById = new Map(hunde.map((hund) => [hund.id, hund]));
@@ -1555,27 +1562,37 @@ function renderKundenKurseSection(
         if (!value) return "–";
         return String(value).slice(0, 10);
       };
-      const resolveTrainerName = (kurs) => kurs.trainer?.name || kurs.trainerName || "–";
+      const resolveTrainerName = (kurs) => kurs?.trainer?.name || kurs?.trainerName || "–";
       const resolveEntryHundName = (entry) => {
         if (!entry) return "–";
         const hund = hundeById.get(entry.hundId);
         return formatHundName(hund) || entry.hundName || "–";
       };
+      const resolveKursTitle = (kurs, entry) =>
+        entry?.kursTitleSnapshot || entry?.kursCodeSnapshot || kurs?.title || kurs?.code || "Kurs";
+      const resolveKursDate = (kurs, entry) => entry?.kursDateSnapshot || kurs?.date || "";
+      const resolveTrainerLabel = (kurs, entry) =>
+        entry?.trainerLabelSnapshot || resolveTrainerName(kurs);
+      const resolveSubKursName = (entry) => entry?.subKursNameSnapshot || "–";
 
       const rows = [];
       kurse.forEach((kurs) => {
         const entries = teilnehmerByKursId.get(kurs.id) || [];
         if (entries.length) {
           entries.forEach((entry, index) => {
-            const startdatum = formatKursDate(entry.startDatum || kurs.date || "");
+            const startdatum = formatKursDate(
+              entry.startDatum || resolveKursDate(kurs, entry) || ""
+            );
             rows.push({
               kurs,
               entry,
               rowKey: `${kurs.id}-${entry.id || index}`,
               startdatum,
-              kursname: kurs.title || kurs.code || "Kurs",
-              trainer: resolveTrainerName(kurs),
+              kursname: resolveKursTitle(kurs, entry),
+              trainer: resolveTrainerLabel(kurs, entry),
               hunde: resolveEntryHundName(entry),
+              subkurs: resolveSubKursName(entry),
+              isDeleted: false,
             });
           });
           return;
@@ -1584,10 +1601,25 @@ function renderKundenKurseSection(
           kurs,
           entry: null,
           rowKey: `${kurs.id}-single`,
-          startdatum: formatKursDate(kurs.date || ""),
-          kursname: kurs.title || kurs.code || "Kurs",
-          trainer: resolveTrainerName(kurs),
+          startdatum: formatKursDate(resolveKursDate(kurs, null) || ""),
+          kursname: resolveKursTitle(kurs, null),
+          trainer: resolveTrainerLabel(kurs, null),
           hunde: "–",
+          subkurs: "–",
+          isDeleted: false,
+        });
+      });
+      (Array.isArray(orphanTeilnehmer) ? orphanTeilnehmer : []).forEach((entry, index) => {
+        rows.push({
+          kurs: null,
+          entry,
+          rowKey: `orphan-${entry.id || index}`,
+          startdatum: formatKursDate(entry.startDatum || entry.kursDateSnapshot || ""),
+          kursname: resolveKursTitle(null, entry),
+          trainer: resolveTrainerLabel(null, entry),
+          hunde: resolveEntryHundName(entry),
+          subkurs: resolveSubKursName(entry),
+          isDeleted: true,
         });
       });
 
@@ -1606,6 +1638,12 @@ function renderKundenKurseSection(
           sortValue: (row) => String(row.kursname || "").toLowerCase(),
           isLink: true,
         },
+        subkurs: {
+          key: "subkurs",
+          label: "Sub-Kurs",
+          value: (row) => valueOrDash(row.subkurs),
+          sortValue: (row) => String(row.subkurs || "").toLowerCase(),
+        },
         trainer: {
           key: "trainer",
           label: "Trainer",
@@ -1621,7 +1659,7 @@ function renderKundenKurseSection(
       };
 
       const tableWrapper = document.createElement("div");
-      tableWrapper.className = "kunden-list-scroll kunden-kurse-scroll";
+      tableWrapper.className = "kunden-list-scroll";
       const table = document.createElement("table");
       table.className = "kunden-list-table";
       const thead = document.createElement("thead");
@@ -1705,26 +1743,37 @@ function renderKundenKurseSection(
         sortedRows.forEach((rowData) => {
           const row = document.createElement("tr");
           row.className = "kunden-list-row";
-          row.tabIndex = 0;
-          row.addEventListener("click", (event) => {
-            if (event.target && event.target.closest("a")) return;
-            window.location.hash = `#/kurse/${rowData.kurs.id}`;
-          });
-          row.addEventListener("keydown", (event) => {
-            if (event.key === "Enter" || event.key === " ") {
-              event.preventDefault();
+          if (rowData.kurs) {
+            row.tabIndex = 0;
+            row.addEventListener("click", (event) => {
+              if (event.target && event.target.closest("a")) return;
               window.location.hash = `#/kurse/${rowData.kurs.id}`;
-            }
-          });
+            });
+            row.addEventListener("keydown", (event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                window.location.hash = `#/kurse/${rowData.kurs.id}`;
+              }
+            });
+          } else {
+            row.classList.add("kunden-list-row--disabled");
+          }
 
           Object.values(columnDefinitions).forEach((column) => {
             const cell = document.createElement("td");
             if (column.isLink) {
-              const link = document.createElement("a");
-              link.href = `#/kurse/${rowData.kurs.id}`;
-              link.className = "kunden-list__link";
-              link.textContent = column.value(rowData);
-              cell.appendChild(link);
+              if (rowData.kurs) {
+                const link = document.createElement("a");
+                link.href = `#/kurse/${rowData.kurs.id}`;
+                link.className = "kunden-list__link";
+                link.textContent = column.value(rowData);
+                cell.appendChild(link);
+              } else {
+                const span = document.createElement("span");
+                span.className = "kunden-list__link kunden-list__link--disabled";
+                span.textContent = column.value(rowData);
+                cell.appendChild(span);
+              }
             } else {
               cell.textContent = column.value(rowData);
             }
@@ -2602,22 +2651,43 @@ function renderKundenZertifikateSection(zertifikate = [], hasError = false) {
   } else if (!zertifikate.length) {
     appendSharedEmptyState(body);
   } else {
-    const list = document.createElement("ul");
-    list.className = "kunden-zertifikate-liste";
-    zertifikate.forEach((zertifikat) => {
-      const item = document.createElement("li");
+    const rows = [...zertifikate].sort((a, b) => {
+      const aTime = new Date(a.ausstellungsdatum || a.createdAt || 0).getTime();
+      const bTime = new Date(b.ausstellungsdatum || b.createdAt || 0).getTime();
+      return bTime - aTime;
+    });
+    const tableWrapper = document.createElement("div");
+    tableWrapper.className = "kunden-list-scroll";
+    const table = document.createElement("table");
+    table.className = "kunden-list-table";
+    const thead = document.createElement("thead");
+    const headerRow = document.createElement("tr");
+    ["Zertifikat", "Ausstellungsdatum"].forEach((label) => {
+      const th = document.createElement("th");
+      th.textContent = label;
+      headerRow.appendChild(th);
+    });
+    thead.appendChild(headerRow);
+    const tbody = document.createElement("tbody");
+    rows.forEach((zertifikat) => {
+      const row = document.createElement("tr");
+      row.className = "kunden-list-row";
+      const titleCell = document.createElement("td");
       const link = document.createElement("a");
       link.href = `#/zertifikate/${zertifikat.id}`;
-      link.className = "kunden-zertifikate-link";
-      const label = zertifikat.kursTitelSnapshot || zertifikat.code || "Zertifikat";
-      const meta = zertifikat.ausstellungsdatum
-        ? ` · ${formatDateTime(zertifikat.ausstellungsdatum)}`
-        : "";
-      link.textContent = `${label}${meta}`;
-      item.appendChild(link);
-      list.appendChild(item);
+      link.className = "kunden-list__link";
+      link.textContent = zertifikat.kursTitelSnapshot || zertifikat.code || "Zertifikat";
+      titleCell.appendChild(link);
+      row.appendChild(titleCell);
+
+      const dateCell = document.createElement("td");
+      dateCell.textContent = formatDateTime(zertifikat.ausstellungsdatum);
+      row.appendChild(dateCell);
+      tbody.appendChild(row);
     });
-    body.appendChild(list);
+    table.append(thead, tbody);
+    tableWrapper.appendChild(table);
+    body.appendChild(tableWrapper);
   }
 
   section.appendChild(card);

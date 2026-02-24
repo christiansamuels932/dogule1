@@ -43,6 +43,32 @@ function ensureForeignKeys() {
     }
   });
 
+  db.subKurse?.forEach((subKurs) => {
+    if (!exists("kurse", subKurs.kursId)) {
+      throw new Error(
+        `[INTEGRITY] Sub-Kurs ${subKurs.id} references missing Kurs ${subKurs.kursId}`
+      );
+    }
+    if (subKurs.primaryTrainerId && !exists("trainer", subKurs.primaryTrainerId)) {
+      throw new Error(
+        `[INTEGRITY] Sub-Kurs ${subKurs.id} references missing Trainer ${subKurs.primaryTrainerId}`
+      );
+    }
+  });
+
+  db.kursTeilnehmer?.forEach((entry) => {
+    if (entry.kursId && !exists("kurse", entry.kursId)) {
+      throw new Error(
+        `[INTEGRITY] Kurs Teilnehmer ${entry.id} references missing Kurs ${entry.kursId}`
+      );
+    }
+    if (entry.subKursId && !exists("subKurse", entry.subKursId)) {
+      throw new Error(
+        `[INTEGRITY] Kurs Teilnehmer ${entry.id} references missing Sub-Kurs ${entry.subKursId}`
+      );
+    }
+  });
+
   db.kalender?.forEach((entry) => {
     if (entry.kursId && !exists("kurse", entry.kursId)) {
       throw new Error(`[INTEGRITY] Kalender ${entry.id} references missing Kurs ${entry.kursId}`);
@@ -98,6 +124,7 @@ export function runIntegrityCheck() {
   ensureUniqueIds("kunden", db.kunden);
   ensureUniqueIds("hunde", db.hunde);
   ensureUniqueIds("kurse", db.kurse);
+  ensureUniqueIds("subKurse", db.subKurse);
   ensureUniqueIds("trainer", db.trainer);
   ensureUniqueIds("kalender", db.kalender);
   ensureUniqueIds("zahlungen", db.zahlungen);

@@ -209,6 +209,7 @@ function ensureTeilnehmerShape(entry = {}) {
   return {
     id: entry.id || "",
     kursId: entry.kursId || "",
+    subKursId: entry.subKursId || "",
     kundeId: entry.kundeId || "",
     hundId: entry.hundId || "",
     kundeNachname: entry.kundeNachname || "",
@@ -216,6 +217,12 @@ function ensureTeilnehmerShape(entry = {}) {
     kundeOrt: entry.kundeOrt || "",
     hundName: entry.hundName || "",
     startDatum: entry.startDatum || "",
+    kursCodeSnapshot: entry.kursCodeSnapshot || "",
+    kursTitleSnapshot: entry.kursTitleSnapshot || "",
+    kursDateSnapshot: entry.kursDateSnapshot || "",
+    kursOrtSnapshot: entry.kursOrtSnapshot || "",
+    trainerLabelSnapshot: entry.trainerLabelSnapshot || "",
+    subKursNameSnapshot: entry.subKursNameSnapshot || "",
     createdAt: entry.createdAt || "",
     createdBy: entry.createdBy || "",
   };
@@ -308,17 +315,37 @@ export async function getKurs(id, options) {
 }
 
 export async function listKursTeilnehmer(kursId) {
-  const targetId = (kursId || "").trim();
-  if (!targetId) return [];
+  return listKursTeilnehmerByFilter({ kursId });
+}
+
+export async function listKursTeilnehmerByFilter({ kursId, kundeId, hundId, subKursId } = {}) {
+  const filters = {
+    kursId: (kursId || "").trim(),
+    kundeId: (kundeId || "").trim(),
+    hundId: (hundId || "").trim(),
+    subKursId: (subKursId || "").trim(),
+  };
+  const hasFilter = Object.values(filters).some((value) => value);
+  if (!hasFilter) return [];
   if (isHttpMode()) {
-    const result = await httpRequest(`/kurse/${encodeURIComponent(targetId)}/teilnehmer`, {
+    const query = Object.entries(filters)
+      .filter(([, value]) => value)
+      .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
+      .join("&");
+    const result = await httpRequest(`/kurse/teilnehmer?${query}`, {
       method: "GET",
     });
     return Array.isArray(result) ? result.map(ensureTeilnehmerShape) : [];
   }
   const table = Array.isArray(db.kursTeilnehmer) ? db.kursTeilnehmer : [];
   return table
-    .filter((entry) => entry.kursId === targetId)
+    .filter((entry) => {
+      if (filters.kursId && entry.kursId !== filters.kursId) return false;
+      if (filters.kundeId && entry.kundeId !== filters.kundeId) return false;
+      if (filters.hundId && entry.hundId !== filters.hundId) return false;
+      if (filters.subKursId && entry.subKursId !== filters.subKursId) return false;
+      return true;
+    })
     .map(ensureTeilnehmerShape)
     .sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || ""));
 }

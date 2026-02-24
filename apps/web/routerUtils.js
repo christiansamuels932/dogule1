@@ -10,6 +10,7 @@ export const VALID_MODULES = new Set([
   "zertifikate",
   "schulungen",
   "uebungsbibliothek",
+  "developer",
 ]);
 
 export const DEFAULT_MODULE = "dashboard";

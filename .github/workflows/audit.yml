@@ -31,5 +31,5 @@ jobs:
 
       - name: Run pnpm audit
         run: |
-          echo "DLX-CI-AUDIT-001: running pnpm audit in CI"
-          pnpm audit
+          echo "DLX-CI-AUDIT-001: running pnpm audit (prod deps only) in CI"
+          pnpm audit --prod

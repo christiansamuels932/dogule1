@@ -267,6 +267,7 @@ export const db = {
       updatedAt: "2024-12-20T15:40:00.000Z",
     },
   ],
+  subKurse: [],
   trainer: [
     {
       id: "t1",

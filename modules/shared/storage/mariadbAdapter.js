@@ -269,6 +269,7 @@ function mapKursTeilnehmerRow(row) {
   return {
     id: row.id,
     kursId: row.kurs_id,
+    subKursId: row.sub_kurs_id,
     kundeId: row.kunde_id,
     hundId: row.hund_id,
     kundeNachname: row.kunde_nachname,
@@ -276,8 +277,31 @@ function mapKursTeilnehmerRow(row) {
     kundeOrt: row.kunde_ort,
     hundName: row.hund_name,
     startDatum: row.start_datum,
+    kursCodeSnapshot: row.kurs_code_snapshot,
+    kursTitleSnapshot: row.kurs_title_snapshot,
+    kursDateSnapshot: row.kurs_date_snapshot,
+    kursOrtSnapshot: row.kurs_ort_snapshot,
+    trainerLabelSnapshot: row.trainer_label_snapshot,
+    subKursNameSnapshot: row.sub_kurs_name_snapshot,
     createdAt: row.created_at,
     createdBy: row.created_by,
+    schemaVersion: row.schema_version,
+    version: row.version,
+  };
+}
+
+function mapSubKursRow(row) {
+  if (!row) return null;
+  return {
+    id: row.id,
+    kursId: row.kurs_id,
+    name: row.name,
+    weekday: row.weekday,
+    time: row.time,
+    primaryTrainerId: row.primary_trainer_id,
+    trainerIds: parseJson(row.trainer_ids, []),
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
     schemaVersion: row.schema_version,
     version: row.version,
   };
@@ -664,6 +688,7 @@ function normalizeKursTeilnehmer(data = {}, existing) {
   return {
     id: data.id || existing?.id || uuidv7(),
     kursId: toStringValue(data.kursId ?? existing?.kursId),
+    subKursId: toStringValue(data.subKursId ?? existing?.subKursId),
     kundeId: toStringValue(data.kundeId ?? existing?.kundeId),
     hundId: toStringValue(data.hundId ?? existing?.hundId),
     kundeNachname: toStringValue(data.kundeNachname ?? existing?.kundeNachname),
@@ -671,8 +696,33 @@ function normalizeKursTeilnehmer(data = {}, existing) {
     kundeOrt: toStringValue(data.kundeOrt ?? existing?.kundeOrt),
     hundName: toStringValue(data.hundName ?? existing?.hundName),
     startDatum: toStringValue(data.startDatum ?? existing?.startDatum),
+    kursCodeSnapshot: toStringValue(data.kursCodeSnapshot ?? existing?.kursCodeSnapshot),
+    kursTitleSnapshot: toStringValue(data.kursTitleSnapshot ?? existing?.kursTitleSnapshot),
+    kursDateSnapshot: toStringValue(data.kursDateSnapshot ?? existing?.kursDateSnapshot),
+    kursOrtSnapshot: toStringValue(data.kursOrtSnapshot ?? existing?.kursOrtSnapshot),
+    trainerLabelSnapshot: toStringValue(
+      data.trainerLabelSnapshot ?? existing?.trainerLabelSnapshot
+    ),
+    subKursNameSnapshot: toStringValue(data.subKursNameSnapshot ?? existing?.subKursNameSnapshot),
     createdAt,
     createdBy: toStringValue(data.createdBy ?? existing?.createdBy),
+    schemaVersion: Number(data.schemaVersion ?? existing?.schemaVersion ?? 1),
+    version: Number(data.version ?? existing?.version ?? 0),
+  };
+}
+
+function normalizeSubKurs(data = {}, existing) {
+  const createdAt = existing?.createdAt || data.createdAt || nowIso();
+  return {
+    id: data.id || existing?.id || uuidv7(),
+    kursId: toStringValue(data.kursId ?? existing?.kursId),
+    name: toStringValue(data.name ?? existing?.name),
+    weekday: toStringValue(data.weekday ?? existing?.weekday),
+    time: toStringValue(data.time ?? existing?.time),
+    primaryTrainerId: toStringValue(data.primaryTrainerId ?? existing?.primaryTrainerId),
+    trainerIds: toArrayValue(data.trainerIds ?? existing?.trainerIds),
+    createdAt,
+    updatedAt: nowIso(),
     schemaVersion: Number(data.schemaVersion ?? existing?.schemaVersion ?? 1),
     version: Number(data.version ?? existing?.version ?? 0),
   };
@@ -941,6 +991,14 @@ function ensureRequiredFields(record, fields, message) {
 
 function ensureKursOrt(record) {
   ensureRequiredFields(record, ["ort"], "Kurs Ort ist erforderlich");
+}
+
+function ensureSubKursRequired(record) {
+  ensureRequiredFields(
+    record,
+    ["kursId", "weekday", "time", "primaryTrainerId", "name"],
+    "Sub-Kurs benötigt Kurs, Wochentag, Uhrzeit und Trainer"
+  );
 }
 
 function ensureZertifikatRequired(record) {
@@ -1512,8 +1570,116 @@ export function createMariaDbAdapter(options = {}) {
     }
   }
 
+  async function listSubKurse({ query } = {}) {
+    const kursId = toStringValue(query?.kursId);
+    const clauses = [];
+    const params = [];
+    if (kursId) {
+      clauses.push("kurs_id = ?");
+      params.push(kursId);
+    }
+    let sql = "SELECT * FROM sub_kurse";
+    if (clauses.length) {
+      sql += ` WHERE ${clauses.join(" AND ")}`;
+    }
+    sql += " ORDER BY name";
+    try {
+      return await listAll(pool, sql, params, mapSubKursRow);
+    } catch (error) {
+      throw toStorageError(error, "Failed to list sub_kurse");
+    }
+  }
+
+  async function getSubKurs(id) {
+    try {
+      const record = await fetchOne(
+        pool,
+        "SELECT * FROM sub_kurse WHERE id = ?",
+        [id],
+        mapSubKursRow
+      );
+      if (!record) {
+        throw new StorageError(STORAGE_ERROR_CODES.NOT_FOUND, `sub_kurse ${id} not found`);
+      }
+      return record;
+    } catch (error) {
+      throw toStorageError(error, `Failed to get sub_kurse ${id}`);
+    }
+  }
+
+  async function createSubKurs(data = {}) {
+    const record = normalizeSubKurs(data, null);
+    ensureSubKursRequired(record);
+    const params = [
+      record.id,
+      record.kursId,
+      record.name,
+      record.weekday,
+      record.time,
+      record.primaryTrainerId,
+      toJson(record.trainerIds),
+      record.createdAt,
+      record.updatedAt,
+      record.schemaVersion,
+      record.version,
+    ];
+    try {
+      await pool.query(
+        "INSERT INTO sub_kurse (id, kurs_id, name, weekday, time, primary_trainer_id, trainer_ids, created_at, updated_at, schema_version, version) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        params
+      );
+      return record;
+    } catch (error) {
+      throw toStorageError(error, "Failed to create sub_kurse");
+    }
+  }
+
+  async function updateSubKurs(id, patch = {}) {
+    try {
+      const existing = await fetchOne(
+        pool,
+        "SELECT * FROM sub_kurse WHERE id = ?",
+        [id],
+        mapSubKursRow
+      );
+      if (!existing) return null;
+      const record = normalizeSubKurs({ ...existing, ...patch, id: existing.id }, existing);
+      ensureSubKursRequired(record);
+      const params = [
+        record.kursId,
+        record.name,
+        record.weekday,
+        record.time,
+        record.primaryTrainerId,
+        toJson(record.trainerIds),
+        record.updatedAt,
+        record.schemaVersion,
+        record.version,
+        record.id,
+      ];
+      await pool.query(
+        "UPDATE sub_kurse SET kurs_id=?, name=?, weekday=?, time=?, primary_trainer_id=?, trainer_ids=?, updated_at=?, schema_version=?, version=? WHERE id=?",
+        params
+      );
+      return record;
+    } catch (error) {
+      throw toStorageError(error, `Failed to update sub_kurse ${id}`);
+    }
+  }
+
+  async function deleteSubKurs(id) {
+    try {
+      await ensureExists(pool, "sub_kurse", id);
+      await pool.query("DELETE FROM sub_kurse WHERE id = ?", [id]);
+      return { ok: true, id };
+    } catch (error) {
+      throw toStorageError(error, `Failed to delete sub_kurse ${id}`);
+    }
+  }
+
   async function listKursTeilnehmer({ query } = {}) {
     const kursId = toStringValue(query?.kursId);
+    const subKursId = toStringValue(query?.subKursId);
     const kundeId = toStringValue(query?.kundeId);
     const hundId = toStringValue(query?.hundId);
     const clauses = [];
@@ -1521,6 +1687,10 @@ export function createMariaDbAdapter(options = {}) {
     if (kursId) {
       clauses.push("kurs_id = ?");
       params.push(kursId);
+    }
+    if (subKursId) {
+      clauses.push("sub_kurs_id = ?");
+      params.push(subKursId);
     }
     if (kundeId) {
       clauses.push("kunde_id = ?");
@@ -1569,6 +1739,7 @@ export function createMariaDbAdapter(options = {}) {
     const params = [
       record.id,
       record.kursId,
+      record.subKursId || null,
       record.kundeId,
       record.hundId,
       record.kundeNachname,
@@ -1576,6 +1747,12 @@ export function createMariaDbAdapter(options = {}) {
       record.kundeOrt,
       record.hundName,
       record.startDatum,
+      record.kursCodeSnapshot,
+      record.kursTitleSnapshot,
+      record.kursDateSnapshot,
+      record.kursOrtSnapshot,
+      record.trainerLabelSnapshot,
+      record.subKursNameSnapshot,
       record.createdAt,
       record.createdBy,
       record.schemaVersion,
@@ -1583,7 +1760,7 @@ export function createMariaDbAdapter(options = {}) {
     ];
     try {
       await pool.query(
-        "INSERT INTO kurs_teilnehmer (id, kurs_id, kunde_id, hund_id, kunde_nachname, kunde_vorname, kunde_ort, hund_name, start_datum, created_at, created_by, schema_version, version) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO kurs_teilnehmer (id, kurs_id, sub_kurs_id, kunde_id, hund_id, kunde_nachname, kunde_vorname, kunde_ort, hund_name, start_datum, kurs_code_snapshot, kurs_title_snapshot, kurs_date_snapshot, kurs_ort_snapshot, trainer_label_snapshot, sub_kurs_name_snapshot, created_at, created_by, schema_version, version) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         params
       );
       return record;
@@ -2656,6 +2833,13 @@ export function createMariaDbAdapter(options = {}) {
       create: createKurs,
       update: (arg) => updateKurs(arg?.id || arg, arg?.data || arg?.payload || arg?.data || arg),
       delete: deleteKurs,
+    },
+    subKurse: {
+      list: listSubKurse,
+      get: getSubKurs,
+      create: createSubKurs,
+      update: (arg) => updateSubKurs(arg?.id || arg, arg?.data || arg?.payload || arg?.data || arg),
+      delete: deleteSubKurs,
     },
     kalender: {
       list: listKalender,

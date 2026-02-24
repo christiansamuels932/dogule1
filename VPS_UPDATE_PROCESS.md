@@ -64,14 +64,13 @@ Deployment method (VPS):
 Data:
 
 - MariaDB on VPS
-- Backups: to be defined (local snapshot + offsite?)
+- Backups: DB-only encrypted snapshots at `/opt/dogule1/backups/` (24h + 72h slots).
 
 Open questions (legacy; verify current state in STATUS.md):
 
 - VPS OS/version
 - Domain name + TLS approach
 - API/UI ports
-- Backup strategy
 
 Progress (legacy snapshot):
 

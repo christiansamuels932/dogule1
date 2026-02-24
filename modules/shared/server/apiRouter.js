@@ -4,6 +4,7 @@ import path from "node:path";
 import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import { Buffer } from "node:buffer";
+import { spawn } from "node:child_process";
 import { createGroupchatApiHandlers } from "../../kommunikation/groupchat/apiRoutes.js";
 import { createInfochannelApiHandlers } from "../../kommunikation/infochannel/apiRoutes.js";
 import { createAutomationApiHandlers } from "../../kommunikation/automation/apiRoutes.js";
@@ -639,6 +640,35 @@ export function createApiRouter(options = {}) {
     const path = reqUrl.split("?")[0];
     const method = (req.method || "GET").toUpperCase();
     const requestId = resolveRequestId(req);
+    const query = extractQuery(reqUrl);
+    const listAllMatch = path.match(/^\/api\/kurse\/teilnehmer\/?$/);
+    if (listAllMatch && method === "GET") {
+      if (!storage.kursTeilnehmer) {
+        jsonResponse(res, 501, { message: "kurs_teilnehmer_unavailable" });
+        return true;
+      }
+      const filters = {
+        kursId: query.kursId,
+        subKursId: query.subKursId,
+        kundeId: query.kundeId,
+        hundId: query.hundId,
+      };
+      const hasFilter = Object.values(filters).some((value) => String(value || "").trim());
+      if (!hasFilter) {
+        jsonResponse(res, 400, { message: "kurs_teilnehmer_filter_required" });
+        return true;
+      }
+      try {
+        const entries = await storage.kursTeilnehmer.list({
+          query: filters,
+          requestId,
+        });
+        jsonResponse(res, 200, entries);
+      } catch {
+        jsonResponse(res, 500, { message: "kurs_teilnehmer_list_failed" });
+      }
+      return true;
+    }
     const listMatch = path.match(/^\/api\/kurse\/([^/]+)\/teilnehmer\/?$/);
     if (listMatch) {
       const kursId = listMatch[1];
@@ -664,9 +694,40 @@ export function createApiRouter(options = {}) {
           const actorId = req.headers["x-dogule-actor-id"] || "";
           const createdByRaw = actorId || body.createdBy || "";
           const createdBy = String(createdByRaw || "").slice(0, 255);
+          const kurs = await storage.kurse?.get?.(kursId, { requestId });
+          if (!kurs) {
+            jsonResponse(res, 404, { message: "kurs_not_found" });
+            return true;
+          }
+          let subKurs = null;
+          const subKursId = String(body.subKursId || "").trim();
+          if (subKursId) {
+            if (!storage.subKurse) {
+              jsonResponse(res, 501, { message: "subkurse_unavailable" });
+              return true;
+            }
+            subKurs = await storage.subKurse.get(subKursId, { requestId });
+            if (!subKurs || subKurs.kursId !== kursId) {
+              jsonResponse(res, 400, { message: "subkurs_invalid" });
+              return true;
+            }
+          }
+          const trainer =
+            kurs?.trainerId && storage.trainer?.get
+              ? await storage.trainer.get(kurs.trainerId, { requestId }).catch(() => null)
+              : null;
+          const trainerLabel = (() => {
+            const name = trainer?.name || kurs?.trainerName || "";
+            const code = trainer?.code || "";
+            if (name && code) return `${code} · ${name}`;
+            if (name) return name;
+            if (code) return code;
+            return kurs?.trainerId || "";
+          })();
           const created = await storage.kursTeilnehmer.create(
             {
               kursId,
+              subKursId: subKursId || null,
               kundeId: body.kundeId,
               hundId: body.hundId,
               kundeNachname: body.kundeNachname,
@@ -674,6 +735,12 @@ export function createApiRouter(options = {}) {
               kundeOrt: body.kundeOrt,
               hundName: body.hundName,
               startDatum: body.startDatum,
+              kursCodeSnapshot: kurs?.code || "",
+              kursTitleSnapshot: kurs?.title || "",
+              kursDateSnapshot: kurs?.date || "",
+              kursOrtSnapshot: kurs?.ort || kurs?.location || "",
+              trainerLabelSnapshot: trainerLabel,
+              subKursNameSnapshot: subKurs?.name || "",
               createdBy,
             },
             { requestId }
@@ -706,6 +773,293 @@ export function createApiRouter(options = {}) {
       return true;
     }
     return false;
+  }
+
+  function normalizeWeekday(value = "") {
+    const raw = String(value || "").trim();
+    const allowed = new Set(["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"]);
+    if (allowed.has(raw)) return raw;
+    const lower = raw.toLowerCase();
+    const map = {
+      mo: "Mo",
+      di: "Di",
+      mi: "Mi",
+      do: "Do",
+      fr: "Fr",
+      sa: "Sa",
+      so: "So",
+    };
+    return map[lower] || "";
+  }
+
+  function normalizeTime(value = "") {
+    const raw = String(value || "").trim();
+    const match = raw.match(/^(\d{1,2}):(\d{2})$/);
+    if (!match) return "";
+    const hours = String(match[1]).padStart(2, "0");
+    const minutes = match[2];
+    if (Number(hours) > 23 || Number(minutes) > 59) return "";
+    return `${hours}:${minutes}`;
+  }
+
+  function buildTrainerCode(name = "") {
+    const cleaned = String(name || "")
+      .replace(/[^A-Za-zÄÖÜäöüß\\s-]/g, " ")
+      .replace(/\\s+/g, " ")
+      .trim();
+    if (!cleaned) return "";
+    const parts = cleaned.split(" ").filter(Boolean);
+    const first = parts[0] || "";
+    const last = parts[parts.length - 1] || "";
+    const take = (value, count) => value.slice(0, count).padEnd(count, " ").replace(/\\s/g, "");
+    let code = "";
+    if (first && last && first !== last) {
+      code = `${take(first, 2)}${take(last, 2)}`;
+    } else {
+      code = take(first || last, 4);
+    }
+    return code ? code[0].toUpperCase() + code.slice(1) : "";
+  }
+
+  function buildSubKursName({ weekday, time, trainerCode }) {
+    if (!weekday || !time || !trainerCode) return "";
+    return `${weekday}-${time}-${trainerCode}`;
+  }
+
+  async function handleSubKursRoutes(req, res) {
+    const reqUrl = req?.url || "";
+    if (!reqUrl.startsWith("/api/kurse/")) return false;
+    const path = reqUrl.split("?")[0];
+    const method = (req.method || "GET").toUpperCase();
+    const requestId = resolveRequestId(req);
+    const listMatch = path.match(/^\/api\/kurse\/([^/]+)\/subkurse\/?$/);
+    if (listMatch) {
+      const kursId = listMatch[1];
+      if (!storage.subKurse) {
+        jsonResponse(res, 501, { message: "subkurse_unavailable" });
+        return true;
+      }
+      if (method === "GET") {
+        try {
+          const entries = await storage.subKurse.list({
+            query: { kursId },
+            requestId,
+          });
+          jsonResponse(res, 200, entries);
+        } catch {
+          jsonResponse(res, 500, { message: "subkurse_list_failed" });
+        }
+        return true;
+      }
+      if (method === "POST") {
+        const body = await readJsonBody(req);
+        try {
+          const weekday = normalizeWeekday(body.weekday);
+          const time = normalizeTime(body.time);
+          const primaryTrainerId = String(body.primaryTrainerId || "").trim();
+          if (!weekday || !time || !primaryTrainerId) {
+            jsonResponse(res, 400, { message: "subkurs_invalid_input" });
+            return true;
+          }
+          const trainer = await storage.trainer.get(primaryTrainerId, { requestId });
+          if (!trainer) {
+            jsonResponse(res, 400, { message: "subkurs_trainer_invalid" });
+            return true;
+          }
+          const trainerCode = buildTrainerCode(trainer.name || "");
+          const name = buildSubKursName({ weekday, time, trainerCode });
+          if (!name) {
+            jsonResponse(res, 400, { message: "subkurs_invalid_name" });
+            return true;
+          }
+          const rawTrainerIds = Array.isArray(body.trainerIds) ? body.trainerIds : [];
+          const trainerIds = [
+            primaryTrainerId,
+            ...rawTrainerIds.filter((id) => id && id !== primaryTrainerId),
+          ];
+          const created = await storage.subKurse.create(
+            {
+              kursId,
+              name,
+              weekday,
+              time,
+              primaryTrainerId,
+              trainerIds,
+            },
+            { requestId }
+          );
+          jsonResponse(res, 201, created);
+        } catch (error) {
+          console.error("[SUBKURSE_CREATE_FAILED]", error);
+          jsonResponse(res, 400, { message: "subkurse_create_failed", code: error?.code });
+        }
+        return true;
+      }
+    }
+    const detailMatch = path.match(/^\/api\/kurse\/([^/]+)\/subkurse\/([^/]+)$/);
+    if (detailMatch) {
+      const kursId = detailMatch[1];
+      const subKursId = detailMatch[2];
+      if (!storage.subKurse) {
+        jsonResponse(res, 501, { message: "subkurse_unavailable" });
+        return true;
+      }
+      if (method === "GET") {
+        try {
+          const entry = await storage.subKurse.get(subKursId, { requestId });
+          if (!entry || entry.kursId !== kursId) {
+            jsonResponse(res, 404, { message: "not_found" });
+            return true;
+          }
+          jsonResponse(res, 200, entry);
+        } catch {
+          jsonResponse(res, 404, { message: "not_found" });
+        }
+        return true;
+      }
+      if (method === "PUT" || method === "PATCH") {
+        const body = await readJsonBody(req);
+        try {
+          const existing = await storage.subKurse.get(subKursId, { requestId });
+          if (!existing || existing.kursId !== kursId) {
+            jsonResponse(res, 404, { message: "not_found" });
+            return true;
+          }
+          const weekday = normalizeWeekday(body.weekday || existing.weekday);
+          const time = normalizeTime(body.time || existing.time);
+          const primaryTrainerId = String(
+            body.primaryTrainerId || existing.primaryTrainerId || ""
+          ).trim();
+          if (!weekday || !time || !primaryTrainerId) {
+            jsonResponse(res, 400, { message: "subkurs_invalid_input" });
+            return true;
+          }
+          const trainer = await storage.trainer.get(primaryTrainerId, { requestId });
+          if (!trainer) {
+            jsonResponse(res, 400, { message: "subkurs_trainer_invalid" });
+            return true;
+          }
+          const trainerCode = buildTrainerCode(trainer.name || "");
+          const name = buildSubKursName({ weekday, time, trainerCode });
+          if (!name) {
+            jsonResponse(res, 400, { message: "subkurs_invalid_name" });
+            return true;
+          }
+          const rawTrainerIds = Array.isArray(body.trainerIds)
+            ? body.trainerIds
+            : existing.trainerIds || [];
+          const trainerIds = [
+            primaryTrainerId,
+            ...rawTrainerIds.filter((id) => id && id !== primaryTrainerId),
+          ];
+          const updated = await storage.subKurse.update(
+            { id: subKursId, data: { kursId, name, weekday, time, primaryTrainerId, trainerIds } },
+            { requestId }
+          );
+          if (!updated) {
+            jsonResponse(res, 404, { message: "not_found" });
+            return true;
+          }
+          jsonResponse(res, 200, updated);
+        } catch (error) {
+          console.error("[SUBKURSE_UPDATE_FAILED]", error);
+          jsonResponse(res, 400, { message: "subkurse_update_failed", code: error?.code });
+        }
+        return true;
+      }
+      if (method === "DELETE") {
+        if (!storage.kursTeilnehmer) {
+          jsonResponse(res, 501, { message: "kurs_teilnehmer_unavailable" });
+          return true;
+        }
+        try {
+          const existing = await storage.subKurse.get(subKursId, { requestId });
+          if (!existing || existing.kursId !== kursId) {
+            jsonResponse(res, 404, { message: "not_found" });
+            return true;
+          }
+          const linked = await storage.kursTeilnehmer.list({
+            query: { subKursId: subKursId },
+            requestId,
+          });
+          if (Array.isArray(linked) && linked.length) {
+            jsonResponse(res, 409, {
+              message: "subkurse_delete_blocked",
+              code: "SUBKURS_HAS_TEILNEHMER",
+            });
+            return true;
+          }
+          const result = await storage.subKurse.delete(subKursId, { requestId });
+          jsonResponse(res, 200, result);
+        } catch (error) {
+          console.error("[SUBKURSE_DELETE_FAILED]", error);
+          jsonResponse(res, 400, { message: "subkurse_delete_failed", code: error?.code });
+        }
+        return true;
+      }
+    }
+    return false;
+  }
+
+  async function handleDeveloperRoutes(req, res) {
+    const reqUrl = req?.url || "";
+    if (!reqUrl.startsWith("/api/developer/")) return false;
+    const routePath = reqUrl.split("?")[0];
+    const method = (req.method || "GET").toUpperCase();
+    if (routePath === "/api/developer/backups" && method === "GET") {
+      const backupRoot = process.env.DOGULE1_BACKUP_ROOT || "/opt/dogule1/backups";
+      const slots = ["24h", "72h"];
+      const info = {};
+      await Promise.all(
+        slots.map(async (slot) => {
+          const filename = path.join(backupRoot, `backup_${slot}.sql.gz.gpg`);
+          try {
+            const stat = await fs.stat(filename);
+            info[slot] = {
+              exists: true,
+              mtime: stat.mtime.toISOString(),
+              size: stat.size,
+            };
+          } catch {
+            info[slot] = { exists: false };
+          }
+        })
+      );
+      jsonResponse(res, 200, { slots: info });
+      return true;
+    }
+    if (routePath === "/api/developer/restore" && method === "POST") {
+      const body = await readJsonBody(req);
+      const slot = String(body.slot || "").trim();
+      if (!["24h", "72h"].includes(slot)) {
+        jsonResponse(res, 400, { message: "restore_invalid_slot" });
+        return true;
+      }
+      const backupRoot = process.env.DOGULE1_BACKUP_ROOT || "/opt/dogule1/backups";
+      const filename = path.join(backupRoot, `backup_${slot}.sql.gz.gpg`);
+      try {
+        await fs.stat(filename);
+      } catch {
+        jsonResponse(res, 404, { message: "restore_snapshot_missing" });
+        return true;
+      }
+      const restoreScript =
+        process.env.DOGULE1_BACKUP_RESTORE_SCRIPT || "/opt/dogule1/tools/backup/restore_db.sh";
+      try {
+        const child = spawn("sudo", [restoreScript, slot], {
+          detached: true,
+          stdio: "ignore",
+        });
+        child.unref();
+        jsonResponse(res, 202, { ok: true, slot });
+      } catch (error) {
+        console.error("[DEVELOPER_RESTORE_FAILED]", error);
+        jsonResponse(res, 500, { message: "restore_failed" });
+      }
+      return true;
+    }
+    jsonResponse(res, 404, { message: "not_found" });
+    return true;
   }
 
   function contentTypeForUpload(filePath) {
@@ -1649,7 +2003,7 @@ export function createApiRouter(options = {}) {
     }
 
     const entityMatch = reqUrl.match(
-      /^\/api\/(dashboard|kunden|hunde|kurse|trainer|kalender|finanzen|waren|zertifikate|schulungen|uebungsbibliothek|anmeldung|rapporte|historie)(?:\/|$)/
+      /^\/api\/(dashboard|kunden|hunde|kurse|trainer|kalender|finanzen|waren|zertifikate|schulungen|uebungsbibliothek|anmeldung|rapporte|historie|developer)(?:\/|$)/
     );
     if (entityMatch) {
       const entity = entityMatch[1];
@@ -1666,6 +2020,8 @@ export function createApiRouter(options = {}) {
     if (await handleRapporteRoutes(req, res)) return true;
     if (await handleHistorieRoutes(req, res)) return true;
     if (await handleKursTeilnehmerRoutes(req, res)) return true;
+    if (await handleSubKursRoutes(req, res)) return true;
+    if (await handleDeveloperRoutes(req, res)) return true;
     if (await handleSchulungenRoutes(req, res)) return true;
     if (await handleUebungsbibliothekRoutes(req, res)) return true;
     if (await core.handle(req, res)) return true;
