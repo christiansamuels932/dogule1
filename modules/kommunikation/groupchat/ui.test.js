@@ -1,13 +1,15 @@
-/* global document, window, Response, process, global, URL, setTimeout */
+/* global document, window, Response, global, URL, setTimeout, process */
 import path from "node:path";
 import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { initModule } from "../index.js";
-import { createGroupchatSal } from "./sal.js";
-import { createGroupchatApiHandlers } from "./apiRoutes.js";
+import { createInfochannelSal } from "../infochannel/sal.js";
+import { createInfochannelApiHandlers } from "../infochannel/apiRoutes.js";
 
 const TMP_ROOT = path.join(process.cwd(), ".tmp-groupchat-ui");
+const RICHARD_ID = "99999999-9999-9999-9999-999999999999";
+const TRAINER_ID = "11111111-1111-1111-1111-111111111111";
 
 async function makeTempRoot() {
   const dir = path.join(TMP_ROOT, crypto.randomUUID());
@@ -23,17 +25,12 @@ function setupFetch(api) {
   const handler = async (url, options = {}) => {
     const parsed = new URL(url, "http://localhost");
     const pathname = parsed.pathname;
-    const search = Object.fromEntries(parsed.searchParams.entries());
+    const query = Object.fromEntries(parsed.searchParams.entries());
     const body = options.body ? JSON.parse(options.body) : {};
-    const actor = { id: "test-user", role: "admin" };
-    const authz = {
-      allowedActions: [
-        "kommunikation.chat.send",
-        "kommunikation.chat.read",
-        "kommunikation.chat.readMarker.set",
-      ],
-    };
-    const req = { query: search, body, actor, authz };
+    const actor = window.__DOGULE_ACTOR__ || { id: null, role: null };
+    const authz = window.__DOGULE_AUTHZ__ || { allowedActions: [] };
+
+    const req = { query, body, actor, authz, params: {} };
     const res = {
       statusCode: 200,
       headers: {},
@@ -45,17 +42,22 @@ function setupFetch(api) {
         this.body = payload;
       },
     };
-    if (pathname === "/api/kommunikation/groupchat/messages" && options.method === "POST") {
-      await api.handleSendMessage(req, res);
-    } else if (pathname === "/api/kommunikation/groupchat/messages") {
-      await api.handleListMessages(req, res);
-    } else if (
-      pathname === "/api/kommunikation/groupchat/read-marker" &&
-      options.method === "POST"
-    ) {
-      await api.handleSetReadMarker(req, res);
-    } else if (pathname === "/api/kommunikation/groupchat/read-marker") {
-      await api.handleGetReadMarker(req, res);
+
+    const method = (options.method || "GET").toUpperCase();
+    if (pathname === "/api/kommunikation/infochannel/notices" && method === "POST") {
+      await api.handleCreateNotice(req, res);
+    } else if (pathname === "/api/kommunikation/infochannel/notices") {
+      await api.handleListNotices(req, res);
+    } else if (/^\/api\/kommunikation\/infochannel\/notices\/[^/]+\/confirm$/.test(pathname)) {
+      req.params.id = pathname.split("/").slice(-2, -1)[0];
+      await api.handleConfirmNotice(req, res);
+    } else if (/^\/api\/kommunikation\/infochannel\/notices\/[^/]+$/.test(pathname)) {
+      req.params.id = pathname.split("/").pop();
+      if (method === "DELETE") {
+        await api.handleDeleteNotice(req, res);
+      } else {
+        await api.handleGetNotice(req, res);
+      }
     } else {
       res.statusCode = 404;
       res.body = JSON.stringify({ error: "not_found" });
@@ -68,6 +70,22 @@ function setupFetch(api) {
 }
 
 function ensureTemplates() {
+  const button = document.createElement("template");
+  button.id = "ui-btn";
+  button.innerHTML = `<button type="button" class="ui-btn"></button>`;
+  document.body.appendChild(button);
+
+  const formRow = document.createElement("template");
+  formRow.id = "ui-form-row-template";
+  formRow.innerHTML = `
+    <div class="ui-form-row">
+      <label class="ui-form-row__label"></label>
+      <div class="ui-form-row__control"></div>
+      <div class="ui-form-row__hint sr-only"></div>
+    </div>
+  `;
+  document.body.appendChild(formRow);
+
   const notice = document.createElement("template");
   notice.id = "ui-notice";
   notice.innerHTML = `
@@ -89,21 +107,18 @@ function ensureTemplates() {
   document.body.appendChild(empty);
 }
 
-describe("Kommunikation Chats UI", () => {
+function trainerList() {
+  return [
+    { id: RICHARD_ID, code: "TR-001", name: "Fontana Richard" },
+    { id: TRAINER_ID, code: "TR-002", name: "Trainer A" },
+  ];
+}
+
+describe("Kommunikation Infochannel UI", () => {
   let root;
 
   beforeEach(async () => {
     root = await makeTempRoot();
-    window.__DOGULE_STORAGE_PROBE__ = async () => {};
-    window.__DOGULE_ACTOR__ = { id: "test-user", role: "admin" };
-    window.__DOGULE_AUTHZ__ = {
-      allowedActions: [
-        "kommunikation.chat.view",
-        "kommunikation.chat.send",
-        "kommunikation.chat.read",
-        "kommunikation.chat.readMarker.set",
-      ],
-    };
     ensureTemplates();
   });
 
@@ -111,69 +126,74 @@ describe("Kommunikation Chats UI", () => {
     await cleanup(root);
   });
 
-  it("sends a message and shows it after refresh", async () => {
-    const sal = createGroupchatSal({
+  it("renders infochannel list and detail", async () => {
+    const sal = createInfochannelSal({
       mode: "real",
       paths: { root },
       rateLimiter: () => ({ allowed: true, remaining: 1, resetAt: Date.now() + 1000 }),
+      listTrainers: async () => trainerList(),
+      now: () => "2025-01-01T00:00:00.000Z",
     });
-    const api = createGroupchatApiHandlers({ sal });
+    const notice = await sal.publishNotice(
+      { title: "Hinweis", body: "Bitte lesen." },
+      {
+        actorId: `user-${RICHARD_ID}`,
+        actorRole: "admin",
+        authz: { allowedActions: ["kommunikation.infochannel.publish"] },
+      }
+    );
+    const api = createInfochannelApiHandlers({ sal });
     setupFetch(api);
 
-    const container = document.createElement("div");
-    await initModule(container, { segments: ["chats", "global"] });
-    const textarea = container.querySelector("textarea");
-    const sendButton = container.querySelector(".kommunikation-send");
-    expect(textarea).toBeTruthy();
-    textarea.value = "Testnachricht";
-    sendButton.click();
-    await new Promise((resolve) => setTimeout(resolve, 10));
-    expect(container.textContent).toContain("Testnachricht");
+    window.__DOGULE_ACTOR__ = { id: `user-${RICHARD_ID}`, role: "admin" };
+    window.__DOGULE_AUTHZ__ = {
+      allowedActions: ["kommunikation.infochannel.view", "kommunikation.infochannel.publish"],
+    };
+    window.__DOGULE_STORAGE_PROBE__ = async () => {};
 
-    // Refresh
-    await initModule(container, { segments: ["chats", "global"] });
+    const container = document.createElement("div");
+    await initModule(container, { segments: ["infochannel"] });
     await new Promise((resolve) => setTimeout(resolve, 10));
-    expect(container.textContent).toContain("Testnachricht");
+    expect(container.textContent).toContain("Hinweis");
+
+    await initModule(container, { segments: ["infochannel", notice.id] });
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    expect(container.textContent).toContain("Bitte lesen.");
   });
 
-  it("shows retention notices when enabled", async () => {
-    let nowValue = "2025-01-01T00:00:00.000Z";
-    const sal = createGroupchatSal({
+  it("allows trainer confirmation in detail view", async () => {
+    const sal = createInfochannelSal({
       mode: "real",
       paths: { root },
       rateLimiter: () => ({ allowed: true, remaining: 1, resetAt: Date.now() + 1000 }),
-      now: () => nowValue,
-      retentionConfig: { defaultRetentionDays: 1 },
+      listTrainers: async () => trainerList(),
+      now: () => "2025-01-01T00:00:00.000Z",
     });
-    const api = createGroupchatApiHandlers({ sal });
+    const notice = await sal.publishNotice(
+      { title: "SLA", body: "Bitte bestätigen." },
+      {
+        actorId: `user-${RICHARD_ID}`,
+        actorRole: "admin",
+        authz: { allowedActions: ["kommunikation.infochannel.publish"] },
+      }
+    );
+    const api = createInfochannelApiHandlers({ sal });
     setupFetch(api);
 
-    const ctx = {
-      actorId: "test-user",
-      actorRole: "admin",
-      authz: {
-        allowedActions: [
-          "kommunikation.chat.send",
-          "kommunikation.chat.read",
-          "kommunikation.chat.readMarker.set",
-        ],
-      },
+    window.__DOGULE_ACTOR__ = { id: TRAINER_ID, role: "trainer" };
+    window.__DOGULE_AUTHZ__ = {
+      allowedActions: ["kommunikation.infochannel.view", "kommunikation.infochannel.confirm"],
     };
-
-    await sal.sendMessage("global", { body: "Alt", clientNonce: "old-1" }, ctx);
-    nowValue = "2025-01-03T00:00:00.000Z";
-    await sal.sendMessage("global", { body: "Neu", clientNonce: "new-1" }, ctx);
-    nowValue = "2025-01-04T00:00:00.000Z";
+    window.__DOGULE_STORAGE_PROBE__ = async () => {};
 
     const container = document.createElement("div");
-    await initModule(container, { segments: ["chats", "global"] });
+    await initModule(container, { segments: ["infochannel", notice.id] });
     await new Promise((resolve) => setTimeout(resolve, 10));
 
-    expect(container.textContent).toContain(
-      "Aufbewahrung: Nachrichten werden nach 1 Tagen automatisch gelöscht."
-    );
-    expect(container.textContent).toContain(
-      "Ältere Nachrichten sind aufgrund der Aufbewahrungsfrist nicht mehr verfügbar."
-    );
+    const confirmBtn = container.querySelector(".infochannel-confirm .ui-btn");
+    expect(confirmBtn).toBeTruthy();
+    confirmBtn.click();
+    await new Promise((resolve) => setTimeout(resolve, 15));
+    expect(container.textContent).toContain("Bestätigt");
   });
 });

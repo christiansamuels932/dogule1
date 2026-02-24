@@ -40,6 +40,7 @@ async function run() {
       date: "2025-01-01",
       startTime: "10:00",
       endTime: "11:00",
+      ort: "Test-Ort",
       hundIds: [hund.id],
     });
 

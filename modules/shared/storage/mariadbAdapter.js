@@ -806,12 +806,19 @@ function normalizeWaren(data = {}, existing) {
 
 function normalizeZertifikat(data = {}, existing) {
   const createdAt = existing?.createdAt || data.createdAt || nowIso();
+  const resolveKursId = (value, fallback) => {
+    if (value === null) return null;
+    if (value === undefined) value = fallback;
+    if (value === null) return null;
+    const normalized = toStringValue(value).trim();
+    return normalized || null;
+  };
   return {
     id: data.id || existing?.id || uuidv7(),
     code: toStringValue(data.code ?? existing?.code),
     kundeId: toStringValue(data.kundeId ?? existing?.kundeId),
     hundId: toStringValue(data.hundId ?? existing?.hundId),
-    kursId: toStringValue(data.kursId ?? existing?.kursId),
+    kursId: resolveKursId(data.kursId, existing?.kursId),
     kundeNameSnapshot: toStringValue(data.kundeNameSnapshot ?? existing?.kundeNameSnapshot),
     kundeGeschlechtSnapshot: toStringValue(
       data.kundeGeschlechtSnapshot ?? existing?.kundeGeschlechtSnapshot
@@ -1001,20 +1008,24 @@ function ensureSubKursRequired(record) {
   );
 }
 
-function ensureZertifikatRequired(record) {
+function ensureZertifikatRequired(record, options = {}) {
+  const requireKursId = options.requireKursId !== false;
+  const required = [
+    "kundeId",
+    "hundId",
+    "ausstellungsdatum",
+    "kursOrtSnapshot",
+    "trainer1NameSnapshot",
+    "kursInhaltTheorieSnapshot",
+    "kursInhaltPraxisSnapshot",
+  ];
+  if (requireKursId) {
+    required.splice(2, 0, "kursId");
+  }
   ensureRequiredFields(
     record,
-    [
-      "kundeId",
-      "hundId",
-      "kursId",
-      "ausstellungsdatum",
-      "kursOrtSnapshot",
-      "trainer1NameSnapshot",
-      "kursInhaltTheorieSnapshot",
-      "kursInhaltPraxisSnapshot",
-    ],
-    "Zertifikat benötigt Kunde, Hund, Kurs, Ausstellungsdatum, Kurs Ort und Trainer"
+    required,
+    "Zertifikat benötigt Kunde, Hund, Ausstellungsdatum, Kurs Ort und Trainer"
   );
   if (!toStringValue(record.trainer1TitelSnapshot).trim()) {
     throw new StorageError(STORAGE_ERROR_CODES.INVALID_DATA, "TRAINER_TITEL_REQUIRED");
@@ -2121,7 +2132,7 @@ export function createMariaDbAdapter(options = {}) {
 
   async function createZertifikat(data = {}) {
     const record = normalizeZertifikat(data, null);
-    ensureZertifikatRequired(record);
+    ensureZertifikatRequired(record, { requireKursId: true });
     if (record.kursId && record.kundeId && record.hundId) {
       const rows = await pool.query(
         "SELECT id FROM kurs_teilnehmer WHERE kurs_id = ? AND kunde_id = ? AND hund_id = ? LIMIT 1",
@@ -2179,7 +2190,8 @@ export function createMariaDbAdapter(options = {}) {
       );
       if (!existing) return null;
       const record = normalizeZertifikat({ ...existing, ...patch, id: existing.id }, existing);
-      ensureZertifikatRequired(record);
+      const requireKursId = Boolean(record.kursId || existing.kursId);
+      ensureZertifikatRequired(record, { requireKursId });
       if (record.kursId && record.kundeId && record.hundId) {
         const rows = await pool.query(
           "SELECT id FROM kurs_teilnehmer WHERE kurs_id = ? AND kunde_id = ? AND hund_id = ? LIMIT 1",
