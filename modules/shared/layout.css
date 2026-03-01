@@ -166,6 +166,30 @@
   line-height: 1.5;
 }
 
+.dogule-help-form {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.dogule-help-textarea {
+  width: 100%;
+  min-height: 7rem;
+  resize: vertical;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 0.75rem;
+  font: inherit;
+  color: var(--color-ink);
+  background: var(--color-paper);
+  box-sizing: border-box;
+}
+
+.dogule-help-status {
+  min-height: 1.25rem;
+  font-size: 0.95rem;
+  color: var(--color-muted);
+}
+
 .dogule-help-card__close {
   border: none;
   background: var(--color-brand-700);

@@ -83,7 +83,6 @@ a:focus-visible {
   margin-bottom: 0.5rem;
 }
 
-.kunden-section.kunden-detail,
 .kunden-detail-stack {
   margin-bottom: 1rem;
 }
@@ -92,16 +91,39 @@ a:focus-visible {
   width: 100%;
 }
 
-.kunden-detail-grid {
+.kunden-detail-pair {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
   gap: 0.75rem;
-  margin-bottom: 0.75rem;
+}
+
+.kunden-detail-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.kunden-detail-card__body {
+  display: flex;
+  flex-direction: column;
+}
+
+.kunden-detail-card__toolbar {
+  display: grid;
+  gap: 0.75rem;
+  padding-bottom: 1rem;
+}
+
+.kunden-detail-card__toolbar .kunden-kurs-add {
+  margin-top: 0;
 }
 
 .kunden-hunde-details {
-  display: grid;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
   gap: 1rem;
+  min-height: 0;
 }
 
 .kunden-hunde-toggle {
@@ -123,6 +145,62 @@ a:focus-visible {
   display: grid;
   gap: 0.5rem;
   max-width: 420px;
+}
+
+.kunden-detail-actions,
+.kunden-hund-actions {
+  margin-top: 0;
+}
+
+.kunden-hunde-detail-card {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.kunden-hund-edit-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.kunden-hund-edit-form .module-actions {
+  margin-top: auto;
+  padding-top: 1.5rem;
+}
+
+.developer-activity-log {
+  max-height: 420px;
+  overflow: auto;
+  border: 1px solid var(--color-border);
+  border-radius: 0.75rem;
+  background: #fbf7e8;
+}
+
+.developer-activity-log__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.developer-activity-log__item {
+  padding: 0.55rem 0.75rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.developer-activity-log__item:last-child {
+  border-bottom: none;
+}
+
+.developer-activity-log__item--empty {
+  color: var(--color-muted);
+}
+
+.developer-activity-log__line {
+  color: var(--color-ink);
+  font-size: 0.92rem;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
 }
 
 .card-stack-compact .ui-card + .ui-card {
@@ -1140,6 +1218,10 @@ h3,
 }
 
 @media (max-width: 720px) {
+  .kunden-detail-pair {
+    grid-template-columns: 1fr;
+  }
+
   .ui-card {
     padding: 0.85rem;
   }

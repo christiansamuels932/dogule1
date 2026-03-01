@@ -7,12 +7,13 @@ import {
   updateKunde,
   deleteKunde,
 } from "../shared/api/kunden.js";
-import { listHunde, createHund } from "../shared/api/hunde.js";
+import { listHunde, createHund, updateHund, deleteHund } from "../shared/api/hunde.js";
 import { listKurse, listKursTeilnehmerByFilter } from "../shared/api/kurse.js";
 import { listFinanzen } from "../shared/api/finanzen.js";
 import { listWarenByKundeId } from "../shared/api/waren.js";
 import { listZertifikate } from "../shared/api/zertifikate.js";
 import { createRapporteDraft } from "../shared/api/rapporteDrafts.js";
+import { HERKUNFT_OPTIONS } from "../hunde/herkunft.js";
 import {
   createHistorieEntry,
   listHistorieEntries,
@@ -69,6 +70,17 @@ function createStandardCard(title = "", eyebrow = "") {
     footer: "",
   });
   return fragment.querySelector(".ui-card") || fragment.firstElementChild;
+}
+
+function createStandardCardSection(card = null) {
+  const section = createSectionBlock({
+    level: 2,
+    className: "kunden-detail-stack",
+  });
+  if (card) {
+    section.appendChild(card);
+  }
+  return section;
 }
 
 function createUiLink(label, href, variant = "primary") {
@@ -1018,8 +1030,7 @@ async function renderDetail(root, id) {
   } catch (error) {
     console.error("[KUNDEN_ERR_DETAIL_LOAD]", error);
     root.innerHTML = "";
-    const fallbackSection = document.createElement("section");
-    fallbackSection.className = "dogule-section kunden-section kunden-detail";
+    const fallbackSection = createStandardCardSection();
     const errorCard = createStandardCard("Stammdaten");
     const errorBody = errorCard.querySelector(".ui-card__body");
     showErrorNotice(errorBody);
@@ -1030,8 +1041,7 @@ async function renderDetail(root, id) {
   }
 
   root.innerHTML = "";
-  const detailSection = document.createElement("section");
-  detailSection.className = "dogule-section kunden-section kunden-detail";
+  const detailSection = createStandardCardSection();
 
   if (!kunde) {
     detailSection.appendChild(
@@ -1079,8 +1089,10 @@ async function renderDetail(root, id) {
     }
   }
 
-  const detailCard = createStandardCard("Stammdaten");
+  const detailCard = createStandardCard("Stammdaten Kunde");
+  detailCard.classList.add("kunden-detail-card");
   const detailBody = detailCard.querySelector(".ui-card__body");
+  detailBody.classList.add("kunden-detail-card__body");
   const rows = [
     { label: "ID", value: kunde.id },
     { label: "Kundencode", value: kunde.kundenCode },
@@ -1112,19 +1124,14 @@ async function renderDetail(root, id) {
     { label: "Aktualisiert am", value: formatDateTime(kunde.updatedAt) },
   ];
   detailBody.innerHTML = "";
-  detailBody.appendChild(createDefinitionList(rows));
-  const detailGrid = document.createElement("div");
-  detailGrid.className = "kunden-detail-grid";
-  detailGrid.appendChild(detailCard);
-  if (canViewExtras) {
-    detailGrid.appendChild(renderKundenHundeCard(linkedHunde, hundeLoadFailed));
-  }
-  detailSection.appendChild(detailGrid);
+  const detailList = createDefinitionList(rows);
+  const detailToolbar = document.createElement("div");
+  detailToolbar.className = "kunden-detail-card__toolbar";
+  const detailActionsWrap = document.createElement("div");
+  detailActionsWrap.className = "module-actions kunden-detail-actions";
+  const actionStatus = document.createElement("div");
+  actionStatus.className = "kunden-card-status";
 
-  const actionsCard = createStandardCard("Aktionen");
-  const actionsBody = actionsCard.querySelector(".ui-card__body");
-  const actionsWrap = document.createElement("div");
-  actionsWrap.className = "module-actions";
   let deleteBtn = null;
   let kursSelect = null;
   let kursAddWrap = null;
@@ -1150,7 +1157,7 @@ async function renderDetail(root, id) {
     });
     deleteBtn.type = "button";
     deleteBtn.dataset.action = "delete";
-    actionsWrap.append(editBtn, addToKursBtn, deleteBtn);
+    detailActionsWrap.append(editBtn, addToKursBtn, deleteBtn);
 
     const ensureKursAddWrap = () => {
       if (kursAddMounted) return;
@@ -1168,7 +1175,7 @@ async function renderDetail(root, id) {
       kursStatus = document.createElement("div");
       kursStatus.className = "kunden-card-status";
       kursAddWrap.append(kursRow, kursStatus);
-      actionsBody.appendChild(kursAddWrap);
+      detailToolbar.insertBefore(kursAddWrap, actionStatus);
       kursAddMounted = true;
 
       if (kursSelect) {
@@ -1240,22 +1247,33 @@ async function renderDetail(root, id) {
       }
     });
   }
-  const backBtn = createButton({
-    label: "Zur Übersicht",
-    variant: "quiet",
-  });
-  backBtn.type = "button";
-  backBtn.addEventListener("click", () => {
-    window.location.hash = "#/kunden";
-  });
-  actionsWrap.append(backBtn);
-  actionsBody.appendChild(actionsWrap);
-  const actionStatus = document.createElement("div");
-  actionStatus.className = "kunden-card-status";
-  actionsBody.appendChild(actionStatus);
-  detailSection.appendChild(actionsCard);
+  if (canManage) {
+    detailToolbar.append(detailActionsWrap, actionStatus);
+    detailBody.append(detailToolbar, detailList);
+  } else {
+    detailBody.appendChild(detailList);
+  }
+  const detailPair = document.createElement("div");
+  detailPair.className = "kunden-detail-pair";
+  detailPair.appendChild(detailCard);
+  if (canViewExtras) {
+    detailPair.appendChild(
+      renderKundenHundeCard(linkedHunde, hundeLoadFailed, {
+        kundeId: id,
+        canManage,
+        loadAllKurse,
+        onChanged: async (message, tone = "success") => {
+          setToast(message, tone);
+          await renderDetail(root, id);
+        },
+      })
+    );
+  }
+  detailSection.appendChild(detailPair);
 
   const canCreateRapport = canCreateRapportForRole(role);
+  root.appendChild(detailSection);
+
   if (canCreateRapport) {
     const rapportCard = buildRapportDraftCard({
       targetType: "kunden",
@@ -1264,7 +1282,7 @@ async function renderDetail(root, id) {
       role,
     });
     if (rapportCard) {
-      detailSection.appendChild(rapportCard);
+      root.appendChild(createStandardCardSection(rapportCard));
       const rapportTarget = window.__DOGULE_RAPPORT_TARGET__;
       if (rapportTarget && rapportTarget === id) {
         delete window.__DOGULE_RAPPORT_TARGET__;
@@ -1284,10 +1302,8 @@ async function renderDetail(root, id) {
       linkBody.innerHTML = "";
       linkBody.appendChild(createUiLink("Zur Hundeübersicht", "#/hunde", "quiet"));
     }
-    detailSection.appendChild(hundeLinkCard);
+    root.appendChild(createStandardCardSection(hundeLinkCard));
   }
-
-  root.appendChild(detailSection);
 
   if (!canViewExtras) {
     focusHeading(root);
@@ -1429,10 +1445,13 @@ async function renderDetail(root, id) {
   focusHeading(root);
 }
 
-function renderKundenHundeCard(hunde = [], hasError = false) {
-  const card = createStandardCard("Hunde");
+function renderKundenHundeCard(hunde = [], hasError = false, options = {}) {
+  const { kundeId = "", canManage = false, loadAllKurse, onChanged } = options;
+  const card = createStandardCard("Stammdaten Hund");
+  card.classList.add("kunden-detail-card");
   const body = card.querySelector(".ui-card__body");
   if (body) {
+    body.classList.add("kunden-detail-card__body");
     body.innerHTML = "";
     if (hasError) {
       showErrorNotice(body);
@@ -1456,6 +1475,40 @@ function renderKundenHundeCard(hunde = [], hasError = false) {
         if (value === false) return "Nein";
         return "–";
       };
+      const formatKursLabel = (kurs = {}) => {
+        const title = kurs.title || kurs.code || "Kurs";
+        const dateLabel = kurs.date ? String(kurs.date).slice(0, 10) : "";
+        return dateLabel ? `${title} · ${dateLabel}` : title;
+      };
+      const parseBooleanValue = (value) => {
+        if (value === "" || value === null || value === undefined) return null;
+        if (value === true || value === "1" || value === 1 || value === "true") return true;
+        if (value === false || value === "0" || value === 0 || value === "false") return false;
+        return null;
+      };
+      const createHundField = ({
+        id,
+        label,
+        value = "",
+        control = "input",
+        type = "text",
+        required = false,
+        options = [],
+      }) => {
+        const row = createFormRow({
+          id,
+          label,
+          control,
+          type,
+          value,
+          required,
+          options,
+        });
+        const controlEl = row.querySelector(
+          control === "textarea" ? "textarea" : "input, select, textarea"
+        );
+        return { row, control: controlEl };
+      };
       const selectorWrap = document.createElement("div");
       selectorWrap.className = "kunden-hunde-toggle";
       const selectorLabel = document.createElement("span");
@@ -1470,29 +1523,25 @@ function renderKundenHundeCard(hunde = [], hasError = false) {
       });
       selectorWrap.append(selectorLabel, select);
 
+      const controlsHost = canManage ? document.createElement("div") : null;
+      if (controlsHost) {
+        controlsHost.className = "kunden-detail-card__toolbar";
+      }
       const detailHost = document.createElement("div");
       detailHost.className = "kunden-hunde-detail-card";
 
       const renderHundDetails = (hund) => {
         detailHost.innerHTML = "";
+        detailHost.className = "kunden-hunde-detail-card";
+        if (controlsHost) {
+          controlsHost.innerHTML = "";
+        }
         const list = document.createElement("dl");
         list.className = "hunde-detail-list";
         const rows = [
-          {
-            label: "Name",
-            value: hund.name,
-            render: () => {
-              if (!isAdminOrDeveloper(getSession()?.user?.role || "")) {
-                const span = document.createElement("span");
-                span.textContent = valueOrDash(hund.name);
-                return span;
-              }
-              const link = document.createElement("a");
-              link.href = `#/hunde/${hund.id}`;
-              link.textContent = valueOrDash(hund.name);
-              return link;
-            },
-          },
+          { label: "ID", value: hund.id },
+          { label: "Hundecode", value: hund.code || hund.hundeId },
+          { label: "Name", value: hund.name },
           { label: "Rufname", value: hund.rufname },
           { label: "Rasse", value: hund.rasse },
           { label: "Geschlecht", value: hund.geschlecht },
@@ -1509,18 +1558,335 @@ function renderKundenHundeCard(hunde = [], hasError = false) {
           { label: "Trainingsziele", value: hund.trainingsziele },
           { label: "Notizen", value: hund.notizen },
         ];
-        rows.forEach(({ label, value, render }) => {
+        rows.forEach(({ label, value }) => {
           const dt = document.createElement("dt");
           dt.textContent = label;
           const dd = document.createElement("dd");
-          if (typeof render === "function") {
-            dd.appendChild(render());
-          } else {
-            dd.textContent = valueOrDash(value);
-          }
+          dd.textContent = valueOrDash(value);
           list.append(dt, dd);
         });
+
         detailHost.appendChild(list);
+
+        if (canManage) {
+          const statusSlot = document.createElement("div");
+          statusSlot.className = "kunden-card-status";
+          const actionsWrap = document.createElement("div");
+          actionsWrap.className = "module-actions kunden-hund-actions";
+          const editBtn = createButton({ label: "Bearbeiten", variant: "primary" });
+          editBtn.type = "button";
+          const addToKursBtn = createButton({
+            label: "Zu Kurs hinzufügen",
+            variant: "secondary",
+          });
+          addToKursBtn.type = "button";
+          const deleteBtn = createButton({ label: "Löschen", variant: "secondary" });
+          deleteBtn.type = "button";
+          actionsWrap.append(editBtn, addToKursBtn, deleteBtn);
+          controlsHost.append(actionsWrap, statusSlot);
+
+          let kursWrap = null;
+          let kursSelect = null;
+          const ensureKursWrap = async () => {
+            if (kursWrap) return;
+            kursWrap = document.createElement("div");
+            kursWrap.className = "kunden-kurs-add";
+            const kursRow = createFormRow({
+              id: `kunden-hund-kurs-${hund.id}`,
+              label: "Kurs auswählen",
+              control: "select",
+              options: [{ value: "", label: "— Kurs auswählen —", selected: true }],
+            });
+            kursSelect = kursRow.querySelector("select");
+            kursWrap.appendChild(kursRow);
+            controlsHost.insertBefore(kursWrap, statusSlot);
+            const kurse = typeof loadAllKurse === "function" ? await loadAllKurse() : [];
+            if (kursSelect) {
+              kursSelect.innerHTML = "";
+              const placeholder = document.createElement("option");
+              placeholder.value = "";
+              placeholder.textContent = "— Kurs auswählen —";
+              placeholder.selected = true;
+              kursSelect.appendChild(placeholder);
+              kurse.forEach((kurs) => {
+                const option = document.createElement("option");
+                option.value = kurs.id;
+                option.textContent = formatKursLabel(kurs);
+                kursSelect.appendChild(option);
+              });
+              kursSelect.addEventListener("change", () => {
+                const kursId = kursSelect?.value || "";
+                if (!kursId) return;
+                window[KURS_TEILNEHMER_PREFILL_KEY] = {
+                  kundeId,
+                  hundId: hund.id,
+                  kursId,
+                };
+                window.location.hash = `#/kurse/${kursId}`;
+              });
+            }
+          };
+
+          const renderEditForm = () => {
+            detailHost.innerHTML = "";
+            detailHost.className = "kunden-hunde-detail-card kunden-hunde-detail-card--editing";
+            const form = document.createElement("form");
+            form.className = "kunden-hund-edit-form";
+            form.noValidate = true;
+            const status = document.createElement("div");
+            status.className = "kunden-card-status";
+
+            const fields = {
+              code: createHundField({
+                id: `kunden-hund-code-${hund.id}`,
+                label: "Hundecode",
+                value: hund.code || hund.hundeId || "",
+              }),
+              name: createHundField({
+                id: `kunden-hund-name-${hund.id}`,
+                label: "Name",
+                value: hund.name || "",
+                required: true,
+              }),
+              rufname: createHundField({
+                id: `kunden-hund-rufname-${hund.id}`,
+                label: "Rufname",
+                value: hund.rufname || "",
+              }),
+              rasse: createHundField({
+                id: `kunden-hund-rasse-${hund.id}`,
+                label: "Rasse",
+                value: hund.rasse || "",
+              }),
+              geschlecht: createHundField({
+                id: `kunden-hund-geschlecht-${hund.id}`,
+                label: "Geschlecht",
+                control: "select",
+                options: [
+                  {
+                    value: "",
+                    label: "Bitte wählen",
+                    selected: !hund.geschlecht,
+                  },
+                  {
+                    value: "Rüde",
+                    label: "Rüde",
+                    selected: hund.geschlecht === "Rüde",
+                  },
+                  {
+                    value: "Hündin",
+                    label: "Hündin",
+                    selected: hund.geschlecht === "Hündin",
+                  },
+                ],
+              }),
+              status: createHundField({
+                id: `kunden-hund-status-${hund.id}`,
+                label: "Status",
+                control: "select",
+                options: [
+                  {
+                    value: "",
+                    label: "Bitte wählen",
+                    selected: !hund.status,
+                  },
+                  {
+                    value: "aktiv",
+                    label: "Aktiv",
+                    selected: hund.status === "aktiv",
+                  },
+                  {
+                    value: "verstorben",
+                    label: "Verstorben",
+                    selected: hund.status === "verstorben",
+                  },
+                ],
+              }),
+              geburtsdatum: createHundField({
+                id: `kunden-hund-geburtsdatum-${hund.id}`,
+                label: "Wurfdatum",
+                type: "date",
+                value: hund.geburtsdatum || "",
+              }),
+              kastriert: createHundField({
+                id: `kunden-hund-kastriert-${hund.id}`,
+                label: "Kastriert",
+                control: "select",
+                options: [
+                  {
+                    value: "",
+                    label: "Bitte wählen",
+                    selected:
+                      hund.kastriert === null ||
+                      hund.kastriert === undefined ||
+                      hund.kastriert === "",
+                  },
+                  { value: "1", label: "Ja", selected: hund.kastriert === true },
+                  { value: "0", label: "Nein", selected: hund.kastriert === false },
+                ],
+              }),
+              felltyp: createHundField({
+                id: `kunden-hund-felltyp-${hund.id}`,
+                label: "Felltyp",
+                value: hund.felltyp || "",
+              }),
+              fellfarbe: createHundField({
+                id: `kunden-hund-fellfarbe-${hund.id}`,
+                label: "Fellfarbe",
+                value: hund.fellfarbe || "",
+              }),
+              groesseTyp: createHundField({
+                id: `kunden-hund-groessetyp-${hund.id}`,
+                label: "Größe (Typ)",
+                value: hund.groesseTyp || "",
+              }),
+              groesseCm: createHundField({
+                id: `kunden-hund-groessecm-${hund.id}`,
+                label: "Größe (cm)",
+                value: hund.groesseCm ?? "",
+              }),
+              gewichtKg: createHundField({
+                id: `kunden-hund-gewichtkg-${hund.id}`,
+                label: "Gewicht (kg)",
+                value: hund.gewichtKg ?? "",
+              }),
+              herkunft: createHundField({
+                id: `kunden-hund-herkunft-${hund.id}`,
+                label: "Herkunft",
+                control: "select",
+                options: HERKUNFT_OPTIONS.map((option) => ({
+                  ...option,
+                  selected: option.value === (hund.herkunft || ""),
+                })),
+              }),
+              chipNummer: createHundField({
+                id: `kunden-hund-chip-${hund.id}`,
+                label: "Chip-Nr.",
+                value: hund.chipNummer || "",
+              }),
+              trainingsziele: createHundField({
+                id: `kunden-hund-trainingsziele-${hund.id}`,
+                label: "Trainingsziele",
+                value: hund.trainingsziele || "",
+                control: "textarea",
+              }),
+              notizen: createHundField({
+                id: `kunden-hund-notizen-${hund.id}`,
+                label: "Notizen",
+                value: hund.notizen || "",
+                control: "textarea",
+              }),
+            };
+
+            Object.values(fields).forEach((field) => {
+              form.appendChild(field.row);
+            });
+
+            const actions = document.createElement("div");
+            actions.className = "module-actions";
+            const saveBtn = createButton({ label: "Speichern", variant: "primary" });
+            saveBtn.type = "submit";
+            const cancelBtn = createButton({ label: "Abbrechen", variant: "secondary" });
+            cancelBtn.type = "button";
+            cancelBtn.addEventListener("click", () => renderHundDetails(hund));
+            actions.append(saveBtn, cancelBtn);
+            form.append(actions, status);
+
+            form.addEventListener("submit", async (event) => {
+              event.preventDefault();
+              status.innerHTML = "";
+              const payload = {
+                code: fields.code.control?.value.trim() || "",
+                name: fields.name.control?.value.trim() || "",
+                rufname: fields.rufname.control?.value.trim() || "",
+                rasse: fields.rasse.control?.value.trim() || "",
+                geschlecht: fields.geschlecht.control?.value.trim() || "",
+                status: fields.status.control?.value.trim() || "",
+                geburtsdatum: fields.geburtsdatum.control?.value.trim() || "",
+                kastriert: parseBooleanValue(fields.kastriert.control?.value),
+                felltyp: fields.felltyp.control?.value.trim() || "",
+                fellfarbe: fields.fellfarbe.control?.value.trim() || "",
+                groesseTyp: fields.groesseTyp.control?.value.trim() || "",
+                groesseCm:
+                  fields.groesseCm.control?.value === "" ? null : fields.groesseCm.control?.value,
+                gewichtKg:
+                  fields.gewichtKg.control?.value === "" ? null : fields.gewichtKg.control?.value,
+                kundenId: kundeId,
+                herkunft: fields.herkunft.control?.value.trim() || "",
+                chipNummer: fields.chipNummer.control?.value.trim() || "",
+                trainingsziele: fields.trainingsziele.control?.value.trim() || "",
+                notizen: fields.notizen.control?.value.trim() || "",
+              };
+              if (!payload.name) {
+                status.appendChild(
+                  createNotice("Name ist erforderlich.", { variant: "warn", role: "alert" })
+                );
+                return;
+              }
+              saveBtn.disabled = true;
+              try {
+                await updateHund(hund.id, payload);
+                if (typeof onChanged === "function") {
+                  await onChanged("Hund gespeichert.", "success");
+                }
+              } catch (error) {
+                console.error("[KUNDEN_ERR_HUND_SAVE]", error);
+                status.appendChild(
+                  createNotice("Hund konnte nicht gespeichert werden.", {
+                    variant: "warn",
+                    role: "alert",
+                  })
+                );
+                saveBtn.disabled = false;
+              }
+            });
+
+            detailHost.appendChild(form);
+          };
+
+          editBtn.addEventListener("click", renderEditForm);
+          addToKursBtn.addEventListener("click", async () => {
+            statusSlot.innerHTML = "";
+            try {
+              await ensureKursWrap();
+              kursSelect?.focus();
+            } catch (error) {
+              console.error("[KUNDEN_ERR_HUND_KURSE_LOAD]", error);
+              statusSlot.appendChild(
+                createNotice("Kurse konnten nicht geladen werden.", {
+                  variant: "warn",
+                  role: "alert",
+                })
+              );
+            }
+          });
+          deleteBtn.addEventListener("click", async () => {
+            const confirmed = window.confirm(
+              `Soll "${formatHundName(hund) || hund.name || "Hund"}" wirklich gelöscht werden?`
+            );
+            if (!confirmed) return;
+            deleteBtn.disabled = true;
+            statusSlot.innerHTML = "";
+            try {
+              const result = await deleteHund(hund.id);
+              if (!result?.ok) {
+                throw new Error("delete_failed");
+              }
+              if (typeof onChanged === "function") {
+                await onChanged("Hund gelöscht.", "success");
+              }
+            } catch (error) {
+              console.error("[KUNDEN_ERR_HUND_DELETE]", error);
+              statusSlot.appendChild(
+                createNotice("Hund konnte nicht gelöscht werden.", {
+                  variant: "warn",
+                  role: "alert",
+                })
+              );
+              deleteBtn.disabled = false;
+            }
+          });
+        }
       };
 
       renderHundDetails(hunde[0]);
@@ -1530,7 +1896,11 @@ function renderKundenHundeCard(hunde = [], hasError = false) {
         renderHundDetails(hund);
       });
 
-      wrap.append(selectorWrap, detailHost);
+      if (controlsHost) {
+        wrap.append(controlsHost, selectorWrap, detailHost);
+      } else {
+        wrap.append(selectorWrap, detailHost);
+      }
       body.appendChild(wrap);
     }
   }

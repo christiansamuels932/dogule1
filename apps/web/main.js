@@ -6,6 +6,7 @@ import fontanasLogoUrl from "./assets/fontanas-logo.png";
 import layoutHtml from "../../modules/shared/layout.html?raw";
 import templatesHtml from "../../modules/shared/components/templates.html?raw";
 import { runIntegrityCheck } from "../../modules/shared/api/db/integrityCheck.js";
+import { recordSupportActivity } from "../../modules/shared/api/developer.js";
 import {
   getSession,
   clearSession,
@@ -25,11 +26,19 @@ const STATUS_ENDPOINT = "/healthz";
 const STATUS_CHECK_INTERVAL_MS = 15000;
 const STATUS_CHECK_TIMEOUT_MS = 3500;
 const STATUS_SLOW_THRESHOLD_MS = 1200;
+const ACTIVITY_FLUSH_INTERVAL_MS = 1200;
+const ACTIVITY_BATCH_LIMIT = 20;
+const ISSUE_MAX_LENGTH = 500;
 let layoutMain = null;
 let layoutPromise = null;
 let templatesPromise = null;
 let statusIntervalId = null;
 let statusRequestActive = false;
+let activityCaptureInstalled = false;
+let activityFlushTimerId = null;
+let activityQueue = [];
+let lastActivitySignature = "";
+let lastActivityAt = 0;
 
 function ensureIntegrityOnce() {
   if (!import.meta?.env?.DEV) return;
@@ -137,8 +146,7 @@ function updateAuthHeader(session) {
   const host = document.getElementById("dogule-auth");
   if (!host) return;
   host.innerHTML = "";
-  const helpBtn = createHelpButton();
-  host.appendChild(helpBtn);
+  host.appendChild(createIssueButton());
   if (!session?.user) {
     const loginBtn = document.createElement("button");
     loginBtn.type = "button";
@@ -165,97 +173,196 @@ function updateAuthHeader(session) {
   host.append(name, role, logoutBtn);
 }
 
-function createHelpButton() {
+function createIssueButton() {
   const button = document.createElement("button");
   button.type = "button";
   button.className = "dogule-auth__btn dogule-help-btn";
-  button.textContent = "Anleitung";
+  button.textContent = "Achtung";
   button.addEventListener("click", () => {
-    showModuleHelp();
+    showIssueReporter();
   });
   return button;
 }
 
-function showModuleHelp() {
+function canAutoRecordActivity(session = getSession()) {
+  const role = normalizeRole(session?.user?.role);
+  return Boolean(session?.user?.id) && Boolean(role) && role !== "developer";
+}
+
+function queueActivity(event) {
+  if (!canAutoRecordActivity()) return;
+  const eventType = String(event?.eventType || "").trim();
+  if (!eventType) return;
+  const routeHash = String(event?.routeHash || window.location.hash || "").trim();
+  const moduleId = String(event?.moduleId || window.__DOGULE_ROUTE__?.module || "").trim();
+  const actionLabel = String(event?.actionLabel || "")
+    .trim()
+    .slice(0, 255);
+  const details = String(event?.details || "").trim();
+  const signature = `${eventType}|${routeHash}|${moduleId}|${actionLabel}|${details}`;
+  const now = Date.now();
+  if (signature === lastActivitySignature && now - lastActivityAt < 750) {
+    return;
+  }
+  lastActivitySignature = signature;
+  lastActivityAt = now;
+  activityQueue.push({
+    eventType,
+    routeHash,
+    moduleId,
+    actionLabel,
+    details,
+  });
+  if (activityQueue.length > ACTIVITY_BATCH_LIMIT * 3) {
+    activityQueue = activityQueue.slice(-ACTIVITY_BATCH_LIMIT * 2);
+  }
+  scheduleActivityFlush();
+}
+
+function scheduleActivityFlush() {
+  if (activityFlushTimerId) return;
+  activityFlushTimerId = window.setTimeout(() => {
+    activityFlushTimerId = null;
+    void flushActivityQueue();
+  }, ACTIVITY_FLUSH_INTERVAL_MS);
+}
+
+async function flushActivityQueue() {
+  if (!activityQueue.length || !canAutoRecordActivity()) return;
+  const batch = activityQueue.slice(0, ACTIVITY_BATCH_LIMIT);
+  activityQueue = activityQueue.slice(batch.length);
+  try {
+    await recordSupportActivity(batch);
+  } catch (error) {
+    console.warn("[SUPPORT_ACTIVITY_FLUSH_FAILED]", error);
+  }
+  if (activityQueue.length) {
+    scheduleActivityFlush();
+  }
+}
+
+function extractActivityLabel(target) {
+  if (!target) return "";
+  const aria = String(target.getAttribute?.("aria-label") || "").trim();
+  if (aria) return aria.slice(0, 255);
+  const text = String(target.textContent || "")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (text) return text.slice(0, 255);
+  const value = String(target.value || "").trim();
+  if (value) return value.slice(0, 255);
+  const name = String(target.name || "").trim();
+  if (name) return name.slice(0, 255);
+  return "";
+}
+
+function installActivityCapture() {
+  if (activityCaptureInstalled || typeof document === "undefined") return;
+  activityCaptureInstalled = true;
+  document.addEventListener(
+    "click",
+    (event) => {
+      const target = event.target?.closest?.(
+        "button, a, [role='button'], input[type='button'], input[type='submit']"
+      );
+      if (!target) return;
+      if (target.closest(".dogule-help-overlay")) return;
+      const label = extractActivityLabel(target);
+      if (!label) return;
+      queueActivity({
+        eventType: "ui_click",
+        actionLabel: label,
+      });
+    },
+    true
+  );
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") {
+      void flushActivityQueue();
+    }
+  });
+}
+
+function showIssueReporter() {
   const module = window.__DOGULE_ROUTE__?.module || "unbekannt";
-  const help = getModuleHelp(module);
+  const session = getSession();
   const overlay = document.createElement("div");
   overlay.className = "dogule-help-overlay";
   const card = document.createElement("div");
   card.className = "dogule-help-card";
   const title = document.createElement("h2");
-  title.textContent = "Anleitung";
+  title.textContent = "Achtung";
   const moduleLabel = document.createElement("p");
   moduleLabel.className = "dogule-help-card__module";
-  moduleLabel.textContent = `Modul: ${help.label}`;
+  moduleLabel.textContent = `Modul: ${module}`;
   const body = document.createElement("p");
   body.className = "dogule-help-card__text";
-  body.textContent = help.text;
+  body.textContent =
+    "Kurz beschreiben, wo es klemmt. Die Meldung landet direkt im Developer-Modul zusammen mit deinem Aktivitätslog.";
+  const form = document.createElement("form");
+  form.className = "dogule-help-form";
+  form.noValidate = true;
+  const text = document.createElement("textarea");
+  text.className = "dogule-help-textarea";
+  text.maxLength = ISSUE_MAX_LENGTH;
+  text.placeholder = "Kurze Problembeschreibung";
+  text.rows = 5;
+  const status = document.createElement("div");
+  status.className = "dogule-help-status";
+  const actions = document.createElement("div");
+  actions.className = "module-actions";
+  const submitBtn = document.createElement("button");
+  submitBtn.type = "submit";
+  submitBtn.className = "dogule-help-card__close";
+  submitBtn.textContent = "Senden";
   const closeBtn = document.createElement("button");
   closeBtn.type = "button";
   closeBtn.className = "dogule-help-card__close";
   closeBtn.textContent = "Schliessen";
   closeBtn.addEventListener("click", () => overlay.remove());
+  actions.append(submitBtn, closeBtn);
+  form.append(text, status, actions);
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    status.innerHTML = "";
+    const details = String(text.value || "").trim();
+    if (!session?.user) {
+      status.textContent = "Bitte zuerst anmelden.";
+      return;
+    }
+    if (!details) {
+      status.textContent = "Bitte eine kurze Problembeschreibung eingeben.";
+      return;
+    }
+    submitBtn.disabled = true;
+    closeBtn.disabled = true;
+    try {
+      await recordSupportActivity([
+        {
+          eventType: "issue_report",
+          routeHash: window.location.hash || "",
+          moduleId: module,
+          actionLabel: "Problem gemeldet",
+          details,
+        },
+      ]);
+      status.textContent = "Meldung gespeichert.";
+      text.value = "";
+    } catch (error) {
+      console.warn("[SUPPORT_ISSUE_SUBMIT_FAILED]", error);
+      status.textContent = "Meldung konnte nicht gespeichert werden.";
+    } finally {
+      submitBtn.disabled = false;
+      closeBtn.disabled = false;
+    }
+  });
   overlay.addEventListener("click", (event) => {
     if (event.target === overlay) overlay.remove();
   });
-  card.append(title, moduleLabel, body, closeBtn);
+  card.append(title, moduleLabel, body, form);
   overlay.appendChild(card);
   document.body.appendChild(overlay);
-}
-
-function getModuleHelp(module) {
-  const helpMap = {
-    auth: {
-      label: "Anmeldung",
-      text: "Wählen Sie einen Benutzer aus und melden Sie sich an. Nach der Anmeldung sehen Sie die Module, die für Ihre Rolle freigegeben sind.",
-    },
-    dashboard: {
-      label: "Dashboard",
-      text: "Hier sehen Sie die wichtigsten Übersichten und aktuellen Hinweise. Nutzen Sie die Karten, um direkt zu den relevanten Bereichen zu springen.",
-    },
-    anmeldung: {
-      label: "Anmeldung",
-      text: "Fügen Sie eine Anmeldungs-E-Mail ein, prüfen Sie die Vorschau und erstellen Sie daraus Kunde und Hund. Kurszuordnung ist Pflicht.",
-    },
-    kunden: {
-      label: "Kunden",
-      text: "Suchen Sie Kunden, öffnen Sie Details und pflegen Sie Stammdaten. Verknüpfte Hunde und Historie finden Sie in der Detailansicht.",
-    },
-    hunde: {
-      label: "Hunde",
-      text: "Suchen Sie Hunde, öffnen Sie die Detailansicht und pflegen Sie die Stammdaten. Verknüpfte Kunden werden dort angezeigt.",
-    },
-    kurse: {
-      label: "Kurse",
-      text: "Verwalten Sie Kursdaten, Trainer und Zertifikat-Hintergründe. Änderungen hier beeinflussen Zertifikate und Kursübersichten.",
-    },
-    trainer: {
-      label: "Trainer",
-      text: "Pflegen Sie Trainerprofile, Zuständigkeiten und Verfügbarkeiten. Trainer werden in Kursen und Rapporteinträgen angezeigt.",
-    },
-    zertifikate: {
-      label: "Zertifikate",
-      text: "Erstellen Sie Zertifikate für absolvierte Kurse. Prüfen Sie die Vorschau und exportieren Sie das PDF.",
-    },
-    kommunikation: {
-      label: "Kommunikation",
-      text: "Veröffentlichen Sie Hinweise im Infochannel und prüfen Sie Bestätigungen. Inhalte sind für Trainer sichtbar.",
-    },
-    schulungen: {
-      label: "Schulungen",
-      text: "Verwalten Sie Schulungen mit Texten und Bildern. Öffnen Sie eine Schulung, um Details zu prüfen.",
-    },
-    uebungsbibliothek: {
-      label: "Übungsbibliothek",
-      text: "Verwalten Sie Inhalte, Texte und Bilder. Öffnen Sie einen Eintrag, um Details zu prüfen.",
-    },
-  };
-  const fallback = {
-    label: module,
-    text: "Zu diesem Modul ist noch keine spezifische Anleitung hinterlegt.",
-  };
-  return helpMap[module] || fallback;
+  text.focus();
 }
 
 function applyForceMobileStyles(forceMobile) {
@@ -338,6 +445,12 @@ async function handleNavigation() {
     }
   }
   await loadAndRender(routeInfo);
+  queueActivity({
+    eventType: "route_view",
+    routeHash: hash,
+    moduleId: routeInfo.module,
+    actionLabel: routeInfo.module,
+  });
 }
 
 window.addEventListener("hashchange", handleNavigation);
@@ -377,6 +490,7 @@ async function mountLayout() {
     // Purpose: unify page frame and route changes without reloading or losing layout.
     applyLayoutBody(layoutDoc.body);
     hydrateBranding();
+    installActivityCapture();
     startStatusMonitor();
     const session = getSession();
     updateAuthHeader(session);
