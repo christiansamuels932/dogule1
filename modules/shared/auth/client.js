@@ -56,6 +56,7 @@ export function getAuthHeaders() {
     Authorization: `Bearer ${session.accessToken}`,
     "x-dogule-actor-id": session.user?.id || "",
     "x-dogule-actor-role": session.user?.role || "",
+    "x-dogule-actor-username": session.user?.username || "",
   };
 }
 

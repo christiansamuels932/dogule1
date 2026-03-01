@@ -3,6 +3,83 @@ NEW ENTRIES: Add the latest station block directly below this header section (to
 READ-ONLY NOTE: provide only 1 step of instruction/guidance per message.
 READ-ONLY NOTE: A single "." from the user means "confirmed, ok, next"
 READ-ONLY NOTE: Each assistant response must start with "🔷 Topic — Subtitle — Progress: X% 🔷".
+BASE NOTE: Keep the "Quick start, 3 Launchcodes" section in this header area. Do not place new station blocks above it.
+
+## Quick start, 3 Launchcodes (manual)
+
+- `sudo systemctl start mariadb && sudo systemctl status mariadb`
+- `DOGULE1_STORAGE_MODE=mariadb DOGULE1_MARIADB_SOCKET=/run/mysqld/mysqld.sock DOGULE1_MARIADB_USER=ran node tools/server/apiServer.js`
+- `DOGULE1_STORAGE_MODE=mariadb DOGULE1_MARIADB_SOCKET=/run/mysqld/mysqld.sock DOGULE1_MARIADB_USER=ran DOGULE1_PASSWORD_FILE=/home/ran/codex/dogule1/dogule1.passwords pnpm dev`
+
+## Date 2026-03-01 — Developer Activity Logging + Kunden/Hunde Detail Rework + VPS Rollout
+
+## Kontext
+
+- Status: completed.
+- Branch: `2026-03-01`.
+- Scope: VPS-Datenbank lokal synchronisieren, neues Developer-Modul mit Aktivitäts-/Problem-Log ausbauen, Header-Button `Anleitung` → `Achtung` umstellen, Hunde-Stammdaten in `#Kunden` direkt bearbeitbar machen, danach vollständigen local→VPS DB- und Runtime-Rollout gemäss `VPS_UPDATE_PROCESS.md` durchführen.
+
+## Ergebnis (kurz)
+
+- Lokale Vorbereitung:
+- Aufgaben für die nächste Runde in `Next-Updates.md` ergänzt.
+- VPS-Datenbank nach lokal geholt (`/tmp/dogule1_vps_2026-03-01.sql`) und lokal importiert.
+- Neue MariaDB-Struktur lokal angewendet: `tools/mariadb/migrations/115_0_developer_activity.sql`.
+- `STATUS.md` Header vereinheitlicht: Launchcodes ganz oben gehalten, damit der lokale Start künftig direkt auffindbar bleibt.
+- Developer-Modul ausgebaut:
+- `Developer` ist jetzt als echtes Navigationsmodul sichtbar, aber weiterhin nur für Rolle `developer`.
+- Backup-/Restore-Buttons bleiben im Modul vorhanden.
+- Neues Aktivitäts-/Problem-Backend eingeführt:
+- neue API-Datei `modules/shared/api/developer.js`
+- neuer Server-Store `modules/shared/server/developerActivityStore.js`
+- API-Routen in `modules/shared/server/apiRouter.js`
+- neue MariaDB-Tabelle `developer_activity_events` in `tools/mariadb/schema.sql`
+- Migration `tools/mariadb/migrations/115_0_developer_activity.sql`
+- `Gemeldete Probleme` bleibt separat mit sinnvoller Sortierung; Probleme können jetzt mit `Bestätigen` bestätigt und aus der Liste entfernt werden.
+- `Aktivitätslog` auf eine deutlich einfachere, scrollbare Barebones-Liste reduziert.
+- Support-/Issue-Flow umgesetzt:
+- Header-Button `Anleitung` in `apps/web/main.js` zu `Achtung` umbenannt.
+- `Achtung` öffnet ein kurzes Problem-/Hinweisformular.
+- Nicht-Developer-Aktivität wird für den Developer mitgeloggt (Modulaufrufe, UI-Klicks, Problem-Meldungen).
+- Kunden/Hunde-Detailansicht in `#Kunden` überarbeitet:
+- Top-Detailbereich jetzt zweispaltig: links `Stammdaten Kunde`, rechts `Stammdaten Hund`.
+- Eigene `Aktionen`-Card entfernt.
+- Action-Buttons (`Bearbeiten`, `Zu Kurs hinzufügen`, `Löschen`) sitzen jetzt direkt unter dem Titel beider Stammdaten-Cards.
+- Hunde-Stammdaten in `#Kunden` vollständig sichtbar und direkt inline bearbeitbar.
+- Inline-Hundeditor in `#Kunden` an die echte `#Hunde`-Maske angenähert:
+- `Geschlecht` = Dropdown
+- `Status` = Dropdown
+- `Wurfdatum` = Date-Picker
+- `Herkunft` = Dropdown über `HERKUNFT_OPTIONS`
+- Layout-/Nav-Anpassungen:
+- `modules/shared/layout.html` und `modules/shared/layout.css` für sichtbares Developer-Modul angepasst.
+- `modules/shared/shared.css` für neue Kunden-/Developer-Layouts erweitert.
+
+## Tests
+
+- Lokal:
+- `pnpm lint` ✅
+- `pnpm test -- --runInBand` ✅ (`20` Dateien, `118` Tests)
+- `pnpm build` ✅
+- Lokaler Start mit den dokumentierten 3 Launchcodes geprüft ✅
+- Login lokal wiederhergestellt über korrekten Start mit `DOGULE1_PASSWORD_FILE=/home/ran/codex/dogule1/dogule1.passwords` ✅
+- Manuelle Checks lokal:
+- Login als `Developer` funktioniert; `Developer`-Modul sichtbar ✅
+- Login als Nicht-Developer funktioniert; `Achtung` und Aktivitätslogging verfügbar ✅
+- `Gemeldete Probleme` lässt sich im Developer-Modul bestätigen/entfernen ✅
+- VPS-Rollout:
+- Lokalen DB-Dump erstellt: `/tmp/dogule1_local_2026-03-01.sql`
+- Dump auf VPS kopiert ✅
+- VPS-Datenbank per `DROP/CREATE` vollständig mit lokalem Dump überschrieben ✅
+- `pnpm build` lokal vor Deploy erneut ausgeführt ✅
+- Safe `rsync` (`dist`, `modules`, `tools`) nach `/opt/dogule1` ausgeführt ✅
+- `sudo systemctl restart dogule1 && sudo systemctl status dogule1 --no-pager -l` = `active (running)` ✅
+- `curl -sS -i http://127.0.0.1:5177/healthz` auf VPS = `HTTP/1.1 200 OK` + `{"status":"ok","storageMb":1.8}` ✅
+
+## Offene Punkte
+
+- Browser-Hard-Reload auf dem VPS nach Deploy empfohlen (hash-basierte Assets).
+- Live-UI-Smoke auf VPS für `#Developer` und `#Kunden` nach dem Deploy durchführen.
 
 ## Date 2026-02-24 — Session Consolidation (Übungsbibliothek UI + Sub-Kurse Local + VPS Rollout)
 

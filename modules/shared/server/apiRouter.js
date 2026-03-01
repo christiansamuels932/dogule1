@@ -16,6 +16,14 @@ import { createUserStore, getSeedUsers } from "../auth/users.js";
 import { getKommunikationActions, isApiAllowed, normalizeRole } from "../auth/rbac.js";
 import { createStorage } from "../storage/storage.js";
 import { uuidv7 } from "../utils/uuidv7.js";
+import {
+  deleteDeveloperActivity,
+  insertDeveloperActivity,
+  listDeveloperActivity,
+  normalizeActivityInput,
+} from "./developerActivityStore.js";
+
+const ACTIVITY_BATCH_LIMIT = 25;
 
 function jsonResponse(res, statusCode, body) {
   res.statusCode = statusCode;
@@ -111,6 +119,36 @@ function resolveRequestId(req) {
     req.headers["x-request-id"] || req.headers["x-dogule-request-id"] || req.headers["x-trace-id"];
   if (header) return header;
   return crypto.randomUUID ? crypto.randomUUID() : `req-${Math.random().toString(36).slice(2)}`;
+}
+
+function buildActivityActor(req) {
+  return {
+    id: String(req?.headers?.["x-dogule-actor-id"] || "").trim(),
+    role: normalizeRole(req?.headers?.["x-dogule-actor-role"]),
+    username: String(req?.headers?.["x-dogule-actor-username"] || "").trim(),
+  };
+}
+
+function buildDeveloperActivityRecords(req, rawEvents = []) {
+  const actor = buildActivityActor(req);
+  if (!actor.id || !actor.role) return [];
+  return rawEvents
+    .slice(0, ACTIVITY_BATCH_LIMIT)
+    .map((event) => normalizeActivityInput(event))
+    .filter(Boolean)
+    .filter((event) => actor.role !== "developer" || event.eventType === "issue_report")
+    .map((event) => ({
+      id: uuidv7(),
+      eventType: event.eventType,
+      actorId: actor.id,
+      actorRole: actor.role,
+      actorUsername: actor.username,
+      routeHash: event.routeHash,
+      moduleId: event.moduleId,
+      actionLabel: event.actionLabel,
+      details: event.details,
+      createdAt: new Date().toISOString(),
+    }));
 }
 
 function buildReq(req, { body, params, query }) {
@@ -1006,6 +1044,47 @@ export function createApiRouter(options = {}) {
     if (!reqUrl.startsWith("/api/developer/")) return false;
     const routePath = reqUrl.split("?")[0];
     const method = (req.method || "GET").toUpperCase();
+    const activityEntryMatch = routePath.match(/^\/api\/developer\/activity\/([^/]+)$/);
+    if (routePath === "/api/developer/activity" && method === "GET") {
+      const pool = storage?.pool;
+      if (!pool?.query) {
+        jsonResponse(res, 503, { message: "developer_activity_unavailable" });
+        return true;
+      }
+      try {
+        const query = extractQuery(reqUrl);
+        const events = await listDeveloperActivity(pool, {
+          limit: query.limit,
+          actorId: query.actorId,
+          actorRole: query.actorRole,
+          eventType: query.eventType,
+        });
+        jsonResponse(res, 200, { events });
+      } catch (error) {
+        console.error("[DEVELOPER_ACTIVITY_LIST_FAILED]", error);
+        jsonResponse(res, 500, { message: "developer_activity_list_failed" });
+      }
+      return true;
+    }
+    if (activityEntryMatch && method === "DELETE") {
+      const pool = storage?.pool;
+      if (!pool?.query) {
+        jsonResponse(res, 503, { message: "developer_activity_unavailable" });
+        return true;
+      }
+      try {
+        const result = await deleteDeveloperActivity(pool, activityEntryMatch[1]);
+        if (!result?.found) {
+          jsonResponse(res, 404, { message: "not_found" });
+          return true;
+        }
+        jsonResponse(res, 200, result);
+      } catch (error) {
+        console.error("[DEVELOPER_ACTIVITY_DELETE_FAILED]", error);
+        jsonResponse(res, 500, { message: "developer_activity_delete_failed" });
+      }
+      return true;
+    }
     if (routePath === "/api/developer/backups" && method === "GET") {
       const backupRoot = process.env.DOGULE1_BACKUP_ROOT || "/opt/dogule1/backups";
       const slots = ["24h", "72h"];
@@ -1051,10 +1130,60 @@ export function createApiRouter(options = {}) {
           stdio: "ignore",
         });
         child.unref();
+        const pool = storage?.pool;
+        if (pool?.query) {
+          await insertDeveloperActivity(pool, [
+            {
+              id: uuidv7(),
+              eventType: "admin_action",
+              actorId: String(req.headers["x-dogule-actor-id"] || "").trim(),
+              actorRole: String(req.headers["x-dogule-actor-role"] || "").trim(),
+              actorUsername: String(req.headers["x-dogule-actor-username"] || "").trim(),
+              routeHash: "#/developer",
+              moduleId: "developer",
+              actionLabel: `Restore ${slot}`,
+              details: `Restore-Slot ${slot} ausgelöst`,
+              createdAt: new Date().toISOString(),
+            },
+          ]);
+        }
         jsonResponse(res, 202, { ok: true, slot });
       } catch (error) {
         console.error("[DEVELOPER_RESTORE_FAILED]", error);
         jsonResponse(res, 500, { message: "restore_failed" });
+      }
+      return true;
+    }
+    jsonResponse(res, 404, { message: "not_found" });
+    return true;
+  }
+
+  async function handleSupportRoutes(req, res) {
+    const reqUrl = req?.url || "";
+    if (!reqUrl.startsWith("/api/support/")) return false;
+    const routePath = reqUrl.split("?")[0];
+    const method = (req.method || "GET").toUpperCase();
+    if (routePath === "/api/support/activity" && method === "POST") {
+      const pool = storage?.pool;
+      if (!pool?.query) {
+        jsonResponse(res, 503, { message: "support_activity_unavailable" });
+        return true;
+      }
+      const body = await readJsonBody(req);
+      const records = buildDeveloperActivityRecords(
+        req,
+        Array.isArray(body?.events) ? body.events : []
+      );
+      if (!records.length) {
+        jsonResponse(res, 200, { ok: true, stored: 0 });
+        return true;
+      }
+      try {
+        const result = await insertDeveloperActivity(pool, records);
+        jsonResponse(res, 201, { ok: true, stored: result.inserted || records.length });
+      } catch (error) {
+        console.error("[SUPPORT_ACTIVITY_STORE_FAILED]", error);
+        jsonResponse(res, 500, { message: "support_activity_store_failed" });
       }
       return true;
     }
@@ -2001,6 +2130,8 @@ export function createApiRouter(options = {}) {
     if (allowedActions.length) {
       req.headers["x-dogule-authz"] = allowedActions.includes("*") ? "*" : allowedActions.join(",");
     }
+
+    if (await handleSupportRoutes(req, res)) return true;
 
     const entityMatch = reqUrl.match(
       /^\/api\/(dashboard|kunden|hunde|kurse|trainer|kalender|finanzen|waren|zertifikate|schulungen|uebungsbibliothek|anmeldung|rapporte|historie|developer)(?:\/|$)/
