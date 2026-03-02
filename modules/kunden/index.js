@@ -22,6 +22,7 @@ import {
 } from "../shared/api/historie.js";
 import { getSession } from "../shared/auth/client.js";
 import { exportTableToXlsx } from "../shared/utils/xlsxExport.js";
+import { matchesSearchQuery, normalizeSearchText } from "../shared/utils/search.js";
 import {
   createSectionHeader,
   createCard,
@@ -728,12 +729,6 @@ async function renderList(root) {
       ];
     }
 
-    function normalizeSearch(value) {
-      return String(value || "")
-        .trim()
-        .toLowerCase();
-    }
-
     function buildStatusSortValue(kunde) {
       const normalized = String(kunde.status || "")
         .trim()
@@ -747,32 +742,30 @@ async function renderList(root) {
     }
 
     function matchesSearch(kunde, query) {
-      if (!query) return true;
-      const haystack = [
-        kunde.code,
-        kunde.vorname,
-        kunde.nachname,
-        formatKundenStatus(kunde.status),
-        kunde.status,
-        getHundeNamenString(kunde, hundeByKundeId),
-        kunde.email,
-        kunde.telefon,
-        kunde.mobile,
-        extractTown(kunde.adresse || kunde.address || ""),
-        kunde.strasse,
-        kunde.plz,
-        kunde.ort,
-        kunde.adresse,
-      ]
-        .filter(Boolean)
-        .map(normalizeSearch)
-        .join(" ");
-      return haystack.includes(query);
+      return matchesSearchQuery(query, {
+        textFields: [
+          kunde.code,
+          kunde.vorname,
+          kunde.nachname,
+          formatKundenStatus(kunde.status),
+          kunde.status,
+          getHundeNamenString(kunde, hundeByKundeId),
+          kunde.email,
+          kunde.telefon,
+          kunde.mobile,
+          extractTown(kunde.adresse || kunde.address || ""),
+          kunde.strasse,
+          kunde.plz,
+          kunde.ort,
+          kunde.adresse,
+        ],
+        phoneFields: [kunde.telefon, kunde.mobile],
+      });
     }
 
     function matchesFilters(kunde) {
       if (filterState.status === "all") return true;
-      return normalizeSearch(kunde.status) === filterState.status;
+      return normalizeSearchText(kunde.status) === filterState.status;
     }
 
     function renderColumnControls() {
@@ -858,7 +851,7 @@ async function renderList(root) {
     }
 
     function getDisplayRows() {
-      const query = normalizeSearch(searchState.query);
+      const query = normalizeSearchText(searchState.query);
       const filtered = kunden.filter(
         (kunde) => matchesSearch(kunde, query) && matchesFilters(kunde)
       );

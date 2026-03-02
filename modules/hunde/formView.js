@@ -11,6 +11,7 @@ import { runIntegrityCheck } from "../shared/api/db/integrityCheck.js";
 import { HERKUNFT_OPTIONS } from "./herkunft.js";
 import { recordAutomationEvent } from "../kommunikation/automation/client.js";
 import { getSession } from "../shared/auth/client.js";
+import { matchesSearchQuery, normalizeSearchText } from "../shared/utils/search.js";
 
 const TOAST_KEY = "__DOGULE_HUNDE_TOAST__";
 const GESCHLECHT_OPTIONS = [
@@ -166,28 +167,24 @@ function buildFormFields(
   const kundenIndex = new Map(kunden.map((kunde) => [kunde.id, kunde]));
 
   function normalizeSearch(value) {
-    return String(value || "")
-      .trim()
-      .toLowerCase();
+    return normalizeSearchText(value);
   }
 
   function filterKundenOptions(query) {
     const needle = normalizeSearch(query);
     if (!needle) return kundeOptions;
     const filtered = kunden.filter((kunde) => {
-      const haystack = [
-        kunde.vorname,
-        kunde.nachname,
-        kunde.email,
-        kunde.telefon,
-        kunde.adresse,
-        kunde.code,
-        kunde.kundenCode,
-      ]
-        .filter(Boolean)
-        .map(normalizeSearch)
-        .join(" ");
-      return haystack.includes(needle);
+      return matchesSearchQuery(needle, {
+        textFields: [
+          kunde.vorname,
+          kunde.nachname,
+          kunde.email,
+          kunde.adresse,
+          kunde.code,
+          kunde.kundenCode,
+        ],
+        phoneFields: [kunde.telefon, kunde.mobile],
+      });
     });
     return [
       { value: "", label: "Bitte wählen" },

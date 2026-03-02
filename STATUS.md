@@ -11,6 +11,61 @@ BASE NOTE: Keep the "Quick start, 3 Launchcodes" section in this header area. Do
 - `DOGULE1_STORAGE_MODE=mariadb DOGULE1_MARIADB_SOCKET=/run/mysqld/mysqld.sock DOGULE1_MARIADB_USER=ran node tools/server/apiServer.js`
 - `DOGULE1_STORAGE_MODE=mariadb DOGULE1_MARIADB_SOCKET=/run/mysqld/mysqld.sock DOGULE1_MARIADB_USER=ran DOGULE1_PASSWORD_FILE=/home/ran/codex/dogule1/dogule1.passwords pnpm dev`
 
+## Date 2026-03-02 — Anmeldung Parser Hardening + Phone-Aware Search + VPS Runtime Deploy
+
+## Kontext
+
+- Status: completed.
+- Branch: `2026-03-02`.
+- Scope: reales `.eml`-Format aus `data/DogTabs Data/Anmeldung Modul Lerninhalt` sauber parsen, Suchfelder in `#Kunden`, `#Hunde`, `#Kurse` und Sub-Kurs-/Teilnehmer-Flows um telefonbasierte Treffer erweitern, danach runtime-only Deploy auf den VPS ohne Datenbankänderung.
+
+## Ergebnis (kurz)
+
+- Anmeldung:
+- Parser aus `modules/anmeldung/index.js` in neue Hilfsdatei `modules/anmeldung/parser.js` ausgelagert und testbar gemacht.
+- Parser gegen echte Mail-Samples gehärtet:
+- rohe `.eml`-Bodies mit Mail-Headern werden erkannt
+- `base64`/`quoted-printable` Inhalte werden dekodiert
+- AWS-Unsubscribe-/Footer-Rauschen wird entfernt
+- HTML-Entities wie `&#34;` werden zurück in Klartext gewandelt
+- Datumsvarianten wie `15.8.2025` werden zu `15.08.2025` normalisiert
+- Adressvarianten mit doppelter PLZ/Ort-Information werden bereinigt
+- `Rufname: Akihito (Kurz Aki)` wird korrekt zu `name = Akihito`, `rufname = Aki`
+- Kurs-Fuzzy-Match robuster gemacht für Varianten wie `Welpenschule/Welpenprägung` vs. `Welpenschule & Prägung`
+- Neue fokussierte Tests ergänzt: `modules/anmeldung/parser.test.js`
+- Suche / Telefon-Matching:
+- neue Hilfsdatei `modules/shared/utils/search.js` mit formatunabhängiger Telefon-Suche (`076...`, `+41...`, `0041...`)
+- neue Tests ergänzt: `modules/shared/utils/search.test.js`
+- `#Kunden`-Übersicht sucht jetzt robust über `telefon` und `mobile`
+- `#Hunde`-Übersicht findet Hunde jetzt auch über die Telefonnummern des verknüpften Kunden
+- Hunde-Kundenpicker sucht jetzt ebenfalls über Kunden-Telefon/Mobile
+- `#Kurse` Teilnehmer-`Kunde suchen` findet Treffer jetzt auch über Kunden-Telefon/Mobile
+- Kurs-Historie- und Sub-Kurs-Teilnehmersuche findet Treffer jetzt ebenfalls über Kunden-Telefon/Mobile
+- VPS-Rollout:
+- nur Runtime-Dateien (`dist`, `modules`, `tools`) auf den VPS synchronisiert
+- `dogule1.service` neu gestartet
+- ausdrücklich keine DB-Migration, kein Dump/Import, kein Schema-Change durchgeführt
+
+## Tests
+
+- Lokal:
+- `pnpm exec vitest run modules/anmeldung/parser.test.js` ✅
+- `pnpm exec vitest run modules/shared/utils/search.test.js modules/anmeldung/parser.test.js` ✅ (`2` Dateien, `7` Tests)
+- `pnpm lint` ✅
+- `pnpm build` ✅
+- VPS:
+- Safe `rsync` (`dist`, `modules`, `tools`) nach `/opt/dogule1` ausgeführt ✅
+- `sudo systemctl restart dogule1` ✅
+- `sudo systemctl status dogule1 --no-pager -l` = `active (running)` ✅
+- `curl -sS -i http://127.0.0.1:5177/healthz` = `HTTP/1.1 200 OK` + `{"status":"ok","storageMb":2}` ✅
+
+## Offene Punkte
+
+- Live-UI-Smoke empfohlen für:
+- `#Anmeldung` mit echtem rohem `.eml`-Paste
+- telefonbasierte Suche in `#Kunden`, `#Hunde`, `#Kurse` und Sub-Kurs-Teilnehmeransichten
+- Kursübersicht selbst durchsucht aktuell weiterhin nur Kursdaten, nicht Teilnehmer-Telefonnummern.
+
 ## Date 2026-03-01 — Developer Activity Logging + Kunden/Hunde Detail Rework + VPS Rollout
 
 ## Kontext
