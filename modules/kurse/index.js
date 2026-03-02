@@ -36,6 +36,7 @@ import {
 } from "../shared/api/index.js";
 import { runIntegrityCheck } from "../shared/api/db/integrityCheck.js";
 import { getSession } from "../shared/auth/client.js";
+import { matchesSearchQuery, normalizeSearchText } from "../shared/utils/search.js";
 import {
   describeCertificateBackground,
   getCertificateBackgroundForKurs,
@@ -247,16 +248,13 @@ function createTeilnehmerFormCard() {
   };
 
   const updateKundeOptions = (query = "") => {
-    const normalized = String(query || "")
-      .trim()
-      .toLowerCase();
+    const normalized = normalizeSearchText(query);
     const filtered = normalized
       ? kunden.filter((kunde) => {
-          const text = [kunde.nachname, kunde.vorname, kunde.ort, kunde.email, kunde.telefon]
-            .filter(Boolean)
-            .join(" ")
-            .toLowerCase();
-          return text.includes(normalized);
+          return matchesSearchQuery(normalized, {
+            textFields: [kunde.nachname, kunde.vorname, kunde.ort, kunde.email],
+            phoneFields: [kunde.telefon, kunde.mobile],
+          });
         })
       : kunden;
     const options = [
@@ -359,20 +357,25 @@ function createTeilnehmerFormCard() {
 function renderKursHistorieRows(
   tbody,
   entries = [],
-  { onDelete, onCreateZertifikat, filter = "", canManage = true } = {}
+  { onDelete, onCreateZertifikat, filter = "", canManage = true, kundenById = new Map() } = {}
 ) {
   if (!tbody) return;
   tbody.innerHTML = "";
-  const normalizedFilter = String(filter || "")
-    .trim()
-    .toLowerCase();
+  const normalizedFilter = normalizeSearchText(filter);
   const visibleEntries = normalizedFilter
     ? entries.filter((entry) => {
-        const searchText = [entry?.kundeNachname, entry?.kundeVorname, entry?.hundName]
-          .filter(Boolean)
-          .join(" ")
-          .toLowerCase();
-        return searchText.includes(normalizedFilter);
+        const kunde = kundenById.get(entry?.kundeId || "") || null;
+        return matchesSearchQuery(normalizedFilter, {
+          textFields: [
+            entry?.kundeNachname,
+            entry?.kundeVorname,
+            entry?.kundeOrt,
+            entry?.hundName,
+            entry?.subKursNameSnapshot,
+            kunde?.email,
+          ],
+          phoneFields: [kunde?.telefon, kunde?.mobile],
+        });
       })
     : entries;
   if (!visibleEntries.length) {
@@ -434,7 +437,13 @@ function renderKursHistorieRows(
 
 function buildKursHistorieCard(
   kurs = {},
-  { onDelete, onCreateZertifikat, canManage = true, title = "Kurs Historie" } = {}
+  {
+    onDelete,
+    onCreateZertifikat,
+    canManage = true,
+    title = "Kurs Historie",
+    kundenById = new Map(),
+  } = {}
 ) {
   const card = createStandardCard(title);
   const body = card.querySelector(".ui-card__body");
@@ -469,11 +478,23 @@ function buildKursHistorieCard(
   thead.appendChild(headerRow);
   const entries = Array.isArray(kurs.teilnehmerLog) ? kurs.teilnehmerLog : [];
   let filter = "";
-  renderKursHistorieRows(tbody, entries, { onDelete, onCreateZertifikat, filter, canManage });
+  renderKursHistorieRows(tbody, entries, {
+    onDelete,
+    onCreateZertifikat,
+    filter,
+    canManage,
+    kundenById,
+  });
   if (searchInput) {
     searchInput.addEventListener("input", (event) => {
       filter = event.target.value || "";
-      renderKursHistorieRows(tbody, entries, { onDelete, onCreateZertifikat, filter, canManage });
+      renderKursHistorieRows(tbody, entries, {
+        onDelete,
+        onCreateZertifikat,
+        filter,
+        canManage,
+        kundenById,
+      });
     });
   }
 
@@ -485,7 +506,13 @@ function buildKursHistorieCard(
     tbody,
     setEntries(nextEntries = []) {
       const list = Array.isArray(nextEntries) ? nextEntries : [];
-      renderKursHistorieRows(tbody, list, { onDelete, onCreateZertifikat, filter, canManage });
+      renderKursHistorieRows(tbody, list, {
+        onDelete,
+        onCreateZertifikat,
+        filter,
+        canManage,
+        kundenById,
+      });
     },
   };
 }
@@ -596,6 +623,13 @@ async function renderDetail(section, id) {
     if (!kurs) kurs = await getKurs(id);
     if (!kurs) {
       throw new Error(`Kurs ${id} nicht gefunden`);
+    }
+    let kundenById = new Map();
+    try {
+      const kunden = await listKunden();
+      kundenById = new Map((kunden || []).map((kunde) => [kunde.id, kunde]));
+    } catch (error) {
+      console.error("[KURSE_ERR_KUNDEN_SEARCH_LOAD]", error);
     }
     if (!kurs?.trainer) {
       const hydrated = await hydrateKurseWithTrainer([kurs]);
@@ -984,6 +1018,7 @@ async function renderDetail(section, id) {
       onDelete: canManage ? handleDeleteTeilnehmer : null,
       onCreateZertifikat: canManage ? handleCreateZertifikat : null,
       canManage,
+      kundenById,
     });
     detailSection.appendChild(kursHistorie.card);
   } catch (error) {
@@ -1514,10 +1549,11 @@ async function renderSubKursDetail(section, routeState = {}) {
   section.appendChild(detailSection);
 
   try {
-    const [kurs, subKurs, teilnehmerLog] = await Promise.all([
+    const [kurs, subKurs, teilnehmerLog, kunden] = await Promise.all([
       getKurs(kursId).catch(() => null),
       getSubKurs(kursId, subKursId),
       listKursTeilnehmerByFilter({ kursId, subKursId }).catch(() => []),
+      listKunden().catch(() => []),
     ]);
     if (!subKurs) {
       throw new Error(`Sub-Kurs ${subKursId} nicht gefunden`);
@@ -1595,7 +1631,11 @@ async function renderSubKursDetail(section, routeState = {}) {
 
     const historieCard = buildKursHistorieCard(
       { teilnehmerLog: Array.isArray(teilnehmerLog) ? teilnehmerLog : [] },
-      { canManage: false, title: "Teilnehmer" }
+      {
+        canManage: false,
+        title: "Teilnehmer",
+        kundenById: new Map((kunden || []).map((kunde) => [kunde.id, kunde])),
+      }
     );
     detailSection.appendChild(historieCard.card);
   } catch (error) {

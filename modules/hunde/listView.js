@@ -7,9 +7,11 @@ import {
   createFormRow,
 } from "../shared/components/components.js";
 import { listHunde } from "../shared/api/hunde.js";
+import { listKunden } from "../shared/api/kunden.js";
 import { exportTableToXlsx } from "../shared/utils/xlsxExport.js";
 import { getSession } from "../shared/auth/client.js";
 import { injectHundToast } from "./formView.js";
+import { matchesSearchQuery, normalizeSearchText } from "../shared/utils/search.js";
 
 export async function createHundeListView(container) {
   if (!container) return;
@@ -100,7 +102,8 @@ async function populateHundeTable(cardElement) {
   body.textContent = "Hunde werden geladen ...";
 
   try {
-    const hunde = await listHunde();
+    const [hunde, kunden] = await Promise.all([listHunde(), listKunden()]);
+    const kundenById = new Map((kunden || []).map((kunde) => [kunde.id, kunde]));
     body.innerHTML = "";
     if (!hunde.length) {
       body.appendChild(createEmptyState("Keine Daten vorhanden.", ""));
@@ -250,32 +253,30 @@ async function populateHundeTable(cardElement) {
       },
     ];
 
-    function normalizeSearch(value) {
-      return String(value || "")
-        .trim()
-        .toLowerCase();
-    }
-
     function matchesSearch(hund, query) {
-      if (!query) return true;
-      const haystack = [
-        hund.code,
-        hund.name,
-        hund.rufname,
-        hund.rasse,
-        hund.geschlecht,
-        hund.geburtsdatum,
-        hund.herkunft,
-      ]
-        .filter(Boolean)
-        .map(normalizeSearch)
-        .join(" ");
-      return haystack.includes(query);
+      const owner = kundenById.get(hund.kundenId || hund.kundeId || "") || null;
+      return matchesSearchQuery(query, {
+        textFields: [
+          hund.code,
+          hund.name,
+          hund.rufname,
+          hund.rasse,
+          hund.geschlecht,
+          hund.geburtsdatum,
+          hund.herkunft,
+          owner?.vorname,
+          owner?.nachname,
+          owner?.email,
+          owner?.ort,
+          owner?.adresse,
+        ],
+        phoneFields: [owner?.telefon, owner?.mobile],
+      });
     }
 
     function matchesFilters(hund) {
       if (filterState.status === "all") return true;
-      return normalizeSearch(hund.status) === filterState.status;
+      return normalizeSearchText(hund.status) === filterState.status;
     }
 
     function updateHeaderState() {
@@ -297,7 +298,7 @@ async function populateHundeTable(cardElement) {
     }
 
     function getDisplayRows() {
-      const query = normalizeSearch(searchState.query);
+      const query = normalizeSearchText(searchState.query);
       const filtered = hunde.filter((hund) => matchesSearch(hund, query) && matchesFilters(hund));
       if (!filtered.length) return [];
       const column = columns.find((col) => col.key === sortState.key) || columns[0];
