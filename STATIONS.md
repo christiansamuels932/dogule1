@@ -49,7 +49,7 @@ Goal:
 
 - Add a top-level app header card that includes the Fontanas logo and white "DOGULE" text as a single header frame.
   Dependencies:
-- Asset at `/home/ran/codex/dogule1/attachments/material/FontanasLogo.png` (181x73).
+- Asset at `/home/ran/codex/dogule@144.91.86.20/attachments/material/FontanasLogo.png` (181x73).
   Scope:
 - Header card includes logo on the left and large white "DOGULE" text on the right.
 - Both elements are inside the same frame/card as the app title.

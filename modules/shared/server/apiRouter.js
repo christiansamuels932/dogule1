@@ -25,12 +25,49 @@ import {
 
 const ACTIVITY_BATCH_LIMIT = 25;
 
+const CLIENT_MASKED_ROLE = "client_readonly";
+const CLIENT_SENSITIVE_KEY_RE = /(nachname|last.?name|adresse|address|telefon|phone|mobile)/i;
+
+function isClientMaskedRole(res) {
+  return (
+    String(res?.__doguleActorRole || "")
+      .trim()
+      .toLowerCase() === CLIENT_MASKED_ROLE
+  );
+}
+
+function maskSensitiveValue(value) {
+  if (value == null) return value;
+  if (typeof value === "string") return value ? "—" : value;
+  if (typeof value === "number" || typeof value === "boolean") return "—";
+  if (Array.isArray(value)) return value.map(() => "—");
+  return "—";
+}
+
+function redactClientPayload(payload) {
+  const walk = (node) => {
+    if (Array.isArray(node)) return node.map((item) => walk(item));
+    if (!node || typeof node !== "object") return node;
+    const out = {};
+    Object.entries(node).forEach(([key, value]) => {
+      if (CLIENT_SENSITIVE_KEY_RE.test(String(key || ""))) {
+        out[key] = maskSensitiveValue(value);
+        return;
+      }
+      out[key] = walk(value);
+    });
+    return out;
+  };
+  return walk(payload);
+}
+
 function jsonResponse(res, statusCode, body) {
   res.statusCode = statusCode;
   if (typeof res.setHeader === "function") {
     res.setHeader("Content-Type", "application/json");
   }
-  const payload = JSON.stringify(body);
+  const safeBody = isClientMaskedRole(res) ? redactClientPayload(body) : body;
+  const payload = JSON.stringify(safeBody);
   if (typeof res.end === "function") {
     res.end(payload);
   } else if (typeof res.send === "function") {
@@ -525,17 +562,25 @@ export function createApiRouter(options = {}) {
     const trainers = await storage.trainer.list();
     const optionsList = [];
     const seen = new Set();
-    const developerUser = userStore.getUserByUsername("Developer");
     const passwordlessUsers = [];
-    if (developerUser) {
+    const trainerSortKey = (code = "") => {
+      const raw = String(code || "").trim();
+      const match = raw.match(/(\d+)/);
+      if (!match) return Number.POSITIVE_INFINITY;
+      const parsed = Number(match[1]);
+      return Number.isFinite(parsed) ? parsed : Number.POSITIVE_INFINITY;
+    };
+    const addStaticAuthOption = (username, label) => {
+      const user = userStore.getUserByUsername(username);
+      if (!user || seen.has(user.username)) return;
       optionsList.push({
-        id: developerUser.id,
-        username: developerUser.username,
-        label: "Developer",
-        role: developerUser.role,
+        id: user.id,
+        username: user.username,
+        label,
+        role: user.role,
       });
-      seen.add(developerUser.username);
-    }
+      seen.add(user.username);
+    };
 
     const trainerOptions = (
       await Promise.all(
@@ -553,14 +598,26 @@ export function createApiRouter(options = {}) {
             username: user.username,
             label,
             role: user.role,
+            sortOrder: trainerSortKey(code),
           };
         })
       )
     )
       .filter(Boolean)
-      .sort((a, b) => a.label.localeCompare(b.label, "de"));
+      .sort((a, b) => {
+        if (a.sortOrder !== b.sortOrder) return a.sortOrder - b.sortOrder;
+        return a.label.localeCompare(b.label, "de");
+      })
+      .map((entry) => ({
+        id: entry.id,
+        username: entry.username,
+        label: entry.label,
+        role: entry.role,
+      }));
 
     optionsList.push(...trainerOptions);
+    addStaticAuthOption("Developer", "Developer");
+    addStaticAuthOption("Tester", "Test");
     if (authConfig.allowLocalPasswordless) {
       passwordlessUsers.push(...optionsList.map((user) => user.username).filter(Boolean));
     }
@@ -1164,6 +1221,11 @@ export function createApiRouter(options = {}) {
     const routePath = reqUrl.split("?")[0];
     const method = (req.method || "GET").toUpperCase();
     if (routePath === "/api/support/activity" && method === "POST") {
+      const actorRole = normalizeRole(req.headers["x-dogule-actor-role"] || "");
+      if (actorRole === "client_readonly") {
+        jsonResponse(res, 403, { message: "forbidden" });
+        return true;
+      }
       const pool = storage?.pool;
       if (!pool?.query) {
         jsonResponse(res, 503, { message: "support_activity_unavailable" });
@@ -2126,6 +2188,7 @@ export function createApiRouter(options = {}) {
     const role = normalizeRole(payload?.role);
     req.headers["x-dogule-actor-id"] = payload.sub;
     req.headers["x-dogule-actor-role"] = role;
+    res.__doguleActorRole = role;
     const allowedActions = getKommunikationActions(role);
     if (allowedActions.length) {
       req.headers["x-dogule-authz"] = allowedActions.includes("*") ? "*" : allowedActions.join(",");

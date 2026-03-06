@@ -15,6 +15,13 @@ import {
 } from "../shared/api/rapporteDrafts.js";
 import { getSession } from "../shared/auth/client.js";
 
+function isClientReadonlyRole() {
+  const role = String(getSession()?.user?.role || "")
+    .trim()
+    .toLowerCase();
+  return role === "client_readonly";
+}
+
 export async function initModule(container) {
   container.innerHTML = "";
   const fragment = document.createDocumentFragment();
@@ -322,6 +329,7 @@ function buildMailtoHref({ to, subject, body }) {
 }
 
 async function buildBirthdaysCard() {
+  const isReadonlyClient = isClientReadonlyRole();
   let data = null;
   try {
     data = await getDashboardBirthdays();
@@ -406,9 +414,15 @@ async function buildBirthdaysCard() {
       variant: "primary",
     });
     mailBtn.type = "button";
-    mailBtn.disabled = !String(email || "").trim();
+    mailBtn.disabled = isReadonlyClient || !String(email || "").trim();
+    dismissBtn.disabled = isReadonlyClient;
+    if (isReadonlyClient) {
+      dismissBtn.title = "Nur Lesen";
+      mailBtn.title = "Nur Lesen";
+    }
 
     dismissBtn.addEventListener("click", async () => {
+      if (isReadonlyClient) return;
       const ok = window.confirm(`${kindLabel}seintrag verwerfen?\n\n${label}`);
       if (!ok) return;
       dismissBtn.disabled = true;
@@ -418,13 +432,14 @@ async function buildBirthdaysCard() {
         li.remove();
       } catch (error) {
         console.error("DASHBOARD_BIRTHDAYS_DISMISS_FAILED", error);
-        dismissBtn.disabled = false;
-        mailBtn.disabled = !String(email || "").trim();
+        dismissBtn.disabled = isReadonlyClient;
+        mailBtn.disabled = isReadonlyClient || !String(email || "").trim();
         window.alert("Aktion fehlgeschlagen (siehe Konsole).");
       }
     });
 
     mailBtn.addEventListener("click", async () => {
+      if (isReadonlyClient) return;
       const warningLine = warningText ? `\n\nWARNUNG: ${warningText}` : "";
       const ok = window.confirm(
         `${kindLabel}semail vorbereiten?\n\nEmpfänger: ${email || "—"}${warningLine}\n\nHinweis: Es wird nichts automatisch versendet – es öffnet nur dein Mailprogramm.`
@@ -439,8 +454,8 @@ async function buildBirthdaysCard() {
         li.remove();
       } catch (error) {
         console.error("DASHBOARD_BIRTHDAYS_MAILTO_FAILED", error);
-        dismissBtn.disabled = false;
-        mailBtn.disabled = !String(email || "").trim();
+        dismissBtn.disabled = isReadonlyClient;
+        mailBtn.disabled = isReadonlyClient || !String(email || "").trim();
         window.alert("Aktion fehlgeschlagen (siehe Konsole).");
       }
     });

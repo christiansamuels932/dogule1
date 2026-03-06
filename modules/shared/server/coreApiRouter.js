@@ -5,12 +5,49 @@ import { Buffer } from "node:buffer";
 import { createStorage } from "../storage/storage.js";
 import { StorageError, STORAGE_ERROR_CODES } from "../storage/errors.js";
 
+const CLIENT_MASKED_ROLE = "client_readonly";
+const CLIENT_SENSITIVE_KEY_RE = /(nachname|last.?name|adresse|address|telefon|phone|mobile)/i;
+
+function isClientMaskedRole(res) {
+  return (
+    String(res?.__doguleActorRole || "")
+      .trim()
+      .toLowerCase() === CLIENT_MASKED_ROLE
+  );
+}
+
+function maskSensitiveValue(value) {
+  if (value == null) return value;
+  if (typeof value === "string") return value ? "—" : value;
+  if (typeof value === "number" || typeof value === "boolean") return "—";
+  if (Array.isArray(value)) return value.map(() => "—");
+  return "—";
+}
+
+function redactClientPayload(payload) {
+  const walk = (node) => {
+    if (Array.isArray(node)) return node.map((item) => walk(item));
+    if (!node || typeof node !== "object") return node;
+    const out = {};
+    Object.entries(node).forEach(([key, value]) => {
+      if (CLIENT_SENSITIVE_KEY_RE.test(String(key || ""))) {
+        out[key] = maskSensitiveValue(value);
+        return;
+      }
+      out[key] = walk(value);
+    });
+    return out;
+  };
+  return walk(payload);
+}
+
 function jsonResponse(res, statusCode, body) {
   res.statusCode = statusCode;
   if (typeof res.setHeader === "function") {
     res.setHeader("Content-Type", "application/json");
   }
-  const payload = JSON.stringify(body);
+  const safeBody = isClientMaskedRole(res) ? redactClientPayload(body) : body;
+  const payload = JSON.stringify(safeBody);
   if (typeof res.end === "function") {
     res.end(payload);
   } else if (typeof res.send === "function") {

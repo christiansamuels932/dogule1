@@ -34,7 +34,7 @@ If a password is unknown, it is left blank intentionally.
 - Password file (users): `/opt/dogule1/config/dogule1.passwords`
   - One line per user: `username:password`.
   - Permissions should allow the service user to read it.
-- Source password list (local): `/home/ran/codex/dogule1/dogule1.passwords`.
+- Source password list (local): `/home/ran/codex/dogule@144.91.86.20/dogule1.passwords`.
 
 ## MariaDB (VPS)
 
@@ -70,7 +70,7 @@ If a password is unknown, it is left blank intentionally.
 
 ### App users (Dogule1)
 
-From `/home/ran/codex/dogule1/dogule1.passwords` and deployed to
+From `/home/ran/codex/dogule@144.91.86.20/dogule1.passwords` and deployed to
 `/opt/dogule1/config/dogule1.passwords`:
 
 - Developer / `Developer`: `deve6087`
@@ -89,7 +89,7 @@ From `/home/ran/codex/dogule1/dogule1.passwords` and deployed to
 
 - Local user: `ran` / password: 215932
 
-### MariaDB 
+### MariaDB
 
 - Local: Ace1Ab215932.
 - on NAS: Dogule1!2026

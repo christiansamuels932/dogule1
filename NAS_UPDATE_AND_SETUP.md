@@ -1,5 +1,7 @@
 # NAS-Dogule (alpha) Update + Setup (84U)
 
+Legacy note: historical NAS runbook only. Current production scope is VPS-only, and NAS runtime scripts are no longer maintained in `tools/`.
+
 Terminology:
 
 - NAS-Dogule (alpha): current NAS-hosted pilot runtime at `/volume1/dogule1nasfolder`.
@@ -8,21 +10,21 @@ Terminology:
 
 Purpose: update Dogule1 locally and propagate changes to the NAS pilot so they are visible at the remote URL.
 
-Rule: `/home/ran/codex/dogule1/.NAS-Distro` must always be an exact mirror of the NAS-Dogule (alpha) root `/volume1/dogule1nasfolder`.
-All changes are made inside `/home/ran/codex/dogule1/.NAS-Distro` first, then you copy the specific subfolder(s)
+Rule: `/home/ran/codex/dogule@144.91.86.20/.NAS-Distro` must always be an exact mirror of the NAS-Dogule (alpha) root `/volume1/dogule1nasfolder`.
+All changes are made inside `/home/ran/codex/dogule@144.91.86.20/.NAS-Distro` first, then you copy the specific subfolder(s)
 (`app/`, `api/`, `config/`, `logs/`, or root files like `README.md` and `update.sh`) to the NAS as instructed.
 
 Non-negotiable: do not hand-edit `app/` or `api/` on the NAS. If something needs to change, change it in
-`/home/ran/codex/dogule1/.NAS-Distro` and then upload the relevant subfolder(s). This avoids “works locally but not on NAS”
+`/home/ran/codex/dogule@144.91.86.20/.NAS-Distro` and then upload the relevant subfolder(s). This avoids “works locally but not on NAS”
 drift and prevents repeated breakages.
 
 Important: NAS-Backup is a separate root folder and is not updated via `.NAS-Distro`.
 
 ## Assumptions
 
-- Local repo: `/home/ran/codex/dogule1`
+- Local repo: `/home/ran/codex/dogule@144.91.86.20`
 - Local MariaDB (ran) password: `Ace1Ab215932.`
-- Local NAS deploy payload: `/home/ran/codex/dogule1/.NAS-Distro`
+- Local NAS deploy payload: `/home/ran/codex/dogule@144.91.86.20/.NAS-Distro`
 - NAS root: `/volume1/dogule1nasfolder`
 - NAS API: `http://127.0.0.1:5177`
 - Remote UI: `https://4c31.synology.me:8443/#/auth`
@@ -32,7 +34,7 @@ Important: NAS-Backup is a separate root folder and is not updated via `.NAS-Dis
 
 ## Minimal workflow (current)
 
-1. Make local changes in `/home/ran/codex/dogule1`.
+1. Make local changes in `/home/ran/codex/dogule@144.91.86.20`.
 2. Update `.NAS-Distro`:
    - `pnpm build`
    - sync `dist/` → `.NAS-Distro/app/`

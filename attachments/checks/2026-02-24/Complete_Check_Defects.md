@@ -12,9 +12,9 @@
 - Expected: Kurs deletion succeeds and downstream history remains usable.
 - Actual: `500 {"message":"storage_error","code":"STORAGE_ERROR"}` and Kurs remains (`GET /api/kurse/:id` returns `200`).
 - Probable root cause:
-  - Hard delete in [mariadbAdapter.js](/home/ran/codex/dogule1/modules/shared/storage/mariadbAdapter.js:1563) does not handle FK-protected relations.
-  - FK `fk_zertifikate_kurs` is `ON DELETE RESTRICT` in [schema.sql](/home/ran/codex/dogule1/tools/mariadb/schema.sql:280) and [83_2_zertifikate_schema.sql](/home/ran/codex/dogule1/tools/mariadb/migrations/83_2_zertifikate_schema.sql:48).
-  - Error translation surfaces generic 500 in [coreApiRouter.js](/home/ran/codex/dogule1/modules/shared/server/coreApiRouter.js:68).
+  - Hard delete in [mariadbAdapter.js](/home/ran/codex/dogule@144.91.86.20/modules/shared/storage/mariadbAdapter.js:1563) does not handle FK-protected relations.
+  - FK `fk_zertifikate_kurs` is `ON DELETE RESTRICT` in [schema.sql](/home/ran/codex/dogule@144.91.86.20/tools/mariadb/schema.sql:280) and [83_2_zertifikate_schema.sql](/home/ran/codex/dogule@144.91.86.20/tools/mariadb/migrations/83_2_zertifikate_schema.sql:48).
+  - Error translation surfaces generic 500 in [coreApiRouter.js](/home/ran/codex/dogule@144.91.86.20/modules/shared/server/coreApiRouter.js:68).
 - Regression risk: high (breaks admin data lifecycle and leaves inconsistent operator expectations).
 
 ## P2 — Automated test suite failing (7 tests)
@@ -25,10 +25,10 @@
 - Actual: 7 failed tests (`infochannel` SAL/API route tests, `groupchat` UI tests, `authService` token expiry test).
 - Probable root cause: tests not aligned with current role/publisher constraints and/or auth expiration behavior changes.
 - Affected references:
-  - [apiRoutes.test.js](/home/ran/codex/dogule1/modules/kommunikation/infochannel/apiRoutes.test.js)
-  - [sal.test.js](/home/ran/codex/dogule1/modules/kommunikation/infochannel/sal.test.js)
-  - [ui.test.js](/home/ran/codex/dogule1/modules/kommunikation/groupchat/ui.test.js)
-  - [authService.test.js](/home/ran/codex/dogule1/modules/shared/auth/authService.test.js)
+  - [apiRoutes.test.js](/home/ran/codex/dogule@144.91.86.20/modules/kommunikation/infochannel/apiRoutes.test.js)
+  - [sal.test.js](/home/ran/codex/dogule@144.91.86.20/modules/kommunikation/infochannel/sal.test.js)
+  - [ui.test.js](/home/ran/codex/dogule@144.91.86.20/modules/kommunikation/groupchat/ui.test.js)
+  - [authService.test.js](/home/ran/codex/dogule@144.91.86.20/modules/shared/auth/authService.test.js)
 - Regression risk: medium-high (CI signal degraded; risk of hidden behavior drift).
 
 ## P2 — VPS restore path not end-to-end testable (missing snapshots)
@@ -47,5 +47,5 @@
 - Route: `GET /api/auth/options`
 - Expected: dedicated `trainer` test user available for matrix checks.
 - Actual: only `admin`, `developer`, and `trainer_rapport` users are returned.
-- Probable root cause: trainer user generation currently maps non-admin trainers to `trainer_rapport` only in [apiRouter.js](/home/ran/codex/dogule1/modules/shared/server/apiRouter.js:380).
+- Probable root cause: trainer user generation currently maps non-admin trainers to `trainer_rapport` only in [apiRouter.js](/home/ran/codex/dogule@144.91.86.20/modules/shared/server/apiRouter.js:380).
 - Regression risk: low-medium (test-plan mismatch; trainer-specific checks blocked).

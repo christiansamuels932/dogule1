@@ -146,7 +146,9 @@ function updateAuthHeader(session) {
   const host = document.getElementById("dogule-auth");
   if (!host) return;
   host.innerHTML = "";
-  host.appendChild(createIssueButton());
+  if (normalizedRole !== "client_readonly") {
+    host.appendChild(createIssueButton());
+  }
   if (!session?.user) {
     const loginBtn = document.createElement("button");
     loginBtn.type = "button";
@@ -186,7 +188,12 @@ function createIssueButton() {
 
 function canAutoRecordActivity(session = getSession()) {
   const role = normalizeRole(session?.user?.role);
-  return Boolean(session?.user?.id) && Boolean(role) && role !== "developer";
+  return (
+    Boolean(session?.user?.id) &&
+    Boolean(role) &&
+    role !== "developer" &&
+    role !== "client_readonly"
+  );
 }
 
 function queueActivity(event) {
