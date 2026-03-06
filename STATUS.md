@@ -9,7 +9,94 @@ BASE NOTE: Keep the "Quick start, 3 Launchcodes" section in this header area. Do
 
 - `sudo systemctl start mariadb && sudo systemctl status mariadb`
 - `DOGULE1_STORAGE_MODE=mariadb DOGULE1_MARIADB_SOCKET=/run/mysqld/mysqld.sock DOGULE1_MARIADB_USER=ran node tools/server/apiServer.js`
-- `DOGULE1_STORAGE_MODE=mariadb DOGULE1_MARIADB_SOCKET=/run/mysqld/mysqld.sock DOGULE1_MARIADB_USER=ran DOGULE1_PASSWORD_FILE=/home/ran/codex/dogule1/dogule1.passwords pnpm dev`
+- `DOGULE1_STORAGE_MODE=mariadb DOGULE1_MARIADB_SOCKET=/run/mysqld/mysqld.sock DOGULE1_MARIADB_USER=ran DOGULE1_PASSWORD_FILE=/home/ran/codex/dogule@144.91.86.20/dogule1.passwords pnpm dev`
+
+## Date 2026-03-06 — Client Read-Only Role (`Tester`) + Login Order + PII-Masking + UI Hardening
+
+## Kontext
+
+- Status: completed (local), VPS deploy pending.
+- Scope: Test-User mit strikt read-only Berechtigungen einführen, Login-Reihenfolge anpassen, sensible Kundendaten für den Read-only-User serverseitig maskieren, und Schreibaktionen in UI deutlich deaktivieren.
+
+## Ergebnis (kurz)
+
+- Auth/RBAC:
+- Seed-User `Tester` mit Rolle `client_readonly` ergänzt.
+- Rolle `client_readonly` in RBAC ergänzt (`read` erlaubt, `write` leer).
+- Kommunikation-Actions für `client_readonly` auf `view` limitiert.
+- Login:
+- Dropdown-Reihenfolge angepasst:
+- `TR-001` bis `TR-005` numerisch sortiert
+- danach `Developer`
+- danach `Test` (User: `Tester`)
+- Sicherheit / Server:
+- Serverseitige Feld-Maskierung für `client_readonly` in API-JSON-Antworten ergänzt (u.a. `nachname`, `adresse/address`, `telefon/phone`, `mobile`).
+- `support/activity` für `client_readonly` auf `403 forbidden` gesetzt.
+- UI-Hardening Read-Only:
+- Header-Button `Achtung` für `client_readonly` ausgeblendet; Auto-Activity-Logging deaktiviert.
+- `#Dashboard`: Buttons `Geburtstagsmail`, `Wurftagsmail`, `Verwerfen` deaktiviert/grau für `client_readonly`.
+- `#Anmeldung`: Button `Auswerten` deaktiviert/grau für `client_readonly`.
+- `#Zertifikate`: alle Buttons via Read-only Guard deaktiviert/grau für `client_readonly`.
+- Kunden-Detail:
+- Regression behoben: `client_readonly` sieht in `#Kunden` wieder die Detail-Zusatzbereiche (`Hund`, `Kurse`, `Historie`) read-only.
+- Pfadstandard:
+- Repo-Root-Referenzen von `/home/ran/codex/dogule1` auf `/home/ran/codex/dogule@144.91.86.20` aktualisiert.
+
+## Tests
+
+- Lokal:
+- `pnpm lint` ✅
+- `pnpm exec vite build --outDir /tmp/dogule-build-check` ✅
+- Hinweis:
+- normales `pnpm build` kann lokal wegen `EACCES` auf `dist/assets` fehlschlagen (Dateirechte), funktionaler Build-Check erfolgte deshalb über temporäres OutDir.
+
+## Offene Punkte
+
+- Runtime-Deploy auf VPS + Service-Neustart erforderlich, damit Änderungen live sind.
+- Live-Smoke empfohlen mit `Tester`:
+- Login-Reihenfolge prüfen
+- PII-Maskierung in `#Kunden`, `#Hunde`, `#Kurse` prüfen
+- deaktivierte Buttons in `#Dashboard`, `#Anmeldung`, `#Zertifikate` prüfen.
+
+## Date 2026-03-02 — VPS Audit + Healthcheck Repair + Runtime Cleanup
+
+## Kontext
+
+- Status: completed.
+- Branch: `2026-03-02`.
+- Scope: VPS nach gemeldetem kurzem Ausfall prüfen, fehlerhaften Healthcheck-Watchdog reparieren, NAS-/Altlasten auf dem VPS identifizieren und sichere Cleanup-Massnahmen durchführen.
+
+## Ergebnis (kurz)
+
+- Live-VPS geprüft:
+- `dogule1.service` lief stabil; `/healthz` intern und öffentlich = `200 OK`
+- kein 5-Minuten-Backend-Crash im `dogule1.service`-Journal gefunden; sichtbare Unterbrechungen waren nur manuelle Restarts
+- Root cause des Alarmbilds:
+- `dogule1-healthcheck.service` lief im Minuten-Takt in `status=203/EXEC`, weil `/opt/dogule1/tools/healthcheck.sh` fehlte
+- VPS-Watchdog repariert:
+- neue Runtime-Datei `tools/healthcheck.sh` ergänzt
+- Watchdog prüft jetzt MariaDB-Socket plus `http://127.0.0.1:5177/healthz`
+- `dogule1-healthcheck.service` und `dogule1-healthcheck.timer` danach wieder erfolgreich
+- NAS-/Deploy-Altlasten bereinigt:
+- NAS-only Scripts aus `tools/` entfernt (`tools/ops/nas-api-server.sh`, `tools/ops/nas-api-healthcheck.sh`, `tools/mariadb/nas-ensure-schema.sh`)
+- alte flach deployte Runtime-Reste auf dem VPS nicht gelöscht, sondern nach `/opt/dogule1/_quarantine_20260302_vps_cleanup` verschoben
+- aktive VPS-Struktur damit wieder auf Runtime-relevante Pfade reduziert (`dist`, `modules`, `tools`, `config`, `node_modules`, `uploads`, `logs`, `backups`)
+- Sicherheit / Config:
+- `/opt/dogule1/config/dogule1.env` auf `600 root:root` gehärtet
+
+## Tests
+
+- VPS:
+- `sudo systemctl status dogule1 --no-pager -l` = `active (running)` ✅
+- `curl -sS -i http://127.0.0.1:5177/healthz` = `HTTP/1.1 200 OK` + `{"status":"ok","storageMb":2.2}` ✅
+- `curl -sS -i http://144.91.86.20:5177/healthz` = `HTTP/1.1 200 OK` + `{"status":"ok","storageMb":2.2}` ✅
+- `/opt/dogule1/tools/healthcheck.sh` direkt ausgeführt = MariaDB-Socket OK + API OK ✅
+- `systemctl show -p Id -p ActiveState -p SubState -p Result dogule1-healthcheck.timer dogule1-healthcheck.service` = Timer `active/waiting`, Service `Result=success` ✅
+
+## Offene Punkte
+
+- Quarantäne-Ordner `/opt/dogule1/_quarantine_20260302_vps_cleanup` nach Beobachtungszeit endgültig löschen, falls nichts mehr daraus benötigt wird.
+- Historische NAS-Doku bleibt im Repo als Referenz; Produktionsbetrieb ist VPS-only.
 
 ## Date 2026-03-02 — Anmeldung Parser Hardening + Phone-Aware Search + VPS Runtime Deploy
 
@@ -117,7 +204,7 @@ BASE NOTE: Keep the "Quick start, 3 Launchcodes" section in this header area. Do
 - `pnpm test -- --runInBand` ✅ (`20` Dateien, `118` Tests)
 - `pnpm build` ✅
 - Lokaler Start mit den dokumentierten 3 Launchcodes geprüft ✅
-- Login lokal wiederhergestellt über korrekten Start mit `DOGULE1_PASSWORD_FILE=/home/ran/codex/dogule1/dogule1.passwords` ✅
+- Login lokal wiederhergestellt über korrekten Start mit `DOGULE1_PASSWORD_FILE=/home/ran/codex/dogule@144.91.86.20/dogule1.passwords` ✅
 - Manuelle Checks lokal:
 - Login als `Developer` funktioniert; `Developer`-Modul sichtbar ✅
 - Login als Nicht-Developer funktioniert; `Achtung` und Aktivitätslogging verfügbar ✅
@@ -597,7 +684,7 @@ Quick start, 3 Launchcodes (manual):
 
 - `sudo systemctl start mariadb && sudo systemctl status mariadb`
 - `DOGULE1_STORAGE_MODE=mariadb DOGULE1_MARIADB_SOCKET=/run/mysqld/mysqld.sock DOGULE1_MARIADB_USER=ran node tools/server/apiServer.js`
-- `DOGULE1_STORAGE_MODE=mariadb DOGULE1_MARIADB_SOCKET=/run/mysqld/mysqld.sock DOGULE1_MARIADB_USER=ran DOGULE1_PASSWORD_FILE=/home/ran/codex/dogule1/dogule1.passwords pnpm dev`
+- `DOGULE1_STORAGE_MODE=mariadb DOGULE1_MARIADB_SOCKET=/run/mysqld/mysqld.sock DOGULE1_MARIADB_USER=ran DOGULE1_PASSWORD_FILE=/home/ran/codex/dogule@144.91.86.20/dogule1.passwords pnpm dev`
 
 Quick stop (manual):
 

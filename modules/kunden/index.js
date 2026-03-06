@@ -41,6 +41,10 @@ function isAdminOrDeveloper(role) {
   return role === "admin" || role === "developer";
 }
 
+function canViewDetailExtras(role) {
+  return isAdminOrDeveloper(role) || role === "client_readonly";
+}
+
 function canCreateRapportForRole(role) {
   return (
     role === "admin" || role === "developer" || role === "trainer" || role === "trainer_rapport"
@@ -1052,7 +1056,7 @@ async function renderDetail(root, id) {
   injectToast(detailSection);
   const role = getSession()?.user?.role || "";
   const canManage = isAdminOrDeveloper(role);
-  const canViewExtras = isAdminOrDeveloper(role);
+  const canViewExtras = canViewDetailExtras(role);
   let allKurse = [];
   let kurseLoaded = false;
   let kurseLoadFailed = false;

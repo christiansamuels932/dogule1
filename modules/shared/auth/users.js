@@ -6,6 +6,13 @@ const USERS = [
     passwordHash: "",
     requires2fa: false,
   },
+  {
+    id: "user-client-tester",
+    username: "Tester",
+    role: "client_readonly",
+    passwordHash: "",
+    requires2fa: false,
+  },
 ];
 
 export function createUserStore(seed = USERS) {

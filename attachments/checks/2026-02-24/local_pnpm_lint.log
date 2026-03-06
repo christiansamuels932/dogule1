@@ -1,5 +1,5 @@
 
-> dogule1@0.0.0 lint /home/ran/codex/dogule1
+> dogule1@0.0.0 lint /home/ran/codex/dogule@144.91.86.20
 > echo "DLX-LINT-001: running eslint" && eslint .
 
 DLX-LINT-001: running eslint

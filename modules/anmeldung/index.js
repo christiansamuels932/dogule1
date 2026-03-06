@@ -17,6 +17,14 @@ import {
   createHundFromAnmeldungDraft,
 } from "../shared/api/anmeldung.js";
 import { buildAdresseFromParts, findBestKursMatch, parseEmailDraft } from "./parser.js";
+import { getSession } from "../shared/auth/client.js";
+
+function isClientReadonlyRole() {
+  const role = String(getSession()?.user?.role || "")
+    .trim()
+    .toLowerCase();
+  return role === "client_readonly";
+}
 
 function normalizeText(value) {
   return String(value || "")
@@ -579,6 +587,11 @@ async function renderCreate(container) {
   actionsWrap.className = "module-actions anmeldung-actions";
   const parseBtn = createButton({ label: "Auswerten", variant: "primary" });
   parseBtn.type = "button";
+  const isReadonlyClient = isClientReadonlyRole();
+  if (isReadonlyClient) {
+    parseBtn.disabled = true;
+    parseBtn.title = "Nur Lesen";
+  }
   actionsWrap.appendChild(parseBtn);
   intakeSection.appendChild(actionsWrap);
 
@@ -587,6 +600,7 @@ async function renderCreate(container) {
   container.appendChild(intakeSection);
 
   parseBtn.addEventListener("click", async () => {
+    if (isReadonlyClient) return;
     statusHost.innerHTML = "";
     previewHost.innerHTML = "";
     const rawText = normalizeText(textarea.value);

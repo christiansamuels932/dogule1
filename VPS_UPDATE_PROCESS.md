@@ -90,7 +90,7 @@ Next step (legacy; verify current state in STATUS.md):
 - VPS: `dogule@144.91.86.20`
 - App root: `/opt/dogule1`
 - Service: `dogule1.service`
-- Local repo: `/home/ran/codex/dogule1`
+- Local repo: `/home/ran/codex/dogule@144.91.86.20`
 - Deploy method: rsync/scp (no git repo on VPS)
 
 ## MariaDB Sync Workflow (VPS → Local → VPS)
@@ -167,7 +167,7 @@ Run locally:
 
 ```
 pnpm build
-rsync -av --delete --exclude 'config/' --exclude 'uploads/' --exclude 'node_modules/' /home/ran/codex/dogule1/dist /home/ran/codex/dogule1/modules /home/ran/codex/dogule1/tools dogule@144.91.86.20:/opt/dogule1/
+rsync -av --delete --exclude 'config/' --exclude 'uploads/' --exclude 'node_modules/' /home/ran/codex/dogule@144.91.86.20/dist /home/ran/codex/dogule@144.91.86.20/modules /home/ran/codex/dogule@144.91.86.20/tools dogule@144.91.86.20:/opt/dogule1/
 ```
 
 Then on the VPS:
@@ -205,7 +205,7 @@ Preferred: rsync from local (safe: do NOT delete config/uploads/node_modules).
 Important: no trailing slashes on the source paths (they would flatten the folders and break `/opt/dogule1/tools` and `/opt/dogule1/dist`).
 
 ```
-rsync -av --delete --exclude 'config/' --exclude 'uploads/' --exclude 'node_modules/' /home/ran/codex/dogule1/dist /home/ran/codex/dogule1/modules /home/ran/codex/dogule1/tools dogule@144.91.86.20:/opt/dogule1/
+rsync -av --delete --exclude 'config/' --exclude 'uploads/' --exclude 'node_modules/' /home/ran/codex/dogule@144.91.86.20/dist /home/ran/codex/dogule@144.91.86.20/modules /home/ran/codex/dogule@144.91.86.20/tools dogule@144.91.86.20:/opt/dogule1/
 ```
 
 ⚠️ **Never** run plain `rsync --delete` against `/opt/dogule1`, and never add trailing slashes to the source paths. It will delete or flatten:
@@ -243,7 +243,7 @@ Notes:
 Local:
 
 ```
-scp /home/ran/codex/dogule1/dogule1.passwords dogule@144.91.86.20:/tmp/dogule1.passwords
+scp /home/ran/codex/dogule@144.91.86.20/dogule1.passwords dogule@144.91.86.20:/tmp/dogule1.passwords
 ```
 
 VPS:
@@ -317,7 +317,7 @@ ls -la /opt/dogule1/tools/server/apiServer.js
 2. If missing, re-deploy from local using the exact safe rsync command (includes `tools/`):
 
 ```
-rsync -av --delete --exclude 'config/' --exclude 'uploads/' --exclude 'node_modules/' /home/ran/codex/dogule1/dist /home/ran/codex/dogule1/modules /home/ran/codex/dogule1/tools dogule@144.91.86.20:/opt/dogule1/
+rsync -av --delete --exclude 'config/' --exclude 'uploads/' --exclude 'node_modules/' /home/ran/codex/dogule@144.91.86.20/dist /home/ran/codex/dogule@144.91.86.20/modules /home/ran/codex/dogule@144.91.86.20/tools dogule@144.91.86.20:/opt/dogule1/
 ```
 
 3. Restart and verify:
@@ -337,7 +337,7 @@ Cause:
 Fix:
 
 ```
-scp /home/ran/codex/dogule1/package.json /home/ran/codex/dogule1/pnpm-lock.yaml dogule@144.91.86.20:/opt/dogule1/
+scp /home/ran/codex/dogule@144.91.86.20/package.json /home/ran/codex/dogule@144.91.86.20/pnpm-lock.yaml dogule@144.91.86.20:/opt/dogule1/
 ```
 
 ```
@@ -353,7 +353,7 @@ Cause:
 Fix:
 
 ```
-rsync -av --delete /home/ran/codex/dogule1/dist/ dogule@144.91.86.20:/opt/dogule1/dist/
+rsync -av --delete /home/ran/codex/dogule@144.91.86.20/dist/ dogule@144.91.86.20:/opt/dogule1/dist/
 ```
 
 ### Port already in use (EADDRINUSE)

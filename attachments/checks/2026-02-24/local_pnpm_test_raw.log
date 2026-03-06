@@ -1,9 +1,9 @@
 
-> dogule1@0.0.0 test /home/ran/codex/dogule1
+> dogule1@0.0.0 test /home/ran/codex/dogule@144.91.86.20
 > vitest
 
 
- RUN  v4.0.12 /home/ran/codex/dogule1
+ RUN  v4.0.12 /home/ran/codex/dogule@144.91.86.20
 
  ✓ modules/kalender/utils/layout.test.js (8 tests) 8ms
  ✓ modules/shared/logging/logger.test.js (3 tests) 38ms

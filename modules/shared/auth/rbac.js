@@ -23,6 +23,7 @@ const DEVELOPER_API_ENTITIES = [...ALL_API_ENTITIES, "developer"];
 const ROLE_MODULES = {
   admin: ALL_MODULES,
   developer: DEVELOPER_MODULES,
+  client_readonly: ALL_MODULES,
   trainer: ["kunden", "hunde", "kurse", "schulungen", "uebungsbibliothek", "kommunikation"],
   trainer_rapport: ["kunden", "hunde", "kurse", "schulungen", "uebungsbibliothek", "kommunikation"],
 };
@@ -30,6 +31,7 @@ const ROLE_MODULES = {
 const API_ACCESS = {
   admin: { read: ALL_API_ENTITIES, write: ALL_API_ENTITIES },
   developer: { read: DEVELOPER_API_ENTITIES, write: DEVELOPER_API_ENTITIES },
+  client_readonly: { read: ALL_API_ENTITIES, write: [] },
   trainer: {
     read: ["kunden", "hunde", "kurse", "rapporte", "schulungen", "uebungsbibliothek"],
     write: ["kunden", "hunde", "rapporte", "uebungsbibliothek"],
@@ -47,6 +49,7 @@ const KOMMUNIKATION_ACTIONS = {
     "kommunikation.infochannel.confirm",
   ],
   developer: ["kommunikation.infochannel.view", "kommunikation.infochannel.confirm"],
+  client_readonly: ["kommunikation.infochannel.view"],
   trainer: ["kommunikation.infochannel.view", "kommunikation.infochannel.confirm"],
   trainer_rapport: ["kommunikation.infochannel.view", "kommunikation.infochannel.confirm"],
 };

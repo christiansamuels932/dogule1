@@ -1,4 +1,4 @@
-/* globals document, window, URLSearchParams, console */
+/* globals document, window, URLSearchParams, console, MutationObserver */
 import {
   listZertifikate,
   getZertifikat,
@@ -20,6 +20,31 @@ import {
 import { openCertificatePdf, validateCertificateSnapshot } from "./certificatePdf.js";
 import { recordAutomationEvent } from "../kommunikation/automation/client.js";
 import { getCertificateBackgroundForKurs } from "../shared/certificates/backgrounds.js";
+import { getSession } from "../shared/auth/client.js";
+
+function isClientReadonlyRole() {
+  const role = String(getSession()?.user?.role || "")
+    .trim()
+    .toLowerCase();
+  return role === "client_readonly";
+}
+
+function disableAllButtons(host) {
+  if (!host) return;
+  host.querySelectorAll("button").forEach((button) => {
+    button.disabled = true;
+    if (!button.title) button.title = "Nur Lesen";
+  });
+}
+
+function installReadonlyButtonGuard(host) {
+  if (!host || typeof MutationObserver === "undefined") return;
+  disableAllButtons(host);
+  const observer = new MutationObserver(() => {
+    disableAllButtons(host);
+  });
+  observer.observe(host, { childList: true, subtree: true });
+}
 
 export function initModule(container, routeInfo = {}) {
   if (!container) return;
@@ -29,6 +54,10 @@ export function initModule(container, routeInfo = {}) {
   const { mode, detailId } = parseRoute(routeInfo?.segments);
   const section = document.createElement("section");
   section.className = "dogule-section zertifikate-section";
+
+  if (isClientReadonlyRole()) {
+    installReadonlyButtonGuard(section);
+  }
 
   if (mode === "list") {
     renderListView(section);

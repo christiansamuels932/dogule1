@@ -2,7 +2,7 @@
 set -euo pipefail
 
 BASE="${BASE:-http://127.0.0.1:5177}"
-OUT="${OUT:-/home/ran/codex/dogule1/attachments/checks/2026-02-24}"
+OUT="${OUT:-/home/ran/codex/dogule@144.91.86.20/attachments/checks/2026-02-24}"
 API_DIR="$OUT/api"
 RESULTS="$OUT/local_check_results.tsv"
 SUMMARY_JSON="$OUT/local_check_summary.json"
