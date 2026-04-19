@@ -14,6 +14,7 @@ import { getSession } from "../shared/auth/client.js";
 import { matchesSearchQuery, normalizeSearchText } from "../shared/utils/search.js";
 
 const TOAST_KEY = "__DOGULE_HUNDE_TOAST__";
+const KUNDEN_TOAST_KEY = "__DOGULE_KUNDEN_TOAST__";
 const GESCHLECHT_OPTIONS = [
   { value: "", label: "Bitte wählen" },
   { value: "Rüde", label: "Rüde" },
@@ -30,6 +31,13 @@ export async function createHundeFormView(container, options = {}) {
   const mode = options.mode === "edit" ? "edit" : "create";
   const initialHund = mode === "edit" ? options.hund || null : null;
   const hundId = options.id || initialHund?.id || "";
+  const createPrefill =
+    mode === "create"
+      ? {
+          kundenId: String(options.prefillKundenId || "").trim(),
+          returnHash: String(options.returnHash || "").trim(),
+        }
+      : null;
 
   container.innerHTML = "";
   container.classList.add("hunde-view");
@@ -89,6 +97,8 @@ export async function createHundeFormView(container, options = {}) {
       return;
     }
     existing = initialHund;
+  } else if (createPrefill?.kundenId) {
+    existing = { kundenId: createPrefill.kundenId };
   }
 
   const cardFragment = createCard({
@@ -112,7 +122,11 @@ export async function createHundeFormView(container, options = {}) {
 
   const hundeCodeValue = mode === "edit" ? (existing?.code ?? existing?.hundeId ?? "") : "";
   const defaultHundCode = mode === "edit" ? hundeCodeValue : generateNextHundCode(hundeListe);
-  const refs = buildFormFields(form, existing, kunden, { hundeCodeValue, defaultHundCode });
+  const refs = buildFormFields(form, existing, kunden, {
+    hundeCodeValue,
+    defaultHundCode,
+    lockKundenId: Boolean(createPrefill?.kundenId),
+  });
 
   const footer = cardElement.querySelector(".ui-card__footer");
   footer.innerHTML = "";
@@ -128,6 +142,10 @@ export async function createHundeFormView(container, options = {}) {
     label: "Abbrechen",
     variant: "quiet",
     onClick: () => {
+      if (mode === "create" && createPrefill?.returnHash) {
+        window.location.hash = createPrefill.returnHash;
+        return;
+      }
       window.location.hash = mode === "create" ? "#/hunde" : `#/hunde/${hundId}`;
     },
   });
@@ -144,6 +162,7 @@ export async function createHundeFormView(container, options = {}) {
     section,
     submit,
     hundeListe,
+    returnHash: createPrefill?.returnHash || "",
   };
   form.addEventListener("submit", (event) => handleHundFormSubmit(event, submitContext));
 
@@ -154,7 +173,7 @@ function buildFormFields(
   form,
   existing = {},
   kunden = [],
-  { hundeCodeValue = "", defaultHundCode = "" } = {}
+  { hundeCodeValue = "", defaultHundCode = "", lockKundenId = false } = {}
 ) {
   const kundeOptions = [
     { value: "", label: "Bitte wählen" },
@@ -449,6 +468,9 @@ function buildFormFields(
       if (searchInput) {
         searchInput.type = "search";
       }
+      if (lockKundenId) {
+        searchRow.hidden = true;
+      }
       form.appendChild(searchRow);
 
       const row = createFormRow(field.config);
@@ -461,8 +483,14 @@ function buildFormFields(
           populateKundenSelect(input, options, input.value);
         });
       }
+      if (lockKundenId) {
+        input.disabled = true;
+        input.setAttribute("aria-disabled", "true");
+      }
       const hint = row.querySelector(".ui-form-row__hint");
-      const defaultHint = field.config.describedByText || "";
+      const defaultHint = lockKundenId
+        ? "Kunde ist durch den Aufruf aus der Kundenansicht vorgegeben."
+        : field.config.describedByText || "";
       if (defaultHint) {
         hint.textContent = defaultHint;
         hint.classList.remove("sr-only");
@@ -689,7 +717,7 @@ function generateNextHundCode(hundeListe = []) {
 
 async function handleHundFormSubmit(
   event,
-  { mode, id, existing, kunden, refs, section, submit, hundeListe }
+  { mode, id, existing, kunden, refs, section, submit, hundeListe, returnHash }
 ) {
   event.preventDefault();
   const codeInput = refs.hundeCode?.input;
@@ -754,6 +782,11 @@ async function handleHundFormSubmit(
       mode === "create" ? "Hund wurde erstellt." : "Hund wurde aktualisiert.",
       "success"
     );
+    if (mode === "create" && returnHash) {
+      window[KUNDEN_TOAST_KEY] = { message: "Hund wurde erstellt.", tone: "success" };
+      window.location.hash = returnHash;
+      return;
+    }
     window.location.hash = `#/hunde/${result.id}`;
   } catch (error) {
     console.error("[HUNDE_ERR_FORM_SUBMIT]", error);

@@ -19,7 +19,11 @@ export async function initModule(container, routeContext = { segments: [] }) {
     return;
   }
   if (view === "create") {
-    await createHundeFormView(container, { mode: "create" });
+    await createHundeFormView(container, {
+      mode: "create",
+      prefillKundenId: routeContext?.prefillKundenId || "",
+      returnHash: routeContext?.returnHash || "",
+    });
     return;
   }
   if (view === "edit" && id) {
@@ -37,7 +41,12 @@ function resolveView(routeContext = {}) {
   }
   const [first, second] = segments;
   if (first === "new") {
-    return { view: "create" };
+    const prefillKundenId = second || "";
+    return {
+      view: "create",
+      prefillKundenId,
+      returnHash: prefillKundenId ? `#/kunden/${prefillKundenId}` : "",
+    };
   }
   if (second === "edit") {
     return { view: "edit", id: first };

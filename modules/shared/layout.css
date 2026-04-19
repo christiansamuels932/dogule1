@@ -209,24 +209,38 @@
 }
 
 .dogule-nav a {
+  display: inline-flex;
+  align-items: center;
   margin-right: 0.75rem;
+  margin-bottom: 0.35rem;
   color: var(--color-paper);
   text-decoration: none;
-  padding: 0.3rem 0.5rem;
+  padding: 0.35rem 0.7rem;
   border-radius: 999px;
+  border: 1px solid rgba(255, 253, 246, 0.82);
+  background: rgba(255, 253, 246, 0.06);
+  box-shadow: inset 0 0 0 1px rgba(255, 253, 246, 0.08);
   transition:
     background 150ms ease,
-    color 150ms ease;
+    color 150ms ease,
+    border-color 150ms ease,
+    box-shadow 150ms ease;
 }
 
 .dogule-nav a.active,
 .dogule-nav .nav__link--active {
   background: rgba(255, 253, 246, 0.2);
+  border-color: rgba(255, 253, 246, 1);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 253, 246, 0.24),
+    0 2px 8px rgba(15, 20, 38, 0.18);
 }
 
 .dogule-nav a:hover,
 .dogule-nav a:focus-visible {
   background: rgba(255, 253, 246, 0.32);
+  border-color: rgba(255, 253, 246, 0.95);
+  box-shadow: inset 0 0 0 1px rgba(255, 253, 246, 0.2);
 }
 
 .dogule-main {

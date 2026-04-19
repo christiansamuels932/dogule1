@@ -441,7 +441,7 @@ function buildKursHistorieCard(
     onDelete,
     onCreateZertifikat,
     canManage = true,
-    title = "Kurs Historie",
+    title = "Kurs Teilnehmer Historie",
     kundenById = new Map(),
   } = {}
 ) {
