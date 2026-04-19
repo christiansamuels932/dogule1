@@ -11,6 +11,123 @@ BASE NOTE: Keep the "Quick start, 3 Launchcodes" section in this header area. Do
 - `DOGULE1_STORAGE_MODE=mariadb DOGULE1_MARIADB_SOCKET=/run/mysqld/mysqld.sock DOGULE1_MARIADB_USER=ran node tools/server/apiServer.js`
 - `DOGULE1_STORAGE_MODE=mariadb DOGULE1_MARIADB_SOCKET=/run/mysqld/mysqld.sock DOGULE1_MARIADB_USER=ran DOGULE1_PASSWORD_FILE=/home/ran/codex/dogule@144.91.86.20/dogule1.passwords pnpm dev`
 
+## Date 2026-04-19 — VPS Data Sync + Kunden/Hunde Detail UI Polish + Trainer Kunden Hund-Card + VPS Rollout
+
+## Kontext
+
+- Status: completed.
+- Branch: `2026-03-06`.
+- Scope:
+- aktuelle VPS-MariaDB nach lokal holen und als Arbeitsstand übernehmen
+- Kunden-/Hunde-Detailansicht in `#Kunden` visuell stabilisieren
+- Admin/Developer-Flow `Neuen Hund anlegen` direkt aus der Kundenansicht ergänzen
+- Trainer-Kundenansicht um eingebettete Hunde-Stammdaten erweitern, aber ohne Hund-Anlage
+- Header-Navigation im blauen Balken klarer absetzen
+- Kurs-Detailbenennung `Kurs Historie` präzisieren
+- danach vollständigen lokalen DB- und Runtime-Stand wieder auf den VPS deployen
+
+## Ergebnis (kurz)
+
+- Datenstand / Sync:
+- aktuellen VPS-Dump erzeugt und lokal übernommen
+- lokalen Arbeitsstand danach mit frischem SQL-Dump wieder vollständig auf den VPS zurückgeschrieben
+- lokaler Arbeitsstand ist damit wieder die live ausgerollte Quelle
+- Analyse / Datenverhalten:
+- Kundenfall `019b6f8b-fc47-72be-bb34-5b0ea981b6ca` geprüft
+- bestätigt: `kurs_teilnehmer.kunde_ort` ist ein historischer Snapshot und wird nicht live aus `kunden.ort` nachgezogen
+- Entscheidung beibehalten: historische Kurs-Teilnehmerdaten werden nicht automatisch überschrieben
+- UI / Kunden-Detail:
+- Zwei-Spalten-Ansicht `Stammdaten Kunde` + `Stammdaten Hund` stabilisiert
+- Ursachen behoben:
+- Kartenbreite lief wegen `width: 100%` ohne `border-box` minimal über die Grid-Spalte hinaus
+- lange Detailwerte konnten zu unsauberem Layout beitragen
+- Änderungen:
+- `box-sizing: border-box` für die Kunden-Detail-Cards
+- `min-width: 0` + Wrapping-Schutz für Detailzellen
+- Grid-/Card-Verhalten auf sauberes Equal-Height-Layout gebracht
+- Ergebnis:
+- Kunde- und Hund-Karte stehen sauber nebeneinander
+- beide Karten übernehmen die Höhe der jeweils höheren Karte
+- UI / Hunde-Anlage aus Kundenansicht:
+- neuer Button `Neuen Hund anlegen` in der `Stammdaten Hund`-Card für `admin`/`developer`
+- ursprünglicher Window-Prefill-Ansatz war im Browser nicht robust genug
+- final auf robuste Route umgestellt:
+- Kundenansicht verlinkt direkt auf `#/hunde/new/:kundenId`
+- Hunde-Create-Form liest `kundenId` aus der Route
+- Kundenfeld ist dabei vorbefüllt und gesperrt
+- nach `Erstellen` oder `Abbrechen` geht der Flow zurück zu `#/kunden/:kundenId`
+- Success-Toast erscheint wieder in der Kundenansicht
+- UI / Trainer-Kundenansicht:
+- Trainer und `trainer_rapport` sehen in `#Kunden` jetzt ebenfalls die eingebettete `Stammdaten Hund`-Card rechts neben `Stammdaten Kunde`
+- bewusst ohne Admin-/Developer-Schreibaktionen:
+- kein Button `Neuen Hund anlegen`
+- keine Freischaltung weiterer Admin-Extras durch diese Änderung
+- UI / Header:
+- Modulnamen in der blauen Top-Navigation mit sichtbaren weißen Umrandungen versehen
+- Hover/Active-Zustände klarer hervorgehoben
+- UI / Kurse:
+- Card-Titel im Kurs-Detail umbenannt:
+- `Kurs Historie` → `Kurs Teilnehmer Historie`
+- zugehöriger Zertifikate-Hinweistext ebenfalls auf die neue Bezeichnung angepasst
+
+## Technische Änderungen
+
+- `modules/shared/shared.css`
+- Kunden-Detail-Pair/Grid und Kartenbreiten korrigiert
+- Equal-Height-Verhalten für die beiden Detail-Cards ergänzt
+- Wrapping/Overflow-Schutz für Detailwerte ergänzt
+- `modules/kunden/index.js`
+- neue Sichtbarkeitslogik für eingebettete Hunde-Card in Kunden-Details
+- Trainer erhalten die Hunde-Card, aber keine Admin-Hund-Anlage
+- Admin/Developer erhalten `Neuen Hund anlegen` direkt in der Hunde-Card
+- redundante Trainer-Link-Card zur Hundeübersicht entfernt
+- `modules/hunde/index.js`
+- Route `#/hunde/new/:kundenId` als Create-Variante verdrahtet
+- `modules/hunde/formView.js`
+- routebasierter Kunden-Prefill für Hund-Neuanlage
+- gesperrtes Kundenfeld bei Aufruf aus der Kundenansicht
+- Rücksprung nach `#/kunden/:kundenId` nach Save/Cancel
+- Kunden-Toast bei erfolgreicher Anlage
+- `modules/shared/layout.css`
+- weiße Rahmen und stärkere visuelle Trennung für Header-Navigation
+- `modules/kurse/index.js`
+- Titel `Kurs Teilnehmer Historie`
+- `modules/zertifikate/index.js`
+- Hinweistext auf `Kurs Teilnehmer Historie` umgestellt
+
+## Tests
+
+- Lokal:
+- lokale App mit den dokumentierten 3 Launchcodes gestartet ✅
+- lokale MariaDB-Verbindung geprüft:
+- `mariadb --protocol=socket --socket /run/mysqld/mysqld.sock -u ran -N -B -e "SELECT 1;"` ✅
+- lokale API geprüft:
+- `curl -sS -i http://127.0.0.1:5177/healthz` = `HTTP/1.1 200 OK` ✅
+- VPS-Dump lokal importiert und geprüft ✅
+- Kontrollcounts nach Import:
+- `kunden=1426`
+- `hunde=1597`
+- `kurse=14`
+- `trainer=5`
+- Build-Checks:
+- `pnpm build` mehrfach nach den UI-/Routing-Änderungen ausgeführt ✅
+- VPS Rollout:
+- lokaler Dump erstellt:
+- `/tmp/dogule1_local_2026-04-19_deploy.sql` ✅
+- Dump auf VPS kopiert:
+- `/home/dogule/dogule1_local_2026-04-19_deploy.sql` ✅
+- VPS-Datenbank vollständig mit lokalem Dump überschrieben ✅
+- Runtime-Sync mit safe `rsync` (`dist`, `modules`, `tools`) nach `/opt/dogule1` ausgeführt ✅
+- `sudo systemctl restart dogule1 && sudo systemctl status dogule1 --no-pager -l` = `active (running)` ✅
+- VPS Healthcheck:
+- `ssh dogule@144.91.86.20 "curl -sS -i http://127.0.0.1:5177/healthz"` = `HTTP/1.1 200 OK` + `{"status":"ok","storageMb":3}` ✅
+
+## Wichtige Hinweise
+
+- Nach dem VPS-Deploy wurden UI-Änderungen zunächst nicht sofort sichtbar; Ursache war sehr wahrscheinlich Browser-/Asset-Cache.
+- Hard-Reload kann nach Frontend-Deploys weiterhin nötig sein, selbst wenn `dist` korrekt synchronisiert wurde.
+- Historische Kurs-Teilnehmer-Snapshots bleiben bewusst unverändert; keine automatische Rückbefüllung aus aktuellen Kunden-Stammdaten.
+
 ## Date 2026-03-06 — Client Read-Only Role (`Tester`) + Login Order + PII-Masking + UI Hardening
 
 ## Kontext

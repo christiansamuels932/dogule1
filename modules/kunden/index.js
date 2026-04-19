@@ -45,6 +45,10 @@ function canViewDetailExtras(role) {
   return isAdminOrDeveloper(role) || role === "client_readonly";
 }
 
+function canViewHundDetailCard(role) {
+  return canViewDetailExtras(role) || role === "trainer" || role === "trainer_rapport";
+}
+
 function canCreateRapportForRole(role) {
   return (
     role === "admin" || role === "developer" || role === "trainer" || role === "trainer_rapport"
@@ -1057,6 +1061,7 @@ async function renderDetail(root, id) {
   const role = getSession()?.user?.role || "";
   const canManage = isAdminOrDeveloper(role);
   const canViewExtras = canViewDetailExtras(role);
+  const canViewHundCard = canViewHundDetailCard(role);
   let allKurse = [];
   let kurseLoaded = false;
   let kurseLoadFailed = false;
@@ -1075,7 +1080,7 @@ async function renderDetail(root, id) {
   };
   let linkedHunde = [];
   let hundeLoadFailed = false;
-  if (canViewExtras) {
+  if (canViewHundCard) {
     try {
       const allHunde = await listHunde();
       linkedHunde = allHunde.filter((hund) => hund.kundenId === id);
@@ -1253,7 +1258,7 @@ async function renderDetail(root, id) {
   const detailPair = document.createElement("div");
   detailPair.className = "kunden-detail-pair";
   detailPair.appendChild(detailCard);
-  if (canViewExtras) {
+  if (canViewHundCard) {
     detailPair.appendChild(
       renderKundenHundeCard(linkedHunde, hundeLoadFailed, {
         kundeId: id,
@@ -1290,16 +1295,6 @@ async function renderDetail(root, id) {
         }
       }
     }
-  }
-
-  if (role === "trainer" || role === "trainer_rapport") {
-    const hundeLinkCard = createStandardCard("Hunde");
-    const linkBody = hundeLinkCard.querySelector(".ui-card__body");
-    if (linkBody) {
-      linkBody.innerHTML = "";
-      linkBody.appendChild(createUiLink("Zur Hundeübersicht", "#/hunde", "quiet"));
-    }
-    root.appendChild(createStandardCardSection(hundeLinkCard));
   }
 
   if (!canViewExtras) {
@@ -1450,9 +1445,28 @@ function renderKundenHundeCard(hunde = [], hasError = false, options = {}) {
   if (body) {
     body.classList.add("kunden-detail-card__body");
     body.innerHTML = "";
+    const createHundButton = () => {
+      return createUiLink(
+        "Neuen Hund anlegen",
+        `#/hunde/new/${encodeURIComponent(kundeId)}`,
+        "secondary"
+      );
+    };
     if (hasError) {
+      if (canManage) {
+        const toolbar = document.createElement("div");
+        toolbar.className = "kunden-detail-card__toolbar";
+        toolbar.appendChild(createHundButton());
+        body.appendChild(toolbar);
+      }
       showErrorNotice(body);
     } else if (!hunde.length) {
+      if (canManage) {
+        const toolbar = document.createElement("div");
+        toolbar.className = "kunden-detail-card__toolbar";
+        toolbar.appendChild(createHundButton());
+        body.appendChild(toolbar);
+      }
       appendSharedEmptyState(body);
     } else {
       const wrap = document.createElement("div");
@@ -1570,6 +1584,7 @@ function renderKundenHundeCard(hunde = [], hasError = false, options = {}) {
           statusSlot.className = "kunden-card-status";
           const actionsWrap = document.createElement("div");
           actionsWrap.className = "module-actions kunden-hund-actions";
+          const createBtn = createHundButton();
           const editBtn = createButton({ label: "Bearbeiten", variant: "primary" });
           editBtn.type = "button";
           const addToKursBtn = createButton({
@@ -1579,7 +1594,7 @@ function renderKundenHundeCard(hunde = [], hasError = false, options = {}) {
           addToKursBtn.type = "button";
           const deleteBtn = createButton({ label: "Löschen", variant: "secondary" });
           deleteBtn.type = "button";
-          actionsWrap.append(editBtn, addToKursBtn, deleteBtn);
+          actionsWrap.append(editBtn, addToKursBtn, deleteBtn, createBtn);
           controlsHost.append(actionsWrap, statusSlot);
 
           let kursWrap = null;

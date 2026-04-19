@@ -110,7 +110,8 @@ async function renderListView(section) {
   actionsRow.className = "module-actions";
   const createBtn = document.createElement("p");
   createBtn.className = "zertifikate-kurs-only";
-  createBtn.textContent = "Zertifikate können nur aus der Kurs Historie erstellt werden.";
+  createBtn.textContent =
+    "Zertifikate können nur aus der Kurs Teilnehmer Historie erstellt werden.";
   actionsRow.appendChild(createBtn);
   if (actionsBody) {
     actionsBody.innerHTML = "";
