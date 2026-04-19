@@ -30,7 +30,7 @@
   },
   "dependencies": {
     "mariadb": "^3.4.0",
-    "nodemailer": "^7.0.12"
+    "nodemailer": "^8.0.5"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
