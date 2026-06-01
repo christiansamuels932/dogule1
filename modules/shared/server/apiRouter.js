@@ -77,18 +77,25 @@ function jsonResponse(res, statusCode, body) {
 
 async function readJsonBody(req) {
   if (!req || req.method === "GET" || req.method === "HEAD") return {};
-  const chunks = [];
-  for await (const chunk of req) {
-    chunks.push(chunk);
-  }
-  if (!chunks.length) return {};
-  const text = Buffer.concat(chunks).toString("utf8");
+  const buffer = await readRequestBodyBuffer(req);
+  if (!buffer.length) return {};
+  const text = buffer.toString("utf8");
   if (!text) return {};
   try {
     return JSON.parse(text);
   } catch {
     return {};
   }
+}
+
+async function readRequestBodyBuffer(req) {
+  if (!req || req.method === "GET" || req.method === "HEAD") return Buffer.alloc(0);
+  const chunks = [];
+  for await (const chunk of req) {
+    chunks.push(chunk);
+  }
+  if (!chunks.length) return Buffer.alloc(0);
+  return Buffer.concat(chunks);
 }
 
 const PASSWORD_FILE = process.env.DOGULE1_PASSWORD_FILE
@@ -398,6 +405,9 @@ export function createApiRouter(options = {}) {
   const uebungsbibliothekUploadRoot =
     process.env.DOGULE1_UEBUNGSBIBLIOTHEK_UPLOAD_ROOT ||
     path.resolve(process.cwd(), "uploads", "uebungsbibliothek");
+  const uebungsbibliothekMaterialUploadRoot =
+    process.env.DOGULE1_UEBUNGSBIBLIOTHEK_MATERIAL_UPLOAD_ROOT ||
+    path.resolve(uebungsbibliothekUploadRoot, "material");
   const authConfig = resolveAuthConfig({
     enabled: true,
   });
@@ -1257,6 +1267,7 @@ export function createApiRouter(options = {}) {
     const ext = path.extname(filePath).toLowerCase();
     if (ext === ".png") return "image/png";
     if (ext === ".jpg" || ext === ".jpeg") return "image/jpeg";
+    if (ext === ".zip") return "application/zip";
     if (ext === ".gif") return "image/gif";
     if (ext === ".webp") return "image/webp";
     if (ext === ".pdf") return "application/pdf";
@@ -1301,6 +1312,51 @@ export function createApiRouter(options = {}) {
     const mime = match[1].toLowerCase();
     if (!isAllowedUploadMime(mime)) return null;
     return { mime, data: match[2] };
+  }
+
+  function normalizeMaterialType(value) {
+    const normalized = String(value || "")
+      .trim()
+      .toLowerCase();
+    if (["picture", "image", "bild", "einzelbild"].includes(normalized)) return "picture";
+    if (["zip", "zip_folder", "zipfolder", "ordner"].includes(normalized)) return "zip";
+    return "";
+  }
+
+  function extensionForMaterial({ mimeType = "", fileName = "", materialType = "" } = {}) {
+    const mime = String(mimeType || "").toLowerCase();
+    const ext = path
+      .extname(String(fileName || ""))
+      .replace(/^\./, "")
+      .toLowerCase();
+    if (materialType === "picture") {
+      if (mime === "image/jpeg" || mime === "image/jpg") return "jpg";
+      if (mime === "image/png") return "png";
+      if (ext === "jpg" || ext === "jpeg") return "jpg";
+      if (ext === "png") return "png";
+      return "";
+    }
+    if (materialType === "zip") {
+      if (
+        mime === "application/zip" ||
+        mime === "application/x-zip-compressed" ||
+        mime === "application/octet-stream" ||
+        ext === "zip"
+      ) {
+        return "zip";
+      }
+      return "";
+    }
+    return "";
+  }
+
+  function parseMaterialDataUrl({ dataUrl = "", fileName = "", materialType = "" } = {}) {
+    const match = String(dataUrl).match(/^data:([^;]+);base64,(.+)$/i);
+    if (!match) return null;
+    const mime = match[1].toLowerCase();
+    const ext = extensionForMaterial({ mimeType: mime, fileName, materialType });
+    if (!ext) return null;
+    return { mime, data: match[2], ext };
   }
 
   async function handleSchulungenRoutes(req, res) {
@@ -1426,13 +1482,123 @@ export function createApiRouter(options = {}) {
     const reqUrl = req?.url || "";
     if (!reqUrl.startsWith("/api/uebungsbibliothek")) return false;
 
-    const body = await readJsonBody(req);
     const pathOnly = reqUrl.split("?")[0];
     const method = (req.method || "GET").toUpperCase();
     const requestId = resolveRequestId(req);
     const actorRole = String(req.headers["x-dogule-actor-role"] || "");
+    let cachedBody = null;
+    async function getBody() {
+      if (cachedBody) return cachedBody;
+      cachedBody = await readJsonBody(req);
+      return cachedBody;
+    }
+
+    if (pathOnly === "/api/uebungsbibliothek/material" && method === "GET") {
+      try {
+        const entries = await storage.uebungsbibliothekMaterial.list({ requestId });
+        jsonResponse(res, 200, entries);
+      } catch (error) {
+        jsonResponse(res, 500, {
+          message: "uebungsbibliothek_material_list_failed",
+          code: error?.code,
+        });
+      }
+      return true;
+    }
+
+    if (pathOnly === "/api/uebungsbibliothek/material" && method === "POST") {
+      const contentType = String(req.headers["content-type"] || "").toLowerCase();
+      let materialType = normalizeMaterialType(req.headers["x-dogule-material-type"]);
+      let materialName = decodeURIComponent(
+        String(req.headers["x-dogule-material-name"] || "").trim()
+      ).trim();
+      let originalFileName = decodeURIComponent(
+        String(req.headers["x-dogule-material-filename"] || "").trim()
+      ).trim();
+      let payload = null;
+      let fileBuffer = null;
+      if (contentType.includes("application/json")) {
+        const body = await getBody();
+        materialType = normalizeMaterialType(body?.materialType);
+        materialName = String(body?.name || "").trim();
+        originalFileName = String(body?.fileName || "").trim();
+        payload = parseMaterialDataUrl({
+          dataUrl: body?.dataUrl || "",
+          fileName: originalFileName,
+          materialType,
+        });
+        if (payload) fileBuffer = Buffer.from(payload.data, "base64");
+      } else {
+        const bodyBuffer = await readRequestBodyBuffer(req);
+        const ext = extensionForMaterial({
+          mimeType: contentType.split(";")[0],
+          fileName: originalFileName,
+          materialType,
+        });
+        if (ext) {
+          payload = { mime: contentType.split(";")[0] || "application/octet-stream", ext };
+          fileBuffer = bodyBuffer;
+        }
+      }
+      if (!materialName || !materialType || !payload) {
+        jsonResponse(res, 400, { message: "invalid_material" });
+        return true;
+      }
+      const fileName = `${uuidv7()}.${payload.ext}`;
+      const targetPath = path.join(uebungsbibliothekMaterialUploadRoot, fileName);
+      try {
+        await fs.mkdir(uebungsbibliothekMaterialUploadRoot, { recursive: true });
+        await fs.writeFile(targetPath, fileBuffer);
+        const created = await storage.uebungsbibliothekMaterial.create(
+          {
+            name: materialName,
+            materialType,
+            fileName,
+            originalFileName,
+            mimeType: payload.mime,
+            sizeBytes: fileBuffer.length,
+            url: `/api/uebungsbibliothek/material/uploads/${fileName}`,
+            createdBy: String(
+              req.headers["x-dogule-actor-username"] || req.headers["x-dogule-actor-id"] || ""
+            ),
+          },
+          { requestId }
+        );
+        jsonResponse(res, 201, created);
+      } catch (error) {
+        try {
+          await fs.unlink(targetPath);
+        } catch {
+          // Ignore cleanup failure after a failed metadata insert.
+        }
+        jsonResponse(res, 500, { message: "material_upload_failed", code: error?.code });
+      }
+      return true;
+    }
+
+    if (pathOnly.startsWith("/api/uebungsbibliothek/material/uploads/") && method === "GET") {
+      const fileName = pathOnly.replace("/api/uebungsbibliothek/material/uploads/", "");
+      if (!fileName || fileName.includes("..") || fileName.includes("/")) {
+        jsonResponse(res, 400, { message: "invalid_file" });
+        return true;
+      }
+      const filePath = path.join(uebungsbibliothekMaterialUploadRoot, fileName);
+      try {
+        const data = await fs.readFile(filePath);
+        res.statusCode = 200;
+        res.setHeader("Content-Type", contentTypeForUpload(filePath));
+        if (path.extname(filePath).toLowerCase() === ".zip") {
+          res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
+        }
+        res.end(data);
+      } catch {
+        jsonResponse(res, 404, { message: "not_found" });
+      }
+      return true;
+    }
 
     if (pathOnly === "/api/uebungsbibliothek/uploads" && method === "POST") {
+      const body = await getBody();
       const payload = parseDataUrl(body?.dataUrl || "");
       if (!payload) {
         jsonResponse(res, 400, { message: "invalid_image" });
@@ -1489,6 +1655,7 @@ export function createApiRouter(options = {}) {
         jsonResponse(res, 403, { message: "forbidden" });
         return true;
       }
+      const body = await getBody();
       try {
         const created = await storage.uebungsbibliothekKategorien.create(body, { requestId });
         jsonResponse(res, 201, created);
@@ -1512,6 +1679,7 @@ export function createApiRouter(options = {}) {
     }
 
     if (pathOnly === "/api/uebungsbibliothek" && method === "POST") {
+      const body = await getBody();
       try {
         const created = await storage.uebungsbibliothek.create(body, { requestId });
         jsonResponse(res, 201, created);
@@ -1541,6 +1709,7 @@ export function createApiRouter(options = {}) {
       return true;
     }
     if (entryMatch && (method === "PATCH" || method === "PUT")) {
+      const body = await getBody();
       try {
         const updated = await storage.uebungsbibliothek.update(entryMatch[1], body, { requestId });
         if (!updated) {
@@ -2162,6 +2331,12 @@ export function createApiRouter(options = {}) {
       return handleUebungsbibliothekRoutes(req, res);
     }
     if (
+      reqUrl.startsWith("/api/uebungsbibliothek/material/uploads/") &&
+      (req.method || "GET").toUpperCase() === "GET"
+    ) {
+      return handleUebungsbibliothekRoutes(req, res);
+    }
+    if (
       await handleAuthRoutes(req, res, authService, {
         listAuthOptions,
         ensureTrainerUsers,
@@ -2203,7 +2378,9 @@ export function createApiRouter(options = {}) {
       const entity = entityMatch[1];
       const method = (req.method || "GET").toUpperCase();
       const action = method === "GET" || method === "HEAD" ? "read" : "write";
-      if (!isApiAllowed(role, entity, action)) {
+      const isMaterialUpload =
+        reqUrl.split("?")[0] === "/api/uebungsbibliothek/material" && method === "POST";
+      if (!isMaterialUpload && !isApiAllowed(role, entity, action)) {
         jsonResponse(res, 403, { message: "forbidden" });
         return true;
       }

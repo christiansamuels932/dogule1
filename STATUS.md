@@ -11,6 +11,205 @@ BASE NOTE: Keep the "Quick start, 3 Launchcodes" section in this header area. Do
 - `DOGULE1_STORAGE_MODE=mariadb DOGULE1_MARIADB_SOCKET=/run/mysqld/mysqld.sock DOGULE1_MARIADB_USER=ran node tools/server/apiServer.js`
 - `DOGULE1_STORAGE_MODE=mariadb DOGULE1_MARIADB_SOCKET=/run/mysqld/mysqld.sock DOGULE1_MARIADB_USER=ran DOGULE1_PASSWORD_FILE=/home/ran/codex/dogule@144.91.86.20/dogule1.passwords pnpm dev`
 
+## Date 2026-06-01 — Material Name Sort + Search
+
+## Kontext
+
+- Status: completed.
+- Scope:
+- Materialliste in `#Übungsbibliothek` um Suche erweitern
+- Sortierung für die Spalte `Name` als A-Z und Z-A ergänzen
+- Runtime auf VPS aktualisieren
+- Änderungen committen und pushen
+
+## Ergebnis (kurz)
+
+- UI:
+- neue Suchzeile `Suche Material` oberhalb der Materialliste
+- Suche filtert nach Materialname, Originaldateiname, internem Dateinamen, Typ und Ersteller
+- neue Sortierbuttons `Name A-Z` und `Name Z-A`
+- Materialliste wird nach Name sortiert und bei Suche/Sortierung direkt neu gerendert
+- bestehende Download-Spalte bleibt erhalten
+- VPS:
+- Runtime-only Deploy durchgeführt
+- `dogule1.service` neu gestartet
+
+## Tests
+
+- Lokal:
+- `pnpm lint` ✅
+- `pnpm build` ✅
+- VPS:
+- safe Runtime-`rsync` (`dist`, `modules`, `tools`) ausgeführt ✅
+- `dogule1.service` = `active (running)` ✅
+- VPS `/healthz` = `200 OK` ✅
+
+## Offene Punkte
+
+- Browser-Hard-Reload empfohlen, damit Suche und Sortierbuttons sicher sichtbar sind.
+
+## Date 2026-06-01 — Material Download Button + Image Batch Upload
+
+## Kontext
+
+- Status: completed.
+- Scope:
+- in der Materialliste einen direkten Download-Button pro Datei ergänzen
+- Bilder aus `/home/ran/Downloads/Sammlung-Bilder_Uebungsmaterial-1` als einzelne `Einzelbild`-Materialien auf den VPS hochladen
+- bestehendes `Balance-Pfad.png` nicht duplizieren
+
+## Ergebnis (kurz)
+
+- UI:
+- Materialliste hat jetzt eine eigene Spalte `Download`
+- jeder Eintrag hat einen direkten `Download`-Button mit `download`-Attribut und Originaldateiname
+- Upload:
+- 55 lokale Dateien im Quellordner erkannt
+- 54 neue PNG-Dateien als einzelne Materialeinträge hochgeladen
+- `Balance-Pfad.png` übersprungen, weil bereits vorhanden
+- keine Nicht-Bild-Dateien gefunden
+- temporäre Kopie auf dem VPS unter `/tmp/dogule_material_images` wieder entfernt
+
+## Tests
+
+- Lokal:
+- `pnpm lint` ✅
+- `pnpm build` ✅
+- VPS:
+- safe Runtime-`rsync` (`dist`, `modules`, `tools`) ausgeführt ✅
+- `dogule1.service` neu gestartet und `active (running)` ✅
+- Batch-Upload via VPS-API:
+- `uploaded=54` ✅
+- `skippedExisting=Balance-Pfad.png` ✅
+- `failed=[]` ✅
+- DB-Verifikation:
+- `uebungsbibliothek_material` = `55` Einträge ✅
+- `material_type=picture` = `55` ✅
+- `total_bytes=6341965` ✅
+- VPS `/healthz` = `200 OK` ✅
+
+## Offene Punkte
+
+- Browser-Hard-Reload empfohlen, damit die neue Download-Spalte sicher sichtbar ist.
+
+## Date 2026-06-01 — Material ZIP Upload Hardening
+
+## Kontext
+
+- Status: completed.
+- Scope: ZIP-Upload in `#Übungsbibliothek` → `Material` für grössere Dateien stabilisieren, nachdem ein 5.2-MB-ZIP im Browser hängen blieb, während ein 92.4-KB-PNG erfolgreich gespeichert wurde.
+
+## Ergebnis (kurz)
+
+- Ursache eingegrenzt:
+- VPS-API konnte synthetische 6-MB-ZIP-Dateien grundsätzlich speichern
+- der Browserpfad nutzte aber base64-in-JSON, was für ZIPs unnötig gross und sichtbar träge ist
+- Fix:
+- Material-Uploads senden Dateien jetzt direkt binär an `POST /api/uebungsbibliothek/material`
+- serverseitig werden binäre JPG/PNG/ZIP-Uploads neben dem alten JSON-Fallback akzeptiert
+- Uploadstatus zeigt jetzt sofort `Upload läuft` mit Dateiname und Grösse
+- CORS-/Header-Liste für Material-Metadaten ergänzt
+- keine DB-Änderung nötig
+- Runtime-only VPS-Deploy durchgeführt und `dogule1.service` neu gestartet
+
+## Tests
+
+- Lokal:
+- `pnpm lint` ✅
+- `pnpm build` ✅
+- VPS:
+- safe Runtime-`rsync` (`dist`, `modules`, `tools`) ausgeführt ✅
+- `dogule1.service` = `active (running)` ✅
+- VPS-Binary-Smoke als `Tester`:
+- 6-MB-ZIP Upload = `201` ✅
+- gespeicherte Grösse = `6291456` Bytes ✅
+- temporäre Smoke-Test-Zeile und Datei wieder entfernt ✅
+- VPS `/healthz` = `200 OK` ✅
+- bestehender Materialbestand bleibt erhalten (`Balance-Pfad.png`) ✅
+
+## Offene Punkte
+
+- Browser-Hard-Reload nötig, damit der neue direkte Uploadpfad statt des alten base64-Bundles verwendet wird.
+
+## Date 2026-06-01 — Übungsbibliothek Material Uploads + VPS Rollout
+
+## Kontext
+
+- Status: completed.
+- Scope:
+- aktuellen VPS-MariaDB-Stand nach lokal ziehen und als Arbeitsstand übernehmen
+- in `#Übungsbibliothek` unterhalb der Übungsbibliothek-Card eine eigene `Material`-Card ergänzen
+- Uploads für JPG/PNG-Einzelbilder und ZIP-Ordner für alle Rollen ermöglichen
+- Material-Metadaten in MariaDB speichern und Dateien unter `uploads/uebungsbibliothek/material/` ablegen
+- danach lokalen DB- und Runtime-Stand wieder auf den VPS deployen
+
+## Ergebnis (kurz)
+
+- Datenstand / Sync:
+- aktuellen VPS-Dump nach lokal geholt und lokal importiert
+- neue Tabelle `uebungsbibliothek_material` lokal angelegt und in `tools/mariadb/schema.sql` sowie Migration `116_0_uebungsbibliothek_material.sql` dokumentiert
+- UI / Übungsbibliothek:
+- neue Card `Material` direkt unterhalb der bestehenden Übungsbibliothek-Card ergänzt
+- Uploadformular mit Pflichtfeldern `Name`, `Typ` (`Einzelbild` oder `ZIP-Ordner`) und `Datei`
+- Dateitypprüfung im Browser:
+- `Einzelbild` erlaubt JPG/PNG
+- `ZIP-Ordner` erlaubt ZIP
+- Materialliste zeigt Vorschau für Bilder und Downloadlink für ZIP-Dateien
+- API / Storage:
+- neue Endpunkte:
+- `GET /api/uebungsbibliothek/material`
+- `POST /api/uebungsbibliothek/material`
+- `GET /api/uebungsbibliothek/material/uploads/:fileName`
+- serverseitige Prüfung auf JPG/PNG/ZIP ergänzt
+- `client_readonly` darf gezielt Material hochladen, ohne allgemeine Schreibrechte für Übungsbibliothek-Einträge zu erhalten
+- VPS-Rollout:
+- lokalen DB-Dump erstellt und auf VPS importiert
+- Runtime per safe `rsync` (`dist`, `modules`, `tools`) nach `/opt/dogule1` synchronisiert
+- `dogule1.service` neu gestartet
+
+## Technische Änderungen
+
+- `modules/uebungsbibliothek/index.js`
+- `Material`-Card, Uploadformular und Materialliste ergänzt
+- `modules/shared/api/uebungsbibliothek.js`
+- Material-API-Clientfunktionen ergänzt
+- `modules/shared/server/apiRouter.js`
+- Material-Routen, Uploadspeicher, ZIP-Content-Type und gezielte RBAC-Ausnahme ergänzt
+- `modules/shared/storage/mariadbAdapter.js`
+- Mapper/Normalizer/List/Create für `uebungsbibliothek_material` ergänzt
+- `modules/shared/shared.css`
+- Materialformular und Vorschaubild-Styling ergänzt
+- `tools/mariadb/schema.sql`
+- `tools/mariadb/migrations/116_0_uebungsbibliothek_material.sql`
+
+## Tests
+
+- Lokal:
+- VPS-Dump lokal importiert ✅
+- Migration `116_0_uebungsbibliothek_material.sql` lokal angewendet ✅
+- `pnpm lint` ✅
+- `pnpm build` ✅
+- lokale API `/healthz` = `200 OK` ✅
+- Material-Smoke als `Developer`:
+- PNG Upload = `201` ✅
+- ZIP Upload = `201` ✅
+- Material-Smoke als `Tester` (`client_readonly`):
+- ZIP Upload = `201` ✅
+- temporäre Smoke-Test-Zeilen und Dateien lokal wieder entfernt ✅
+- VPS:
+- DB-Dump local → VPS importiert ✅
+- safe Runtime-`rsync` ausgeführt ✅
+- `dogule1.service` = `active (running)` ✅
+- VPS `/healthz` = `200 OK` ✅
+- Tabelle `uebungsbibliothek_material` auf VPS vorhanden ✅
+- Material-Smoke als `Tester` auf VPS:
+- ZIP Upload = `201` ✅
+- temporäre Smoke-Test-Zeile und Datei auf VPS wieder entfernt ✅
+
+## Offene Punkte
+
+- Browser-Hard-Reload auf dem VPS empfohlen, damit das neue hash-basierte UI-Bundle sicher geladen wird.
+
 ## Date 2026-04-19 — VPS Data Sync + Kunden/Hunde Detail UI Polish + Trainer Kunden Hund-Card + VPS Rollout
 
 ## Kontext

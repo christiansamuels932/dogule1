@@ -512,6 +512,25 @@ function mapUebungsbibliothekRow(row) {
   };
 }
 
+function mapUebungsbibliothekMaterialRow(row) {
+  if (!row) return null;
+  return {
+    id: row.id,
+    name: row.name,
+    materialType: row.material_type,
+    fileName: row.file_name,
+    originalFileName: row.original_file_name,
+    mimeType: row.mime_type,
+    sizeBytes: toNumber(row.size_bytes, 0),
+    url: row.url,
+    createdBy: row.created_by,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    schemaVersion: row.schema_version,
+    version: row.version,
+  };
+}
+
 function normalizeKunde(data = {}, existing) {
   const createdAt = existing?.createdAt || data.createdAt || nowIso();
   const shouldInfer =
@@ -981,6 +1000,25 @@ function normalizeUebungsbibliothekKategorie(data = {}, existing) {
   return {
     id: data.id || existing?.id || uuidv7(),
     name: toStringValue(data.name ?? existing?.name),
+    createdBy: toStringValue(data.createdBy ?? existing?.createdBy),
+    createdAt,
+    updatedAt: nowIso(),
+    schemaVersion: Number(data.schemaVersion ?? existing?.schemaVersion ?? 1),
+    version: Number(data.version ?? existing?.version ?? 0),
+  };
+}
+
+function normalizeUebungsbibliothekMaterial(data = {}, existing) {
+  const createdAt = existing?.createdAt || data.createdAt || nowIso();
+  return {
+    id: data.id || existing?.id || uuidv7(),
+    name: toStringValue(data.name ?? existing?.name),
+    materialType: toStringValue(data.materialType ?? existing?.materialType),
+    fileName: toStringValue(data.fileName ?? existing?.fileName),
+    originalFileName: toStringValue(data.originalFileName ?? existing?.originalFileName),
+    mimeType: toStringValue(data.mimeType ?? existing?.mimeType),
+    sizeBytes: toNumber(data.sizeBytes ?? existing?.sizeBytes ?? 0, 0),
+    url: toStringValue(data.url ?? existing?.url),
     createdBy: toStringValue(data.createdBy ?? existing?.createdBy),
     createdAt,
     updatedAt: nowIso(),
@@ -2817,6 +2855,52 @@ export function createMariaDbAdapter(options = {}) {
     }
   }
 
+  async function listUebungsbibliothekMaterial() {
+    try {
+      return await listAll(
+        pool,
+        "SELECT * FROM uebungsbibliothek_material ORDER BY created_at DESC",
+        [],
+        mapUebungsbibliothekMaterialRow
+      );
+    } catch (error) {
+      throw toStorageError(error, "Failed to list uebungsbibliothek material");
+    }
+  }
+
+  async function createUebungsbibliothekMaterial(data = {}) {
+    const record = normalizeUebungsbibliothekMaterial(data, null);
+    ensureRequiredFields(
+      record,
+      ["name", "materialType", "fileName", "url"],
+      "Material benötigt Name, Typ und Datei"
+    );
+    const params = [
+      record.id,
+      record.name,
+      record.materialType,
+      record.fileName,
+      record.originalFileName,
+      record.mimeType,
+      record.sizeBytes,
+      record.url,
+      record.createdBy,
+      record.createdAt,
+      record.updatedAt,
+      record.schemaVersion,
+      record.version,
+    ];
+    try {
+      await pool.query(
+        "INSERT INTO uebungsbibliothek_material (id, name, material_type, file_name, original_file_name, mime_type, size_bytes, url, created_by, created_at, updated_at, schema_version, version) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        params
+      );
+      return record;
+    } catch (error) {
+      throw toStorageError(error, "Failed to create uebungsbibliothek material");
+    }
+  }
+
   return {
     kunden: {
       list: listKunden,
@@ -2922,6 +3006,10 @@ export function createMariaDbAdapter(options = {}) {
     uebungsbibliothekKategorien: {
       list: listUebungsbibliothekKategorien,
       create: createUebungsbibliothekKategorie,
+    },
+    uebungsbibliothekMaterial: {
+      list: listUebungsbibliothekMaterial,
+      create: createUebungsbibliothekMaterial,
     },
     kursTeilnehmer: {
       list: listKursTeilnehmer,
