@@ -1543,6 +1543,21 @@ h3,
   display: inline-block;
 }
 
+.uebungsbibliothek-material-form {
+  display: grid;
+  gap: 0.85rem;
+  margin-bottom: 1rem;
+}
+
+.uebungsbibliothek-material-preview {
+  width: 80px;
+  max-width: 80px;
+  max-height: 60px;
+  object-fit: cover;
+  border-radius: 0.35rem;
+  display: block;
+}
+
 .schulungen-block__doc-link {
   display: inline-block;
   color: inherit;

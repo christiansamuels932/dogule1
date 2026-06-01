@@ -7,6 +7,8 @@ import {
   listUebungsbibliothekKategorien,
   createUebungsbibliothekKategorie,
   uploadUebungsbibliothekImage,
+  listUebungsbibliothekMaterial,
+  uploadUebungsbibliothekMaterial,
   deleteUebungsbibliothek,
 } from "../shared/api/uebungsbibliothek.js";
 import {
@@ -214,6 +216,338 @@ function buildActionsCard({ onCategoryCreated }) {
   return card;
 }
 
+function formatFileSize(bytes) {
+  const value = Number(bytes || 0);
+  if (!Number.isFinite(value) || value <= 0) return "–";
+  if (value < 1024) return `${value} B`;
+  if (value < 1024 * 1024) return `${Math.round(value / 102.4) / 10} KB`;
+  return `${Math.round(value / 1024 / 102.4) / 10} MB`;
+}
+
+function materialTypeLabel(type) {
+  if (type === "picture") return "Einzelbild";
+  if (type === "zip") return "ZIP-Ordner";
+  return "–";
+}
+
+function createMaterialCard() {
+  const materialCard = createCard({
+    eyebrow: "",
+    title: "Material",
+    body: "",
+    footer: "",
+  });
+  const card = materialCard.querySelector(".ui-card") || materialCard.firstElementChild;
+  const body = card?.querySelector(".ui-card__body");
+  if (!body) return card;
+  body.innerHTML = "";
+
+  const statusSlot = document.createElement("div");
+  statusSlot.className = "schulungen-status";
+
+  const form = document.createElement("form");
+  form.className = "uebungsbibliothek-material-form";
+  form.noValidate = true;
+
+  const nameRow = createFormRow({
+    id: "uebungsbibliothek-material-name",
+    label: "Name",
+    placeholder: "Materialname",
+    required: true,
+  });
+  const nameInput = nameRow.querySelector("input");
+  if (nameInput) nameInput.name = "materialName";
+
+  const typeRow = createFormRow({
+    id: "uebungsbibliothek-material-type",
+    label: "Typ",
+    control: "select",
+    required: true,
+    options: [
+      { value: "picture", label: "Einzelbild", selected: true },
+      { value: "zip", label: "ZIP-Ordner" },
+    ],
+  });
+  const typeSelect = typeRow.querySelector("select");
+  if (typeSelect) typeSelect.name = "materialType";
+
+  const fileRow = createFormRow({
+    id: "uebungsbibliothek-material-file",
+    label: "Datei",
+    type: "file",
+    required: true,
+    describedByText: "Erlaubt sind JPG, PNG und ZIP.",
+  });
+  const fileInput = fileRow.querySelector("input");
+  if (fileInput) {
+    fileInput.name = "materialFile";
+    fileInput.accept = "image/jpeg,image/png";
+  }
+
+  const actions = document.createElement("div");
+  actions.className = "module-actions";
+  const submitBtn = createButton({ label: "Material hochladen", variant: "primary" });
+  submitBtn.type = "submit";
+  actions.appendChild(submitBtn);
+
+  form.append(nameRow, typeRow, fileRow, actions);
+
+  const materialState = {
+    items: [],
+    query: "",
+    nameDirection: "asc",
+  };
+
+  const controlsWrap = document.createElement("div");
+  controlsWrap.className = "list-controls";
+  const searchRow = createFormRow({
+    id: "uebungsbibliothek-material-search",
+    label: "Suche Material",
+    placeholder: "Name oder Datei ...",
+    type: "search",
+    required: false,
+  });
+  const searchInput = searchRow.querySelector("input");
+  if (searchInput) {
+    searchInput.addEventListener("input", (event) => {
+      materialState.query = event.target.value || "";
+      renderMaterialList();
+    });
+  }
+
+  const sortActions = document.createElement("div");
+  sortActions.className = "module-actions";
+  const sortAzBtn = createButton({ label: "Name A-Z", variant: "secondary" });
+  const sortZaBtn = createButton({ label: "Name Z-A", variant: "secondary" });
+  sortAzBtn.type = "button";
+  sortZaBtn.type = "button";
+  const updateSortButtons = () => {
+    sortAzBtn.classList.toggle("is-active", materialState.nameDirection === "asc");
+    sortZaBtn.classList.toggle("is-active", materialState.nameDirection === "desc");
+  };
+  sortAzBtn.addEventListener("click", () => {
+    materialState.nameDirection = "asc";
+    updateSortButtons();
+    renderMaterialList();
+  });
+  sortZaBtn.addEventListener("click", () => {
+    materialState.nameDirection = "desc";
+    updateSortButtons();
+    renderMaterialList();
+  });
+  sortActions.append(sortAzBtn, sortZaBtn);
+  updateSortButtons();
+  controlsWrap.append(searchRow, sortActions);
+
+  const listWrap = document.createElement("div");
+  listWrap.className = "kunden-list-scroll";
+
+  const getVisibleMaterials = () => {
+    const query = normalizeSortValue(materialState.query);
+    return [...materialState.items]
+      .filter((entry) => {
+        if (!query) return true;
+        const haystack = [
+          entry.name,
+          entry.originalFileName,
+          entry.fileName,
+          materialTypeLabel(entry.materialType),
+          resolveCreatorLabel(entry.createdBy),
+        ]
+          .filter(Boolean)
+          .map(normalizeSortValue)
+          .join(" ");
+        return haystack.includes(query);
+      })
+      .sort((a, b) => {
+        const aValue = normalizeSortValue(a.name || a.originalFileName || "");
+        const bValue = normalizeSortValue(b.name || b.originalFileName || "");
+        const compare = aValue.localeCompare(bValue, "de", { sensitivity: "base" });
+        return materialState.nameDirection === "asc" ? compare : -compare;
+      });
+  };
+
+  function renderMaterialList() {
+    listWrap.innerHTML = "";
+    const materials = getVisibleMaterials();
+    if (!materials.length) {
+      listWrap.appendChild(createEmptyState("Kein Material gefunden.", ""));
+      return;
+    }
+
+    const table = document.createElement("table");
+    table.className = "kunden-list-table";
+    const thead = document.createElement("thead");
+    const headerRow = document.createElement("tr");
+    ["Vorschau", "Name", "Typ", "Datei", "Download", "Ersteller", "Hochgeladen"].forEach(
+      (label) => {
+        const th = document.createElement("th");
+        th.textContent = label;
+        headerRow.appendChild(th);
+      }
+    );
+    thead.appendChild(headerRow);
+    const tbody = document.createElement("tbody");
+    materials.forEach((entry) => {
+      const row = document.createElement("tr");
+      row.className = "kunden-list-row";
+
+      const previewCell = document.createElement("td");
+      if (entry.materialType === "picture") {
+        const link = document.createElement("a");
+        link.href = entry.url || "";
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        const image = document.createElement("img");
+        image.className = "uebungsbibliothek-material-preview";
+        image.alt = entry.name || "Material";
+        image.src = entry.url || "";
+        link.appendChild(image);
+        previewCell.appendChild(link);
+      } else {
+        previewCell.textContent = "ZIP";
+      }
+      row.appendChild(previewCell);
+
+      const nameCell = document.createElement("td");
+      nameCell.textContent = valueOrDash(entry.name);
+      row.appendChild(nameCell);
+
+      const typeCell = document.createElement("td");
+      typeCell.textContent = materialTypeLabel(entry.materialType);
+      row.appendChild(typeCell);
+
+      const fileCell = document.createElement("td");
+      const link = document.createElement("a");
+      link.href = entry.url || "";
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      link.textContent = `${valueOrDash(entry.originalFileName || entry.fileName)} (${formatFileSize(
+        entry.sizeBytes
+      )})`;
+      fileCell.appendChild(link);
+      row.appendChild(fileCell);
+
+      const downloadCell = document.createElement("td");
+      const downloadLink = document.createElement("a");
+      downloadLink.href = entry.url || "";
+      downloadLink.download = entry.originalFileName || entry.fileName || "";
+      downloadLink.className = "ui-btn ui-btn--secondary";
+      downloadLink.textContent = "Download";
+      downloadCell.appendChild(downloadLink);
+      row.appendChild(downloadCell);
+
+      const creatorCell = document.createElement("td");
+      creatorCell.textContent = valueOrDash(resolveCreatorLabel(entry.createdBy));
+      row.appendChild(creatorCell);
+
+      const createdCell = document.createElement("td");
+      createdCell.textContent = valueOrDash(formatDate(entry.createdAt));
+      row.appendChild(createdCell);
+
+      tbody.appendChild(row);
+    });
+    table.append(thead, tbody);
+    listWrap.appendChild(table);
+  }
+
+  const renderMaterials = async () => {
+    listWrap.innerHTML = "";
+    listWrap.appendChild(createNotice("Lade Material...", { variant: "info", role: "status" }));
+    try {
+      materialState.items = await listUebungsbibliothekMaterial();
+    } catch (error) {
+      console.error("[UEBUNGSBIBLIOTHEK_MATERIAL_LIST_FAILED]", error);
+      listWrap.innerHTML = "";
+      listWrap.appendChild(
+        createNotice("Material konnte nicht geladen werden.", { variant: "warn", role: "alert" })
+      );
+      return;
+    }
+    renderMaterialList();
+  };
+
+  typeSelect?.addEventListener("change", () => {
+    if (!fileInput) return;
+    fileInput.value = "";
+    fileInput.accept = typeSelect.value === "zip" ? ".zip,application/zip" : "image/jpeg,image/png";
+  });
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    statusSlot.innerHTML = "";
+    const name = nameInput?.value.trim() || "";
+    const materialType = typeSelect?.value || "picture";
+    const file = fileInput?.files?.[0] || null;
+    if (!name || !file) {
+      statusSlot.appendChild(
+        createNotice("Name und Datei sind erforderlich.", { variant: "warn", role: "alert" })
+      );
+      return;
+    }
+    const fileName = file.name || "";
+    const lowerName = fileName.toLowerCase();
+    const isPicture =
+      materialType === "picture" &&
+      (file.type === "image/jpeg" ||
+        file.type === "image/png" ||
+        lowerName.endsWith(".jpg") ||
+        lowerName.endsWith(".jpeg") ||
+        lowerName.endsWith(".png"));
+    const isZip =
+      materialType === "zip" &&
+      (file.type === "application/zip" ||
+        file.type === "application/x-zip-compressed" ||
+        lowerName.endsWith(".zip"));
+    if (!isPicture && !isZip) {
+      statusSlot.appendChild(
+        createNotice("Dateityp passt nicht zur Auswahl.", { variant: "warn", role: "alert" })
+      );
+      return;
+    }
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Hochladen ...";
+    statusSlot.appendChild(
+      createNotice(`Upload läuft: ${fileName} (${formatFileSize(file.size)})`, {
+        variant: "info",
+        role: "status",
+      })
+    );
+    try {
+      await uploadUebungsbibliothekMaterial({
+        name,
+        materialType,
+        fileName,
+        file,
+      });
+      form.reset();
+      if (fileInput) fileInput.accept = "image/jpeg,image/png";
+      statusSlot.appendChild(
+        createNotice("Material hochgeladen.", { variant: "ok", role: "status" })
+      );
+      await renderMaterials();
+    } catch (error) {
+      console.error("[UEBUNGSBIBLIOTHEK_MATERIAL_UPLOAD_FAILED]", error);
+      const detail = [error?.status ? `Status ${error.status}` : "", error?.message || ""]
+        .filter(Boolean)
+        .join(": ");
+      statusSlot.appendChild(
+        createNotice(`Material konnte nicht hochgeladen werden.${detail ? ` (${detail})` : ""}`, {
+          variant: "warn",
+          role: "alert",
+        })
+      );
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Material hochladen";
+    }
+  });
+
+  body.append(statusSlot, form, controlsWrap, listWrap);
+  void renderMaterials();
+  return card;
+}
+
 function buildDetailActions(entry, statusSlot) {
   const actionsCard = createCard({
     eyebrow: "",
@@ -311,6 +645,7 @@ async function renderListView(section) {
   body.appendChild(statusSlot);
   body.appendChild(createNotice("Lade Übungsbibliothek...", { variant: "info", role: "status" }));
   section.appendChild(card);
+  section.appendChild(createMaterialCard());
 
   let entries = [];
   try {

@@ -87,7 +87,7 @@ const server = http.createServer(async (req, res) => {
       res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS");
       res.setHeader(
         "Access-Control-Allow-Headers",
-        "Content-Type, Authorization, x-dogule-actor-id, x-dogule-actor-role, x-dogule-authz, x-dogule-access-token, x-dogule-backup-token"
+        "Content-Type, Authorization, x-dogule-actor-id, x-dogule-actor-role, x-dogule-authz, x-dogule-access-token, x-dogule-backup-token, x-dogule-material-name, x-dogule-material-type, x-dogule-material-filename"
       );
     }
     if (req.method === "OPTIONS") {
