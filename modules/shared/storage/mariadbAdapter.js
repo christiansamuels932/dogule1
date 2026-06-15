@@ -2901,6 +2901,36 @@ export function createMariaDbAdapter(options = {}) {
     }
   }
 
+  async function getUebungsbibliothekMaterial(id) {
+    try {
+      const record = await fetchOne(
+        pool,
+        "SELECT * FROM uebungsbibliothek_material WHERE id = ?",
+        [id],
+        mapUebungsbibliothekMaterialRow
+      );
+      if (!record) {
+        throw new StorageError(
+          STORAGE_ERROR_CODES.NOT_FOUND,
+          `uebungsbibliothek material ${id} not found`
+        );
+      }
+      return record;
+    } catch (error) {
+      throw toStorageError(error, `Failed to get uebungsbibliothek material ${id}`);
+    }
+  }
+
+  async function deleteUebungsbibliothekMaterial(id) {
+    try {
+      await ensureExists(pool, "uebungsbibliothek_material", id);
+      await pool.query("DELETE FROM uebungsbibliothek_material WHERE id = ?", [id]);
+      return { ok: true, id };
+    } catch (error) {
+      throw toStorageError(error, `Failed to delete uebungsbibliothek material ${id}`);
+    }
+  }
+
   return {
     kunden: {
       list: listKunden,
@@ -3009,7 +3039,9 @@ export function createMariaDbAdapter(options = {}) {
     },
     uebungsbibliothekMaterial: {
       list: listUebungsbibliothekMaterial,
+      get: getUebungsbibliothekMaterial,
       create: createUebungsbibliothekMaterial,
+      delete: deleteUebungsbibliothekMaterial,
     },
     kursTeilnehmer: {
       list: listKursTeilnehmer,
