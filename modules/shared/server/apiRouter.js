@@ -1576,6 +1576,38 @@ export function createApiRouter(options = {}) {
       return true;
     }
 
+    const materialDeleteMatch = pathOnly.match(/^\/api\/uebungsbibliothek\/material\/([^/]+)$/);
+    if (materialDeleteMatch && method === "DELETE") {
+      if (actorRole !== "admin" && actorRole !== "developer") {
+        jsonResponse(res, 403, { message: "forbidden" });
+        return true;
+      }
+      const materialId = decodeURIComponent(materialDeleteMatch[1]);
+      try {
+        const material = await storage.uebungsbibliothekMaterial.get(materialId, { requestId });
+        if (material.materialType !== "picture") {
+          jsonResponse(res, 400, { message: "material_delete_picture_only" });
+          return true;
+        }
+        await storage.uebungsbibliothekMaterial.delete(materialId, { requestId });
+        const fileName = String(material.fileName || "");
+        if (fileName && !fileName.includes("..") && !fileName.includes("/")) {
+          try {
+            await fs.unlink(path.join(uebungsbibliothekMaterialUploadRoot, fileName));
+          } catch (error) {
+            if (error?.code !== "ENOENT") throw error;
+          }
+        }
+        jsonResponse(res, 200, { ok: true, id: materialId });
+      } catch (error) {
+        jsonResponse(res, error?.code === "NOT_FOUND" ? 404 : 500, {
+          message: "uebungsbibliothek_material_delete_failed",
+          code: error?.code,
+        });
+      }
+      return true;
+    }
+
     if (pathOnly.startsWith("/api/uebungsbibliothek/material/uploads/") && method === "GET") {
       const fileName = pathOnly.replace("/api/uebungsbibliothek/material/uploads/", "");
       if (!fileName || fileName.includes("..") || fileName.includes("/")) {

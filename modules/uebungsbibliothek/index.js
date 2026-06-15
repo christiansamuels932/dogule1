@@ -8,6 +8,7 @@ import {
   createUebungsbibliothekKategorie,
   uploadUebungsbibliothekImage,
   listUebungsbibliothekMaterial,
+  deleteUebungsbibliothekMaterial,
   uploadUebungsbibliothekMaterial,
   deleteUebungsbibliothek,
 } from "../shared/api/uebungsbibliothek.js";
@@ -60,6 +61,11 @@ function canCreate() {
 }
 
 function canManageCategories() {
+  const role = getSession()?.user?.role || "";
+  return role === "admin" || role === "developer";
+}
+
+function canDeleteMaterial() {
   const role = getSession()?.user?.role || "";
   return role === "admin" || role === "developer";
 }
@@ -379,13 +385,13 @@ function createMaterialCard() {
     table.className = "kunden-list-table";
     const thead = document.createElement("thead");
     const headerRow = document.createElement("tr");
-    ["Vorschau", "Name", "Typ", "Datei", "Download", "Ersteller", "Hochgeladen"].forEach(
-      (label) => {
-        const th = document.createElement("th");
-        th.textContent = label;
-        headerRow.appendChild(th);
-      }
-    );
+    const headers = ["Vorschau", "Name", "Typ", "Datei", "Download", "Ersteller", "Hochgeladen"];
+    if (canDeleteMaterial()) headers.push("Aktion");
+    headers.forEach((label) => {
+      const th = document.createElement("th");
+      th.textContent = label;
+      headerRow.appendChild(th);
+    });
     thead.appendChild(headerRow);
     const tbody = document.createElement("tbody");
     materials.forEach((entry) => {
@@ -444,6 +450,43 @@ function createMaterialCard() {
       const createdCell = document.createElement("td");
       createdCell.textContent = valueOrDash(formatDate(entry.createdAt));
       row.appendChild(createdCell);
+
+      if (canDeleteMaterial()) {
+        const actionCell = document.createElement("td");
+        if (entry.materialType === "picture") {
+          const deleteBtn = createButton({ label: "Bild löschen", variant: "secondary" });
+          deleteBtn.type = "button";
+          deleteBtn.addEventListener("click", async () => {
+            const ok = window.confirm(
+              `Bild wirklich löschen?\n\n${valueOrDash(entry.name)}\n\nDieser Vorgang kann nicht rückgängig gemacht werden.`
+            );
+            if (!ok) return;
+            deleteBtn.disabled = true;
+            statusSlot.innerHTML = "";
+            try {
+              await deleteUebungsbibliothekMaterial(entry.id);
+              materialState.items = materialState.items.filter((item) => item.id !== entry.id);
+              statusSlot.appendChild(
+                createNotice("Bild gelöscht.", { variant: "ok", role: "status" })
+              );
+              renderMaterialList();
+            } catch (error) {
+              console.error("[UEBUNGSBIBLIOTHEK_MATERIAL_DELETE_FAILED]", error);
+              statusSlot.appendChild(
+                createNotice("Bild konnte nicht gelöscht werden.", {
+                  variant: "warn",
+                  role: "alert",
+                })
+              );
+              deleteBtn.disabled = false;
+            }
+          });
+          actionCell.appendChild(deleteBtn);
+        } else {
+          actionCell.textContent = "–";
+        }
+        row.appendChild(actionCell);
+      }
 
       tbody.appendChild(row);
     });

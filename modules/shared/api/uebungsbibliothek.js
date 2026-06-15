@@ -59,6 +59,14 @@ export async function listUebungsbibliothekMaterial(options) {
   return list("uebungsbibliothek_material", options);
 }
 
+export async function deleteUebungsbibliothekMaterial(id, options) {
+  if (!id) return { ok: false };
+  if (isHttpMode()) {
+    return httpRequest(`/uebungsbibliothek/material/${id}`, { method: "DELETE" });
+  }
+  return remove("uebungsbibliothek_material", id, options);
+}
+
 export async function uploadUebungsbibliothekMaterial({
   name = "",
   materialType = "",

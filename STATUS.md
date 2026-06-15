@@ -11,6 +11,117 @@ BASE NOTE: Keep the "Quick start, 3 Launchcodes" section in this header area. Do
 - `DOGULE1_STORAGE_MODE=mariadb DOGULE1_MARIADB_SOCKET=/run/mysqld/mysqld.sock DOGULE1_MARIADB_USER=ran node tools/server/apiServer.js`
 - `DOGULE1_STORAGE_MODE=mariadb DOGULE1_MARIADB_SOCKET=/run/mysqld/mysqld.sock DOGULE1_MARIADB_USER=ran DOGULE1_PASSWORD_FILE=/home/ran/codex/dogule@144.91.86.20/dogule1.passwords pnpm dev`
 
+## Date 2026-06-15 — Material Picture Delete For Admin And Developer
+
+## Kontext
+
+- Status: completed.
+- Scope:
+- in `#Übungsbibliothek` → `Material` einen Löschbutton für Bilder ergänzen
+- Löschung nur für Rollen `admin` und `developer` erlauben
+- Trainerrollen dürfen Bilder weiterhin hochladen und ansehen, aber nicht löschen
+- Runtime auf VPS aktualisieren und Rollenrechte live prüfen
+
+## Ergebnis (kurz)
+
+- Materialliste zeigt für `admin` und `developer` die neue Spalte `Aktion`.
+- Bildzeilen enthalten den Button `Bild löschen` mit Bestätigungsdialog.
+- ZIP-Material erhält keinen Löschbutton.
+- Nach erfolgreicher Löschung wird die Bildzeile direkt aus der Liste entfernt.
+- Neue API-Route:
+- `DELETE /api/uebungsbibliothek/material/:id`
+- Serverseitige Berechtigung erlaubt ausschliesslich `admin` und `developer`.
+- Direkter Löschaufruf durch Trainerrollen liefert `403 forbidden`.
+- Löschung entfernt den MariaDB-Eintrag und die zugehörige Datei unter `uploads/uebungsbibliothek/material/`.
+- Runtime-only Deploy (`dist`, `modules`, `tools`) auf VPS durchgeführt.
+
+## Tests
+
+- Lokal:
+- `pnpm lint` ✅
+- `pnpm test -- --run` = `22` Dateien, `125` Tests ✅
+- `pnpm build` ✅
+- `git diff --check` ✅
+- VPS:
+- safe Runtime-`rsync` (`dist`, `modules`, `tools`) ausgeführt ✅
+- `dogule1.service` = `active` ✅
+- VPS `/healthz` = `200 OK` ✅
+- Live-Smoke mit zwei temporären 1x1-PNGs:
+- Löschen als `Developer` (`developer`) = `200` ✅
+- Löschversuch als `eidara` (`trainer_rapport`) = `403` ✅
+- Löschen als Richard / `info` (`admin`) = `200` ✅
+- Materialbestand vor/nach Smoke unverändert: `110` Einträge ✅
+- Keine temporären Smoke-Materialeinträge verblieben ✅
+
+## Offene Punkte
+
+- Browser-Hard-Reload auf dem VPS empfohlen, damit der neue Button sicher sichtbar ist.
+
+## Date 2026-06-15 — Übungsbibliothek Material Image Upload Batch With Clean Names
+
+## Kontext
+
+- Status: completed.
+- Scope: PNG-Bilder aus `/home/ran/Downloads/for uploading` als einzelne `Einzelbild`-Materialien auf den VPS hochladen.
+- Namensregel: `-removebg-preview` darf weder im sichtbaren Materialnamen noch im Originaldateinamen des Uploads vorkommen.
+
+## Ergebnis (kurz)
+
+- 45 PNG-Dateien im Quellordner erkannt und als gültige PNG-Dateien geprüft.
+- 45 neue PNG-Dateien als einzelne Materialeinträge hochgeladen.
+- Bei 44 Dateien wurde `-removebg-preview` vor dem Upload aus dem Dateinamen entfernt.
+- Sichtbare Materialnamen wurden aus den bereinigten Dateinamen ohne `.png` gebildet.
+- Keine bestehenden Dateien übersprungen.
+- Keine Upload-Fehler.
+- Lokale Quelldateien im Download-Ordner wurden nicht verändert.
+
+## Tests
+
+- VPS-API Login als `Developer` ✅
+- `GET /api/uebungsbibliothek/material` vor Upload: `64` Einträge ✅
+- `POST /api/uebungsbibliothek/material` für alle 45 PNG-Dateien: `201` ✅
+- `GET /api/uebungsbibliothek/material` nach Upload: `109` Einträge ✅
+- Prüfung aller Materialnamen und Originaldateinamen auf `-removebg-preview`: `0` Treffer ✅
+
+## Offene Punkte
+
+- Browser-Hard-Reload auf dem VPS empfohlen, damit die Materialliste sicher frisch geladen wird.
+
+## Date 2026-06-04 — Übungsbibliothek Material Image Upload Batch
+
+## Kontext
+
+- Status: completed.
+- Scope: Bilder aus `/home/ran/Downloads/New Folder` als einzelne `Einzelbild`-Materialien auf den VPS hochladen.
+
+## Ergebnis (kurz)
+
+- 9 PNG-Dateien im Quellordner erkannt.
+- 9 neue PNG-Dateien als einzelne Materialeinträge hochgeladen:
+- `tunnel-schwarz2.png`
+- `uebergang3.png`
+- `bobine3.png`
+- `bobine4.png`
+- `plastikblume.png`
+- `sprung3.png`
+- `sprung4.png`
+- `tor-gelb.png`
+- `tunnel-kurz3.png`
+- Keine bestehenden Dateien übersprungen.
+- Keine Upload-Fehler.
+
+## Tests
+
+- VPS-API Login als `Developer` ✅
+- `GET /api/uebungsbibliothek/material` vor Upload: `55` Einträge ✅
+- `POST /api/uebungsbibliothek/material` für alle 9 PNG-Dateien: `201` ✅
+- `GET /api/uebungsbibliothek/material` nach Upload: `64` Einträge ✅
+- `materialType=picture`: `64` Einträge ✅
+
+## Offene Punkte
+
+- Browser-Hard-Reload auf dem VPS empfohlen, damit die Materialliste sicher frisch geladen wird.
+
 ## Date 2026-06-01 — Material Name Sort + Search
 
 ## Kontext
