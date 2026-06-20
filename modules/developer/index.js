@@ -59,6 +59,29 @@ function buildEventTypeLabel(eventType) {
   return EVENT_LABELS[eventType] || valueOrDash(eventType);
 }
 
+function parseIssueDetails(details = "") {
+  const raw = String(details || "").trim();
+  if (!raw) {
+    return { message: "", screenshotUrl: "", activityLines: [] };
+  }
+  try {
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object") {
+      return { message: raw, screenshotUrl: "", activityLines: [] };
+    }
+    return {
+      message: String(parsed.message || "").trim(),
+      screenshotUrl: String(parsed.screenshotUrl || "").trim(),
+      capturedAt: String(parsed.capturedAt || "").trim(),
+      activityLines: Array.isArray(parsed.activityLines)
+        ? parsed.activityLines.map((line) => String(line || "").trim()).filter(Boolean)
+        : [],
+    };
+  } catch {
+    return { message: raw, screenshotUrl: "", activityLines: [] };
+  }
+}
+
 function sortEvents(events = []) {
   return [...events].sort((a, b) =>
     String(b?.createdAt || "").localeCompare(String(a?.createdAt || ""))
@@ -148,10 +171,37 @@ function renderIssues(card, events = [], onChanged = null) {
     const issueBody = issueCard.querySelector(".ui-card__body");
     const issueFooter = issueCard.querySelector(".ui-card__footer");
     issueBody.innerHTML = "";
+    const details = parseIssueDetails(event.details);
     const meta = document.createElement("p");
     meta.textContent = `${formatTimestamp(event.createdAt)} · ${valueOrDash(event.moduleId)}`;
     const text = document.createElement("p");
-    text.textContent = valueOrDash(event.details);
+    text.textContent = valueOrDash(details.message);
+    issueBody.append(meta, text);
+    if (details.screenshotUrl) {
+      const screenshotLink = document.createElement("a");
+      screenshotLink.className = "developer-issue-screenshot";
+      screenshotLink.href = details.screenshotUrl;
+      screenshotLink.target = "_blank";
+      screenshotLink.rel = "noopener noreferrer";
+      const image = document.createElement("img");
+      image.src = details.screenshotUrl;
+      image.alt = "Pagescreenshot zur Problemmeldung";
+      screenshotLink.appendChild(image);
+      issueBody.appendChild(screenshotLink);
+    }
+    if (details.activityLines.length) {
+      const logTitle = document.createElement("p");
+      logTitle.className = "developer-issue-log__title";
+      logTitle.textContent = "Aktivitätslog";
+      const logList = document.createElement("ol");
+      logList.className = "developer-issue-log";
+      details.activityLines.slice(0, 15).forEach((line) => {
+        const item = document.createElement("li");
+        item.textContent = line;
+        logList.appendChild(item);
+      });
+      issueBody.append(logTitle, logList);
+    }
     const actions = document.createElement("div");
     actions.className = "module-actions";
     const status = document.createElement("div");
@@ -186,7 +236,6 @@ function renderIssues(card, events = [], onChanged = null) {
       }
     });
     actions.append(confirmBtn);
-    issueBody.append(meta, text);
     issueFooter.innerHTML = "";
     issueFooter.append(actions, status);
     list.appendChild(issueCard);

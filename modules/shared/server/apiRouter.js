@@ -408,6 +408,9 @@ export function createApiRouter(options = {}) {
   const uebungsbibliothekMaterialUploadRoot =
     process.env.DOGULE1_UEBUNGSBIBLIOTHEK_MATERIAL_UPLOAD_ROOT ||
     path.resolve(uebungsbibliothekUploadRoot, "material");
+  const supportScreenshotRoot =
+    process.env.DOGULE1_SUPPORT_SCREENSHOT_ROOT ||
+    path.resolve(process.cwd(), "uploads", "support", "screenshots");
   const authConfig = resolveAuthConfig({
     enabled: true,
   });
@@ -1145,6 +1148,7 @@ export function createApiRouter(options = {}) {
           jsonResponse(res, 404, { message: "not_found" });
           return true;
         }
+        await deleteSupportScreenshotFromDetails(result.details);
         jsonResponse(res, 200, result);
       } catch (error) {
         console.error("[DEVELOPER_ACTIVITY_DELETE_FAILED]", error);
@@ -1230,6 +1234,63 @@ export function createApiRouter(options = {}) {
     if (!reqUrl.startsWith("/api/support/")) return false;
     const routePath = reqUrl.split("?")[0];
     const method = (req.method || "GET").toUpperCase();
+    const screenshotMatch = routePath.match(/^\/api\/support\/screenshots\/([^/]+)$/);
+    if (screenshotMatch && (method === "GET" || method === "DELETE")) {
+      const fileName = screenshotMatch[1] || "";
+      if (!isSafeSupportScreenshotFileName(fileName)) {
+        jsonResponse(res, 400, { message: "invalid_file" });
+        return true;
+      }
+      if (method === "DELETE") {
+        const actorRole = normalizeRole(req.headers["x-dogule-actor-role"] || "");
+        if (actorRole === "client_readonly") {
+          jsonResponse(res, 403, { message: "forbidden" });
+          return true;
+        }
+        try {
+          await fs.unlink(path.join(supportScreenshotRoot, fileName));
+        } catch {
+          // Treat missing screenshots as already cleaned up.
+        }
+        jsonResponse(res, 200, { ok: true, name: fileName });
+        return true;
+      }
+      try {
+        const filePath = path.join(supportScreenshotRoot, fileName);
+        const data = await fs.readFile(filePath);
+        res.statusCode = 200;
+        res.setHeader("Content-Type", "image/png");
+        res.end(data);
+      } catch {
+        jsonResponse(res, 404, { message: "not_found" });
+      }
+      return true;
+    }
+    if (routePath === "/api/support/screenshots" && method === "POST") {
+      const actorRole = normalizeRole(req.headers["x-dogule-actor-role"] || "");
+      if (actorRole === "client_readonly") {
+        jsonResponse(res, 403, { message: "forbidden" });
+        return true;
+      }
+      const body = await readJsonBody(req);
+      const parsed = parseSupportScreenshotDataUrl(body?.dataUrl || "");
+      if (!parsed) {
+        jsonResponse(res, 400, { message: "invalid_screenshot" });
+        return true;
+      }
+      const fileName = `${uuidv7()}.png`;
+      try {
+        await fs.mkdir(supportScreenshotRoot, { recursive: true });
+        await fs.writeFile(path.join(supportScreenshotRoot, fileName), parsed);
+        jsonResponse(res, 201, {
+          url: `/api/support/screenshots/${fileName}`,
+          name: fileName,
+        });
+      } catch (error) {
+        jsonResponse(res, 500, { message: "screenshot_store_failed", code: error?.code });
+      }
+      return true;
+    }
     if (routePath === "/api/support/activity" && method === "POST") {
       const actorRole = normalizeRole(req.headers["x-dogule-actor-role"] || "");
       if (actorRole === "client_readonly") {
@@ -1261,6 +1322,39 @@ export function createApiRouter(options = {}) {
     }
     jsonResponse(res, 404, { message: "not_found" });
     return true;
+  }
+
+  function parseSupportScreenshotDataUrl(dataUrl = "") {
+    const match = String(dataUrl || "").match(/^data:image\/png;base64,([A-Za-z0-9+/=]+)$/);
+    if (!match) return null;
+    const buffer = Buffer.from(match[1], "base64");
+    if (!buffer.length || buffer.length > 2 * 1024 * 1024) return null;
+    return buffer;
+  }
+
+  function isSafeSupportScreenshotFileName(fileName = "") {
+    return /^[a-f0-9-]+\.png$/i.test(String(fileName || ""));
+  }
+
+  function extractSupportScreenshotFileName(details = "") {
+    try {
+      const parsed = JSON.parse(String(details || ""));
+      const url = String(parsed?.screenshotUrl || "");
+      const match = url.match(/^\/api\/support\/screenshots\/([^/]+\.png)$/);
+      return match ? match[1] : "";
+    } catch {
+      return "";
+    }
+  }
+
+  async function deleteSupportScreenshotFromDetails(details = "") {
+    const fileName = extractSupportScreenshotFileName(details);
+    if (!fileName || !isSafeSupportScreenshotFileName(fileName)) return;
+    try {
+      await fs.unlink(path.join(supportScreenshotRoot, fileName));
+    } catch {
+      // Best effort: the issue entry should still be removed if the screenshot is already gone.
+    }
   }
 
   function contentTypeForUpload(filePath) {
@@ -1368,9 +1462,12 @@ export function createApiRouter(options = {}) {
     const method = (req.method || "GET").toUpperCase();
     const requestId = resolveRequestId(req);
     const actorId = req.headers["x-dogule-actor-id"] || "";
+    const actorRole = normalizeRole(req.headers["x-dogule-actor-role"] || "");
+    const canManageSchulungen = async () =>
+      actorRole === "admin" || actorRole === "developer" || (await isRichardActor(actorId));
 
     if (pathOnly === "/api/schulungen/uploads" && method === "POST") {
-      if (!(await isRichardActor(actorId))) {
+      if (!(await canManageSchulungen())) {
         jsonResponse(res, 403, { message: "forbidden" });
         return true;
       }
@@ -1420,7 +1517,7 @@ export function createApiRouter(options = {}) {
     }
 
     if (pathOnly === "/api/schulungen" && method === "POST") {
-      if (!(await isRichardActor(actorId))) {
+      if (!(await canManageSchulungen())) {
         jsonResponse(res, 403, { message: "forbidden" });
         return true;
       }
@@ -1444,7 +1541,7 @@ export function createApiRouter(options = {}) {
       return true;
     }
     if (entryMatch && method === "DELETE") {
-      if (!(await isRichardActor(actorId))) {
+      if (!(await canManageSchulungen())) {
         jsonResponse(res, 403, { message: "forbidden" });
         return true;
       }
@@ -1457,7 +1554,7 @@ export function createApiRouter(options = {}) {
       return true;
     }
     if (entryMatch && (method === "PATCH" || method === "PUT")) {
-      if (!(await isRichardActor(actorId))) {
+      if (!(await canManageSchulungen())) {
         jsonResponse(res, 403, { message: "forbidden" });
         return true;
       }
@@ -2367,6 +2464,12 @@ export function createApiRouter(options = {}) {
       (req.method || "GET").toUpperCase() === "GET"
     ) {
       return handleUebungsbibliothekRoutes(req, res);
+    }
+    if (
+      reqUrl.startsWith("/api/support/screenshots/") &&
+      (req.method || "GET").toUpperCase() === "GET"
+    ) {
+      return handleSupportRoutes(req, res);
     }
     if (
       await handleAuthRoutes(req, res, authService, {

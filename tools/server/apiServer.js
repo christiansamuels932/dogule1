@@ -20,6 +20,12 @@ const ALLOWED_ORIGINS = (process.env.DOGULE1_CORS_ORIGINS || "")
   .split(",")
   .map((value) => value.trim())
   .filter(Boolean);
+const STORAGE_STATUS_PATH = process.env.DOGULE1_STORAGE_STATUS_PATH
+  ? path.resolve(process.env.DOGULE1_STORAGE_STATUS_PATH)
+  : path.resolve(ROOT, "..");
+const STORAGE_PERCENT_BUFFER = Number(process.env.DOGULE1_STORAGE_PERCENT_BUFFER || 5);
+const STORAGE_WARN_PERCENT = Number(process.env.DOGULE1_STORAGE_WARN_PERCENT || 75);
+const STORAGE_CRITICAL_PERCENT = Number(process.env.DOGULE1_STORAGE_CRITICAL_PERCENT || 91);
 
 process.env.DOGULE1_REQUIRE_MARIADB = process.env.DOGULE1_REQUIRE_MARIADB || "1";
 
@@ -28,17 +34,34 @@ const router = createApiRouter({ storage });
 const backupHandlers = createBackupHandlers();
 const healthHandlers = createHealthHandlers({
   storageUsage: async () => {
-    const pool = storage?.pool;
-    if (!pool?.query) return null;
-    const dbName = process.env.DOGULE1_MARIADB_DATABASE || "dogule1";
-    const rows = await pool.query(
-      "SELECT SUM(data_length + index_length) AS bytes FROM information_schema.tables WHERE table_schema = ?",
-      [dbName]
+    const stat = await fs.statfs(STORAGE_STATUS_PATH);
+    const totalBytes = Number(stat.blocks) * Number(stat.bsize);
+    const freeBytes = Number(stat.bfree) * Number(stat.bsize);
+    const availableBytes = Number(stat.bavail) * Number(stat.bsize);
+    if (![totalBytes, freeBytes, availableBytes].every(Number.isFinite) || totalBytes <= 0) {
+      return null;
+    }
+    const usedBytes = Math.max(0, totalBytes - freeBytes);
+    const rawUsedPercent = Math.round((usedBytes / totalBytes) * 1000) / 10;
+    const usedPercent = Math.min(
+      100,
+      Math.round((rawUsedPercent + STORAGE_PERCENT_BUFFER) * 10) / 10
     );
-    const bytesRaw = rows?.[0]?.bytes ?? 0;
-    const bytes = Number(bytesRaw);
-    if (!Number.isFinite(bytes)) return null;
-    return Math.round((bytes / 1024 / 1024) * 10) / 10;
+    const state =
+      usedPercent >= STORAGE_CRITICAL_PERCENT
+        ? "critical"
+        : usedPercent >= STORAGE_WARN_PERCENT
+          ? "warn"
+          : "ok";
+    return {
+      path: STORAGE_STATUS_PATH,
+      usedMb: Math.round((usedBytes / 1024 / 1024) * 10) / 10,
+      totalMb: Math.round((totalBytes / 1024 / 1024) * 10) / 10,
+      freeMb: Math.round((availableBytes / 1024 / 1024) * 10) / 10,
+      usedPercent,
+      rawUsedPercent,
+      state,
+    };
   },
 });
 

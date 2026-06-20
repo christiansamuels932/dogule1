@@ -48,9 +48,9 @@ function resolveCreatorLabel(rawValue = "") {
   return String(rawValue || "").trim();
 }
 
-function canCreate() {
+function canManageSchulungen() {
   const role = getSession()?.user?.role || "";
-  return role === "admin";
+  return role === "admin" || role === "developer";
 }
 
 function getCreatorLabel() {
@@ -71,7 +71,7 @@ function buildActionsCard() {
   body.innerHTML = "";
   const actions = document.createElement("div");
   actions.className = "module-actions";
-  if (canCreate()) {
+  if (canManageSchulungen()) {
     const createBtn = createButton({
       label: "Schulung erstellen",
       variant: "primary",
@@ -439,7 +439,7 @@ async function renderDetailView(section, id) {
     return;
   }
 
-  if (canCreate()) {
+  if (canManageSchulungen()) {
     section.insertBefore(buildDetailActions(entry, statusSlot), card);
   }
 
@@ -552,9 +552,9 @@ function readFileAsDataUrl(file) {
 }
 
 async function renderCreateView(section) {
-  if (!canCreate()) {
+  if (!canManageSchulungen()) {
     section.appendChild(
-      createNotice("Nur Trainer 001 kann Schulungen erstellen.", {
+      createNotice("Nur Admin und Developer können Schulungen erstellen.", {
         variant: "warn",
         role: "alert",
       })
@@ -763,9 +763,9 @@ async function renderCreateView(section) {
 }
 
 async function renderEditView(section, id) {
-  if (!canCreate()) {
+  if (!canManageSchulungen()) {
     section.appendChild(
-      createNotice("Nur Trainer 001 kann Schulungen bearbeiten.", {
+      createNotice("Nur Admin und Developer können Schulungen bearbeiten.", {
         variant: "warn",
         role: "alert",
       })

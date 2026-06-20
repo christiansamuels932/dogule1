@@ -13,7 +13,7 @@ import { listFinanzen } from "../shared/api/finanzen.js";
 import { listWarenByKundeId } from "../shared/api/waren.js";
 import { listZertifikate } from "../shared/api/zertifikate.js";
 import { createRapporteDraft } from "../shared/api/rapporteDrafts.js";
-import { HERKUNFT_OPTIONS } from "../hunde/herkunft.js";
+import { HERKUNFT_OPTIONS, formatHerkunft } from "../hunde/herkunft.js";
 import {
   createHistorieEntry,
   listHistorieEntries,
@@ -1564,7 +1564,7 @@ function renderKundenHundeCard(hunde = [], hasError = false, options = {}) {
           { label: "Größe (Typ)", value: hund.groesseTyp || hund.groesseType },
           { label: "Größe (cm)", value: hund.groesseCm },
           { label: "Gewicht (kg)", value: hund.gewichtKg },
-          { label: "Herkunft", value: hund.herkunft },
+          { label: "Herkunft", value: formatHerkunft(hund.herkunft) },
           { label: "Chip-Nr.", value: hund.chipNummer || hund.chipnummer },
           { label: "Trainingsziele", value: hund.trainingsziele },
           { label: "Notizen", value: hund.notizen },

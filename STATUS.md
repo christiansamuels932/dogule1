@@ -11,6 +11,157 @@ BASE NOTE: Keep the "Quick start, 3 Launchcodes" section in this header area. Do
 - `DOGULE1_STORAGE_MODE=mariadb DOGULE1_MARIADB_SOCKET=/run/mysqld/mysqld.sock DOGULE1_MARIADB_USER=ran node tools/server/apiServer.js`
 - `DOGULE1_STORAGE_MODE=mariadb DOGULE1_MARIADB_SOCKET=/run/mysqld/mysqld.sock DOGULE1_MARIADB_USER=ran DOGULE1_PASSWORD_FILE=/home/ran/codex/dogule@144.91.86.20/dogule1.passwords pnpm dev`
 
+## Date 2026-06-20 — VPS Data Refresh + Schulungen Developer Rights + Hunde Herkunft Label + VPS Status + Achtung Diagnostics
+
+## Kontext
+
+- Status: completed and deployed.
+- Scope:
+- aktuellen MariaDB-Datenstand vom VPS nach lokal ziehen und als Arbeitsstand übernehmen
+- Rolle `Developer` muss `Schulungen` erstellen, bearbeiten, löschen und Uploads nutzen können
+- Hunde-Herkunft `züchter` in Kunden-/Hunde-Anzeigen als reguläres Label `Züchter` anzeigen
+- Header-Statusanzeige von `NAS` auf `VPS` umstellen
+- Header-Speicheranzeige von MariaDB-Grösse auf echte VPS-Filesystem-Belegung umstellen
+- Speicherwarnung mit 5-Prozentpunkten Puffer einführen:
+- unter `75%` = grün
+- `75%` bis `90%` = gelb
+- ab `91%` = rot / kritisch
+- `Achtung`-Problemmeldungen um Pagescreenshot und 15 Aktivitätslog-Zeilen erweitern
+- Screenshots nach Bestätigung/Löschung der Problemmeldung automatisch entfernen
+- Runtime auf VPS aktualisieren und live prüfen
+
+## Ergebnis (kurz)
+
+- Datenstand:
+- VPS-Dump erstellt: `/tmp/dogule1_vps.sql` auf dem VPS
+- Dump lokal kopiert: `/tmp/dogule1_vps_2026-06-20.sql`
+- lokaler Vorher-Backup-Dump erstellt: `/tmp/dogule1_local_before_vps_import_2026-06-20.sql`
+- lokale Datenbank `dogule1` mit aktuellem VPS-Stand überschrieben
+- lokale Kontrollcounts nach Import:
+- `kunden=1428`
+- `hunde=1599`
+- `kurse=14`
+- `trainer=5`
+- `uebungsbibliothek=16`
+- `uebungsbibliothek_material=105`
+- Schulungen:
+- UI zeigt `Schulung erstellen`, Bearbeiten und Löschen jetzt für `admin` und `developer`
+- API-Spezialrouten für Schulungen erlauben Schreibaktionen und Uploads jetzt für `admin` und `developer`
+- Live-/lokaler Developer-Smoke: Schulung erstellen und löschen erfolgreich
+- Hunde/Kunden:
+- `formatHerkunft` mappt Herkunftswerte case-insensitive auf Anzeigenamen
+- eingebettete `Stammdaten Hund`-Card in `#Kunden` zeigt `Züchter` statt `züchter`
+- VPS-Status:
+- Header-Badge zeigt `VPS` statt `NAS`
+- `/healthz` liefert jetzt strukturierte Speicherwerte:
+- `storage.usedMb`
+- `storage.totalMb`
+- `storage.freeMb`
+- `storage.rawUsedPercent`
+- `storage.usedPercent` mit 5%-Puffer
+- `storage.state`
+- Live-VPS nach Deploy:
+- `/healthz` öffentlich `200 OK`
+- `storage.usedMb=6209.1`
+- `storage.totalMb=147718.6`
+- `rawUsedPercent=4.2`
+- `usedPercent=9.2`
+- `state=ok`
+- `Achtung`:
+- Klick auf `Achtung` bereitet sofort Pagescreenshot und Aktivitätslog vor
+- Problemmeldung speichert Nachricht, Screenshot-Link, Screenshot-Dateiname, Zeitpunkt und bis zu 15 Aktivitätszeilen
+- Developer-Modul zeigt Nachricht, Screenshot-Vorschau und Aktivitätslog-Zeilen in der Problemkarte
+- `Bestätigen` löscht den Problem-Eintrag und die zugehörige Screenshot-Datei
+- Falls DOM-Screenshot im Browser scheitert, wird ein kompaktes Diagnosebild mit Route/Zeit/Aktivitätslog erzeugt
+- VPS-Rollout:
+- `pnpm build`
+- safe Runtime-`rsync` (`dist`, `modules`, `tools`) nach `/opt/dogule1`
+- `dogule1.service` neu gestartet
+- neue Runtime live geprüft
+
+## Technische Änderungen
+
+- `apps/web/main.js`
+- Header-Status von `NAS` auf `VPS` umgestellt
+- Speicherformatierung mit belegtem/gesamt Speicher und Prozent ergänzt
+- Warnlogik für Speicherstatus mit 75/91%-Schwellen ergänzt
+- `Achtung`-Dialog um Screenshot-/Aktivitätsdiagnose erweitert
+- `modules/developer/index.js`
+- Problemkarten zeigen Screenshot-Vorschau und 15 Aktivitätslog-Zeilen
+- `modules/shared/server/apiRouter.js`
+- Support-Screenshot-Routen ergänzt:
+- `POST /api/support/screenshots`
+- `GET /api/support/screenshots/:fileName`
+- `DELETE /api/support/screenshots/:fileName`
+- Screenshot-Löschung beim Entfernen einer Problemmeldung ergänzt
+- Schulungen-Schreibschutz für `admin`/`developer` korrigiert
+- `modules/shared/server/developerActivityStore.js`
+- `issue_report.details` auf 4000 Zeichen erweitert
+- Delete-Rückgabe enthält Details für Screenshot-Cleanup
+- `modules/shared/server/health.js`
+- `/healthz` unterstützt strukturierte Speicherwerte
+- `modules/shared/server/health.test.js`
+- Health-Test für strukturierte Speicherwerte ergänzt
+- `tools/server/apiServer.js`
+- Speicherberechnung von MariaDB-Tabellengrösse auf `fs.statfs()` für `/opt/dogule1` bzw. App-Root umgestellt
+- 5%-Puffer und Warnschwellen per Env konfigurierbar:
+- `DOGULE1_STORAGE_STATUS_PATH`
+- `DOGULE1_STORAGE_PERCENT_BUFFER`
+- `DOGULE1_STORAGE_WARN_PERCENT`
+- `DOGULE1_STORAGE_CRITICAL_PERCENT`
+- `modules/hunde/herkunft.js`
+- Herkunftslabel case-insensitive formatiert
+- `modules/kunden/index.js`
+- eingebettete Hunde-Herkunft nutzt `formatHerkunft`
+- `modules/schulungen/index.js`
+- Schulungen-Verwaltung für `developer` freigeschaltet
+- `modules/shared/shared.css`
+- Styling für Screenshot- und Aktivitätslog-Anzeige im Developer-Modul ergänzt
+
+## Tests
+
+- Lokal:
+- VPS-Dump lokal importiert ✅
+- `mariadb --protocol=socket --socket /run/mysqld/mysqld.sock -u ran -N -B -e "SELECT 1;"` ✅
+- `pnpm lint` ✅
+- `pnpm build` ✅
+- `pnpm vitest run --root . modules/shared/server/health.test.js` ✅
+- `git diff --check` ✅
+- `formatHerkunft('züchter')` → `Züchter` ✅
+- `formatHerkunft('ZÜCHTER')` → `Züchter` ✅
+- lokaler Developer-Schulungen-Smoke:
+- Login als `Developer` ✅
+- Schulung erstellen = `201` ✅
+- Schulung löschen = `200` ✅
+- keine Smoke-Schulungen verblieben ✅
+- lokaler `/healthz`-Smoke:
+- strukturierter Speicherstatus vorhanden ✅
+- `rawUsedPercent` + gepufferter `usedPercent` vorhanden ✅
+- lokaler `Achtung`-API-Smoke:
+- Screenshot Upload = `201` ✅
+- Problemmeldung speichern = `201` ✅
+- Problem bestätigen/löschen = `200` ✅
+- Screenshot danach = `404` ✅
+- gespeicherte Aktivitätszeilen = `15` ✅
+- VPS:
+- Runtime per safe `rsync` nach `/opt/dogule1` deployt ✅
+- `dogule1.service` = `active (running)` ✅
+- VPS intern `/healthz` = `200 OK` ✅
+- VPS öffentlich `/healthz` = `200 OK` ✅
+- VPS `/api/auth/options` erreichbar ✅
+- VPS Speicheranzeige gegen `df -BM /opt/dogule1` plausibilisiert ✅
+- Live-`Achtung`-API-Smoke:
+- Screenshot Upload = `201` ✅
+- Problemmeldung speichern = `201` ✅
+- Problem bestätigen/löschen = `200` ✅
+- Screenshot danach = `404` ✅
+- gespeicherte Aktivitätszeilen = `15` ✅
+
+## Offene Punkte
+
+- Browser-Hard-Reload auf dem VPS empfohlen, damit das neue hash-basierte UI-Bundle sicher geladen wird.
+- `gh` CLI ist lokal nicht installiert; PR-Erstellung erfolgt deshalb über GitHub-Compare-Link bzw. GitHub-Weboberfläche.
+
 ## Date 2026-06-15 — Material Picture Delete For Admin And Developer
 
 ## Kontext

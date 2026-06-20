@@ -41,7 +41,7 @@ export function normalizeActivityInput(raw = {}) {
   const routeHash = normalizeText(raw.routeHash, 255);
   const moduleId = normalizeText(raw.moduleId, 64);
   const actionLabel = normalizeText(raw.actionLabel, 255);
-  const detailsLimit = eventType === "issue_report" ? 500 : 255;
+  const detailsLimit = eventType === "issue_report" ? 4000 : 255;
   const details = normalizeText(raw.details, detailsLimit);
   if (eventType === "issue_report" && !details) return null;
   return {
@@ -149,7 +149,7 @@ export async function deleteDeveloperActivity(pool, id) {
     return { ok: false, found: false };
   }
   const rows = await pool.query(
-    `SELECT id
+    `SELECT id, details
        FROM developer_activity_events
       WHERE id = ?
         AND event_type = 'issue_report'
@@ -160,5 +160,5 @@ export async function deleteDeveloperActivity(pool, id) {
     return { ok: false, found: false };
   }
   await pool.query("DELETE FROM developer_activity_events WHERE id = ?", [normalizedId]);
-  return { ok: true, found: true, id: normalizedId };
+  return { ok: true, found: true, id: normalizedId, details: rows[0]?.details || "" };
 }
