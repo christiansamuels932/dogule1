@@ -26,6 +26,28 @@ describe("health handlers", () => {
     expect(JSON.parse(res.body)).toEqual({ status: "ok" });
   });
 
+  it("/healthz returns structured storage usage when available", async () => {
+    const storage = {
+      usedMb: 1200,
+      totalMb: 2000,
+      freeMb: 800,
+      usedPercent: 60,
+      rawUsedPercent: 55,
+      state: "ok",
+    };
+    const { handleHealthz } = createHealthHandlers({
+      storageUsage: vi.fn(async () => storage),
+    });
+    const res = createMockRes();
+    await handleHealthz({}, res);
+    expect(res.statusCode).toBe(200);
+    expect(JSON.parse(res.body)).toEqual({
+      status: "ok",
+      storageMb: 1200,
+      storage,
+    });
+  });
+
   it("/readyz returns ok when checks pass and does not log", () => {
     const logger = vi.fn();
     const readinessCheck = vi.fn(() => ({

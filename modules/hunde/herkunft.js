@@ -15,5 +15,5 @@ const HERKUNFT_LABELS = new Map(
 export function formatHerkunft(value) {
   const normalized = String(value || "").trim();
   if (!normalized) return "";
-  return HERKUNFT_LABELS.get(normalized) || normalized;
+  return HERKUNFT_LABELS.get(normalized.toLowerCase()) || normalized;
 }

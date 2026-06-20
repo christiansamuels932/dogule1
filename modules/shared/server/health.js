@@ -44,22 +44,24 @@ export function createHealthHandlers(options = {}) {
   const storageUsage = options.storageUsage;
 
   async function handleHealthz(req, res) {
-    let storageMb = null;
+    let storage = null;
     if (typeof storageUsage === "function") {
       try {
         const value = await storageUsage({ req });
         if (Number.isFinite(value)) {
-          storageMb = value;
+          storage = { usedMb: value };
+        } else if (value && typeof value === "object") {
+          storage = value;
         }
       } catch {
-        storageMb = null;
+        storage = null;
       }
     }
-    if (storageMb === null) {
+    if (!storage) {
       jsonResponse(res, 200, { status: "ok" });
       return;
     }
-    jsonResponse(res, 200, { status: "ok", storageMb });
+    jsonResponse(res, 200, { status: "ok", storageMb: storage.usedMb ?? null, storage });
   }
 
   function handleReadyz(req, res) {

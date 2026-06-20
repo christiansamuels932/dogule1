@@ -217,6 +217,36 @@ a:focus-visible {
   overflow-wrap: anywhere;
 }
 
+.developer-issue-screenshot {
+  display: block;
+  margin: 0.75rem 0;
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  overflow: hidden;
+  background: #fff;
+}
+
+.developer-issue-screenshot img {
+  display: block;
+  width: 100%;
+  max-height: 320px;
+  object-fit: contain;
+}
+
+.developer-issue-log__title {
+  margin: 0.75rem 0 0.35rem;
+  font-weight: 700;
+}
+
+.developer-issue-log {
+  margin: 0;
+  padding-left: 1.25rem;
+  color: var(--color-ink);
+  font-size: 0.92rem;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
 .card-stack-compact .ui-card + .ui-card {
   margin-top: 0.75rem;
 }

@@ -1,5 +1,5 @@
 // Simple hash-based router for Dogule1
-/* globals window, document, console, DOMParser, requestAnimationFrame, fetch, AbortController, performance */
+/* globals window, document, console, DOMParser, XMLSerializer, Image, requestAnimationFrame, fetch, AbortController, performance */
 import "../../modules/shared/shared.css";
 import "../../modules/shared/layout.css";
 import fontanasLogoUrl from "./assets/fontanas-logo.png";
@@ -26,9 +26,13 @@ const STATUS_ENDPOINT = "/healthz";
 const STATUS_CHECK_INTERVAL_MS = 15000;
 const STATUS_CHECK_TIMEOUT_MS = 3500;
 const STATUS_SLOW_THRESHOLD_MS = 1200;
+const STATUS_STORAGE_WARN_PERCENT = 75;
+const STATUS_STORAGE_CRITICAL_PERCENT = 91;
 const ACTIVITY_FLUSH_INTERVAL_MS = 1200;
 const ACTIVITY_BATCH_LIMIT = 20;
 const ISSUE_MAX_LENGTH = 500;
+const ISSUE_DETAILS_MAX_LENGTH = 4000;
+const ISSUE_ACTIVITY_LINE_LIMIT = 15;
 let layoutMain = null;
 let layoutPromise = null;
 let templatesPromise = null;
@@ -37,6 +41,7 @@ let statusRequestActive = false;
 let activityCaptureInstalled = false;
 let activityFlushTimerId = null;
 let activityQueue = [];
+let recentActivityLines = [];
 let lastActivitySignature = "";
 let lastActivityAt = 0;
 
@@ -197,7 +202,6 @@ function canAutoRecordActivity(session = getSession()) {
 }
 
 function queueActivity(event) {
-  if (!canAutoRecordActivity()) return;
   const eventType = String(event?.eventType || "").trim();
   if (!eventType) return;
   const routeHash = String(event?.routeHash || window.location.hash || "").trim();
@@ -206,6 +210,15 @@ function queueActivity(event) {
     .trim()
     .slice(0, 255);
   const details = String(event?.details || "").trim();
+  const normalizedEvent = {
+    eventType,
+    routeHash,
+    moduleId,
+    actionLabel,
+    details,
+  };
+  rememberActivityLine(normalizedEvent);
+  if (!canAutoRecordActivity()) return;
   const signature = `${eventType}|${routeHash}|${moduleId}|${actionLabel}|${details}`;
   const now = Date.now();
   if (signature === lastActivitySignature && now - lastActivityAt < 750) {
@@ -213,17 +226,26 @@ function queueActivity(event) {
   }
   lastActivitySignature = signature;
   lastActivityAt = now;
-  activityQueue.push({
-    eventType,
-    routeHash,
-    moduleId,
-    actionLabel,
-    details,
-  });
+  activityQueue.push(normalizedEvent);
   if (activityQueue.length > ACTIVITY_BATCH_LIMIT * 3) {
     activityQueue = activityQueue.slice(-ACTIVITY_BATCH_LIMIT * 2);
   }
   scheduleActivityFlush();
+}
+
+function rememberActivityLine(event) {
+  const timestamp = new Date().toLocaleString("de-CH", {
+    dateStyle: "short",
+    timeStyle: "medium",
+  });
+  const label = event.details || event.actionLabel || event.eventType;
+  const moduleText = event.moduleId ? ` · ${event.moduleId}` : "";
+  const routeText = event.routeHash ? ` · ${event.routeHash}` : "";
+  const line = `${timestamp} · ${event.eventType} · ${label}${moduleText}${routeText}`;
+  recentActivityLines.push(line);
+  if (recentActivityLines.length > 80) {
+    recentActivityLines = recentActivityLines.slice(-60);
+  }
 }
 
 function scheduleActivityFlush() {
@@ -293,6 +315,14 @@ function installActivityCapture() {
 function showIssueReporter() {
   const module = window.__DOGULE_ROUTE__?.module || "unbekannt";
   const session = getSession();
+  const diagnosticsPromise = prepareIssueDiagnostics(module);
+  let diagnostics = {
+    activityLines: getRecentActivityLines(),
+    screenshotUrl: "",
+    screenshotName: "",
+    capturedAt: new Date().toISOString(),
+  };
+  let issueSubmitted = false;
   const overlay = document.createElement("div");
   overlay.className = "dogule-help-overlay";
   const card = document.createElement("div");
@@ -326,9 +356,27 @@ function showIssueReporter() {
   closeBtn.type = "button";
   closeBtn.className = "dogule-help-card__close";
   closeBtn.textContent = "Schliessen";
-  closeBtn.addEventListener("click", () => overlay.remove());
+  closeBtn.addEventListener("click", async () => {
+    if (!issueSubmitted) {
+      await cleanupIssueScreenshot(diagnostics);
+    }
+    overlay.remove();
+  });
   actions.append(submitBtn, closeBtn);
   form.append(text, status, actions);
+  status.textContent = "Screenshot und Aktivitätslog werden vorbereitet ...";
+  diagnosticsPromise
+    .then((result) => {
+      diagnostics = result || diagnostics;
+      status.textContent = diagnostics.screenshotUrl
+        ? "Screenshot und Aktivitätslog wurden gespeichert."
+        : "Aktivitätslog wurde gespeichert. Screenshot konnte nicht erstellt werden.";
+    })
+    .catch((error) => {
+      console.warn("[SUPPORT_DIAGNOSTICS_FAILED]", error);
+      status.textContent =
+        "Aktivitätslog wurde gespeichert. Screenshot konnte nicht erstellt werden.";
+    });
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
     status.innerHTML = "";
@@ -344,15 +392,17 @@ function showIssueReporter() {
     submitBtn.disabled = true;
     closeBtn.disabled = true;
     try {
+      diagnostics = (await diagnosticsPromise.catch(() => diagnostics)) || diagnostics;
       await recordSupportActivity([
         {
           eventType: "issue_report",
           routeHash: window.location.hash || "",
           moduleId: module,
           actionLabel: "Problem gemeldet",
-          details,
+          details: buildIssueDetails(details, diagnostics),
         },
       ]);
+      issueSubmitted = true;
       status.textContent = "Meldung gespeichert.";
       text.value = "";
     } catch (error) {
@@ -364,12 +414,181 @@ function showIssueReporter() {
     }
   });
   overlay.addEventListener("click", (event) => {
-    if (event.target === overlay) overlay.remove();
+    if (event.target === overlay) {
+      if (!issueSubmitted) {
+        void cleanupIssueScreenshot(diagnostics);
+      }
+      overlay.remove();
+    }
   });
   card.append(title, moduleLabel, body, form);
   overlay.appendChild(card);
   document.body.appendChild(overlay);
   text.focus();
+}
+
+function getRecentActivityLines() {
+  return recentActivityLines.slice(-ISSUE_ACTIVITY_LINE_LIMIT).reverse();
+}
+
+async function prepareIssueDiagnostics(moduleId) {
+  const activityLines = getRecentActivityLines();
+  const capturedAt = new Date().toISOString();
+  void flushActivityQueue();
+  const screenshotDataUrl = await capturePageScreenshot({ moduleId, activityLines, capturedAt });
+  const upload = screenshotDataUrl ? await uploadIssueScreenshot(screenshotDataUrl) : null;
+  return {
+    activityLines,
+    capturedAt,
+    screenshotUrl: upload?.url || "",
+    screenshotName: upload?.name || "",
+  };
+}
+
+function buildIssueDetails(message, diagnostics = {}) {
+  const payload = {
+    message: String(message || "").trim(),
+    screenshotUrl: diagnostics.screenshotUrl || "",
+    screenshotName: diagnostics.screenshotName || "",
+    capturedAt: diagnostics.capturedAt || new Date().toISOString(),
+    activityLines: Array.isArray(diagnostics.activityLines)
+      ? diagnostics.activityLines.slice(0, ISSUE_ACTIVITY_LINE_LIMIT)
+      : [],
+  };
+  let serialized = JSON.stringify(payload);
+  while (serialized.length > ISSUE_DETAILS_MAX_LENGTH && payload.activityLines.length) {
+    payload.activityLines.pop();
+    serialized = JSON.stringify(payload);
+  }
+  if (serialized.length > ISSUE_DETAILS_MAX_LENGTH) {
+    payload.message = payload.message.slice(0, Math.max(0, payload.message.length - 200));
+    serialized = JSON.stringify(payload);
+  }
+  return serialized.slice(0, ISSUE_DETAILS_MAX_LENGTH);
+}
+
+async function uploadIssueScreenshot(dataUrl) {
+  const res = await fetch("/api/support/screenshots", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...getAuthHeaders(),
+    },
+    body: JSON.stringify({ dataUrl }),
+  });
+  const text = await res.text();
+  const json = text ? JSON.parse(text) : null;
+  if (!res.ok) {
+    throw new Error(json?.message || "screenshot_upload_failed");
+  }
+  return json;
+}
+
+async function cleanupIssueScreenshot(diagnostics = {}) {
+  const name = String(diagnostics.screenshotName || "").trim();
+  if (!name) return;
+  try {
+    await fetch(`/api/support/screenshots/${encodeURIComponent(name)}`, {
+      method: "DELETE",
+      headers: getAuthHeaders(),
+    });
+  } catch (error) {
+    console.warn("[SUPPORT_SCREENSHOT_CLEANUP_FAILED]", error);
+  }
+}
+
+async function capturePageScreenshot({ moduleId = "", activityLines = [], capturedAt = "" } = {}) {
+  const width = Math.max(320, Math.min(window.innerWidth || 1280, 1600));
+  const height = Math.max(240, Math.min(window.innerHeight || 900, 1200));
+  try {
+    const css = collectDocumentCss();
+    const bodyClone = document.body.cloneNode(true);
+    bodyClone.querySelectorAll(".dogule-help-overlay, script").forEach((node) => node.remove());
+    bodyClone.setAttribute(
+      "style",
+      `margin:0;width:${width}px;min-height:${height}px;overflow:hidden;background:#fff;`
+    );
+    const serializedBody = new XMLSerializer().serializeToString(bodyClone);
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
+      <foreignObject width="100%" height="100%">
+        <div xmlns="http://www.w3.org/1999/xhtml" style="width:${width}px;height:${height}px;overflow:hidden;background:#fff;">
+          <style>${escapeCssForSvg(css)}</style>
+          ${serializedBody}
+        </div>
+      </foreignObject>
+    </svg>`;
+    return await renderSvgToPngDataUrl(svg, width, height);
+  } catch (error) {
+    console.warn("[SUPPORT_SCREENSHOT_DOM_FAILED]", error);
+    return createFallbackScreenshot({ width, height, moduleId, activityLines, capturedAt });
+  }
+}
+
+function collectDocumentCss() {
+  const chunks = [];
+  Array.from(document.styleSheets || []).forEach((sheet) => {
+    try {
+      Array.from(sheet.cssRules || []).forEach((rule) => chunks.push(rule.cssText));
+    } catch {
+      // Cross-origin stylesheets cannot be read; the fallback still keeps the report useful.
+    }
+  });
+  return chunks.join("\n");
+}
+
+function escapeCssForSvg(css = "") {
+  return String(css).replace(/<\/style/gi, "<\\/style");
+}
+
+function renderSvgToPngDataUrl(svg, width, height) {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    const svgUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+    image.onload = () => {
+      try {
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, width, height);
+        ctx.drawImage(image, 0, 0, width, height);
+        resolve(canvas.toDataURL("image/png"));
+      } catch (error) {
+        reject(error);
+      }
+    };
+    image.onerror = () => reject(new Error("svg_screenshot_failed"));
+    image.src = svgUrl;
+  });
+}
+
+function createFallbackScreenshot({ width, height, moduleId, activityLines, capturedAt }) {
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext("2d");
+  ctx.fillStyle = "#fffaf0";
+  ctx.fillRect(0, 0, width, height);
+  ctx.fillStyle = "#1f2933";
+  ctx.font = "700 22px sans-serif";
+  ctx.fillText("Dogule Problem-Snapshot", 24, 42);
+  ctx.font = "16px sans-serif";
+  const lines = [
+    `Route: ${window.location.hash || "#/"}`,
+    `Modul: ${moduleId || "unbekannt"}`,
+    `Zeit: ${capturedAt || new Date().toISOString()}`,
+    `Viewport: ${width} x ${height}`,
+    "",
+    "Aktivitätslog:",
+    ...(activityLines || []),
+  ];
+  let y = 78;
+  lines.forEach((line) => {
+    ctx.fillText(String(line).slice(0, 150), 24, y);
+    y += 24;
+  });
+  return canvas.toDataURL("image/png");
 }
 
 function applyForceMobileStyles(forceMobile) {
@@ -532,35 +751,93 @@ function startStatusMonitor() {
   statusIntervalId = window.setInterval(runCheck, STATUS_CHECK_INTERVAL_MS);
 }
 
-function formatStorageMb(value) {
+function formatStorageUnitFromMb(value) {
   if (!Number.isFinite(value)) return "";
-  const rounded = value >= 10 ? Math.round(value) : Math.round(value * 10) / 10;
-  const text = Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
-  return ` · ${text} MB`;
+  if (value >= 1024) {
+    const gb = value / 1024;
+    const roundedGb = gb >= 10 ? Math.round(gb) : Math.round(gb * 10) / 10;
+    return `${Number.isInteger(roundedGb) ? roundedGb : roundedGb.toFixed(1)} GB`;
+  }
+  const roundedMb = value >= 10 ? Math.round(value) : Math.round(value * 10) / 10;
+  return `${Number.isInteger(roundedMb) ? roundedMb : roundedMb.toFixed(1)} MB`;
 }
 
-function setStatusBadge(badge, state, latencyMs, statusCode, storageMb) {
+function normalizeStoragePayload(storage, storageMb) {
+  if (storage && typeof storage === "object") {
+    const usedMb = Number(storage.usedMb);
+    const totalMb = Number(storage.totalMb);
+    const usedPercent = Number(storage.usedPercent);
+    const storageState = String(storage.state || "").trim();
+    return {
+      usedMb: Number.isFinite(usedMb) ? usedMb : null,
+      totalMb: Number.isFinite(totalMb) ? totalMb : null,
+      usedPercent: Number.isFinite(usedPercent) ? usedPercent : null,
+      state: storageState || "",
+    };
+  }
+  const legacyUsedMb = Number(storageMb);
+  return {
+    usedMb: Number.isFinite(legacyUsedMb) ? legacyUsedMb : null,
+    totalMb: null,
+    usedPercent: null,
+    state: "",
+  };
+}
+
+function resolveStorageState(storage) {
+  if (storage?.state === "critical" || storage?.state === "warn") return storage.state;
+  const usedPercent = Number(storage?.usedPercent);
+  if (!Number.isFinite(usedPercent)) return "";
+  if (usedPercent >= STATUS_STORAGE_CRITICAL_PERCENT) return "critical";
+  if (usedPercent >= STATUS_STORAGE_WARN_PERCENT) return "warn";
+  return "ok";
+}
+
+function formatStorageDetail(storage) {
+  if (!Number.isFinite(storage?.usedMb)) return "";
+  const used = formatStorageUnitFromMb(storage.usedMb);
+  if (Number.isFinite(storage.totalMb) && Number.isFinite(storage.usedPercent)) {
+    const total = formatStorageUnitFromMb(storage.totalMb);
+    const percent = Math.round(storage.usedPercent * 10) / 10;
+    const percentText = Number.isInteger(percent) ? String(percent) : percent.toFixed(1);
+    return ` · Speicher: ${used} / ${total} (${percentText}%)`;
+  }
+  return ` · Speicher: ${used}`;
+}
+
+function setStatusBadge(badge, state, latencyMs, statusCode, storagePayload, storageMb) {
   const baseClass = "dogule-status";
-  const stateClass = `dogule-status--${state}`;
+  const storage = normalizeStoragePayload(storagePayload, storageMb);
+  const storageState = state === "ok" ? resolveStorageState(storage) : "";
+  let visualState = state;
+  if (storageState === "warn") visualState = "slow";
+  if (storageState === "critical") visualState = "down";
+  const stateClass = `dogule-status--${visualState}`;
   badge.className = `${baseClass} ${stateClass}`;
-  let text = "NAS Status";
+  let text = "VPS Status";
   let detail = "";
-  const storageDetail = formatStorageMb(storageMb);
+  const storageDetail = formatStorageDetail(storage);
   if (state === "ok") {
-    text = "NAS OK";
+    if (storageState === "critical") {
+      text = "VPS Speicher kritisch";
+    } else if (storageState === "warn") {
+      text = "VPS Speicher hoch";
+    } else {
+      text = "VPS OK";
+    }
     detail = typeof latencyMs === "number" ? ` · ${latencyMs} ms` : "";
   } else if (state === "slow") {
-    text = "NAS langsam";
+    text = "VPS langsam";
     detail = typeof latencyMs === "number" ? ` · ${latencyMs} ms` : "";
   } else if (state === "down") {
-    text = "NAS offline";
+    text = "VPS offline";
     detail = statusCode ? ` · ${statusCode}` : "";
   } else if (state === "checking") {
-    text = "NAS prüfen";
+    text = "VPS prüfen";
   }
   const label = `${text}${detail}${storageDetail}`;
   badge.textContent = label;
-  badge.setAttribute("aria-label", `NAS Status: ${label}`);
+  badge.setAttribute("aria-label", `VPS Status: ${label}`);
   badge.setAttribute("title", `Letzte Prüfung: ${label}`);
 }
 
@@ -578,16 +855,17 @@ async function checkStatus(badge) {
     });
     const elapsed = Math.round(performance.now() - startedAt);
     const payload = await res.json().catch(() => null);
+    const storage = payload?.storage || null;
     const storageMb = Number.isFinite(payload?.storageMb) ? payload.storageMb : null;
     if (!res.ok) {
-      setStatusBadge(badge, "down", elapsed, res.status, storageMb);
+      setStatusBadge(badge, "down", elapsed, res.status, storage, storageMb);
       return;
     }
     if (elapsed >= STATUS_SLOW_THRESHOLD_MS) {
-      setStatusBadge(badge, "slow", elapsed, null, storageMb);
+      setStatusBadge(badge, "slow", elapsed, null, storage, storageMb);
       return;
     }
-    setStatusBadge(badge, "ok", elapsed, null, storageMb);
+    setStatusBadge(badge, "ok", elapsed, null, storage, storageMb);
   } catch (error) {
     if (error?.name === "AbortError") {
       setStatusBadge(badge, "down", null, "timeout");
