@@ -11,6 +11,29 @@ BASE NOTE: Keep the "Quick start, 3 Launchcodes" section in this header area. Do
 - `DOGULE1_STORAGE_MODE=mariadb DOGULE1_MARIADB_SOCKET=/run/mysqld/mysqld.sock DOGULE1_MARIADB_USER=ran node tools/server/apiServer.js`
 - `DOGULE1_STORAGE_MODE=mariadb DOGULE1_MARIADB_SOCKET=/run/mysqld/mysqld.sock DOGULE1_MARIADB_USER=ran DOGULE1_PASSWORD_FILE=/home/ran/codex/dogule@144.91.86.20/dogule1.passwords pnpm dev`
 
+## Date 2026-06-20 — CI Dependency Audit Nodemailer
+
+## Kontext
+
+- Status: completed and pushed.
+- Scope:
+- GitHub Check `Dependency Audit / audit (pull_request)` schlug fehl.
+- Ursache: direkte Production-Dependency `nodemailer` lag auf `^8.0.5`; CI meldete mehrere Advisories mit Patchziel `>=9.0.1`.
+
+## Ergebnis
+
+- `nodemailer` in `package.json` auf `^9.0.1` aktualisiert.
+- `pnpm-lock.yaml` auf `nodemailer@9.0.1` aktualisiert.
+- Fix auf Branch `codex/customer-course-detail-ux` gepusht.
+- PR-Link bleibt:
+- `https://github.com/christiansamuels932/dogule1/compare/main...codex%2Fcustomer-course-detail-ux?expand=1`
+
+## Tests
+
+- `pnpm audit --prod` ✅
+- `pnpm build` ✅
+- `pnpm lint` ✅
+
 ## Date 2026-06-20 — VPS Data Refresh + Schulungen Developer Rights + Hunde Herkunft Label + VPS Status + Achtung Diagnostics
 
 ## Kontext
