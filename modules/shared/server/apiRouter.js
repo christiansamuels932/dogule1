@@ -1328,7 +1328,7 @@ export function createApiRouter(options = {}) {
     const match = String(dataUrl || "").match(/^data:image\/png;base64,([A-Za-z0-9+/=]+)$/);
     if (!match) return null;
     const buffer = Buffer.from(match[1], "base64");
-    if (!buffer.length || buffer.length > 2 * 1024 * 1024) return null;
+    if (!buffer.length || buffer.length > 8 * 1024 * 1024) return null;
     return buffer;
   }
 
