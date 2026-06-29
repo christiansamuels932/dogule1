@@ -33,6 +33,9 @@ const ACTIVITY_BATCH_LIMIT = 20;
 const ISSUE_MAX_LENGTH = 500;
 const ISSUE_DETAILS_MAX_LENGTH = 4000;
 const ISSUE_ACTIVITY_LINE_LIMIT = 15;
+const ISSUE_SCREENSHOT_MAX_WIDTH = 1600;
+const ISSUE_SCREENSHOT_MAX_HEIGHT = 16000;
+const ISSUE_SCREENSHOT_MAX_PIXELS = 32_000_000;
 let layoutMain = null;
 let layoutPromise = null;
 let templatesPromise = null;
@@ -498,20 +501,20 @@ async function cleanupIssueScreenshot(diagnostics = {}) {
 }
 
 async function capturePageScreenshot({ moduleId = "", activityLines = [], capturedAt = "" } = {}) {
-  const width = Math.max(320, Math.min(window.innerWidth || 1280, 1600));
-  const height = Math.max(240, Math.min(window.innerHeight || 900, 1200));
+  const { width, height, scale, naturalWidth, naturalHeight } = getIssueScreenshotDimensions();
   try {
     const css = collectDocumentCss();
     const bodyClone = document.body.cloneNode(true);
     bodyClone.querySelectorAll(".dogule-help-overlay, script").forEach((node) => node.remove());
     bodyClone.setAttribute(
       "style",
-      `margin:0;width:${width}px;min-height:${height}px;overflow:hidden;background:#fff;`
+      `margin:0;width:${naturalWidth}px;min-height:${naturalHeight}px;overflow:visible;background:#fff;`
     );
     const serializedBody = new XMLSerializer().serializeToString(bodyClone);
+    const transform = scale === 1 ? "" : `transform:scale(${scale});transform-origin:top left;`;
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
       <foreignObject width="100%" height="100%">
-        <div xmlns="http://www.w3.org/1999/xhtml" style="width:${width}px;height:${height}px;overflow:hidden;background:#fff;">
+        <div xmlns="http://www.w3.org/1999/xhtml" style="width:${naturalWidth}px;height:${naturalHeight}px;overflow:visible;background:#fff;${transform}">
           <style>${escapeCssForSvg(css)}</style>
           ${serializedBody}
         </div>
@@ -520,8 +523,52 @@ async function capturePageScreenshot({ moduleId = "", activityLines = [], captur
     return await renderSvgToPngDataUrl(svg, width, height);
   } catch (error) {
     console.warn("[SUPPORT_SCREENSHOT_DOM_FAILED]", error);
-    return createFallbackScreenshot({ width, height, moduleId, activityLines, capturedAt });
+    return createFallbackScreenshot({
+      width,
+      height,
+      moduleId,
+      activityLines,
+      capturedAt,
+      pageWidth: naturalWidth,
+      pageHeight: naturalHeight,
+    });
   }
+}
+
+function getIssueScreenshotDimensions() {
+  const doc = document.documentElement;
+  const body = document.body;
+  const naturalWidth = Math.max(
+    320,
+    window.innerWidth || 0,
+    doc?.clientWidth || 0,
+    doc?.scrollWidth || 0,
+    body?.clientWidth || 0,
+    body?.scrollWidth || 0
+  );
+  const naturalHeight = Math.max(
+    240,
+    window.innerHeight || 0,
+    doc?.clientHeight || 0,
+    doc?.scrollHeight || 0,
+    doc?.offsetHeight || 0,
+    body?.clientHeight || 0,
+    body?.scrollHeight || 0,
+    body?.offsetHeight || 0
+  );
+  const scale = Math.min(
+    1,
+    ISSUE_SCREENSHOT_MAX_WIDTH / naturalWidth,
+    ISSUE_SCREENSHOT_MAX_HEIGHT / naturalHeight,
+    Math.sqrt(ISSUE_SCREENSHOT_MAX_PIXELS / (naturalWidth * naturalHeight))
+  );
+  return {
+    width: Math.max(1, Math.ceil(naturalWidth * scale)),
+    height: Math.max(1, Math.ceil(naturalHeight * scale)),
+    scale,
+    naturalWidth,
+    naturalHeight,
+  };
 }
 
 function collectDocumentCss() {
@@ -563,7 +610,15 @@ function renderSvgToPngDataUrl(svg, width, height) {
   });
 }
 
-function createFallbackScreenshot({ width, height, moduleId, activityLines, capturedAt }) {
+function createFallbackScreenshot({
+  width,
+  height,
+  moduleId,
+  activityLines,
+  capturedAt,
+  pageWidth,
+  pageHeight,
+}) {
   const canvas = document.createElement("canvas");
   canvas.width = width;
   canvas.height = height;
@@ -578,7 +633,8 @@ function createFallbackScreenshot({ width, height, moduleId, activityLines, capt
     `Route: ${window.location.hash || "#/"}`,
     `Modul: ${moduleId || "unbekannt"}`,
     `Zeit: ${capturedAt || new Date().toISOString()}`,
-    `Viewport: ${width} x ${height}`,
+    `Screenshot: ${width} x ${height}`,
+    `Seite: ${pageWidth || width} x ${pageHeight || height}`,
     "",
     "Aktivitätslog:",
     ...(activityLines || []),

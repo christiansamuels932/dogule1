@@ -11,6 +11,29 @@ BASE NOTE: Keep the "Quick start, 3 Launchcodes" section in this header area. Do
 - `DOGULE1_STORAGE_MODE=mariadb DOGULE1_MARIADB_SOCKET=/run/mysqld/mysqld.sock DOGULE1_MARIADB_USER=ran node tools/server/apiServer.js`
 - `DOGULE1_STORAGE_MODE=mariadb DOGULE1_MARIADB_SOCKET=/run/mysqld/mysqld.sock DOGULE1_MARIADB_USER=ran DOGULE1_PASSWORD_FILE=/home/ran/codex/dogule@144.91.86.20/dogule1.passwords pnpm dev`
 
+## Date 2026-06-29 — ACHTUNG Full-Page Screenshot Fix
+
+## Kontext
+
+- Status: completed, deployed, pushed.
+- Scope: `Achtung`-Problemmeldung soll die ganze Seite erfassen, nicht nur den aktuell sichtbaren Viewport.
+
+## Ergebnis
+
+- `capturePageScreenshot` misst jetzt `scrollWidth`/`scrollHeight` von `documentElement` und `body`.
+- Screenshot-Klon nutzt die natürliche Seitenbreite/-höhe mit sichtbarem Overflow.
+- Sehr grosse Seiten werden durch Maximalwerte skaliert statt unbeschränkt grosse Canvas-Bilder zu erzeugen.
+- Fallback-Screenshot dokumentiert jetzt Screenshot- und Seitenabmessungen.
+- API-Screenshot-Limit von 2 MB auf 8 MB erhöht, damit Full-Page-PNGs nicht direkt abgelehnt werden.
+- Runtime per safe `rsync` (`dist`, `modules`, `tools`) nach `/opt/dogule1` deployt.
+- Service neu gestartet; `dogule1.service` ist aktiv und `/healthz` liefert `200 OK`.
+- Web-App unter `http://144.91.86.20:5177/` liefert `200 OK`.
+
+## Tests
+
+- `pnpm lint` ✅
+- `pnpm build` ✅
+
 ## Date 2026-06-20 — CI Dependency Audit Nodemailer
 
 ## Kontext
